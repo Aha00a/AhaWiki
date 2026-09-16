@@ -1695,6 +1695,53 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 $textarea.change();
             }
 
+            // Formatting toolbar. Read the selection, compute the edit with the pure ops in
+            // AhaWiki.Format, and apply it -- via replaceRange on CodeMirror so its undo history
+            // survives, or by splicing the textarea value on the fallback path.
+            function formatSelection() {
+                const cm = getEditor();
+                if (cm)
+                    return { value: cm.getValue(), s: cm.indexFromPos(cm.getCursor('from')), e: cm.indexFromPos(cm.getCursor('to')) };
+                const el = $textarea.get(0);
+                return { value: el.value, s: el.selectionStart || 0, e: el.selectionEnd || 0 };
+            }
+
+            function applyFormatEdit(edit) {
+                const cm = getEditor();
+                if (cm) {
+                    cm.replaceRange(edit.replacement, cm.posFromIndex(edit.rangeStart), cm.posFromIndex(edit.rangeEnd));
+                    cm.setSelection(cm.posFromIndex(edit.selectionStart), cm.posFromIndex(edit.selectionEnd));
+                    cm.focus();
+                    cm.save();
+                    $textarea.trigger('change');
+                    return;
+                }
+                const el = $textarea.get(0);
+                el.value = el.value.slice(0, edit.rangeStart) + edit.replacement + el.value.slice(edit.rangeEnd);
+                el.selectionStart = edit.selectionStart;
+                el.selectionEnd = edit.selectionEnd;
+                el.focus();
+                $textarea.change();
+            }
+
+            const formatActions = {
+                bold: sel => AhaWiki.Format.wrap(sel.value, sel.s, sel.e, "'''", "'''"),
+                italic: sel => AhaWiki.Format.wrap(sel.value, sel.s, sel.e, "''", "''"),
+                underline: sel => AhaWiki.Format.wrap(sel.value, sel.s, sel.e, '__', '__'),
+                strike: sel => AhaWiki.Format.wrap(sel.value, sel.s, sel.e, '~~', '~~'),
+                code: sel => AhaWiki.Format.wrap(sel.value, sel.s, sel.e, '`', '`'),
+                link: sel => AhaWiki.Format.wrap(sel.value, sel.s, sel.e, '[', ']'),
+                heading: sel => AhaWiki.Format.prefixLines(sel.value, sel.s, sel.e, '== '),
+                ul: sel => AhaWiki.Format.prefixLines(sel.value, sel.s, sel.e, ' * '),
+            };
+
+            $('.formatButton').on('click', function (e) {
+                e.preventDefault();
+                const action = formatActions[$(this).data('format')];
+                if (action)
+                    applyFormatEdit(action(formatSelection()));
+            });
+
             function hasFiles(event) {
                 const dataTransfer = event.originalEvent && event.originalEvent.dataTransfer;
                 const types = dataTransfer && dataTransfer.types;

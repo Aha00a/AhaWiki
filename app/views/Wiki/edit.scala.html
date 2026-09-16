@@ -22,6 +22,7 @@
 @_base(page.name, "") {
     <script type="text/javascript" src="/public/js/jquery.paste_image_reader.js"></script>
     <script type="text/javascript" src="/public/js/AhaWiki.Editor.js"></script>
+    <script type="text/javascript" src="/public/js/AhaWiki.Format.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@@5.65.20/lib/codemirror.min.css"/>
     <link rel="stylesheet" href="/public/edit.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/codemirror@@5.65.20/lib/codemirror.min.js"></script>
@@ -75,6 +76,14 @@
                             <div class="toolbar">
                                 <div class="toolbarLeft">
                                     <label class="toolbarTableOnly"><input type="checkbox" class="checkboxWrap" checked="checked"> Word Wrap@kbdHotKeyAlt("W")</label>
+                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="bold" title="Bold ('''...''')"><i class="fas fa-bold"></i></a>
+                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="italic" title="Italic (''...'')"><i class="fas fa-italic"></i></a>
+                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="underline" title="Underline (__...__)"><i class="fas fa-underline"></i></a>
+                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="strike" title="Strikethrough (~~...~~)"><i class="fas fa-strikethrough"></i></a>
+                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="code" title="Inline code (`...`)"><i class="fas fa-code"></i></a>
+                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="heading" title="Heading (== )"><i class="fas fa-heading"></i></a>
+                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="ul" title="Bullet list ( * )"><i class="fas fa-list-ul"></i></a>
+                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="link" title="Link ([...])"><i class="fas fa-link"></i></a>
                                 </div>
                                 <div class="toolbarRight">
                                     <a class="fetchInfoBoxFromWikipedia toolbarTableOnly" href="#" rel="nofollow"><i class="fab fa-wikipedia-w"></i>InfoBox@kbdHotKeyAlt("I")</a>

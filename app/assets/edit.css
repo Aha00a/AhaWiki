@@ -83,6 +83,21 @@
   color: var(--color-muted-strong);
   text-decoration: none;
 }
+.AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarLeft > a.formatButton,
+.AhaWiki .edit > div.ui > form > div.right > div.toolbar > div.toolbarLeft > a.formatButton,
+.AhaWiki .edit > div.ui > form > div.left > div.editorAdditional > div.toolbarLeft > a.formatButton,
+.AhaWiki .edit > div.ui > form > div.right > div.editorAdditional > div.toolbarLeft > a.formatButton,
+.AhaWiki .edit > div.ui > form > div.left > div.previewAdditional > div.toolbarLeft > a.formatButton,
+.AhaWiki .edit > div.ui > form > div.right > div.previewAdditional > div.toolbarLeft > a.formatButton,
+.AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarRight > a.formatButton,
+.AhaWiki .edit > div.ui > form > div.right > div.toolbar > div.toolbarRight > a.formatButton,
+.AhaWiki .edit > div.ui > form > div.left > div.editorAdditional > div.toolbarRight > a.formatButton,
+.AhaWiki .edit > div.ui > form > div.right > div.editorAdditional > div.toolbarRight > a.formatButton,
+.AhaWiki .edit > div.ui > form > div.left > div.previewAdditional > div.toolbarRight > a.formatButton,
+.AhaWiki .edit > div.ui > form > div.right > div.previewAdditional > div.toolbarRight > a.formatButton {
+  padding-left: 6px;
+  padding-right: 6px;
+}
 .AhaWiki .edit > div.ui > form > div.left > div.toolbar > div.toolbarLeft,
 .AhaWiki .edit > div.ui > form > div.right > div.toolbar > div.toolbarLeft,
 .AhaWiki .edit > div.ui > form > div.left > div.editorAdditional > div.toolbarLeft,
