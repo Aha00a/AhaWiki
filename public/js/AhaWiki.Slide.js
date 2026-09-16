@@ -90,6 +90,15 @@
             }
         }
 
+        // Overview: show every slide as a grid of thumbnails; clicking one (handled in the deck
+        // click listener) jumps to it and leaves overview. CSS does the layout via `.overview`.
+        function toggleOverview() {
+            deck.classList.toggle('overview');
+            if (deck.classList.contains('overview') && slides[index]) {
+                slides[index].scrollIntoView({ block: 'nearest' });
+            }
+        }
+
         function handleKey(e) {
             switch (e.key) {
                 case 'ArrowRight':
@@ -107,6 +116,9 @@
                 case 'f':
                 case 'F':
                     toggleFullscreen(); e.preventDefault(); break;
+                case 'o':
+                case 'O':
+                    toggleOverview(); e.preventDefault(); break;
                 default:
                     break;
             }
@@ -121,9 +133,18 @@
         }
         paint();
 
-        // Click the slide area to advance; clicks on the chrome are handled by its own buttons.
+        // Click behaviour depends on the mode: in overview, click a thumbnail to jump to it and
+        // leave overview; otherwise click the slide area to advance. Chrome clicks are its buttons'.
         deck.addEventListener('click', function (e) {
             if (e.target.closest && e.target.closest('.slideChrome')) {
+                return;
+            }
+            if (deck.classList.contains('overview')) {
+                var section = e.target.closest && e.target.closest('.slide');
+                if (section) {
+                    to(slides.indexOf(section));
+                }
+                deck.classList.remove('overview');
                 return;
             }
             go(1);
@@ -131,9 +152,11 @@
 
         var prev = deck.querySelector('.slidePrev');
         var next = deck.querySelector('.slideNext');
+        var over = deck.querySelector('.slideOverview');
         var full = deck.querySelector('.slideFullscreen');
         if (prev) { prev.addEventListener('click', function (e) { e.stopPropagation(); go(-1); }); }
         if (next) { next.addEventListener('click', function (e) { e.stopPropagation(); go(1); }); }
+        if (over) { over.addEventListener('click', function (e) { e.stopPropagation(); toggleOverview(); }); }
         if (full) { full.addEventListener('click', function (e) { e.stopPropagation(); toggleFullscreen(); }); }
 
         // One document-level listener per deck, guarded so only the active deck responds: the

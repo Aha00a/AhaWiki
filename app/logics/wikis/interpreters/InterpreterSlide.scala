@@ -39,6 +39,7 @@ object InterpreterSlide extends TraitInterpreter {
        |    <button type="button" class="slidePrev" aria-label="Previous slide">&#8249;</button>
        |    <span class="slideCounter"><span class="slideCurrent">1</span> / $total</span>
        |    <button type="button" class="slideNext" aria-label="Next slide">&#8250;</button>
+       |    <button type="button" class="slideOverview" aria-label="Overview">&#9638;</button>
        |    <button type="button" class="slideFullscreen" aria-label="Toggle fullscreen">&#9974;</button>
        |  </div>
        |</div>""".stripMargin

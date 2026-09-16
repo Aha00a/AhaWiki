@@ -123,10 +123,52 @@
 					font-size: 14px;
 				}
 
-				// Push the fullscreen button to the far right, leaving prev/counter/next on the left.
+				// Push the overview/fullscreen buttons to the far right, prev/counter/next on the left.
 				.slideNext {
 					margin-right: auto;
 				}
+			}
+		}
+
+		// Overview: every slide as a small 16:9 thumbnail in a grid. Clicking one jumps to it and
+		// leaves overview (AhaWiki.Slide.js). Each slide is its own container, so `cqw` shrinks the
+		// text with the thumbnail automatically. Written as a sibling of `.presenting` so it is
+		// still inside @media screen -- print stays the static handout.
+		&.presenting.overview {
+			aspect-ratio: auto;
+			max-width: none;
+			height: auto;
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+			gap: 8px;
+			padding: 8px;
+			align-content: start;
+
+			.slide {
+				position: static;
+				inset: auto;
+				display: flex;
+				aspect-ratio: @slideRatio;
+				margin: 0;
+				padding: 3cqw 4cqw;
+				border: 1px solid var(--color-border);
+				box-shadow: none;
+				cursor: pointer;
+
+				&:hover {
+					border-color: var(--color-link);
+				}
+
+				&.current {
+					outline: 2px solid var(--color-link);
+					outline-offset: -2px;
+				}
+			}
+
+			// A full-width bar after the thumbnails rather than a grid cell of its own.
+			.slideChrome {
+				position: static;
+				grid-column: 1 / -1;
 			}
 		}
 	}
