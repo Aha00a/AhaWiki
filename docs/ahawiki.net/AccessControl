@@ -103,13 +103,9 @@ actor level:
 
 따라서 보통 `Exact` target + `Exact` actor가 가장 먼저 적용됩니다.
 
-== 삭제 확인 화면 (2026-09-16)
+== 삭제 확인 화면
 
-`?action=delete` 는 삭제 확인 화면을 연다(`Delete` 권한이 있어야 열린다 — 위 «Action»). 실수 삭제를 막는다.
-
- * 페이지 이름을 그대로 입력해야 «Delete» 버튼이 켜진다. 입력칸이 처음부터 포커스를 받고, 버튼은 이름이 정확히 맞을 때까지 꺼져 있다(Enter 로도 안 눌린다). 지울 리비전 수와 Cancel 링크를 함께 보여 준다.
- * 서버(`Wiki.delete`)도 `confirm` 필드가 페이지 이름과 같아야 지운다 — 오래됐거나 스크립트로 보낸 요청이 이름 없이 삭제하지 못하게 하는 2차 방어다. 권한(`isDeletable`)이 여전히 진짜 게이트다.
- * 2026-09-16 전에는 확인 버튼 하나뿐이었고 그 버튼에 autofocus 가 있어 Enter 한 번으로 삭제됐다.
+`?action=delete` 는 삭제 확인 화면을 연다(`Delete` 권한이 있어야 열린다 — 위 «Action»). «Delete» 버튼(autofocus)을 누르면 `confirm()` 창으로 한 번 더 묻고, 확인해야 삭제한다. 삭제는 되돌릴 수 없다. 권한(`isDeletable`)이 진짜 게이트다.
 
 == Admin UI
 

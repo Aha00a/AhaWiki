@@ -1,25 +1,22 @@
-@(page: models.tables.Page, revisionCount: Int)(implicit wikiContext: models.ContextWikiPage, request: play.api.mvc.Request[Any])
+@(page: models.tables.Page)(implicit wikiContext: models.ContextWikiPage, request: play.api.mvc.Request[Any])
 @import helper._
 @_base(page.name, "") {
     <script type="text/javascript">
-        $(function () {
-            var $form = $(".deleteForm");
-            var pageName = $form.find("input[name=name]").val();
-            var $confirm = $form.find("input[name=confirm]");
-            var $button = $form.find("button[type=submit]");
-            function matches() { return $confirm.val() === pageName; }
-            function sync() { $button.prop("disabled", !matches()); }
-            $confirm.on("input", sync);
-            sync();
-            $confirm.trigger("focus");
-            // Belt and suspenders: the button is disabled until the name matches, but also block a
-            // submit (e.g. Enter) when it does not. The server checks the same thing.
-            $form.on("submit", function (e) {
-                if (!matches()) { e.preventDefault(); e.stopImmediatePropagation(); }
+        $(function(){
+            var $form = $(".form");
+            $form.on("submit", function(e){
+                if (!window.confirm("Completely delete this page? This cannot be undone.")) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                }
             });
             $form.ajaxForm({
-                success: function () { location.href = "/w/@(page.name)"; },
-                error: function (jqXHR) { alert(jqXHR.responseText || jqXHR.statusText); }
+                success: function(result) {
+                    location.href = "/w/@(page.name)"
+                },
+                error: function (jqXHR) {
+                    alert(jqXHR.statusText);
+                }
             });
         });
     </script>
@@ -27,17 +24,13 @@
     <div class="wikiContent">
         <div class="limitWidth">
             <h1>Delete - <a href="?">@page.name</a></h1>
-            <p><b>This is an irreversible operation.</b> The page, all @revisionCount revision(s), and its attachments will be permanently deleted.</p>
-            <p>To confirm, type the page name below:</p>
+            <p><b>This is an irreversible operation!</b></p>
+            <p>Are you sure you want to completely delete this page?</p>
 
-            @form(routes.Wiki.delete(), Symbol("class") -> "deleteForm") {
+            @form(routes.Wiki.delete(), Symbol("class") -> "form") {
                 @CSRF.formField
                 <input type="hidden" name="name" value="@(page.name)"/>
-                <p><input type="text" name="confirm" size="40" autocomplete="off" placeholder="@page.name" aria-label="Type the page name to confirm"/></p>
-                <p>
-                    <button type="submit" disabled="disabled">Delete this page</button>
-                    <a href="/w/@(page.name)" rel="nofollow">Cancel</a>
-                </p>
+                <input type="submit" value="Delete" autofocus="autofocus"/>
             }
         </div>
     </div>
