@@ -2249,6 +2249,139 @@
     display: none;
   }
 }
+.AhaWiki .slideDeck .slide {
+  container-type: inline-size;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  color: var(--color-text);
+  background-color: var(--color-surface);
+}
+.AhaWiki .slideDeck .slide .slideContent {
+  width: 100%;
+  font-size: 4.2cqw;
+}
+.AhaWiki .slideDeck .slide .slideContent > div {
+  width: 100%;
+}
+.AhaWiki .slideDeck .slide .slideContent h1 {
+  font-size: 2em;
+  line-height: 1.1;
+}
+.AhaWiki .slideDeck .slide .slideContent h2 {
+  font-size: 1.5em;
+  line-height: 1.15;
+}
+.AhaWiki .slideDeck .slide .slideContent img {
+  max-width: 100%;
+}
+.AhaWiki .slideDeck .slide .slideNumber {
+  position: absolute;
+  right: 3cqw;
+  bottom: 2.5cqw;
+  font-size: 2.2cqw;
+  opacity: 0.5;
+}
+.AhaWiki .slideDeck .slideChrome {
+  display: none;
+}
+@media screen {
+  .AhaWiki .slideDeck {
+    background-color: var(--color-surface-alt);
+    padding: 1mm;
+  }
+  .AhaWiki .slideDeck .slide {
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    margin: 10px auto;
+    padding: 4cqw 6cqw;
+    border: 1px solid var(--color-border);
+    -webkit-box-shadow: 10px 10px 50px 5px var(--color-shadow-soft);
+    box-shadow: 10px 10px 50px 5px var(--color-shadow-soft);
+  }
+  .AhaWiki .slideDeck.presenting {
+    container-type: inline-size;
+    position: relative;
+    width: 100%;
+    max-width: calc((100vh - 130px) * 16 / 9);
+    aspect-ratio: 16 / 9;
+    margin: 0 auto;
+    padding: 0;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    outline: none;
+  }
+  .AhaWiki .slideDeck.presenting .slide {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    border: none;
+    box-shadow: none;
+    aspect-ratio: auto;
+    padding: 5cqw 7cqw;
+    display: none;
+    cursor: pointer;
+  }
+  .AhaWiki .slideDeck.presenting .slide.current {
+    display: flex;
+  }
+  .AhaWiki .slideDeck.presenting .slideChrome {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 6px 14px;
+    background-color: var(--color-surface-alt);
+    border-top: 1px solid var(--color-border);
+    opacity: 0.9;
+  }
+  .AhaWiki .slideDeck.presenting .slideChrome button {
+    cursor: pointer;
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    padding: 2px 12px;
+    font-size: 16px;
+    line-height: 1.4;
+  }
+  .AhaWiki .slideDeck.presenting .slideChrome button:hover {
+    background-color: var(--color-link-hover-bg);
+  }
+  .AhaWiki .slideDeck.presenting .slideChrome .slideCounter {
+    color: var(--color-text);
+    font-size: 14px;
+  }
+  .AhaWiki .slideDeck.presenting .slideChrome .slideNext {
+    margin-right: auto;
+  }
+}
+@media print {
+  .AhaWiki .slideDeck .slide {
+    aspect-ratio: auto;
+    width: 100%;
+    justify-content: flex-start;
+    padding: 10mm;
+    page-break-after: always;
+    break-after: page;
+  }
+  .AhaWiki .slideDeck .slide:last-of-type {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  .AhaWiki .slideDeck .slide .slideContent {
+    font-size: 12pt;
+  }
+  .AhaWiki .slideDeck .slide .slideNumber {
+    font-size: 9pt;
+  }
+}
 .AhaWiki .MacroCalendar.wikiTableSimple {
   display: inline-table;
   vertical-align: top;

@@ -11,6 +11,7 @@ object Interpreters extends TraitInterpreter {
   val map: Map[String, TraitInterpreter] = Seq(
     InterpreterWiki,
     InterpreterPaper,
+    InterpreterSlide,
 
     InterpreterWikiSyntaxPreview,
 

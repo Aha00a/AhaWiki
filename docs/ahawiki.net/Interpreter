@@ -67,6 +67,7 @@
  1. [InterpreterPaper] - 인쇄용 A4 용지 문서
  1. [InterpreterQuote] - 인용문
  1. [InterpreterSchema] - schema.org 구조화 데이터
+ 1. [InterpreterSlide] - 발표용 슬라이드 (화면은 덱, 인쇄는 유인물)
  1. [InterpreterTable] - TSV/CSV 표
  1. [InterpreterText] - 일반 텍스트
  1. [InterpreterVim] - 코드 syntax highlight

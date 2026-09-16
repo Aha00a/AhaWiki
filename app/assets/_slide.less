@@ -1,0 +1,159 @@
+// Extracted from wiki.less flow -- imported inside .AhaWiki { }.
+//
+// InterpreterSlide shares its content model with InterpreterPaper (see _paper.less); this file is
+// only the presentation. On screen the deck shows one 16:9 slide at a time once AhaWiki.Slide.js
+// adds `.presenting`; without the script the slides stack as 16:9 cards and stay readable. In print
+// every slide is shown, one per page -- the static handout a deck printed to PDF is anyway. The
+// one-at-a-time rules live inside @media screen on purpose, so print never has to undo them.
+
+.slideDeck {
+	@slideRatio: ~"16 / 9";
+
+	// Each slide is its own container, so `cqw` sizes the content to the slide's own width -- text
+	// scales with the slide in every mode, with no JavaScript measuring anything.
+	.slide {
+		container-type: inline-size;
+		box-sizing: border-box;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		position: relative;
+		overflow: hidden;
+		color: var(--color-text);
+		background-color: var(--color-surface);
+
+		.slideContent {
+			width: 100%;
+			font-size: 4.2cqw;
+
+			> div { width: 100%; }
+			h1 { font-size: 2em; line-height: 1.1; }
+			h2 { font-size: 1.5em; line-height: 1.15; }
+			img { max-width: 100%; }
+		}
+
+		.slideNumber {
+			position: absolute;
+			right: 3cqw;
+			bottom: 2.5cqw;
+			font-size: 2.2cqw;
+			opacity: 0.5;
+		}
+	}
+
+	// Navigation chrome needs the script; it is revealed only while presenting on screen.
+	.slideChrome {
+		display: none;
+	}
+
+	@media screen {
+		// Stacked fallback (no script, or before it runs): each slide is its own 16:9 card.
+		background-color: var(--color-surface-alt);
+		padding: 1mm;
+
+		.slide {
+			aspect-ratio: @slideRatio;
+			width: 100%;
+			margin: 10px auto;
+			padding: 4cqw 6cqw;
+			border: 1px solid var(--color-border);
+			.boxShadow(10px 10px 50px 5px var(--color-shadow-soft));
+		}
+
+		// Presenting: the deck itself becomes the 16:9 stage and the slides overlay it, one shown at
+		// a time. Sized to fit the viewport height so a whole slide is visible without scrolling.
+		&.presenting {
+			container-type: inline-size;
+			position: relative;
+			width: 100%;
+			max-width: calc((100vh - 130px) * 16 / 9);
+			aspect-ratio: @slideRatio;
+			margin: 0 auto;
+			padding: 0;
+			background-color: var(--color-surface);
+			border: 1px solid var(--color-border);
+			outline: none;
+
+			.slide {
+				position: absolute;
+				inset: 0;
+				margin: 0;
+				border: none;
+				box-shadow: none;
+				aspect-ratio: auto;
+				padding: 5cqw 7cqw;
+				display: none;
+				cursor: pointer;
+
+				&.current {
+					display: flex;
+				}
+			}
+
+			.slideChrome {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				position: absolute;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				padding: 6px 14px;
+				background-color: var(--color-surface-alt);
+				border-top: 1px solid var(--color-border);
+				opacity: 0.9;
+
+				button {
+					cursor: pointer;
+					background-color: var(--color-surface);
+					color: var(--color-text);
+					border: 1px solid var(--color-border);
+					border-radius: 4px;
+					padding: 2px 12px;
+					font-size: 16px;
+					line-height: 1.4;
+
+					&:hover {
+						background-color: var(--color-link-hover-bg);
+					}
+				}
+
+				.slideCounter {
+					color: var(--color-text);
+					font-size: 14px;
+				}
+
+				// Push the fullscreen button to the far right, leaving prev/counter/next on the left.
+				.slideNext {
+					margin-right: auto;
+				}
+			}
+		}
+	}
+
+	@media print {
+		// Handout: every slide shown, one per page, static (no chrome, all content revealed). The
+		// @media screen block above never applies here, so nothing needs undoing.
+		.slide {
+			aspect-ratio: auto;
+			width: 100%;
+			justify-content: flex-start;
+			padding: 10mm;
+			page-break-after: always;
+			break-after: page;
+
+			&:last-of-type {
+				page-break-after: avoid;
+				break-after: avoid;
+			}
+
+			.slideContent {
+				font-size: 12pt;
+			}
+
+			.slideNumber {
+				font-size: 9pt;
+			}
+		}
+	}
+}

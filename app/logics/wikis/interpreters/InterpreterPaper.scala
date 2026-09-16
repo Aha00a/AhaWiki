@@ -1,27 +1,20 @@
 package logics.wikis.interpreters
 
-import logics.wikis.ExtractConvertInjectVariable
 import models.{PageContent, ContextWikiPage}
 
 object InterpreterPaper extends TraitInterpreter {
 
   import models.tables.CalculatedLink
 
-  private val landscapeMarkerRe = """(?m)^\s*#!landscape[ \t]*$""".r
-  private val portraitMarkerRe  = """(?m)^\s*#!portrait[ \t]*$""".r
-
   //noinspection ZeroIndexToHead
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val pageContent: PageContent = PageContent(content)
 
-    // Step 1: #!var 디렉티브 변수 시드 + [[[#!Variable]]] 블록 추출·파싱
-    //         (split 전에 처리해야 모든 페이지에서 {{key}} 치환이 동작함)
-    val eciv = new ExtractConvertInjectVariable()
-    eciv.variables ++= pageContent.variables          // #!var key=value
-    val bodyExtracted = eciv.extract(pageContent.content)  // [[[#!Variable]]] 블록도 추가
-    val bodyResolved  = eciv.applyVariables(bodyExtracted)
+    // The split, variable seeding and per-chunk render are shared with InterpreterSlide; Paper only
+    // wraps each chunk into an A4 page with a 6-position header/footer.
+    val (eciv, chunks) = PaperSlideCore.render(content)
 
-    // Step 2: 인수 우선, 없으면 변수에서 fallback
+    // 인수 우선, 없으면 변수에서 fallback
     val cssClass = pageContent.argument.lift(0).filter(_.nonEmpty)
       .getOrElse(eciv.variables.getOrElse("class", ""))
     val docId = pageContent.argument.lift(1).filter(_.nonEmpty)
@@ -36,26 +29,13 @@ object InterpreterPaper extends TraitInterpreter {
     val bottomCenterRaw = eciv.variables.getOrElse("bottomCenter", "")
     val bottomRightRaw  = eciv.variables.getOrElse("bottomRight",  "{{pageNo}} / {{pageTotal}}")
 
-    // Step 3: ---- 기준으로 split하되, 각 청크 앞에 \n × offset을 붙여 원본 줄 번호 보존
-    //   lineOffset[N+1] = lineOffset[N] + chunks[N].count('\n')
-    //   (chunk의 선행 \n이 separator 줄을 포함하므로 +1 불필요)
-    val chunks = bodyExtracted.split("""(?m)^-{4,}$""", -1)
-    eciv.variables("pageTotal") = chunks.length.toString
-    // lineOffset starts at the number of directive lines (#! lines stripped by PageContent),
-    // so that padded content line numbers map to raw-document line numbers.
-    var lineOffset = pageContent.directives.length
-    val pages = chunks.zipWithIndex.map { case (chunk, index) =>
-      val offset = lineOffset
-      lineOffset += chunk.count(_ == '\n')
-      eciv.variables("pageNo") = (index + 1).toString
-      val isLandscape    = landscapeMarkerRe.findFirstIn(chunk).isDefined
-      val isPortrait     = portraitMarkerRe.findFirstIn(chunk).isDefined
-      val pageExtraClass = if (isLandscape) " landscape" else if (isPortrait) " portrait" else ""
-      val strippedChunk  = landscapeMarkerRe.replaceAllIn(portraitMarkerRe.replaceAllIn(chunk, ""), "")
-      val paddedResolved = "\n" * offset + eciv.applyVariables(strippedChunk)
-      val rendered = InterpreterWiki.toHtmlString(paddedResolved)
+    val pages = chunks.map { c =>
+      // {{pageNo}} in the header/footer templates is resolved here, so set it to this chunk's number
+      // (the core left it at the last chunk's). {{pageTotal}} is constant and already set.
+      eciv.variables("pageNo") = c.pageNo.toString
+      val pageExtraClass = if (c.isLandscape) " landscape" else if (c.isPortrait) " portrait" else ""
       s"""<div class="page$pageExtraClass">
-         |  <!-- $index -->
+         |  <!-- ${c.index} -->
          |  <div class="pageHeader">
          |    <div class="topLeft">${eciv.applyVariables(topLeftRaw)}</div>
          |    <div class="topCenter">${eciv.applyVariables(topCenterRaw)}</div>
@@ -68,10 +48,10 @@ object InterpreterPaper extends TraitInterpreter {
          |  </div>
          |  <div class="pageContent">
          |    <div>
-         |      $rendered
+         |      ${c.html}
          |    </div>
          |  </div>
-         |  <!-- $index -->
+         |  <!-- ${c.index} -->
          |</div>""".stripMargin
     }
 
@@ -80,12 +60,6 @@ object InterpreterPaper extends TraitInterpreter {
       """</div>"""
   }
 
-  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
-    val pageContent: PageContent = PageContent(content)
-    val eciv = new ExtractConvertInjectVariable()
-    eciv.variables ++= pageContent.variables
-    val bodyExtracted = eciv.extract(pageContent.content)
-    val bodyResolved  = eciv.applyVariables(bodyExtracted)
-    InterpreterWiki.toSeqLink(bodyResolved)
-  }
+  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] =
+    PaperSlideCore.toSeqLink(content)
 }
