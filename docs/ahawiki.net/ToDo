@@ -176,3 +176,4 @@ https://www.wikimatrix.org/ 발견. 여기 기준에 좀 맞춰볼까.. --[2020-
   * c2
 ]]]
  * '''구현했다(2026-09-16). 배포 전.''' 소유자가 «전역 규칙» 으로 정했다 — 마커 없이 맨앞이 탭이면 탭 수만큼 중첩된 불릿으로 렌더한다(`InterpreterWiki` 의 `regexTabList`, `regexList` 다음에 시도). 탭만 대상이고 공백 들여쓰기는 예전처럼 문단으로 둔다. blast radius 점검 결과 현재 맨앞 탭 프로즈 줄이 있는 페이지는 hands-off 3곳뿐(wiki.aharise.com 2, sst Gantt 1) — 그 3곳의 렌더만 바뀐다(내용은 안 건드림, 타인 위키). 단위테스트 `TabListUnit`, Scala 259 통과. 배포는 canary → 그 3곳만 바뀌는지 렌더 비교 → 양쪽.
+ * '''배포했다(2026-09-16).''' canary(10001)로 렌더 비교: change 3곳만 DIFF(탭 → `<li>` 불릿), 표본 104곳 전부 SAME(회귀 없음). aharise 주주명부 페이지에서 `<p>	…</p>` → `<ul><li>…</li></ul>` 확인. 양쪽 올림, 태그 `v20260916T102816-aha00a`. 문서는 [InterpreterWiki] '''탭 들여쓰기'''. hands-off 3곳 렌더가 바뀐 건 예상대로이고 내용은 안 건드림.

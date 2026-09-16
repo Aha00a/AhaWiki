@@ -121,6 +121,16 @@ Leading space is important.
     A. Alpha
 ]]]
 
+=== 탭 들여쓰기
+마커(`*`·`-`) 없이 맨 앞이 탭이면 탭 수만큼 중첩된 불릿이 됩니다(2026-09-16). 공백 들여쓰기는 예전처럼 문단으로 남습니다 — 탭만 이 규칙을 켭니다.
+
+[[[#!WikiSyntaxPreview
+	a
+		a1
+	b
+		c1
+]]]
+
 == Link
 Everything inside the brackets is the page name, spaces included; write the alias after `|`. A target that is not a page title keeps the older reading, where the first space starts the alias: a URL, an anchor (`#x`, `Page#x`), a query (`?x`), or a prefixed target (`schema:`, `wiki:`, `User:`).
 
