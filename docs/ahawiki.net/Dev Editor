@@ -232,9 +232,16 @@ Source API:
 
 이 둘이 인터프리터 블록용(`ExtractConvertInjectInterpreter`)과 제목용(`InterpreterWiki`)에 각각 한 벌씩, 글자 하나 다르지 않게 있었습니다. 두 렌더러는 페이지를 나누는 방식이 달라서 따로 있는 게 맞지만, **링크 모양은 달라질 수 없는 것** 입니다.
 
-== WYSIWYG (설계안 — 미구현, 결정 대기)
+== 서식 툴바 (2026-09-16)
+편집 툴바(`toolbarLeft`)에 서식 버튼을 둔다 — 굵게·기울임·밑줄·취소선·인라인 코드·제목·불릿 목록·링크. 선택을 감싸거나(굵게 → `'''…'''`) 줄 앞에 붙인다(제목 `== `, 목록 ` * `). 빈 선택이면 커서를 프리픽스와 서픽스 사이에 둔다.
 
-[ToDo] 의 «WYSIWYG editing» 설계안이다. 지금 편집기는 CodeMirror 소스 + 라이브 미리보기 + (표·간트) 구조 편집기다. 아래 '''열린 결정''' 을 소유자가 정한 뒤 단계별로 만든다.
+ * 텍스트 연산은 순수 함수 `AhaWiki.Format.wrap` / `prefixLines`(`public/js/AhaWiki.Format.js`)다 — «전체 텍스트 + 선택»을 받아 «최소 편집(범위·대체·새 선택)»을 돌려준다. DOM 을 모르므로 단위테스트되고(`test/ahawiki.format.test.mjs`), CodeMirror·textarea 양쪽이 같은 결과를 적용한다.
+ * 적용은 CodeMirror `replaceRange`(undo 보존), textarea 는 값 치환. 배선은 `edit.page.js` 의 `.formatButton` 클릭 핸들러. 버튼은 `data-format` 으로 동작을 고른다.
+ * WYSIWYG 이 아니다 — 소스가 정본이고 버튼은 AhaMark 를 넣어 줄 뿐이다(아래 «WYSIWYG» 의 접근 3 첫걸음).
+
+== WYSIWYG (설계안 — 접근 3 첫걸음만 구현, 나머지 결정 대기)
+
+[ToDo] 의 «WYSIWYG editing» 설계안이다. '''접근 3(서식 툴바)의 첫걸음은 2026-09-16 에 만들어 배포했다 — 위 «서식 툴바» 절.''' 지금 편집기는 CodeMirror 소스 + 라이브 미리보기 + (표·간트) 구조 편집기 + 서식 툴바다. 진짜 WYSIWYG(접근 2 하이브리드)은 아래 '''열린 결정''' 을 소유자가 정한 뒤 단계별로 만든다.
 
 === 왜 큰가 — 왕복 문제
 렌더는 AhaMark → HTML 단방향이다. WYSIWYG 은 반대로 «편집한 리치 문서 → AhaMark» 직렬화가 필요하고, 그게 어렵다.
