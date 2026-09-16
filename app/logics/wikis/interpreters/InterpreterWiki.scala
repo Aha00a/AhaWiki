@@ -56,6 +56,11 @@ object InterpreterWiki extends TraitInterpreter {
     val regexHr2: Regex = """^={4,}$""".r
     val regexHeading: Regex = """^(={1,6})(>)?\s+(.+?)(\s+\1(?:\s+([#.].+))?)?$""".r
     val regexList: Regex = """^(\s+)([*-]|(\d+|[a-zA-Z]+|[ivxIVX]+|[가나다라마바사아자차카타파하]+|[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ]+)\.)\s*(.+)""".r
+    // A line indented with tabs but carrying no bullet marker is read as a bullet, nested by the
+    // number of leading tabs (one tab per level, matching how regexList counts leading whitespace).
+    // Only tabs, never spaces: a space-indented line stays a paragraph, as it always has. Tried
+    // after regexList, so a tab-then-marker line (`\t* x`) is still an ordinary list item.
+    val regexTabList: Regex = """^(\t+)(\S.*)$""".r
     val regexListUnordered: Regex = """[*-]""".r
     val regexListDecimal: Regex = """\d+\.""".r
     val regexListLowerAlpha: Regex = """[a-z]+\.""".r
@@ -74,6 +79,7 @@ object InterpreterWiki extends TraitInterpreter {
           case regexHr2() => hr2(s)
           case regexHeading(heading, collapseMarker, title, _, idAndClass) => this.heading(heading, title, idAndClass, lineNumber, collapseMarker != null)
           case regexList(indentString, style, _, content) => list(indentString, style, content, lineNumber);
+          case regexTabList(tabs, content) => list(tabs, "*", content, lineNumber)
           case _ => others(s, lineNumber)
         }
       }
@@ -151,6 +157,7 @@ object InterpreterWiki extends TraitInterpreter {
               case regexHr2() => hr2(s)
               case regexHeading(heading, collapseMarker, title, _, idAndClass) => this.heading(heading, title, idAndClass, lineNumber, collapseMarker != null)
               case regexList(indentString, style, _, content) => list(indentString, style, content, lineNumber)
+              case regexTabList(tabs, content) => list(tabs, "*", content, lineNumber)
               case _ => others(s, lineNumber)
             }
             index += 1

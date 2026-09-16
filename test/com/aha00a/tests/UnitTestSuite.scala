@@ -1,6 +1,6 @@
 package com.aha00a.tests
 
-import com.aha00a.tests.unit.{BackQuoteBlockUnit, BlameUnit, CrawlerUnit, CrossInstanceBusUnit, HeadingNumberUnit, InterpreterBlockUnit, InterpreterMarkdownUnit, InterpreterSchemaUnit, InterpreterVimUnit, InterpreterWikiUnit, JsonUnit, MacroPeriodUnit, PageContentUnit, PermissionLogicUnit, PermissionUnit, SchemaOrgUnit, SignedReadUrlLogicUnit, TraitInterpreterUnit, UrlDetectorUnit, UserNicknamePolicyUnit, WikiMacrosUnit, WikiPermissionUnit}
+import com.aha00a.tests.unit.{BackQuoteBlockUnit, BlameUnit, CrawlerUnit, CrossInstanceBusUnit, HeadingNumberUnit, InterpreterBlockUnit, InterpreterMarkdownUnit, InterpreterSchemaUnit, InterpreterVimUnit, InterpreterWikiUnit, JsonUnit, MacroPeriodUnit, PageContentUnit, PermissionLogicUnit, PermissionUnit, SchemaOrgUnit, SignedReadUrlLogicUnit, TabListUnit, TraitInterpreterUnit, UrlDetectorUnit, UserNicknamePolicyUnit, WikiMacrosUnit, WikiPermissionUnit}
 import models.ContextWikiPage
 import play.api.mvc.{AnyContent, Request}
 
@@ -13,6 +13,7 @@ object UnitTestSuite {
 
   def cases(testUtil: TestUtil)(implicit request: Request[AnyContent], contextWikiPage: ContextWikiPage): Seq[UnitTestCase] = Seq(
     UnitTestCase("InterpreterBlockUnit", () => InterpreterBlockUnit.run(testUtil)),
+    UnitTestCase("TabListUnit", () => TabListUnit.run(testUtil)),
     UnitTestCase("BackQuoteBlockUnit", () => BackQuoteBlockUnit.run(testUtil)),
     UnitTestCase("CrossInstanceBusUnit", () => CrossInstanceBusUnit.run(testUtil)),
     UnitTestCase("HeadingNumberUnit", () => HeadingNumberUnit.run(testUtil)),
