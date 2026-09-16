@@ -23,8 +23,9 @@ object SlideUnit {
       assertEquals(html.contains("class=\"slideDeck"), true)
       assertEquals(count(html, "<section class=\"slide"), 1)
       assertEquals(html.contains("hello"), true)
-      // The nav chrome carries the overview toggle (grid of all slides).
+      // The nav chrome carries the overview (grid) and filmstrip (left rail) toggles.
       assertEquals(html.contains("slideOverview"), true)
+      assertEquals(html.contains("slideFilmstrip"), true)
     }
 
     // `----` splits into slides; each carries its own pageNo / pageTotal, and the deck knows the total.

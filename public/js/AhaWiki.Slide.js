@@ -51,6 +51,7 @@
         // shared hash would fight, so only a lone deck reads and writes it.
         var lone = document.querySelectorAll('.slideDeck').length === 1;
         var index = 0;
+        var rail = null; // the filmstrip rail, built lazily on first use
 
         // Present view is primary: switch from the stacked fallback to one-at-a-time.
         deck.classList.add('presenting');
@@ -61,6 +62,12 @@
             }
             if (counterEl) {
                 counterEl.textContent = String(index + 1);
+            }
+            if (rail) {
+                var items = rail.querySelectorAll('.slideRailItem');
+                for (var j = 0; j < items.length; j++) {
+                    items[j].classList.toggle('current', j === index);
+                }
             }
         }
 
@@ -93,9 +100,56 @@
         // Overview: show every slide as a grid of thumbnails; clicking one (handled in the deck
         // click listener) jumps to it and leaves overview. CSS does the layout via `.overview`.
         function toggleOverview() {
+            deck.classList.remove('filmstrip'); // overview and filmstrip are separate views
             deck.classList.toggle('overview');
             if (deck.classList.contains('overview') && slides[index]) {
                 slides[index].scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        // Filmstrip: a left rail of slide thumbnails beside the current slide (PowerPoint's normal
+        // view). The rail is clones of the slides, built once; a click on a rail item jumps to that
+        // slide. CSS lays it out via `.filmstrip`.
+        function buildRail() {
+            if (rail) {
+                return;
+            }
+            rail = document.createElement('div');
+            rail.className = 'slideRail';
+            slides.forEach(function (slide, i) {
+                var item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'slideRailItem';
+                item.setAttribute('data-index', String(i));
+                var clone = slide.cloneNode(true);
+                clone.removeAttribute('id');
+                clone.removeAttribute('data-index');
+                var withId = clone.querySelectorAll('[id]');
+                for (var k = 0; k < withId.length; k++) {
+                    withId[k].removeAttribute('id');
+                }
+                item.appendChild(clone);
+                item.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    to(i);
+                });
+                rail.appendChild(item);
+            });
+            deck.insertBefore(rail, deck.firstChild);
+        }
+
+        function toggleFilmstrip() {
+            if (deck.classList.contains('filmstrip')) {
+                deck.classList.remove('filmstrip');
+                return;
+            }
+            deck.classList.remove('overview');
+            buildRail();
+            deck.classList.add('filmstrip');
+            paint(); // highlight the current rail item
+            var current = rail.querySelector('.slideRailItem.current');
+            if (current) {
+                current.scrollIntoView({ block: 'nearest' });
             }
         }
 
@@ -119,6 +173,9 @@
                 case 'o':
                 case 'O':
                     toggleOverview(); e.preventDefault(); break;
+                case 'l':
+                case 'L':
+                    toggleFilmstrip(); e.preventDefault(); break;
                 default:
                     break;
             }
@@ -136,8 +193,8 @@
         // Click behaviour depends on the mode: in overview, click a thumbnail to jump to it and
         // leave overview; otherwise click the slide area to advance. Chrome clicks are its buttons'.
         deck.addEventListener('click', function (e) {
-            if (e.target.closest && e.target.closest('.slideChrome')) {
-                return;
+            if (e.target.closest && (e.target.closest('.slideChrome') || e.target.closest('.slideRail'))) {
+                return; // chrome buttons and rail items handle their own clicks
             }
             if (deck.classList.contains('overview')) {
                 var section = e.target.closest && e.target.closest('.slide');
@@ -152,10 +209,12 @@
 
         var prev = deck.querySelector('.slidePrev');
         var next = deck.querySelector('.slideNext');
+        var film = deck.querySelector('.slideFilmstrip');
         var over = deck.querySelector('.slideOverview');
         var full = deck.querySelector('.slideFullscreen');
         if (prev) { prev.addEventListener('click', function (e) { e.stopPropagation(); go(-1); }); }
         if (next) { next.addEventListener('click', function (e) { e.stopPropagation(); go(1); }); }
+        if (film) { film.addEventListener('click', function (e) { e.stopPropagation(); toggleFilmstrip(); }); }
         if (over) { over.addEventListener('click', function (e) { e.stopPropagation(); toggleOverview(); }); }
         if (full) { full.addEventListener('click', function (e) { e.stopPropagation(); toggleFullscreen(); }); }
 

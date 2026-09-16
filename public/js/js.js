@@ -107,9 +107,13 @@ document.addEventListener('DOMContentLoaded', function () {
         var title = wrapper.getAttribute('data-edit-title');
         var heading = content.querySelector('h2, h3, h4, h5, h6');
         var interpreterCodeBlock = content.querySelector('.Interpreter.Text, .Interpreter.Vim');
+        // Inside a slide deck these absolutely-positioned top-right overlays (Edit, Copy) sit on
+        // top of the slide content -- and cover it entirely in the small overview thumbnails -- so
+        // a presentation skips them. The page is still edited from the normal view.
+        var insideSlideDeck = wrapper.closest && wrapper.closest('.slideDeck');
         var editLink = null;
         var copyButton = null;
-        if (href) {
+        if (href && !insideSlideDeck) {
             editLink = wrapper.querySelector('.InterpreterRenderEditLink');
             if (!editLink) {
                 editLink = document.createElement('a');
@@ -154,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        if (interpreterCodeBlock) {
+        if (interpreterCodeBlock && !insideSlideDeck) {
             copyButton = wrapper.querySelector('.InterpreterRenderCopyButton');
             if (!copyButton) {
                 copyButton = document.createElement('button');
