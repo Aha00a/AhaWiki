@@ -1,16 +1,18 @@
 // Screen presentation for InterpreterSlide. The server renders a `.slideDeck` of `.slide` sections
 // (see InterpreterSlide.scala); this shows them one at a time with keyboard/click navigation,
-// fullscreen, an overview grid and a filmstrip rail. The index math is a handful of pure functions
-// on window.AhaWiki.Slide so it is unit tested directly (test/ahawiki.slide.test.mjs); the DOM
-// wiring below runs only in a browser.
+// fullscreen, an overview grid and a filmstrip rail.
 //
-// Presentation only: without this script the deck degrades to the slides stacked and readable
-// (_slide.less), and print always shows every slide as a static handout regardless of this file.
+// Every surface renders the slide at ONE fixed design size (1280x720) and scales it to fit its box
+// via a CSS variable the script sets (_slide.less reads it in `transform`). Same design width
+// everywhere means a thumbnail wraps and spaces exactly like the stage -- a true miniature. The
+// scale rides a CSS variable rather than an inline transform so it never leaks into @media print.
+//
+// The index math is a handful of pure functions on window.AhaWiki.Slide, unit tested directly
+// (test/ahawiki.slide.test.mjs); the DOM wiring below runs only in a browser.
 (function () {
     window.AhaWiki = window.AhaWiki || {};
 
     var Slide = {
-        // Keep an index inside [0, total - 1]; an empty deck stays at 0.
         clampIndex: function (index, total) {
             if (total <= 0) return 0;
             if (index < 0) return 0;
@@ -20,8 +22,6 @@
         nextIndex: function (current, total, delta) {
             return Slide.clampIndex(current + delta, total);
         },
-        // "#/3" -> zero-based 2, clamped to the deck. null when the hash is not a slide reference, so
-        // an ordinary "#Section" anchor is left alone.
         parseHashIndex: function (hash, total) {
             var m = /^#\/(\d+)$/.exec(hash || '');
             if (!m) return null;
@@ -34,14 +34,10 @@
 
     window.AhaWiki.Slide = Slide;
 
-    // Loaded into a vm context by the unit test, where there is no document: expose the pure helpers
-    // and stop before touching the DOM.
     if (typeof document === 'undefined') {
         return;
     }
 
-    // Thumbnails are rendered at this fixed design size and scaled down with transform, so a slide's
-    // fixed-px spacing shrinks with the thumbnail rather than overflowing it.
     var DESIGN_W = 1280;
     var DESIGN_H = 720;
 
@@ -52,22 +48,52 @@
             return;
         }
 
+        // Wrap the real slides in a stage; it is the 16:9 box the current slide is scaled into.
+        var stageEl = document.createElement('div');
+        stageEl.className = 'slideStage';
+        deck.insertBefore(stageEl, slides[0]);
+        slides.forEach(function (s) { stageEl.appendChild(s); });
+
         var counterEl = deck.querySelector('.slideCurrent');
         var filmBtn = deck.querySelector('.slideFilmstrip');
         var overBtn = deck.querySelector('.slideOverview');
         var fullBtn = deck.querySelector('.slideFullscreen');
-        // The deep-link (#/n) and hash updates make sense for one deck per page; with several decks a
-        // shared hash would fight, so only a lone deck reads and writes it.
         var lone = document.querySelectorAll('.slideDeck').length === 1;
         var index = 0;
         var thumbs = null; // thumbnail container (clones), built lazily and shared by both modes
 
-        // Present view is primary: switch from the stacked fallback to one-at-a-time.
         deck.classList.add('presenting');
 
         function setPressed(btn, on) {
             if (btn) {
                 btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+            }
+        }
+
+        // Scale the current slide to fit the stage box (fit + center, so a non-16:9 box letterboxes),
+        // scale each thumbnail clone to its item, and keep the filmstrip rail no taller than the stage.
+        function layout() {
+            var bw = stageEl.clientWidth;
+            var bh = stageEl.clientHeight;
+            if (bw && bh) {
+                var s = Math.min(bw / DESIGN_W, bh / DESIGN_H);
+                for (var i = 0; i < slides.length; i++) {
+                    slides[i].style.setProperty('--slide-scale', s);
+                }
+            }
+            if (thumbs) {
+                var items = thumbs.querySelectorAll('.slideThumbItem');
+                for (var j = 0; j < items.length; j++) {
+                    var w = items[j].clientWidth;
+                    if (!w) { continue; }
+                    var ts = w / DESIGN_W;
+                    items[j].style.height = Math.round(DESIGN_H * ts) + 'px';
+                    var clone = items[j].querySelector('.slide');
+                    if (clone) { clone.style.setProperty('--thumb-scale', ts); }
+                }
+                thumbs.style.maxHeight = deck.classList.contains('filmstrip')
+                    ? stageEl.clientHeight + 'px'
+                    : '';
             }
         }
 
@@ -141,8 +167,9 @@
                     var wasOverview = deck.classList.contains('overview');
                     to(i);
                     if (wasOverview) {
-                        deck.classList.remove('overview'); // a pick in overview jumps and returns to the slide
+                        deck.classList.remove('overview');
                         paint();
+                        layout();
                     }
                 });
                 thumbs.appendChild(item);
@@ -150,53 +177,30 @@
             deck.insertBefore(thumbs, deck.firstChild);
         }
 
-        // Scale each clone to fill its item: render at the fixed design size, then transform:scale.
-        // Recomputed on resize because the grid's item width changes with it.
-        function sizeThumbs() {
-            if (!thumbs) {
-                return;
-            }
-            var items = thumbs.querySelectorAll('.slideThumbItem');
-            for (var i = 0; i < items.length; i++) {
-                var w = items[i].clientWidth;
-                if (!w) {
-                    continue;
-                }
-                var scale = w / DESIGN_W;
-                items[i].style.height = Math.round(DESIGN_H * scale) + 'px';
-                var clone = items[i].querySelector('.slide');
-                if (clone) {
-                    clone.style.width = DESIGN_W + 'px';
-                    clone.style.height = DESIGN_H + 'px';
-                    clone.style.transform = 'scale(' + scale + ')';
-                }
-            }
-        }
-
         function toggleOverview() {
             if (deck.classList.contains('overview')) {
                 deck.classList.remove('overview');
-                paint();
-                return;
+            } else {
+                deck.classList.remove('filmstrip');
+                buildThumbs();
+                deck.classList.add('overview');
             }
-            deck.classList.remove('filmstrip'); // overview and filmstrip are separate views
-            buildThumbs();
-            deck.classList.add('overview');
-            sizeThumbs();
             paint();
+            layout();
         }
 
         function toggleFilmstrip() {
             if (deck.classList.contains('filmstrip')) {
                 deck.classList.remove('filmstrip');
                 paint();
+                layout();
                 return;
             }
             deck.classList.remove('overview');
             buildThumbs();
             deck.classList.add('filmstrip');
-            sizeThumbs();
             paint();
+            layout();
             var current = thumbs.querySelector('.slideThumbItem.current');
             if (current) {
                 current.scrollIntoView({ block: 'nearest' });
@@ -231,7 +235,6 @@
             }
         }
 
-        // Start on the deep-linked slide when this is the only deck; otherwise the first.
         if (lone) {
             var fromHash = Slide.parseHashIndex(location.hash, total);
             if (fromHash !== null) {
@@ -239,8 +242,8 @@
             }
         }
         paint();
+        layout();
 
-        // Click the stage to advance; chrome buttons and thumbnail items handle their own clicks.
         deck.addEventListener('click', function (e) {
             if (e.target.closest && (e.target.closest('.slideChrome') || e.target.closest('.slideThumbs'))) {
                 return;
@@ -256,10 +259,6 @@
         if (prev) { prev.addEventListener('click', function (e) { e.stopPropagation(); go(-1); }); }
         if (next) { next.addEventListener('click', function (e) { e.stopPropagation(); go(1); }); }
 
-        // One document-level listener per deck, guarded so only the active deck responds: the
-        // fullscreen deck while fullscreen, otherwise the deck that holds focus (a click focuses it,
-        // since the deck carries tabindex="0"). This avoids double handling and scopes keys when
-        // several decks share a page.
         document.addEventListener('keydown', function (e) {
             var active = document.fullscreenElement
                 ? (document.fullscreenElement === deck)
@@ -269,16 +268,11 @@
             }
         });
 
-        // Keep thumbnails scaled correctly when the grid reflows on resize.
-        window.addEventListener('resize', function () {
-            if (deck.classList.contains('overview') || deck.classList.contains('filmstrip')) {
-                sizeThumbs();
-            }
-        });
-
-        // The fullscreen button's pressed state follows the actual fullscreen element.
+        // Re-fit the slide and thumbnails whenever their boxes change size.
+        window.addEventListener('resize', layout);
         document.addEventListener('fullscreenchange', function () {
             setPressed(fullBtn, document.fullscreenElement === deck);
+            layout();
         });
     }
 

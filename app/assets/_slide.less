@@ -1,15 +1,13 @@
 // Extracted from wiki.less flow -- imported inside .AhaWiki { }.
 //
 // InterpreterSlide shares its content model with InterpreterPaper (see _paper.less); this file is
-// only the presentation. On screen the deck shows one 16:9 slide at a time once AhaWiki.Slide.js
-// adds `.presenting`; without the script the slides stack as 16:9 cards and stay readable. In print
-// every slide is shown, one per page -- the static handout a deck printed to PDF is anyway. The
-// one-at-a-time / overview / filmstrip rules live inside @media screen on purpose, so print never
-// has to undo them.
-//
-// Overview (grid) and filmstrip (left rail) both show thumbnails, which are clones of the slides
-// (built by the script) scaled with transform:scale of a fixed design size -- so a slide's fixed-px
-// spacing (heading margins) shrinks with the thumbnail rather than overflowing a tiny box.
+// only the presentation. Every presentation surface -- the stage (present / filmstrip / fullscreen),
+// the overview grid, the filmstrip rail -- renders the slide at ONE fixed design size (1280x720) and
+// scales it to fit its box with transform (AhaWiki.Slide.js computes the scale). That is what makes
+// a thumbnail an exact miniature of the stage: same width, so the same line wraps and the same
+// spacing, just scaled. Without the script the deck degrades to the slides stacked and readable; in
+// print every slide is shown, one per page (a static handout). The presentation rules live inside
+// @media screen so print never has to undo them.
 
 .slideDeck {
 	@slideRatio: ~"16 / 9";
@@ -44,8 +42,12 @@
 		}
 	}
 
-	// Thumbnail container and items (used by both overview and filmstrip). Hidden until a mode shows
-	// them. The clone inside is sized (width/height/transform) inline by the script.
+	// The stage wrapper (built by the script) and the thumbnail container are hidden until a mode
+	// shows them.
+	.slideStage {
+		display: none;
+	}
+
 	.slideThumbs {
 		display: none;
 	}
@@ -64,7 +66,6 @@
 		&.current { outline: 2px solid var(--color-link); outline-offset: -2px; }
 	}
 
-	// Navigation chrome needs the script; it is revealed only while presenting on screen.
 	.slideChrome {
 		display: none;
 	}
@@ -83,10 +84,7 @@
 			.boxShadow(10px 10px 50px 5px var(--color-shadow-soft));
 		}
 
-		// Presenting: the deck itself becomes the 16:9 stage and the slides overlay it, one shown at
-		// a time. Sized to fit the viewport height so a whole slide is visible without scrolling.
 		&.presenting {
-			container-type: inline-size;
 			box-sizing: border-box;
 			position: relative;
 			width: 100%;
@@ -94,38 +92,54 @@
 			aspect-ratio: @slideRatio;
 			margin: 0 auto;
 			padding: 0;
-			background-color: var(--color-surface);
-			border: 1px solid var(--color-border);
+			background-color: var(--color-surface-alt);
 			outline: none;
 
-			.slide {
+			// The stage fills the 16:9 deck; the current slide is drawn at 1280x720 and scaled to fit
+			// (the script sets the transform), centered so a non-16:9 box (fullscreen) letterboxes.
+			.slideStage {
+				display: block;
 				position: absolute;
 				inset: 0;
-				margin: 0;
-				border: none;
-				box-shadow: none;
-				aspect-ratio: auto;
-				padding: 5cqw 7cqw;
-				display: none;
-				cursor: pointer;
+				overflow: hidden;
+				background-color: var(--color-surface);
 
-				&.current { display: flex; }
+				.slide {
+					position: absolute;
+					top: 50%;
+					left: 50%;
+					width: 1280px;
+					height: 720px;
+					aspect-ratio: auto;
+					margin: 0;
+					border: none;
+					box-shadow: none;
+					padding: 5cqw 7cqw;
+					transform-origin: center;
+					transform: translate(-50%, -50%) scale(var(--slide-scale, 1));
+					display: none;
+
+					&.current { display: flex; }
+				}
 			}
 
-			// The clone inside a thumbnail: scaled to top-left, always shown, no chrome of its own.
-			// Scoped under .presenting so it outranks the one-at-a-time `.slide` rules above.
+			// A thumbnail's clone: same 1280x720, scaled to the item and pinned top-left (the item is
+			// itself 16:9, so it fills). Scoped under .presenting to outrank the stage rules above.
 			.slideThumbItem .slide {
 				position: absolute;
-				inset: auto; // cancel the one-at-a-time inset:0 first, THEN pin to the item's top-left
+				inset: auto;
 				top: 0;
 				left: 0;
-				display: flex;
+				width: 1280px;
+				height: 720px;
 				aspect-ratio: auto;
+				display: flex;
 				margin: 0;
 				border: none;
 				box-shadow: none;
 				padding: 5cqw 7cqw;
 				transform-origin: top left;
+				transform: scale(var(--thumb-scale, 1));
 				pointer-events: none;
 			}
 
@@ -160,7 +174,6 @@
 
 					&:hover { background-color: var(--color-link-hover-bg); }
 
-					// A mode that is on shows its button pressed.
 					&[aria-pressed="true"] {
 						background-color: var(--color-link-hover-bg);
 						border-color: var(--color-link);
@@ -175,19 +188,19 @@
 			}
 		}
 
-		// Overview: all slides as a grid of scaled thumbnails; the real stage slides are hidden.
+		// Overview: all slides as a grid of scaled thumbnails; the stage is hidden.
 		&.presenting.overview {
 			aspect-ratio: auto;
 			max-width: none;
 			height: auto;
 
-			> .slide {
+			.slideStage {
 				display: none;
 			}
 
 			.slideThumbs {
 				display: grid;
-				grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+				grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
 				gap: 8px;
 				padding: 8px;
 				align-content: start;
@@ -198,57 +211,71 @@
 			}
 		}
 
-		// Filmstrip: a left rail of scaled thumbnails beside the current slide (PowerPoint normal view).
+		// Filmstrip: a left rail of scaled thumbnails beside the current slide. Flex-wrap lets the
+		// chrome drop to its own row; the deck's height comes from the 16:9 stage, so it stays
+		// proportional at any width instead of leaving a fixed-height gap.
 		&.presenting.filmstrip {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: flex-start;
 			aspect-ratio: auto;
 			max-width: none;
-			height: 70vh;
-			overflow: hidden;
-			// The area around the 16:9 stage is letterbox, so tint it like the rail.
+			height: auto;
 			background-color: var(--color-surface-alt);
 
 			.slideThumbs {
+				order: 1;
+				flex: 0 0 clamp(96px, 24%, 160px);
+				align-self: stretch;
 				display: flex;
 				flex-direction: column;
 				gap: 6px;
-				position: absolute;
-				left: 0;
-				top: 0;
-				bottom: 0;
-				width: 160px;
 				overflow-y: auto;
-				// Reserve the scrollbar's gutter so an item's width does not shrink when the rail
-				// starts scrolling -- otherwise a clone scaled to the pre-scrollbar width overflows
-				// its item and its right edge is clipped.
 				scrollbar-gutter: stable;
 				padding: 6px;
-				background-color: var(--color-surface-alt);
 				border-right: 1px solid var(--color-border);
 			}
 
-			// Stage: the current slide as a 16:9 box centered in the area right of the rail, so the big
-			// view matches the 16:9 thumbnails (and the real presentation) instead of filling an
-			// arbitrary rectangle. margin:auto centers it; the aspect ratio + max box fit it.
-			> .slide {
-				inset: 0 0 0 160px;
-				width: auto;
-				height: auto;
-				margin: auto;
+			.slideStage {
+				order: 2;
+				flex: 1 1 0;
+				min-width: 0;
 				aspect-ratio: @slideRatio;
-				max-width: calc(100% - 160px);
-				max-height: 100%;
+				max-height: 78vh;
+				position: relative;
+				overflow: hidden;
+				background-color: var(--color-surface);
 				border: 1px solid var(--color-border);
+
+				.slide {
+					position: absolute;
+					top: 50%;
+					left: 50%;
+					width: 1280px;
+					height: 720px;
+					aspect-ratio: auto;
+					margin: 0;
+					border: none;
+					box-shadow: none;
+					padding: 5cqw 7cqw;
+					transform-origin: center;
+					transform: translate(-50%, -50%) scale(var(--slide-scale, 1));
+					display: none;
+
+					&.current { display: flex; }
+				}
 			}
 
 			> .slideChrome {
-				left: 160px;
+				order: 3;
+				flex: 1 0 100%;
+				position: static;
 			}
 		}
 	}
 
 	@media print {
-		// Handout: every slide shown, one per page, static (no chrome, all content revealed). The
-		// @media screen block above never applies here, so nothing needs undoing.
+		// Handout: every slide shown, one per page, static (no chrome, all content revealed).
 		.slide {
 			aspect-ratio: auto;
 			width: 100%;
@@ -264,6 +291,10 @@
 
 			.slideContent { font-size: 12pt; }
 			.slideNumber { font-size: 9pt; }
+		}
+
+		.slideStage {
+			display: contents; // let the slides inside participate in the print flow
 		}
 
 		.slideThumbs {
