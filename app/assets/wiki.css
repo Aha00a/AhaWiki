@@ -2351,9 +2351,9 @@
   }
   .AhaWiki .slideDeck.presenting .slideThumbItem .slide {
     position: absolute;
+    inset: auto;
     top: 0;
     left: 0;
-    inset: auto;
     display: flex;
     aspect-ratio: auto;
     margin: 0;

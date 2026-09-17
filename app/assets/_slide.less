@@ -116,9 +116,9 @@
 			// Scoped under .presenting so it outranks the one-at-a-time `.slide` rules above.
 			.slideThumbItem .slide {
 				position: absolute;
+				inset: auto; // cancel the one-at-a-time inset:0 first, THEN pin to the item's top-left
 				top: 0;
 				left: 0;
-				inset: auto;
 				display: flex;
 				aspect-ratio: auto;
 				margin: 0;
