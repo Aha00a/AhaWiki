@@ -61,6 +61,11 @@
 		border: 1px solid var(--color-border);
 		background: none;
 		cursor: pointer;
+		// It is a <button>, so neutralise the UA button defaults the cloned slide would otherwise
+		// inherit -- text-align:center and the button font -- which made a thumbnail differ from the
+		// stage (which inherits the document's `start`).
+		text-align: start;
+		font: inherit;
 
 		&:hover { border-color: var(--color-link); }
 		&.current { outline: 2px solid var(--color-link); outline-offset: -2px; }

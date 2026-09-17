@@ -2300,6 +2300,8 @@
   border: 1px solid var(--color-border);
   background: none;
   cursor: pointer;
+  text-align: start;
+  font: inherit;
 }
 .AhaWiki .slideDeck .slideThumbItem:hover {
   border-color: var(--color-link);
