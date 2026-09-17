@@ -204,6 +204,8 @@
 			max-width: none;
 			height: 70vh;
 			overflow: hidden;
+			// The area around the 16:9 stage is letterbox, so tint it like the rail.
+			background-color: var(--color-surface-alt);
 
 			.slideThumbs {
 				display: flex;
@@ -215,16 +217,27 @@
 				bottom: 0;
 				width: 160px;
 				overflow-y: auto;
+				// Reserve the scrollbar's gutter so an item's width does not shrink when the rail
+				// starts scrolling -- otherwise a clone scaled to the pre-scrollbar width overflows
+				// its item and its right edge is clipped.
+				scrollbar-gutter: stable;
 				padding: 6px;
 				background-color: var(--color-surface-alt);
 				border-right: 1px solid var(--color-border);
 			}
 
-			// Stage: the real current slide, right of the rail. width:auto so left+right define it --
-			// the stacked-fallback width:100% would otherwise over-constrain and overflow to the right.
+			// Stage: the current slide as a 16:9 box centered in the area right of the rail, so the big
+			// view matches the 16:9 thumbnails (and the real presentation) instead of filling an
+			// arbitrary rectangle. margin:auto centers it; the aspect ratio + max box fit it.
 			> .slide {
 				inset: 0 0 0 160px;
 				width: auto;
+				height: auto;
+				margin: auto;
+				aspect-ratio: @slideRatio;
+				max-width: calc(100% - 160px);
+				max-height: 100%;
+				border: 1px solid var(--color-border);
 			}
 
 			> .slideChrome {
