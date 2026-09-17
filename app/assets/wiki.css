@@ -2285,6 +2285,26 @@
   font-size: 2.2cqw;
   opacity: 0.5;
 }
+.AhaWiki .slideDeck .slideThumbs {
+  display: none;
+}
+.AhaWiki .slideDeck .slideThumbItem {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  background: none;
+  cursor: pointer;
+}
+.AhaWiki .slideDeck .slideThumbItem:hover {
+  border-color: var(--color-link);
+}
+.AhaWiki .slideDeck .slideThumbItem.current {
+  outline: 2px solid var(--color-link);
+  outline-offset: -2px;
+}
 .AhaWiki .slideDeck .slideChrome {
   display: none;
 }
@@ -2304,6 +2324,7 @@
   }
   .AhaWiki .slideDeck.presenting {
     container-type: inline-size;
+    box-sizing: border-box;
     position: relative;
     width: 100%;
     max-width: calc((100vh - 130px) * 16 / 9);
@@ -2328,10 +2349,24 @@
   .AhaWiki .slideDeck.presenting .slide.current {
     display: flex;
   }
+  .AhaWiki .slideDeck.presenting .slideThumbItem .slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    inset: auto;
+    display: flex;
+    aspect-ratio: auto;
+    margin: 0;
+    border: none;
+    box-shadow: none;
+    padding: 5cqw 7cqw;
+    transform-origin: top left;
+    pointer-events: none;
+  }
   .AhaWiki .slideDeck.presenting .slideChrome {
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: space-between;
     position: absolute;
     left: 0;
     right: 0;
@@ -2340,6 +2375,11 @@
     background-color: var(--color-surface-alt);
     border-top: 1px solid var(--color-border);
     opacity: 0.9;
+  }
+  .AhaWiki .slideDeck.presenting .slideChrome .slideChromeGroup {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
   .AhaWiki .slideDeck.presenting .slideChrome button {
     cursor: pointer;
@@ -2354,51 +2394,43 @@
   .AhaWiki .slideDeck.presenting .slideChrome button:hover {
     background-color: var(--color-link-hover-bg);
   }
+  .AhaWiki .slideDeck.presenting .slideChrome button[aria-pressed="true"] {
+    background-color: var(--color-link-hover-bg);
+    border-color: var(--color-link);
+    color: var(--color-link);
+  }
   .AhaWiki .slideDeck.presenting .slideChrome .slideCounter {
     color: var(--color-text);
     font-size: 14px;
-  }
-  .AhaWiki .slideDeck.presenting .slideChrome .slideNext {
-    margin-right: auto;
   }
   .AhaWiki .slideDeck.presenting.overview {
     aspect-ratio: auto;
     max-width: none;
     height: auto;
+  }
+  .AhaWiki .slideDeck.presenting.overview > .slide {
+    display: none;
+  }
+  .AhaWiki .slideDeck.presenting.overview .slideThumbs {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 8px;
     padding: 8px;
     align-content: start;
   }
-  .AhaWiki .slideDeck.presenting.overview .slide {
+  .AhaWiki .slideDeck.presenting.overview > .slideChrome {
     position: static;
-    inset: auto;
-    display: flex;
-    aspect-ratio: 16 / 9;
-    margin: 0;
-    padding: 3cqw 4cqw;
-    border: 1px solid var(--color-border);
-    box-shadow: none;
-    cursor: pointer;
-  }
-  .AhaWiki .slideDeck.presenting.overview .slide:hover {
-    border-color: var(--color-link);
-  }
-  .AhaWiki .slideDeck.presenting.overview .slide.current {
-    outline: 2px solid var(--color-link);
-    outline-offset: -2px;
-  }
-  .AhaWiki .slideDeck.presenting.overview .slideChrome {
-    position: static;
-    grid-column: 1 / -1;
   }
   .AhaWiki .slideDeck.presenting.filmstrip {
     aspect-ratio: auto;
     max-width: none;
     height: 70vh;
+    overflow: hidden;
   }
-  .AhaWiki .slideDeck.presenting.filmstrip .slideRail {
+  .AhaWiki .slideDeck.presenting.filmstrip .slideThumbs {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     position: absolute;
     left: 0;
     top: 0;
@@ -2406,41 +2438,12 @@
     width: 160px;
     overflow-y: auto;
     padding: 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
     background-color: var(--color-surface-alt);
     border-right: 1px solid var(--color-border);
   }
-  .AhaWiki .slideDeck.presenting.filmstrip .slideRail .slideRailItem {
-    flex: 0 0 auto;
-    display: block;
-    width: 100%;
-    padding: 0;
-    border: 1px solid var(--color-border);
-    background: none;
-    cursor: pointer;
-  }
-  .AhaWiki .slideDeck.presenting.filmstrip .slideRail .slideRailItem:hover {
-    border-color: var(--color-link);
-  }
-  .AhaWiki .slideDeck.presenting.filmstrip .slideRail .slideRailItem.current {
-    outline: 2px solid var(--color-link);
-    outline-offset: -2px;
-  }
-  .AhaWiki .slideDeck.presenting.filmstrip .slideRail .slide {
-    position: static;
-    inset: auto;
-    display: flex;
-    aspect-ratio: 16 / 9;
-    margin: 0;
-    border: none;
-    box-shadow: none;
-    padding: 3cqw 4cqw;
-    pointer-events: none;
-  }
   .AhaWiki .slideDeck.presenting.filmstrip > .slide {
     inset: 0 0 0 160px;
+    width: auto;
   }
   .AhaWiki .slideDeck.presenting.filmstrip > .slideChrome {
     left: 160px;
@@ -2464,6 +2467,9 @@
   }
   .AhaWiki .slideDeck .slide .slideNumber {
     font-size: 9pt;
+  }
+  .AhaWiki .slideDeck .slideThumbs {
+    display: none;
   }
 }
 .AhaWiki .MacroCalendar.wikiTableSimple {

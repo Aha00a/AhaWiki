@@ -36,12 +36,18 @@ object InterpreterSlide extends TraitInterpreter {
     s"""<div class="slideDeck $cssClass" tabindex="0" data-total="$total">
        |${slides.mkString("\n")}
        |  <div class="slideChrome">
-       |    <button type="button" class="slidePrev" aria-label="Previous slide">&#8249;</button>
-       |    <span class="slideCounter"><span class="slideCurrent">1</span> / $total</span>
-       |    <button type="button" class="slideNext" aria-label="Next slide">&#8250;</button>
-       |    <button type="button" class="slideFilmstrip" aria-label="Filmstrip">&#9636;</button>
-       |    <button type="button" class="slideOverview" aria-label="Overview">&#9638;</button>
-       |    <button type="button" class="slideFullscreen" aria-label="Toggle fullscreen">&#9974;</button>
+       |    <div class="slideChromeGroup">
+       |      <button type="button" class="slideFilmstrip" title="Filmstrip (L)" aria-label="Filmstrip" aria-pressed="false">&#9636;</button>
+       |      <button type="button" class="slideOverview" title="Overview (O)" aria-label="Overview" aria-pressed="false">&#9638;</button>
+       |    </div>
+       |    <div class="slideChromeGroup">
+       |      <button type="button" class="slidePrev" title="Previous slide (&#8592;)" aria-label="Previous slide">&#8249;</button>
+       |      <span class="slideCounter"><span class="slideCurrent">1</span> / $total</span>
+       |      <button type="button" class="slideNext" title="Next slide (&#8594;)" aria-label="Next slide">&#8250;</button>
+       |    </div>
+       |    <div class="slideChromeGroup">
+       |      <button type="button" class="slideFullscreen" title="Fullscreen (F)" aria-label="Fullscreen" aria-pressed="false">&#9974;</button>
+       |    </div>
        |  </div>
        |</div>""".stripMargin
   }

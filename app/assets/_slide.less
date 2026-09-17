@@ -4,13 +4,16 @@
 // only the presentation. On screen the deck shows one 16:9 slide at a time once AhaWiki.Slide.js
 // adds `.presenting`; without the script the slides stack as 16:9 cards and stay readable. In print
 // every slide is shown, one per page -- the static handout a deck printed to PDF is anyway. The
-// one-at-a-time rules live inside @media screen on purpose, so print never has to undo them.
+// one-at-a-time / overview / filmstrip rules live inside @media screen on purpose, so print never
+// has to undo them.
+//
+// Overview (grid) and filmstrip (left rail) both show thumbnails, which are clones of the slides
+// (built by the script) scaled with transform:scale of a fixed design size -- so a slide's fixed-px
+// spacing (heading margins) shrinks with the thumbnail rather than overflowing a tiny box.
 
 .slideDeck {
 	@slideRatio: ~"16 / 9";
 
-	// Each slide is its own container, so `cqw` sizes the content to the slide's own width -- text
-	// scales with the slide in every mode, with no JavaScript measuring anything.
 	.slide {
 		container-type: inline-size;
 		box-sizing: border-box;
@@ -41,6 +44,26 @@
 		}
 	}
 
+	// Thumbnail container and items (used by both overview and filmstrip). Hidden until a mode shows
+	// them. The clone inside is sized (width/height/transform) inline by the script.
+	.slideThumbs {
+		display: none;
+	}
+
+	.slideThumbItem {
+		position: relative;
+		overflow: hidden;
+		display: block;
+		width: 100%;
+		padding: 0;
+		border: 1px solid var(--color-border);
+		background: none;
+		cursor: pointer;
+
+		&:hover { border-color: var(--color-link); }
+		&.current { outline: 2px solid var(--color-link); outline-offset: -2px; }
+	}
+
 	// Navigation chrome needs the script; it is revealed only while presenting on screen.
 	.slideChrome {
 		display: none;
@@ -64,6 +87,7 @@
 		// a time. Sized to fit the viewport height so a whole slide is visible without scrolling.
 		&.presenting {
 			container-type: inline-size;
+			box-sizing: border-box;
 			position: relative;
 			width: 100%;
 			max-width: calc((100vh - 130px) * 16 / 9);
@@ -85,15 +109,30 @@
 				display: none;
 				cursor: pointer;
 
-				&.current {
-					display: flex;
-				}
+				&.current { display: flex; }
+			}
+
+			// The clone inside a thumbnail: scaled to top-left, always shown, no chrome of its own.
+			// Scoped under .presenting so it outranks the one-at-a-time `.slide` rules above.
+			.slideThumbItem .slide {
+				position: absolute;
+				top: 0;
+				left: 0;
+				inset: auto;
+				display: flex;
+				aspect-ratio: auto;
+				margin: 0;
+				border: none;
+				box-shadow: none;
+				padding: 5cqw 7cqw;
+				transform-origin: top left;
+				pointer-events: none;
 			}
 
 			.slideChrome {
 				display: flex;
 				align-items: center;
-				gap: 12px;
+				justify-content: space-between;
 				position: absolute;
 				left: 0;
 				right: 0;
@@ -102,6 +141,12 @@
 				background-color: var(--color-surface-alt);
 				border-top: 1px solid var(--color-border);
 				opacity: 0.9;
+
+				.slideChromeGroup {
+					display: flex;
+					align-items: center;
+					gap: 12px;
+				}
 
 				button {
 					cursor: pointer;
@@ -113,8 +158,13 @@
 					font-size: 16px;
 					line-height: 1.4;
 
-					&:hover {
+					&:hover { background-color: var(--color-link-hover-bg); }
+
+					// A mode that is on shows its button pressed.
+					&[aria-pressed="true"] {
 						background-color: var(--color-link-hover-bg);
+						border-color: var(--color-link);
+						color: var(--color-link);
 					}
 				}
 
@@ -122,65 +172,43 @@
 					color: var(--color-text);
 					font-size: 14px;
 				}
-
-				// Push the overview/fullscreen buttons to the far right, prev/counter/next on the left.
-				.slideNext {
-					margin-right: auto;
-				}
 			}
 		}
 
-		// Overview: every slide as a small 16:9 thumbnail in a grid. Clicking one jumps to it and
-		// leaves overview (AhaWiki.Slide.js). Each slide is its own container, so `cqw` shrinks the
-		// text with the thumbnail automatically. Written as a sibling of `.presenting` so it is
-		// still inside @media screen -- print stays the static handout.
+		// Overview: all slides as a grid of scaled thumbnails; the real stage slides are hidden.
 		&.presenting.overview {
 			aspect-ratio: auto;
 			max-width: none;
 			height: auto;
-			display: grid;
-			grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-			gap: 8px;
-			padding: 8px;
-			align-content: start;
 
-			.slide {
-				position: static;
-				inset: auto;
-				display: flex;
-				aspect-ratio: @slideRatio;
-				margin: 0;
-				padding: 3cqw 4cqw;
-				border: 1px solid var(--color-border);
-				box-shadow: none;
-				cursor: pointer;
-
-				&:hover {
-					border-color: var(--color-link);
-				}
-
-				&.current {
-					outline: 2px solid var(--color-link);
-					outline-offset: -2px;
-				}
+			> .slide {
+				display: none;
 			}
 
-			// A full-width bar after the thumbnails rather than a grid cell of its own.
-			.slideChrome {
+			.slideThumbs {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+				gap: 8px;
+				padding: 8px;
+				align-content: start;
+			}
+
+			> .slideChrome {
 				position: static;
-				grid-column: 1 / -1;
 			}
 		}
 
-		// Filmstrip: a vertical rail of slide thumbnails on the left with the current slide large on
-		// the right -- PowerPoint's normal view. AhaWiki.Slide.js builds the rail as clones of the
-		// slides; the rail items are inside `.slideRail` so they escape the one-at-a-time hiding.
+		// Filmstrip: a left rail of scaled thumbnails beside the current slide (PowerPoint normal view).
 		&.presenting.filmstrip {
 			aspect-ratio: auto;
 			max-width: none;
 			height: 70vh;
+			overflow: hidden;
 
-			.slideRail {
+			.slideThumbs {
+				display: flex;
+				flex-direction: column;
+				gap: 6px;
 				position: absolute;
 				left: 0;
 				top: 0;
@@ -188,41 +216,15 @@
 				width: 160px;
 				overflow-y: auto;
 				padding: 6px;
-				display: flex;
-				flex-direction: column;
-				gap: 6px;
 				background-color: var(--color-surface-alt);
 				border-right: 1px solid var(--color-border);
-
-				.slideRailItem {
-					flex: 0 0 auto;
-					display: block;
-					width: 100%;
-					padding: 0;
-					border: 1px solid var(--color-border);
-					background: none;
-					cursor: pointer;
-
-					&:hover { border-color: var(--color-link); }
-					&.current { outline: 2px solid var(--color-link); outline-offset: -2px; }
-				}
-
-				.slide {
-					position: static;
-					inset: auto;
-					display: flex;
-					aspect-ratio: @slideRatio;
-					margin: 0;
-					border: none;
-					box-shadow: none;
-					padding: 3cqw 4cqw;
-					pointer-events: none;
-				}
 			}
 
-			// The stage: the real slides, one at a time, in the area right of the rail.
+			// Stage: the real current slide, right of the rail. width:auto so left+right define it --
+			// the stacked-fallback width:100% would otherwise over-constrain and overflow to the right.
 			> .slide {
 				inset: 0 0 0 160px;
+				width: auto;
 			}
 
 			> .slideChrome {
@@ -247,13 +249,12 @@
 				break-after: avoid;
 			}
 
-			.slideContent {
-				font-size: 12pt;
-			}
+			.slideContent { font-size: 12pt; }
+			.slideNumber { font-size: 9pt; }
+		}
 
-			.slideNumber {
-				font-size: 9pt;
-			}
+		.slideThumbs {
+			display: none;
 		}
 	}
 }

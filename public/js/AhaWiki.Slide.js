@@ -1,7 +1,8 @@
 // Screen presentation for InterpreterSlide. The server renders a `.slideDeck` of `.slide` sections
-// (see InterpreterSlide.scala); this shows them one at a time with keyboard/click navigation and
-// fullscreen. The index math is a handful of pure functions on window.AhaWiki.Slide so it is unit
-// tested directly (test/ahawiki.slide.test.mjs); the DOM wiring below runs only in a browser.
+// (see InterpreterSlide.scala); this shows them one at a time with keyboard/click navigation,
+// fullscreen, an overview grid and a filmstrip rail. The index math is a handful of pure functions
+// on window.AhaWiki.Slide so it is unit tested directly (test/ahawiki.slide.test.mjs); the DOM
+// wiring below runs only in a browser.
 //
 // Presentation only: without this script the deck degrades to the slides stacked and readable
 // (_slide.less), and print always shows every slide as a static handout regardless of this file.
@@ -39,6 +40,11 @@
         return;
     }
 
+    // Thumbnails are rendered at this fixed design size and scaled down with transform, so a slide's
+    // fixed-px spacing shrinks with the thumbnail rather than overflowing it.
+    var DESIGN_W = 1280;
+    var DESIGN_H = 720;
+
     function initDeck(deck) {
         var slides = Array.prototype.slice.call(deck.querySelectorAll('.slide'));
         var total = slides.length;
@@ -47,14 +53,23 @@
         }
 
         var counterEl = deck.querySelector('.slideCurrent');
+        var filmBtn = deck.querySelector('.slideFilmstrip');
+        var overBtn = deck.querySelector('.slideOverview');
+        var fullBtn = deck.querySelector('.slideFullscreen');
         // The deep-link (#/n) and hash updates make sense for one deck per page; with several decks a
         // shared hash would fight, so only a lone deck reads and writes it.
         var lone = document.querySelectorAll('.slideDeck').length === 1;
         var index = 0;
-        var rail = null; // the filmstrip rail, built lazily on first use
+        var thumbs = null; // thumbnail container (clones), built lazily and shared by both modes
 
         // Present view is primary: switch from the stacked fallback to one-at-a-time.
         deck.classList.add('presenting');
+
+        function setPressed(btn, on) {
+            if (btn) {
+                btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+            }
+        }
 
         function paint() {
             for (var i = 0; i < slides.length; i++) {
@@ -63,12 +78,15 @@
             if (counterEl) {
                 counterEl.textContent = String(index + 1);
             }
-            if (rail) {
-                var items = rail.querySelectorAll('.slideRailItem');
+            if (thumbs) {
+                var items = thumbs.querySelectorAll('.slideThumbItem');
                 for (var j = 0; j < items.length; j++) {
                     items[j].classList.toggle('current', j === index);
                 }
             }
+            setPressed(filmBtn, deck.classList.contains('filmstrip'));
+            setPressed(overBtn, deck.classList.contains('overview'));
+            setPressed(fullBtn, document.fullscreenElement === deck);
         }
 
         function to(i) {
@@ -97,31 +115,20 @@
             }
         }
 
-        // Overview: show every slide as a grid of thumbnails; clicking one (handled in the deck
-        // click listener) jumps to it and leaves overview. CSS does the layout via `.overview`.
-        function toggleOverview() {
-            deck.classList.remove('filmstrip'); // overview and filmstrip are separate views
-            deck.classList.toggle('overview');
-            if (deck.classList.contains('overview') && slides[index]) {
-                slides[index].scrollIntoView({ block: 'nearest' });
-            }
-        }
-
-        // Filmstrip: a left rail of slide thumbnails beside the current slide (PowerPoint's normal
-        // view). The rail is clones of the slides, built once; a click on a rail item jumps to that
-        // slide. CSS lays it out via `.filmstrip`.
-        function buildRail() {
-            if (rail) {
+        // One clone per slide, shared by the overview grid and the filmstrip rail. Built once.
+        function buildThumbs() {
+            if (thumbs) {
                 return;
             }
-            rail = document.createElement('div');
-            rail.className = 'slideRail';
+            thumbs = document.createElement('div');
+            thumbs.className = 'slideThumbs';
             slides.forEach(function (slide, i) {
                 var item = document.createElement('button');
                 item.type = 'button';
-                item.className = 'slideRailItem';
+                item.className = 'slideThumbItem';
                 item.setAttribute('data-index', String(i));
                 var clone = slide.cloneNode(true);
+                clone.classList.remove('current');
                 clone.removeAttribute('id');
                 clone.removeAttribute('data-index');
                 var withId = clone.querySelectorAll('[id]');
@@ -131,23 +138,66 @@
                 item.appendChild(clone);
                 item.addEventListener('click', function (e) {
                     e.stopPropagation();
+                    var wasOverview = deck.classList.contains('overview');
                     to(i);
+                    if (wasOverview) {
+                        deck.classList.remove('overview'); // a pick in overview jumps and returns to the slide
+                        paint();
+                    }
                 });
-                rail.appendChild(item);
+                thumbs.appendChild(item);
             });
-            deck.insertBefore(rail, deck.firstChild);
+            deck.insertBefore(thumbs, deck.firstChild);
+        }
+
+        // Scale each clone to fill its item: render at the fixed design size, then transform:scale.
+        // Recomputed on resize because the grid's item width changes with it.
+        function sizeThumbs() {
+            if (!thumbs) {
+                return;
+            }
+            var items = thumbs.querySelectorAll('.slideThumbItem');
+            for (var i = 0; i < items.length; i++) {
+                var w = items[i].clientWidth;
+                if (!w) {
+                    continue;
+                }
+                var scale = w / DESIGN_W;
+                items[i].style.height = Math.round(DESIGN_H * scale) + 'px';
+                var clone = items[i].querySelector('.slide');
+                if (clone) {
+                    clone.style.width = DESIGN_W + 'px';
+                    clone.style.height = DESIGN_H + 'px';
+                    clone.style.transform = 'scale(' + scale + ')';
+                }
+            }
+        }
+
+        function toggleOverview() {
+            if (deck.classList.contains('overview')) {
+                deck.classList.remove('overview');
+                paint();
+                return;
+            }
+            deck.classList.remove('filmstrip'); // overview and filmstrip are separate views
+            buildThumbs();
+            deck.classList.add('overview');
+            sizeThumbs();
+            paint();
         }
 
         function toggleFilmstrip() {
             if (deck.classList.contains('filmstrip')) {
                 deck.classList.remove('filmstrip');
+                paint();
                 return;
             }
             deck.classList.remove('overview');
-            buildRail();
+            buildThumbs();
             deck.classList.add('filmstrip');
-            paint(); // highlight the current rail item
-            var current = rail.querySelector('.slideRailItem.current');
+            sizeThumbs();
+            paint();
+            var current = thumbs.querySelector('.slideThumbItem.current');
             if (current) {
                 current.scrollIntoView({ block: 'nearest' });
             }
@@ -190,33 +240,21 @@
         }
         paint();
 
-        // Click behaviour depends on the mode: in overview, click a thumbnail to jump to it and
-        // leave overview; otherwise click the slide area to advance. Chrome clicks are its buttons'.
+        // Click the stage to advance; chrome buttons and thumbnail items handle their own clicks.
         deck.addEventListener('click', function (e) {
-            if (e.target.closest && (e.target.closest('.slideChrome') || e.target.closest('.slideRail'))) {
-                return; // chrome buttons and rail items handle their own clicks
-            }
-            if (deck.classList.contains('overview')) {
-                var section = e.target.closest && e.target.closest('.slide');
-                if (section) {
-                    to(slides.indexOf(section));
-                }
-                deck.classList.remove('overview');
+            if (e.target.closest && (e.target.closest('.slideChrome') || e.target.closest('.slideThumbs'))) {
                 return;
             }
             go(1);
         });
 
+        if (filmBtn) { filmBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleFilmstrip(); }); }
+        if (overBtn) { overBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleOverview(); }); }
+        if (fullBtn) { fullBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleFullscreen(); }); }
         var prev = deck.querySelector('.slidePrev');
         var next = deck.querySelector('.slideNext');
-        var film = deck.querySelector('.slideFilmstrip');
-        var over = deck.querySelector('.slideOverview');
-        var full = deck.querySelector('.slideFullscreen');
         if (prev) { prev.addEventListener('click', function (e) { e.stopPropagation(); go(-1); }); }
         if (next) { next.addEventListener('click', function (e) { e.stopPropagation(); go(1); }); }
-        if (film) { film.addEventListener('click', function (e) { e.stopPropagation(); toggleFilmstrip(); }); }
-        if (over) { over.addEventListener('click', function (e) { e.stopPropagation(); toggleOverview(); }); }
-        if (full) { full.addEventListener('click', function (e) { e.stopPropagation(); toggleFullscreen(); }); }
 
         // One document-level listener per deck, guarded so only the active deck responds: the
         // fullscreen deck while fullscreen, otherwise the deck that holds focus (a click focuses it,
@@ -229,6 +267,18 @@
             if (active) {
                 handleKey(e);
             }
+        });
+
+        // Keep thumbnails scaled correctly when the grid reflows on resize.
+        window.addEventListener('resize', function () {
+            if (deck.classList.contains('overview') || deck.classList.contains('filmstrip')) {
+                sizeThumbs();
+            }
+        });
+
+        // The fullscreen button's pressed state follows the actual fullscreen element.
+        document.addEventListener('fullscreenchange', function () {
+            setPressed(fullBtn, document.fullscreenElement === deck);
         });
     }
 
