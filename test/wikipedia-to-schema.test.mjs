@@ -70,8 +70,11 @@ test('labels schema.org has no concept for are left unmapped on purpose', () => 
     // schema.org 26.0 and has no property that means it; the header comment says why one by one.
     // Mapping any of them to something that merely sounds close would read as correct.
     for (const label of [
-        'Cinematography', 'Designed by', 'Narrated by', 'Volumes', 'Blood type',
+        'Cinematography', '촬영', 'Designed by', 'Narrated by', 'Volumes', 'Blood type',
         'Company type', 'Type of business', 'Type of site', 'Products', 'Services',
+        // The value is a Q-number: sameAs wants a URL and identifier cannot say what it
+        // identifies. Both pages carrying it deleted the row.
+        'Wikidata',
     ]) {
         assert.equal(WikipediaToSchemaProperty[label], undefined, `${label} should not be mapped`);
         assert.equal(convertProperty(label), label, `${label} should pass through unchanged`);
@@ -80,6 +83,31 @@ test('labels schema.org has no concept for are left unmapped on purpose', () => 
     // If schema.org ever grows any of these, the comment block above is what to revisit.
     for (const property of ['cinematographer', 'narrator', 'numberOfVolumes', 'bloodType'])
         assert.equal(schemaOrgProperties().has(property), false, `schema.org now has ${property}; revisit`);
+});
+
+test('labels the author had already corrected by hand are now in the table', () => {
+    // Harvested from the `# <original label>` comments the importer leaves above each property:
+    // where the label passed through unmapped and the line below it was then corrected, that
+    // correction is the answer. The pages were already right; the table was not, so every
+    // similar article had to be fixed again by hand.
+    assert.equal(convertProperty('Original run'), 'startDate');
+    assert.equal(convertProperty('Place of origin'), 'birthPlace');
+    assert.equal(convertProperty('Team affiliations'), 'memberOf');
+    assert.equal(convertProperty('Partnerships'), 'colleague');
+    assert.equal(convertProperty('Published by'), 'publisher');
+    assert.equal(convertProperty('Original network'), 'publisher');
+    assert.equal(convertProperty('Episodes'), 'numberOfEpisodes');
+    assert.equal(convertProperty('Final release'), 'softwareVersion');
+    assert.equal(convertProperty('Domain'), 'about');
+    assert.equal(convertProperty('Traded as'), 'tickerSymbol');
+    assert.equal(convertProperty('개장'), 'foundingDate');
+
+    // 상태 was mapped and Status was not, which is how POSIX ended up dropping the row.
+    assert.equal(convertProperty('Status'), convertProperty('상태'));
+
+    // Both halves of a pair that already existed, so the new entries did not displace them.
+    assert.equal(convertProperty('Origin'), 'birthPlace');
+    assert.equal(convertProperty('Stable release'), 'softwareVersion');
 });
 
 test('labels found written by hand on the wiki now have their mapping', () => {

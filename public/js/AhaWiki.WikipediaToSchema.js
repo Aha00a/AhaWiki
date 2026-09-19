@@ -95,8 +95,10 @@
      * schema.org 26.0 에 개념 자체가 없다. 소유자와 같은 이유로 매핑하지 않는다 — 찾아보고
      * 없어서 비운 것이니, 비슷한 이름을 찾아 채워 넣지 말 것.
      *
-     *  * `Cinematography` — Movie 에 촬영감독 속성이 없다. `director`·`editor`·`musicBy` 는 있는데
-     *    촬영만 없다. 붙일 곳이 없어서 통과시킨다.
+     *  * `Cinematography`·`촬영` — Movie 에 촬영감독 속성이 없다. `director`·`editor`·`musicBy` 는
+     *    있는데 촬영만 없다. 붙일 곳이 없어서 통과시킨다.
+     *  * `Wikidata` — 값이 `Q312` 같은 항목 번호다. `sameAs` 는 URL 을 받고 `identifier` 는 무엇의
+     *    식별자인지 말하지 못한다. 두 문서(세종문화회관·Forrest Gump)에서 다 지워졌다.
      *  * `Designed by` — 프로그래밍 언어 페이지 15개가 쓰는 이름이다. `ComputerLanguage` 는
      *    Intangible 이라 `creator`(domain CreativeWork) 가 걸리지 않는다.
      *  * `Narrated by` — Movie 에 내레이터 속성이 없다. `readBy` 는 domain 이 Audiobook 이고,
@@ -145,10 +147,15 @@
         "Directed by": "director",
         "Distributed by": "publisher",
         "Divisions": "department",
+        // What a standard or an article is about. POSIX had this corrected to `about` by hand.
+        "Domain": "about",
         "Edited by": "editor",
         "Editor": "editor",
+        "Episodes": "numberOfEpisodes",
         "Executive producer": "producer",
         "Executive producers": "producer",
+        // Same shape as "Stable release": the row names a version, not a date.
+        "Final release": "softwareVersion",
         "Formation": "foundingDate",
         "Founded": "foundingDate",
         "Founder": "founder",
@@ -192,9 +199,17 @@
         "Origin": "birthPlace",
         "Original author": "creator",
         "Original language": "inLanguage",
+        "Original network": "publisher",
+        // Manga and television infoboxes write the serialisation period here. The row usually
+        // holds a range; SchemaDateProperties reduces it to the start, which is what startDate is.
+        "Original run": "startDate",
         "Other names": "alternateName",
         "Parent organization": "parentOrganization",
         "Parents": "parent",
+        // Comic-character infoboxes. colleague's domain is Person, which is the class these pages
+        // carry; Tony Stark had it corrected by hand.
+        "Partnerships": "colleague",
+        "Place of origin": "birthPlace",
         "Platform": "runtimePlatform",
         "Price": "offers",
         "Producer": "producer",
@@ -206,6 +221,7 @@
         "Production locations": "contentLocation",
         "Productioncompanies": "productionCompany",
         "Productioncompany": "productionCompany",
+        "Published by": "publisher",
         "Region": "addressRegion",
         // Another standard the article points at. citation is "a citation or reference to another
         // creative work", domain CreativeWork. POSIX carried this label through untouched, spaces
@@ -220,7 +236,15 @@
         "Spouses": "spouse",
         "Stable release": "softwareVersion",
         "Starring": "actor",
+        // The Korean 상태 was mapped and the English label was not; POSIX shows the asymmetry.
+        "Status": "status",
         "Subsidiaries": "subOrganization",
+        // Comic-character infoboxes name the teams a character belongs to.
+        "Team affiliations": "memberOf",
+        // The row lists exchanges and index memberships; the ticker is what schema.org holds, so
+        // the values still need trimming by hand. Mapping the name is still better than letting
+        // "Traded as" through as a JSON-LD key.
+        "Traded as": "tickerSymbol",
         "Treatments": "possibleTreatment",
         "Type": "applicationCategory",
         "URL": "url",
@@ -261,6 +285,10 @@
         "지리 좌표계": "geo",
         // foundingDate's range is Date, so unlike yearBuilt this keeps the month and day.
         "설립일": "foundingDate",
+        // 개장 is when a venue opened, which is its founding. StadiumOrArena reaches Organization
+        // through SportsActivityLocation -> LocalBusiness, so foundingDate's domain covers it;
+        // 서울월드컵경기장 had this corrected by hand.
+        "개장": "foundingDate",
         "완공": "yearBuilt",
         "준공": "yearBuilt",
         "완공일": "yearBuilt",
