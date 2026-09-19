@@ -65,6 +65,36 @@ test('ownership is left unmapped on purpose', () => {
     assert.equal(schemaOrgProperties().has('owner'), false, 'if schema.org ever adds `owner`, revisit this');
 });
 
+test('labels schema.org has no concept for are left unmapped on purpose', () => {
+    // From the 2026-09-19 sweep of every Schema block on the wiki. Each was looked up in
+    // schema.org 26.0 and has no property that means it; the header comment says why one by one.
+    // Mapping any of them to something that merely sounds close would read as correct.
+    for (const label of [
+        'Cinematography', 'Designed by', 'Narrated by', 'Volumes', 'Blood type',
+        'Company type', 'Type of business', 'Type of site', 'Products', 'Services',
+    ]) {
+        assert.equal(WikipediaToSchemaProperty[label], undefined, `${label} should not be mapped`);
+        assert.equal(convertProperty(label), label, `${label} should pass through unchanged`);
+    }
+
+    // If schema.org ever grows any of these, the comment block above is what to revisit.
+    for (const property of ['cinematographer', 'narrator', 'numberOfVolumes', 'bloodType'])
+        assert.equal(schemaOrgProperties().has(property), false, `schema.org now has ${property}; revisit`);
+});
+
+test('labels found written by hand on the wiki now have their mapping', () => {
+    // Each of these reached a page as a raw infobox label or a hand-typed name that is not a
+    // property, and stayed there because the table had no entry.
+    assert.equal(convertProperty('Organization'), 'sourceOrganization');
+    assert.equal(convertProperty('Related standards'), 'citation');
+
+    // These were already in the table; the pages carrying the raw label predate the entries.
+    assert.equal(convertProperty('Developer'), 'author');
+    assert.equal(convertProperty('Available in'), 'inLanguage');
+    assert.equal(convertProperty('Screenplay by'), 'author');
+    assert.equal(convertProperty('Story by'), 'author');
+});
+
 test('address labels that unambiguously mean a place map to the address parts', () => {
     assert.equal(convertProperty('Address'), 'address');
     assert.equal(convertProperty('Street address'), 'streetAddress');

@@ -90,6 +90,27 @@
      * 영화·드라마 infobox 가 압도적으로 많아서다. 건물·장소라면 `addressCountry` 가 맞지만,
      * 이 표는 행 이름만 보고 페이지의 타입을 모른다. 장소인 것이 확실한 이름들(`소재지` 등)만
      * 주소 계열로 보낸다.
+     *
+     * ⓘ '''아래 이름들도 일부러 비워 두었다.''' 2026-09-19 위키 전수 점검에서 나온 것들인데,
+     * schema.org 26.0 에 개념 자체가 없다. 소유자와 같은 이유로 매핑하지 않는다 — 찾아보고
+     * 없어서 비운 것이니, 비슷한 이름을 찾아 채워 넣지 말 것.
+     *
+     *  * `Cinematography` — Movie 에 촬영감독 속성이 없다. `director`·`editor`·`musicBy` 는 있는데
+     *    촬영만 없다. 붙일 곳이 없어서 통과시킨다.
+     *  * `Designed by` — 프로그래밍 언어 페이지 15개가 쓰는 이름이다. `ComputerLanguage` 는
+     *    Intangible 이라 `creator`(domain CreativeWork) 가 걸리지 않는다.
+     *  * `Narrated by` — Movie 에 내레이터 속성이 없다. `readBy` 는 domain 이 Audiobook 이고,
+     *    `actor` 로 보내면 주연들과 한 배열로 합쳐져 내레이션이었다는 사실이 사라진다.
+     *  * `Volumes` — 전체 권수를 담을 속성이 없다. `volumeNumber` 는 "몇 번째 권" 이라 뜻이 다르고
+     *    `numberOfVolumes` 는 없다.
+     *  * `Blood type` — Person 에 없다.
+     *  * `Company type`·`Type of business`·`Type of site` — 조직/사이트의 «종류» 를 담을 속성이
+     *    없다. `additionalType` 은 range 가 타입 URL 이라 "Public" 같은 값이 들어갈 자리가 아니다.
+     *  * `Products`·`Services` — Organization 에 없다. `makesOffer`·`hasOfferCatalog` 는 중첩
+     *    객체라 이 평평한 표로는 못 만든다. 소유자와 같은 사정이다.
+     *
+     * 이 이름들이 붙은 문서는 2026-09-19 기준 그대로 두기로 했다(소유자 결정). 화면에는 계속
+     * 보이고, JSON-LD 에는 schema.org 가 모르는 키로 나간다 — 소비자가 무시할 뿐 깨지지 않는다.
      */
     const WikipediaToSchemaProperty = {
         "Abbreviation": "alternateName",
@@ -163,6 +184,10 @@
         "Occupation": "jobTitle",
         "Occupations": "hasOccupation",
         "Operating system": "operatingSystem",
+        // The body a standard is maintained by. sourceOrganization is "the Organization on whose
+        // behalf the creator was working", domain CreativeWork — which is the class a standard
+        // gets. POSIX had a hand-written lowercase `organization`, which is not a property.
+        "Organization": "sourceOrganization",
         "Organizer": "organizer",
         "Origin": "birthPlace",
         "Original author": "creator",
@@ -182,6 +207,10 @@
         "Productioncompanies": "productionCompany",
         "Productioncompany": "productionCompany",
         "Region": "addressRegion",
+        // Another standard the article points at. citation is "a citation or reference to another
+        // creative work", domain CreativeWork. POSIX carried this label through untouched, spaces
+        // and all, so it reached the JSON-LD as the key "Related standards".
+        "Related standards": "citation",
         "Release date": "datePublished",
         "Release dates": "datePublished",
         "Release": "startDate",
