@@ -48,6 +48,14 @@ object SchemaOrgUnit {
       true
     )
 
+    // Ours and schema.org's, told apart — the class pages link to schema.org only for the latter,
+    // because https://schema.org/Standard is a 404.
+    assertEquals(CalculatedSchemaOrg.isCustom("Standard"), true)
+    assertEquals(CalculatedSchemaOrg.isCustom("Poem"), true)
+    assertEquals(CalculatedSchemaOrg.isCustom("CreativeWork"), false)
+    assertEquals(CalculatedSchemaOrg.isCustom("ShortStory"), false)
+    assertEquals(CalculatedSchemaOrg.isCustom("NotAClassAnywhere"), false)
+
     // And the three that just gained one are out of it, under the parents they declare.
     {
       val rendered = CalculatedSchemaOrg.renderExistingPages(Map(

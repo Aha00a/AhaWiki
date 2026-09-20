@@ -151,6 +151,22 @@ object DefaultPageLogic {
     if(schema(0).isUpper) schemaClassPageContent(schema, schemaType)
     else schemaPropertyPageContent(schema, schemaType)
 
+  /**
+   * The line under a term's description saying where it is defined.
+   *
+   * schema.org's own terms link to their page there. Ours have no page there — that is the whole
+   * reason they are in public/schema.org/custom.jsonld — so the same link would send the reader to
+   * a 404, which is what these pages did from the moment defining the classes made them exist.
+   *
+   * The parent is named here rather than linked from the heading because this template draws no
+   * hierarchy for any class, ours or schema.org's.
+   */
+  private def schemaSourceLine(schemaType: CalculatedSchemaOrg.SchemaType): String =
+    if (CalculatedSchemaOrg.isCustom(schemaType.id))
+      s"""''schema.org 에 없어서 이 위키가 정의한 class 입니다. 상위는 ["schema:${schemaType.subClassOf.headOption.getOrElse("Thing")}"] 입니다.''"""
+    else
+      s"[https://schema.org/${schemaType.id}]"
+
   private def schemaClassPageContent(schema: String, schemaType: CalculatedSchemaOrg.SchemaType)(implicit wikiContext: ContextWikiPage, connection: Connection): String = {
     implicit val site: models.tables.Site = wikiContext.site
     val listSchemaOrg: List[models.tables.CalculatedSchemaOrg] = models.tables.CalculatedSchemaOrg.selectWhereCls(schema)
@@ -160,7 +176,7 @@ object DefaultPageLogic {
        |[[[#!Markdown
        |${schemaType.comment.replaceAll("\\\\n", "\n")}
        |]]]
-       |[https://schema.org/${schemaType.id}]
+       |${schemaSourceLine(schemaType)}
        |== Pages
        |<Columns count="3" gap="16" minWidth="220">
        |${listSchemaOrgWithPermission.map(s => s""" 1. ["${s.page}"]""").mkString("\n")}
@@ -178,7 +194,7 @@ object DefaultPageLogic {
        |[[[#!Markdown
        |${schemaType.comment.replaceAll("\\\\n", "\n")}
        |]]]
-       |[https://schema.org/${schemaType.id}]
+       |${schemaSourceLine(schemaType)}
        |${groupedByClassAndValue.toSeq.sortBy(_._1).map { case (cls, byValue) =>
       s"""== ["schema:$cls" ${EnglishCaseConverter.pascalCase2TitleCase(cls)}]
          |${byValue.toSeq.sortBy(_._1).map { case (value, pages) =>

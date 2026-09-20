@@ -225,6 +225,14 @@ object CalculatedSchemaOrg {
   lazy val seqAll:Seq[SchemaType] = seqSchemaOrg ++ seqCustom
 
   /**
+   * Whether this term is one of ours rather than schema.org's.
+   *
+   * Anything that links to `https://schema.org/<id>` has to ask first: for our own terms that URL
+   * is a 404, and the four class pages carried one from the day they started existing.
+   */
+  def isCustom(id: String): Boolean = seqCustom.exists(_.id == id)
+
+  /**
    * References to terms the filter above dropped, removed.
    *
    * Ten schema.org classes name a bundled foreign class as a parent — `Brand` is a
