@@ -66,13 +66,24 @@
 === 지금 정의한 것
 
 [[[#!Table tsv 1
-class	부모	쓰는 곳
-`Standard`	`CreativeWork`	ISO 3166 계열 5개, ISO 8601, ISO 4217, BCP 47, RFC 2119
+class	부모	쓰는 곳	제안할 만한가
+`Standard`	`CreativeWork`	ISO 3166 계열 5개, ISO 8601, ISO 4217, BCP 47, RFC 2119	'''그렇다'''
+`Poem`	`CreativeWork`	꽃, 풀	'''그렇다'''
+`Whiskey`	`Product`	The Macallan Sherry Oak 12 Years Old	아니다
+`Cognac`	`Product`	Rémy Martin	아니다
 ]]]
 
-`Standard` 는 '''새 property 가 하나도 필요 없다.''' 쓰이는 것은 `name`·`url`·`image`·`isPartOf`·`hasPart` 뿐이고 전부 `CreativeWork` 상속분이다 — `isPartOf`·`hasPart` 가 표준과 그 부분(`ISO 3166` ↔ `ISO 3166-1`)의 관계를 그대로 담는다. [https://schema.org/Legislation Legislation] 이 같은 모양의 선례다: `CreativeWork` 하위의 규범 문서 타입이고, 외부 공동체 어휘(ELI)에서 schema.org 로 들어왔다.
+넷 다 '''새 property 가 하나도 필요 없다.''' 부모만 정해 주면 끝난다.
 
-JSON-LD 에는 '''`"@type": "Standard"` 그대로''' 나간다. `CreativeWork` + `additionalType` 으로 희석하지 않기로 했다(2026-09-20 소유자 결정) — 주장하려는 것이 «이것은 표준이다» 라서다.
+`Standard` — 쓰이는 것은 `name`·`url`·`image`·`isPartOf`·`hasPart` 뿐이고 전부 `CreativeWork` 상속분이다. `isPartOf`·`hasPart` 가 표준과 그 부분(`ISO 3166` ↔ `ISO 3166-1`)의 관계를 그대로 담는다. [https://schema.org/Legislation Legislation] 이 같은 모양의 선례다: `CreativeWork` 하위의 규범 문서 타입이고, 외부 공동체 어휘(ELI)에서 schema.org 로 들어왔다.
+
+`Poem` — `author`·`datePublished` 뿐이고 둘 다 domain 이 `CreativeWork` 다. '''schema.org 에 이미 [https://schema.org/ShortStory ShortStory] 와 [https://schema.org/Play Play] 가 있다''' — `CreativeWork` 하위의 문학 형식 타입들이다. 그러니 시가 없는 것은 일부러 거칠게 둔 결과가 아니라 빈자리이고, 그것이 제안이 할 말 전부다.
+
+`Whiskey`·`Cognac` — `countryOfOrigin` 의 domain 에 `Product` 가 있어서 `Product` 가 부모다. '''제안 대상은 아니다''': schema.org 에는 음료 제품 class 가 아예 없다 — `Wine` 도 `Beer` 도 `FoodProduct` 도 없고, `Winery` 같은 업소 타입과 Intangible 인 `MenuItem` 뿐이다. 빠진 것이 이름 하나가 아니라 가지 하나라서, 이름 하나를 제안하는 것은 앞뒤가 안 맞는다.
+
+둘은 '''형제'''다. 코냑은 브랜디이지 위스키가 아니다. 중간 class(`Spirit`·`AlcoholicBeverage`)를 두지 않은 것은 페이지 두 개에 가지를 새로 만드는 일이라서다 — 세 번째 술이 생기면 그때 만든다.
+
+JSON-LD 에는 '''정의한 이름 그대로''' 나간다. `CreativeWork`·`Product` + `additionalType` 으로 희석하지 않기로 했다(2026-09-20 소유자 결정) — 주장하려는 것이 «이것은 표준이다», «이것은 시다» 라서다.
 
 === 트리 접붙이기
 

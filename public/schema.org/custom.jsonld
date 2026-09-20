@@ -1,11 +1,29 @@
 {
-    "comment": "Classes this wiki needs that schema.org does not define. Same shape as the transformed vocabulary beside it, so CalculatedSchemaOrg can merge the two without a second parser. Every entry needs `subClassOf` naming a real schema.org class: that is what gives it a place in the class tree and a set of inherited properties, and it is also the whole of a proposal to schema.org. See docs/ahawiki.net/'Dev SchemaOrgVocabulary'.",
+    "comment": "Classes this wiki needs that schema.org does not define. Same shape as the transformed vocabulary beside it, so CalculatedSchemaOrg can merge the two without a second parser. Every entry needs `subClassOf` naming a real schema.org class: that is what gives it a place in the class tree and a set of inherited properties. Whether an entry is also worth proposing to schema.org is a separate question, answered per entry below. See docs/ahawiki.net/'Dev SchemaOrgVocabulary'.",
     "graph": [
         {
             "id": "Standard",
             "type": "Class",
             "subClassOf": "CreativeWork",
             "comment": "A published technical standard: a normative document issued by a standards body, such as ISO 8601, ISO 4217, BCP 47 or RFC 2119. Modelled on Legislation, which is the same shape — a CreativeWork subtype for a normative document — and which entered schema.org from an outside community's vocabulary. Needs no properties of its own: the nine pages using it are served by name, url, image, isPartOf and hasPart, all inherited, with isPartOf and hasPart carrying the relation between a standard and its parts (ISO 3166 to ISO 3166-1)."
+        },
+        {
+            "id": "Poem",
+            "type": "Class",
+            "subClassOf": "CreativeWork",
+            "comment": "A poem. schema.org already has ShortStory and Play as CreativeWork subtypes for literary forms, which makes the absence of a poem a gap rather than a deliberate coarseness — the same argument a proposal would make. Needs no properties of its own: the pages using it record author and datePublished, both inherited."
+        },
+        {
+            "id": "Whiskey",
+            "type": "Class",
+            "subClassOf": "Product",
+            "comment": "A whisky. Product is the parent because the pages record countryOfOrigin, whose domain includes Product, alongside name, url and image. Not a candidate to propose: schema.org has no beverage product class at all — no Wine, no Beer, no FoodProduct, only establishment types like Winery and the Intangible MenuItem — so the gap is a whole branch rather than this one name."
+        },
+        {
+            "id": "Cognac",
+            "type": "Class",
+            "subClassOf": "Product",
+            "comment": "A cognac. A sibling of Whiskey rather than a child of it: cognac is a brandy. Both hang directly off Product because an intermediate — Spirit, or AlcoholicBeverage — would be inventing a branch for two pages. Introduce one when a third kind of drink arrives, not before. Not a candidate to propose, for the reason given under Whiskey."
         }
     ]
 }

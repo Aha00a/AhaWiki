@@ -12,15 +12,18 @@ object SchemaOrgUnit {
     // bundles from other vocabularies and the two the prefix stripping renames to `type` and
     // `label`, and plus the classes in public/schema.org/custom.jsonld.
     // test/schema-org-vocabulary.test.mjs asserts the schema.org side of these from the file.
-    assertEquals(logics.CalculatedSchemaOrg.mapAll.size, 3024)
-    assertEquals(logics.CalculatedSchemaOrg.mapClass.size, 940)
+    assertEquals(logics.CalculatedSchemaOrg.mapAll.size, 3027)
+    assertEquals(logics.CalculatedSchemaOrg.mapClass.size, 943)
     assertEquals(logics.CalculatedSchemaOrg.mapProperty.size, 1538)
 
     // A custom class is a class like any other once merged: it has the parent it declares, so it
     // inherits CreativeWork's properties and sits under it in the tree rather than in the flat
     // "Custom" list renderExistingPages falls back to.
-    assertEquals(logics.CalculatedSchemaOrg.seqCustom.map(_.id), Seq("Standard"))
+    assertEquals(logics.CalculatedSchemaOrg.seqCustom.map(_.id), Seq("Standard", "Poem", "Whiskey", "Cognac"))
     assertEquals(logics.CalculatedSchemaOrg.getClassHierarchy("Standard"), Seq("Standard", "CreativeWork", "Thing"))
+    assertEquals(logics.CalculatedSchemaOrg.getClassHierarchy("Poem"), Seq("Poem", "CreativeWork", "Thing"))
+    assertEquals(logics.CalculatedSchemaOrg.getClassHierarchy("Whiskey"), Seq("Whiskey", "Product", "Thing"))
+    assertEquals(logics.CalculatedSchemaOrg.getClassHierarchy("Cognac"), Seq("Cognac", "Product", "Thing"))
 
     // Every custom class must name a parent schema.org really has, or it is grafted onto nothing
     // and its pages fall back to the flat list without saying why.
@@ -38,12 +41,24 @@ object SchemaOrgUnit {
       assertEquals(rendered.contains("""["schema:Standard" Standard] (1)"""), true)
     }
 
-    // A class that is in neither the vocabulary nor custom.jsonld still renders, in that flat
-    // section — which is what the other three the wiki uses (Poem, Cognac, Whiskey) rely on.
+    // A class in neither the vocabulary nor custom.jsonld still renders, in that flat section.
+    // The example used to be Whiskey, until Whiskey was given a parent and left it.
     assertEquals(
-      CalculatedSchemaOrg.renderExistingPages(Map("Whiskey" -> Seq("The Macallan"))).contains("= Custom"),
+      CalculatedSchemaOrg.renderExistingPages(Map("NotAClassAnywhere" -> Seq("Somewhere"))).contains("= Custom"),
       true
     )
+
+    // And the three that just gained one are out of it, under the parents they declare.
+    {
+      val rendered = CalculatedSchemaOrg.renderExistingPages(Map(
+        "Poem" -> Seq("꽃"),
+        "Whiskey" -> Seq("The Macallan Sherry Oak 12 Years Old"),
+        "Cognac" -> Seq("Rémy Martin"),
+      ))
+      assertEquals(rendered.contains("= Custom"), false)
+      assertEquals(rendered.contains("""["schema:Product" Product]"""), true)
+      assertEquals(rendered.contains("""["schema:Poem" Poem] (1)"""), true)
+    }
 
 
     val schemaType: logics.CalculatedSchemaOrg.SchemaType = logics.CalculatedSchemaOrg.mapAll("Movie")
