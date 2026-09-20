@@ -72,6 +72,44 @@
 AhaWiki API에서는 `RequestWrapper.forUser(user)`로 인증 사용자를 `ContextWikiPage`와 `WikiPermission`에 전달한다.
 이 처리가 없으면 인증은 성공해도 권한 계산이 익명 사용자 기준으로 동작할 수 있다.
 
+== Bearer 인증은 v1 경로에서만 동작한다
+
+`Authorization: Bearer <key>` 를 읽는 코드는 `SessionLogic.getApiKeyWithUser` 하나뿐이고, 그것을 부르는 것은 `ApiV1` 뿐이다.
+그 밖의 endpoint 는 어떤 key 를 붙여도 key 를 보지 않는다.
+
+그런데 헤더를 그냥 무시하지도 않는다. CSRF filter 를 건너뛸 경로를 정하는 것은 `app/Filters.scala` 이고, 거기서 빠지는 경로는 CSRF 검사를 받는다.
+Play 의 기본값 `play.filters.csrf.header.protectHeaders` 는 `Cookie` 나 `Authorization` 이 붙은 요청만 검사 대상으로 삼는데, 이 저장소는 `conf/base.conf` 에서 그 값을 바꾸지 않는다.
+그래서 검사 대상이 아니던 요청에 `Authorization` 헤더를 붙이는 순간 CSRF token 이 필요해지고, token 이 없으면 `403` 이다.
+
+'''이 `403` 은 key 가 틀렸다는 뜻이 아니다.''' key 는 읽히지도 않는다.
+유효한 key 든 아무 문자열이든 결과가 같고, 헤더를 빼면 같은 요청이 그대로 성공한다.
+응답 본문이 Play 의 기본 오류 페이지라 제목에 `Unauthorized` 가 찍히는 것도 헷갈리는 이유다 — 인증이 거절된 것이 아니다.
+
+2026-09-19 에 `https://aha00a.com` 에서 확인한 결과:
+
+[[[#!Table tsv 1
+요청	Authorization	결과
+`POST /api/renderAhaMark/:pageName`	없음	`200`
+`POST /api/renderAhaMark/:pageName`	아무 문자열	`403`
+`POST /api/renderAhaMark/:pageName`	유효한 key	`403`
+`GET /api/v1/pages`	없음	`401`
+`GET /api/v1/pages`	유효한 key	`200`
+]]]
+
+상태 코드로 구분하면, AhaWiki API 는 key 가 없거나 잘못됐을 때 `401` 을 주고 권한이 없을 때 `403` 을 준다(위 «인증과 권한»).
+AhaWiki API 밖에서 받는 `403` 은 둘 중 어느 쪽도 아니라서, key 를 새로 발급하거나 바꿔도 사라지지 않는다.
+
+=== 예전 endpoint 를 부르는 법
+
+ * 스크립트에서는 `Authorization` 헤더 '''없이''' 부른다. `/api/renderAhaMark/...` 같은 예전 endpoint 는 원래 그렇게 쓰는 것이다.
+ * 브라우저는 `Cookie` 를 늘 보내므로 헤더를 빼는 것만으로는 부족하다. `GET /api/csrf` 로 token 을 받아 `Csrf-Token` 헤더에 담아야 한다 — `AhaWiki.Kanban.js` 가 그렇게 한다.
+ * 이 `403` 응답에는 `Set-Cookie: PLAY_SESSION=; Max-Age=0` 이 붙는다. 같은 요청이 `200` 일 때는 붙지 않는다. 브라우저에서 부른 경우 세션 쿠키가 지워지므로, 증상이 `403` 하나로 끝나지 않는다.
+
+=== 하지 않기로 한 것
+
+ * `protectHeaders` 에서 `Authorization` 을 빼지 않았다. 그러면 `403` 은 사라지지만 요청이 인증되지도 않는다 — 예전 endpoint 는 key 를 읽지 않으니 여전히 익명 요청이고, 대신 Play 의 기본 보호 범위만 좁아진다.
+ * CSRF 우회 경로를 넓히지 않았다. 우회해도 되는 것은 Bearer 로 인증하는 endpoint 뿐이고, 나머지는 세션 쿠키로 인증하므로 CSRF 검사가 필요하다.
+
 == API와 UI
 
 === AhaWiki API
@@ -168,7 +206,7 @@ Admin 권한과 CSRF token이 필요하다.
  * API Key는 `SecureRandom`으로 32 bytes를 생성하고 Base64 URL-safe 문자열로 표시한다. 형식은 `ahawiki_<token>`이다.
  * DB에는 raw key를 저장하지 않는다.
  * 고엔트로피 API Key이므로 SHA-256 hash로 비교한다. bcrypt/Argon2 같은 slow hash는 요청마다 불필요한 지연을 만든다.
- * AhaWiki API는 `/api/v1/` 경로에서 CSRF filter를 우회한다.
+ * AhaWiki API는 CSRF filter를 우회한다. 어느 경로가 우회하는지는 `app/Filters.scala`가 정하고, 그 밖의 경로에 `Authorization`을 붙이면 어떻게 되는지는 위 «Bearer 인증은 v1 경로에서만 동작한다»에 있다.
  * 브라우저 세션 기반 Account/Admin API는 기존 CSRF 정책을 유지한다.
  * 별도 API Key 단위 rate limit은 1차 구현에 포함하지 않았다. 현재 전역 IP rate limit은 AhaWiki API에도 적용된다.
 
