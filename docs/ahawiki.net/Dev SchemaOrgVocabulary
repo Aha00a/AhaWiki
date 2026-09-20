@@ -12,7 +12,9 @@
 `tree.pruned.jsonld`	`CalculatedSchemaOrg.jsonTree`	class 계층 트리. `getHtmlTree`·`renderExistingPages` 가 걷는다
 ]]]
 
-`5.0`·`14.0`·`26.0` 셋이 있지만 '''애플리케이션이 읽는 것은 `26.0` 뿐이다''' — `SchemaOrg.scala` 두 곳에 경로가 박혀 있다. 나머지는 과거 것이다.
+`5.0`·`14.0`·`26.0`·`30.1` 넷이 있지만 '''애플리케이션이 읽는 것은 하나뿐이다.''' 어느 것인지는 `SchemaOrg.scala` 의 `private val version` 이 정한다 — 경로를 여러 곳에 적지 않는다. 2026-09-20 에 26.0 에서 30.1 로 올렸고, 나머지는 과거 것이다.
+
+'''테스트와 스크립트는 그 상수를 읽는다.''' `scripts/lib/schema-org.mjs` 가 `SchemaOrg.scala` 에서 버전을 뽑아내므로, 한쪽만 올리고 다른 쪽을 잊어도 조용히 지나가지 않는다.
 
 == 어디서 와서 어떻게 가공되나
 
@@ -31,6 +33,28 @@
 
 `test/schema-org-vocabulary.test.mjs` 가 그 모양을 이름 붙여 고정한다. 가공을 빠뜨리면 런타임이 아니라 거기서 실패한다.
 
+== 우리 것이 아닌 용어를 거른다
+
+`CalculatedSchemaOrg.isSchemaOrgTerm` 이 두 가지를 버린다. '''둘 다 26.0 에서는 아무것도 바꾸지 않고''' 27.0 부터 문다.
+
+ * '''namespace 가 붙은 id.''' 27.0 부터 릴리스가 다른 어휘의 용어를 함께 싣는다 — `bibo:`·`cmns-*:`·`fibo-*:`·`gs1:`·`unece:`·`eli:`. 30.1 기준 '''231개''' 이고 전부 Class 나 Property 로 잡혀서, 거르지 않으면 클래스 브라우저와 property 추천에 우리 것인 양 섞인다.
+ * '''`comment` 가 없는 것.''' 가공이 `rdf:`·`rdfs:` 접두어를 벗기는 것은 어쩔 수 없다 — class 가 자기를 class 라고 말하는 방법이 `rdfs:Class` 라서다. 그 부작용으로 `rdf:type` 과 `rdfs:label` 이 '''맨 `type`·`label` 로''' 도착해 schema.org property 처럼 보이고, 같은 이름의 키와 부딪힌다. 진짜 용어는 모두 `rdfs:comment` 를 갖고 이 둘만 아무것도 없다 — 그 차이로 가른다.
+
+[[[#!Table tsv 1
+	원본	거른 뒤
+`mapAll`	3256	3023
+`mapClass`	1016	939
+`mapProperty`	1694	1538
+]]]
+
+=== 버린 것을 가리키는 참조도 함께 지운다
+
+용어를 버리고 그것을 가리키는 참조를 남기면 계층이 어긋난 채로 돈다. '''schema.org class 10개가 외부 class 를 부모로 선언한다''' — `Brand` 는 `cmns-cls:Classifier` 의 하위이고 `Country` 는 `cmns-ge:GeopoliticalEntity` 의 하위다. 그대로 두면 `getParents` 가 어느 map 에도 없는 이름을 내주고 `getPathHierarchy` 가 그리로 걸어 들어간다.
+
+그래서 `keptOnly` 가 `subClassOf` 와 `domainIncludes` 에서 namespace 붙은 것을 빼낸다. '''10개 모두 schema.org 부모를 함께 갖고 있어서 고아가 되는 class 는 없다.''' `domainIncludes` 는 지금 그런 참조가 없지만 같은 규칙으로 덮어 뒀다 — 다음 릴리스가 조용히 하나 넣는 것을 막는다.
+
+`getClassHierarchy` 는 원래 안전했다. `mapClass.get` 이 None 이면 `Seq()` 로 끝나서 외부 이름이 결과에 끼지 않는다. 문제는 그것을 거치지 않는 `getParents` 쪽이었다.
+
 == 버전 올릴 때
 
 [[[#!Vim bash
@@ -38,30 +62,26 @@
 # 2. index.js 의 버전 목록에 <새버전> 을 더한다  ← 하드코딩이다
 # 3. node index.js
 # 4. transformed/<새버전>/ 셋을 AhaWiki public/schema.org/<새버전>/ 로 옮긴다(줄끝 LF)
-# 5. SchemaOrg.scala 두 곳과 테스트의 경로·개수를 갱신한다
+# 5. SchemaOrg.scala 의 `private val version` 을 바꾼다
+# 6. npm test 와 sbt test 가 개수를 다시 말해 준다
 ]]]
 
 '''`SchemaOrgTransform/index.js` 의 prune 단계는 버전을 하드코딩한다.''' 목록에 없는 버전은 `tree.pruned.jsonld` 가 만들어지지 않고, 그 사실을 아무것도 말해 주지 않는다 — 앞 둘만 나오고 조용히 끝난다.
 
-옮길 때 '''줄끝을 LF 로 맞춘다.''' `SchemaOrgTransform/index.js` 는 CRLF 로 쓰고 이 저장소는 LF 로 정규화한다. 2026-09-20 에 `transformed/26.0` 과 실린 `26.0` 을 비교하니 바이트는 달랐고 파싱한 내용은 완전히 같았다 — 차이는 줄끝뿐이었다. 그 확인이 곧 이 파이프라인이 실린 파일을 재현한다는 증거다.
+옮길 때 '''줄끝을 LF 로 맞춘다.''' `SchemaOrgTransform/index.js` 는 CRLF 로 쓰고 이 저장소는 LF 로 정규화한다. 2026-09-20 에 `transformed/26.0` 과 실려 있던 `26.0` 을 비교하니 바이트는 달랐고 파싱한 내용은 완전히 같았다 — 차이는 줄끝뿐이었다. 그 확인이 곧 이 파이프라인이 실린 파일을 재현한다는 증거다. 30.1 을 더하며 5.0·14.0·26.0 을 다시 돌려 봤고, 셋 다 그대로 재현됐다.
 
-== 26.0 → 30.1 로 올릴 때 알고 있을 것
+개수는 두 곳이 같이 단언한다 — `test/schema-org-vocabulary.test.mjs` 는 파일 쪽에서, `SchemaOrgUnit.scala` 는 적재된 map 쪽에서. 한쪽만 고치면 다른 쪽이 실패한다.
 
-2026-09-20 에 30.1(2026-09-15 배포)을 실제로 가공해 재 본 것이다.
+== 26.0 → 30.1 에서 실제로 달라진 것
 
-[[[#!Table tsv 1
-	26.0	30.1
-`mapAll`	2853	3256
-`mapClass`	906	1016
-`mapProperty`	1469	1694
-]]]
+ * '''사라진 class·property 가 하나도 없다.''' 위키의 어느 페이지도 쓰던 용어를 잃지 않았다.
+ * '''`owner` 가 생겼다''' — `domain=Thing`, `range=Organization·Person`, "A person or organization who owns this Thing." 변환 표가 소유자를 일부러 비워 뒀던 이유가 «schema.org 에 없어서» 였고, 그 자리가 채워졌다. `public/js/AhaWiki.WikipediaToSchema.js` 의 테스트에 «생기면 다시 보라» 고 걸어 둔 줄이 어휘를 바꾸는 순간 실패해서 알았다. 지금은 `Owner`·`Owners`·`소유자`·`소유주`·`소유기관` 이 `owner` 로 간다.
+ * native 신규 property 69개 — `pronouns`·`legalAddress`·`jobDuration`·`referee`·`specification` 등.
 
- * '''사라진 class·property 가 하나도 없다.''' 위키의 어느 페이지도 쓰던 용어를 잃지 않는다.
- * '''`owner` 가 생겼다''' — `domain=Thing`, `range=Organization·Person`. [InterpreterSchema] 의 변환 표가 소유자를 일부러 비워 둔 이유가 «schema.org 에 없어서» 였고, 그 자리가 채워졌다. `public/js/AhaWiki.WikipediaToSchema.js` 의 주석과 테스트에 «생기면 다시 보라» 고 걸어 둔 줄이 이때 터진다.
- * '''외부 어휘가 딸려 온다.''' 27.0 부터 릴리스가 다른 어휘의 용어를 함께 싣는다 — `bibo:`·`cmns-*:`·`fibo-*:`·`gs1:`·`unece:`·`eli:`. 가공은 schema.org 접두어만 벗기므로 이것들은 namespace 를 단 채 남고, 30.1 기준 '''class 77개·property 154개''' 가 `mapClass`·`mapProperty` 에 들어가 클래스 브라우저와 property 추천에 섞인다. 올리기 전에 이것들을 어떻게 할지 정해야 한다.
+== 트리와 어휘가 어긋나는 것
 
-== 트리와 어휘가 어긋나는 세 개
+`tree.pruned.jsonld` 에는 있는데 어휘에는 없는 이름이 `StupidType` 하나 있다. schema.org 자신의 시험용이고, 문서 트리에는 실리는데 어휘 어느 층에도 정의가 없다. 둘이 서로 다른 곳에서 오기 때문에 생기는 일이다. 테스트가 이 목록을 그대로 고정하므로, 달라지면 실패한다.
 
-`tree.pruned.jsonld` 에는 있는데 어휘에는 없는 이름이 셋 있다 — `ProductReturnEnumeration`, `ProductReturnPolicy`, `StupidType`. 앞 둘은 attic 으로 물러났고 `StupidType` 은 schema.org 자신의 시험용이다. 둘이 서로 다른 곳에서 오기 때문에 생기는 일이고, 클래스 브라우저가 없는 용어 셋을 보여 준다는 뜻이다. 테스트가 이 셋을 그대로 고정하므로, 목록이 달라지면 실패한다.
+26.0 에서는 `ProductReturnEnumeration`·`ProductReturnPolicy` 도 같은 처지였다 — attic 으로 물러났는데 트리에 남아 있었다. 30.1 의 트리는 더 이상 그 둘을 부르지 않는다.
 
 의료 전공명들(`Dermatology`·`Nursing` 등)은 다르다. 어휘에 `type="MedicalSpecialty"` 로 '''있고''', 트리에 나오는 것이 맞다 — Class 가 아니라 열거형 값일 뿐이다.

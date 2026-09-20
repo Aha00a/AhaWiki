@@ -8,9 +8,12 @@ object SchemaOrgUnit {
   def run(testUtil: TestUtil): Unit = {
     import testUtil.assertEquals
 
-    assertEquals(logics.CalculatedSchemaOrg.mapAll.size, 2853)
-    assertEquals(logics.CalculatedSchemaOrg.mapClass.size, 906)
-    assertEquals(logics.CalculatedSchemaOrg.mapProperty.size, 1469)
+    // After CalculatedSchemaOrg.isSchemaOrgTerm, which drops the namespaced terms the release
+    // bundles from other vocabularies and the two the prefix stripping renames to `type` and
+    // `label`. test/schema-org-vocabulary.test.mjs asserts the same three from the file side.
+    assertEquals(logics.CalculatedSchemaOrg.mapAll.size, 3023)
+    assertEquals(logics.CalculatedSchemaOrg.mapClass.size, 939)
+    assertEquals(logics.CalculatedSchemaOrg.mapProperty.size, 1538)
 
 
     val schemaType: logics.CalculatedSchemaOrg.SchemaType = logics.CalculatedSchemaOrg.mapAll("Movie")

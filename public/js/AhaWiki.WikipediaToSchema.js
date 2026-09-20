@@ -80,11 +80,13 @@
      * 안 넣는 것보다 나쁘다''' — 통과한 이름은 사람이 보고 고치지만, 잘못 매핑된 이름은 맞는
      * 것처럼 보인다.
      *
-     * ⓘ '''소유(Owner·소유자)는 일부러 비워 두었다.''' schema.org 에 장소의 소유자를 가리키는
-     * 속성이 없다. 가장 가까운 `owns` 는 range 가 Product 이고 domain 이 Person·Organization 이라
-     * "사람/조직이 소유한 물건" — 방향이 반대다. `ownedFrom`·`ownedThrough` 는 OwnershipInfo
-     * 라는 별도 구조의 것이고, `additionalProperty` 는 중첩 객체라 이 평평한 표로는 못 만든다.
-     * 그래서 Owner 는 매핑하지 않고 통과시킨다. 채워 넣지 말 것. (2026-09-04 26.0 어휘 기준)
+     * ⓘ '''소유(Owner·소유자)는 30.1 에서 드디어 매핑된다.''' 26.0 까지는 schema.org 에 장소의
+     * 소유자를 가리키는 속성이 없어 비워 두었다 — `owns` 는 range 가 Product, domain 이
+     * Person·Organization 이라 "사람/조직이 소유한 물건" 으로 방향이 반대였고, `ownedFrom`·
+     * `ownedThrough` 는 OwnershipInfo 라는 별도 구조의 것이며 `additionalProperty` 는 중첩
+     * 객체라 이 평평한 표로는 못 만든다. 30.1 이 `owner` 를 추가했고(domain `Thing`, range
+     * `Organization`·`Person`, "A person or organization who owns this Thing.") 뜻이 정확히
+     * 맞는다. 테스트에 «생기면 다시 보라» 고 걸어 둔 줄이 2026-09-20 어휘 교체에서 터져서 안 것이다.
      *
      * ⓘ '''`Country` 는 애매하다.''' 여기서는 `countryOfOrigin`(Product·CreativeWork) 으로 둔다 —
      * 영화·드라마 infobox 가 압도적으로 많아서다. 건물·장소라면 `addressCountry` 가 맞지만,
@@ -197,6 +199,10 @@
         "Organization": "sourceOrganization",
         "Organizer": "organizer",
         "Origin": "birthPlace",
+        // Added in schema.org 30.1: domain Thing, range Organization|Person. Left unmapped for as
+        // long as the vocabulary had nothing that meant it; the header comment has the history.
+        "Owner": "owner",
+        "Owners": "owner",
         "Original author": "creator",
         "Original language": "inLanguage",
         "Original network": "publisher",
@@ -277,6 +283,9 @@
         "주소": "address",
         "소재지": "address",
         "위치": "address",
+        "소유자": "owner",
+        "소유주": "owner",
+        "소유기관": "owner",
         "도시": "addressLocality",
         "우편번호": "postalCode",
         "좌표": "geo",

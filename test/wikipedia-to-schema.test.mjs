@@ -12,6 +12,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import { rootDir } from '../scripts/lib/ahawiki.net.mjs';
+import { readVocabularyFile, schemaOrgTerms } from '../scripts/lib/schema-org.mjs';
 
 function loadWikipediaToSchema() {
     const source = fs.readFileSync(path.join(rootDir, 'public/js/AhaWiki.WikipediaToSchema.js'), 'utf8');
@@ -20,10 +21,15 @@ function loadWikipediaToSchema() {
     return context.window.AhaWiki.WikipediaToSchema;
 }
 
-/** Property ids from the vocabulary the app renders with — the same file SchemaOrg.scala reads. */
+/**
+ * Property ids from the vocabulary the app renders with — the same file SchemaOrg.scala reads,
+ * through the same two filters it applies. Without them, from 27.0 this set would hold the
+ * bundled `bibo:`/`gs1:`/`unece:` properties, and the table could be "validated" against a name
+ * the class browser will never offer.
+ */
 function schemaOrgProperties() {
-    const vocabulary = JSON.parse(fs.readFileSync(path.join(rootDir, 'public/schema.org/26.0/schemaorg-current-https.jsonld'), 'utf8'));
-    return new Set(vocabulary.graph.filter(node => node.type === 'Property').map(node => node.id));
+    const vocabulary = readVocabularyFile('schemaorg-current-https.jsonld');
+    return new Set(schemaOrgTerms(vocabulary.graph).filter(node => node.type === 'Property').map(node => node.id));
 }
 
 const wikipediaToSchema = loadWikipediaToSchema();
@@ -31,10 +37,10 @@ const {WikipediaToSchemaProperty, SchemaDateProperties, convertProperty, parseCo
 
 /** Property ids the vocabulary gives a Date range, restricted to what the table maps onto. */
 function datedTargets() {
-    const vocabulary = JSON.parse(fs.readFileSync(path.join(rootDir, 'public/schema.org/26.0/schemaorg-current-https.jsonld'), 'utf8'));
+    const vocabulary = readVocabularyFile('schemaorg-current-https.jsonld');
     const targets = new Set(Object.values(WikipediaToSchemaProperty));
     const ranges = node => [].concat(node.rangeIncludes || []).map(r => r.id || r);
-    return vocabulary.graph
+    return schemaOrgTerms(vocabulary.graph)
         .filter(node => node.type === 'Property' && targets.has(node.id) && ranges(node).some(r => r === 'Date' || r === 'DateTime'))
         .map(node => node.id);
 }
@@ -49,25 +55,27 @@ test('every mapping points at a property schema.org actually has', () => {
         .filter(([, target]) => !properties.has(target))
         .map(([label, target]) => `${label} -> ${target}`);
 
-    assert.deepEqual(unknown, [], '\nThese targets are not properties in public/schema.org/26.0. ' +
+    assert.deepEqual(unknown, [], '\nThese targets are not properties in the vocabulary the app loads. ' +
         'Leaving a label unmapped is better than mapping it to a name that does not exist.');
     assert.ok(Object.keys(WikipediaToSchemaProperty).length > 100, 'the table should not have been emptied');
 });
 
-test('ownership is left unmapped on purpose', () => {
-    // schema.org has no property for "this place is owned by X". `owns` is the inverse — its
-    // domain is Person/Organization and its range is Product. Mapping Owner to it would read
-    // as correct while meaning the opposite, so the label passes through instead.
-    for (const label of ['Owner', 'Owners', '소유자', '소유주']) {
-        assert.equal(WikipediaToSchemaProperty[label], undefined, `${label} should not be mapped`);
-        assert.equal(convertProperty(label), label, `${label} should pass through unchanged`);
-    }
-    assert.equal(schemaOrgProperties().has('owner'), false, 'if schema.org ever adds `owner`, revisit this');
+test('ownership maps, now that the vocabulary has somewhere to put it', () => {
+    // This test used to assert the opposite, with the line `if schema.org ever adds owner,
+    // revisit this`. Raising the vocabulary to 30.1 on 2026-09-20 made it fail, which is the
+    // whole reason it was written that way.
+    //
+    // Until then there was no property for "this Thing is owned by X": `owns` is the inverse,
+    // domain Person/Organization and range Product, so mapping Owner to it would have read as
+    // correct while meaning the opposite.
+    assert.ok(schemaOrgProperties().has('owner'), 'owner should be in the vocabulary the app loads');
+    for (const label of ['Owner', 'Owners', '소유자', '소유주', '소유기관'])
+        assert.equal(convertProperty(label), 'owner', `${label} should map to owner`);
 });
 
 test('labels schema.org has no concept for are left unmapped on purpose', () => {
     // From the 2026-09-19 sweep of every Schema block on the wiki. Each was looked up in
-    // schema.org 26.0 and has no property that means it; the header comment says why one by one.
+    // the vocabulary the app loads, and has no property that means it; the header comment says why one by one.
     // Mapping any of them to something that merely sounds close would read as correct.
     for (const label of [
         'Cinematography', '촬영', 'Designed by', 'Narrated by', 'Volumes', 'Blood type',
@@ -145,9 +153,9 @@ test('the labels ko.wikipedia actually uses are mapped, not the ones I assumed',
     // mapped to yearBuilt can only keep the year.
     assert.equal(convertProperty('설립일'), 'foundingDate');
 
-    // Ownership stays out, whichever word the article uses.
+    // Ownership reaches `owner` whichever word the article uses, since 30.1 added the property.
     for (const label of ['소유주', '소유기관'])
-        assert.equal(convertProperty(label), label);
+        assert.equal(convertProperty(label), 'owner');
 
     // Comparing the converter against the GitHub page someone had corrected by hand showed this
     // one had been added there and never in the table.
@@ -196,7 +204,7 @@ test('the class comes from the direct schema.org link on what the article is', (
 });
 
 test('every class the fixtures produce exists in the vocabulary the app ships', () => {
-    const vocabulary = JSON.parse(fs.readFileSync(path.join(rootDir, 'public/schema.org/26.0/schemaorg-current-https.jsonld'), 'utf8'));
+    const vocabulary = readVocabularyFile('schemaorg-current-https.jsonld');
     const classes = new Set(vocabulary.graph.filter(node => node.type === 'Class' || (Array.isArray(node.type) && node.type.includes('Class'))).map(node => node.id));
     for (const cls of ['PerformingArtsTheater', 'WebApplication', 'WebSite', 'Movie', 'City', 'Person', 'TVSeries'])
         assert.ok(classes.has(cls), `${cls} should be a schema.org class`);
@@ -289,6 +297,9 @@ test('a date row collapses to the ISO date Wikipedia puts in brackets', () => {
 });
 
 test('an unmapped label keeps its own name and its value', () => {
-    const output = convertWikipediaToSchemaOrg([['Owner', 'Seoul Metropolitan Government']], true);
-    assert.match(output, /^Owner\tSeoul Metropolitan Government$/m);
+    // The example was `Owner` until 30.1 gave that one a property. Cinematography is a steadier
+    // choice: schema.org has no cinematographer and the header comment says so, so this stays an
+    // unmapped label rather than one waiting to be mapped.
+    const output = convertWikipediaToSchemaOrg([['Cinematography', 'Hoyte van Hoytema']], true);
+    assert.match(output, /^Cinematography\tHoyte van Hoytema$/m);
 });

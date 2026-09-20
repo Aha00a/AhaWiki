@@ -9,18 +9,12 @@
 // first page that renders a Schema block. These tests fail by name instead.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import path from 'node:path';
-import { rootDir } from '../scripts/lib/ahawiki.net.mjs';
+import { readVocabularyFile, schemaOrgTerms, schemaOrgVersion } from '../scripts/lib/schema-org.mjs';
 
-/** The one version the application loads. SchemaOrg.scala names it in two places. */
-const version = '26.0';
-const dir = path.join(rootDir, 'public', 'schema.org', version);
-const read = (file) => JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'));
-
-const vocabulary = read('schemaorg-current-https.jsonld');
+const vocabulary = readVocabularyFile('schemaorg-current-https.jsonld');
 const graph = vocabulary.graph;
 const typesOf = (node) => [].concat(node.type ?? []);
+const countOf = (nodes, type) => nodes.filter((node) => typesOf(node).includes(type)).length;
 
 test('the vocabulary is in the transformed shape SchemaOrg.scala reads', () => {
     assert.ok(Array.isArray(graph), 'top level must be `graph` — an untransformed release says `@graph`');
@@ -45,25 +39,38 @@ test('single-key @id objects were unwrapped to plain strings', () => {
     assert.ok(movie, 'Movie is missing from the vocabulary');
     assert.equal(movie.subClassOf, 'CreativeWork');
     assert.equal(typeof movie.comment, 'string');
+
+    // A localised term writes {language, value} instead, which the Scala reads with
+    // `(v \ "comment" \ "value")` before falling back to the plain string. Both shapes are here.
+    assert.ok(graph.some((node) => typeof node.comment === 'object' && node.comment !== null));
 });
 
 test('the counts match what SchemaOrgUnit pins, so the two cannot drift apart', () => {
-    // test/com/aha00a/tests/unit/SchemaOrgUnit.scala asserts these same three numbers against the
-    // loaded maps. Kept here too because this suite runs on every `npm test`, and a vocabulary
-    // swap that changes them should fail in the place that explains why.
-    assert.equal(graph.length, 2853, 'mapAll');
-    assert.equal(graph.filter((node) => typesOf(node).includes('Class')).length, 906, 'mapClass');
-    assert.equal(graph.filter((node) => typesOf(node).includes('Property')).length, 1469, 'mapProperty');
+    // test/com/aha00a/tests/unit/SchemaOrgUnit.scala asserts these three against the loaded maps.
+    // They are the counts AFTER CalculatedSchemaOrg.isSchemaOrgTerm, which is what the maps hold.
+    const kept = schemaOrgTerms(graph);
+    assert.equal(kept.length, 3023, 'mapAll');
+    assert.equal(countOf(kept, 'Class'), 939, 'mapClass');
+    assert.equal(countOf(kept, 'Property'), 1538, 'mapProperty');
 });
 
-test('no term carries a foreign namespace', () => {
-    // 26.0 is schema.org only. From 27.0 the release bundles terms from other vocabularies —
-    // bibo:, cmns-*:, fibo-*:, gs1:, unece:, eli: — and SchemaOrgTransform strips only the
-    // schema.org prefixes, so those keep their namespace and would land in mapClass/mapProperty,
-    // reaching the class browser and the property suggestions. 30.1 brings 77 classes and 154
-    // properties of them. Decide what to do with those before raising the version.
-    const foreign = graph.map((node) => String(node.id ?? '')).filter((id) => id.includes(':'));
-    assert.deepEqual(foreign, [], `foreign-namespace terms reached the maps: ${foreign.slice(0, 10).join(', ')}`);
+test('the terms that are not schema.org are the ones the filter drops', () => {
+    // From 27.0 the release bundles other vocabularies, and the transform strips only schema.org's
+    // prefixes, so these arrive namespaced. Without the filter they would be offered by the class
+    // browser and the property suggestions as if they were ours.
+    const foreign = graph.filter((node) => String(node.id ?? '').includes(':'));
+    assert.equal(foreign.length, 231);
+    assert.deepEqual([...new Set(foreign.map((node) => node.id.split(':')[0]))].sort().slice(0, 6),
+        ['bibo', 'cmns-cls', 'cmns-col', 'cmns-dt', 'cmns-ge', 'cmns-id']);
+
+    // The transform has to strip `rdf:` and `rdfs:` — `rdfs:Class` is how a class says it is one —
+    // and the side effect is that rdf:type and rdfs:label arrive as bare `type` and `label`,
+    // looking like schema.org properties. They are the only terms with no rdfs:comment, which is
+    // what tells them apart.
+    const commentless = graph.filter((node) => !String(node.id ?? '').includes(':') && node.comment === undefined);
+    assert.deepEqual(commentless.map((node) => node.id).sort(), ['label', 'type']);
+
+    assert.equal(schemaOrgTerms(graph).length, graph.length - foreign.length - commentless.length);
 });
 
 test('tree.pruned.jsonld holds only what getHtmlTree walks', () => {
@@ -74,11 +81,11 @@ test('tree.pruned.jsonld holds only what getHtmlTree walks', () => {
         Object.keys(node).forEach((key) => seen.add(key));
         (node.children ?? []).forEach(walk);
     };
-    walk(read('tree.pruned.jsonld'));
+    walk(readVocabularyFile('tree.pruned.jsonld'));
     assert.deepEqual([...seen].sort(), ['children', 'id']);
 });
 
-test('every term the tree names exists in the vocabulary, bar the three known strays', () => {
+test('the tree names no term the maps have thrown away, bar the one known stray', () => {
     // The two files come from different places — the release for the vocabulary, schema.org's
     // /docs/tree.jsonld for the tree — so they can be fetched a version apart with nothing saying
     // so. This checks they still describe the same terms.
@@ -86,17 +93,24 @@ test('every term the tree names exists in the vocabulary, bar the three known st
     // Membership, not class-ness: the tree also lists enumeration values, which the vocabulary
     // types as their enumeration (Dermatology is a MedicalSpecialty, not a Class). Those belong
     // in the tree and the class browser renders them.
-    const known = new Set(graph.map((node) => node.id));
+    const known = new Set(schemaOrgTerms(graph).map((node) => node.id));
     const missing = [];
     const walk = (node) => {
         if (!known.has(node.id)) missing.push(node.id);
         (node.children ?? []).forEach(walk);
     };
-    walk(read('tree.pruned.jsonld'));
+    walk(readVocabularyFile('tree.pruned.jsonld'));
 
-    // These three sit in the docs tree and in no layer of the current vocabulary: the two
-    // ProductReturn terms were retired to the attic, and StupidType is schema.org's own test
-    // fixture. The class browser therefore offers three terms that are not really there. Pinned
-    // rather than filtered, so the list failing means the disagreement changed, not that it exists.
-    assert.deepEqual(missing.sort(), ['ProductReturnEnumeration', 'ProductReturnPolicy', 'StupidType']);
+    // schema.org's own test fixture, which its docs tree lists and no layer of the vocabulary
+    // defines. Pinned rather than filtered, so a change in the disagreement fails rather than the
+    // disagreement itself. On 26.0 this list also held ProductReturnEnumeration and
+    // ProductReturnPolicy, retired to the attic; 30.1's tree no longer names them.
+    assert.deepEqual(missing.sort(), ['StupidType']);
+});
+
+test('the vocabulary directory the tests read is the one SchemaOrg.scala loads', () => {
+    // schemaOrgVersion() parses the constant out of the Scala rather than repeating it, so a
+    // version raised in one place and not the other cannot pass quietly. This asserts the parse
+    // still finds something plausible — a rename there would otherwise throw far from the cause.
+    assert.match(schemaOrgVersion(), /^\d+\.\d+$/);
 });

@@ -16,6 +16,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {rootDir} from './lib/ahawiki.net.mjs';
+import {readVocabularyFile} from './lib/schema-org.mjs';
 
 const Paired = {
     SoftwareApplication: 'SoftwareSourceCode',
@@ -34,8 +35,7 @@ const SiteHost = {'1': 'aha00a.com', '2': 'ahawiki.net', '6': 'fuerinha.ahawiki.
 const DisplayOnly = new Set(['image', 'logo']);
 
 export function loadVocabulary() {
-    const file = path.join(rootDir, 'public/schema.org/26.0/schemaorg-current-https.jsonld');
-    const graph = JSON.parse(fs.readFileSync(file, 'utf8')).graph;
+    const graph = readVocabularyFile('schemaorg-current-https.jsonld').graph;
     const byId = new Map(graph.map(node => [node.id, node]));
     const ids = value => [].concat(value || []).map(v => v.id || v);
     const ancestors = (id, seen = new Set()) => {

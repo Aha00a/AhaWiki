@@ -52,7 +52,12 @@ object CalculatedSchemaOrg {
     Using(scala.io.Source.fromInputStream(is)(Codec.UTF8))(_.mkString)
   }
 
-  lazy val jsonTree: JsValue = Json.parse(readResourceString("public/schema.org/26.0/tree.pruned.jsonld"))
+  // The one version the application reads. public/schema.org/ also holds 5.0 and 14.0, which are
+  // history. These files are not what schema.org publishes — see docs/ahawiki.net/'Dev
+  // SchemaOrgVocabulary' for what produces them and how to raise this.
+  private val version = "30.1"
+
+  lazy val jsonTree: JsValue = Json.parse(readResourceString(s"public/schema.org/$version/tree.pruned.jsonld"))
   def getHtmlTree(q:String, node:JsValue = jsonTree): NodeSeq = {
     val id = (node \ "id").as[String]
     val idWithNameSpace = withNameSpace(id)
@@ -131,19 +136,53 @@ object CalculatedSchemaOrg {
 
 
 
-  lazy val jsonAllLayers: JsValue = Json.parse(readResourceString("public/schema.org/26.0/schemaorg-current-https.jsonld"))
+  lazy val jsonAllLayers: JsValue = Json.parse(readResourceString(s"public/schema.org/$version/schemaorg-current-https.jsonld"))
+
+  /**
+   * Terms this vocabulary carries that are not schema.org's, and must not reach the class browser
+   * or the property suggestions. Both filters are no-ops on 26.0 — they leave its counts exactly
+   * as they were — and both bite from 27.0 onwards.
+   *
+   *  - A namespaced id. From 27.0 the release bundles other vocabularies: `bibo:`, `cmns-*:`,
+   *    `fibo-*:`, `gs1:`, `unece:`, `eli:`. 30.1 brings 231 of them, every one typed Class or
+   *    Property, so without this they land in mapClass and mapProperty as if they were ours.
+   *
+   *  - No comment. SchemaOrgTransform strips the `rdf:` and `rdfs:` prefixes along with
+   *    schema.org's own, which it has to — `rdfs:Class` is how a class says it is one. The side
+   *    effect is that `rdf:type` and `rdfs:label` arrive as bare `type` and `label`, looking like
+   *    schema.org properties and colliding with the keys of the same name. Every real term carries
+   *    rdfs:comment and these two carry nothing, which is the difference worth reading.
+   */
+  private def isSchemaOrgTerm(id: String, comment: Option[String]): Boolean =
+    !id.contains(":") && comment.nonEmpty
+
   lazy val seqAll:Seq[SchemaType] = {
     val values: Seq[JsValue] = (jsonAllLayers \ "graph").as[Seq[JsValue]]
-    values.map(v =>{
+    values.flatMap(v =>{
       val id = (v \ "id").as[String]
-      val typeStr: String = getSeqString(v \ "type").find(v => v == "Class" || v == "Property").getOrElse("")
-      val subClassOf: Seq[String] = getSeqString(v \ "subClassOf")
-      val domainIncludes: Seq[String] = getSeqString(v \ "domainIncludes")
-      val comment = (v \ "comment" \ "value").asOpt[String].getOrElse((v \ "comment").as[String])
-      val supersededBy: Seq[String] = getSeqString(v \ "supersededBy")
-      SchemaType(id, typeStr, subClassOf, domainIncludes, comment, supersededBy)
+      // Both spellings occur: a plain string, or {language, value} once the term is localised.
+      val comment: Option[String] = (v \ "comment" \ "value").asOpt[String].orElse((v \ "comment").asOpt[String])
+      Option.when(isSchemaOrgTerm(id, comment)) {
+        val typeStr: String = getSeqString(v \ "type").find(v => v == "Class" || v == "Property").getOrElse("")
+        val supersededBy: Seq[String] = getSeqString(v \ "supersededBy")
+        SchemaType(id, typeStr, keptOnly(v \ "subClassOf"), keptOnly(v \ "domainIncludes"), comment.get, supersededBy)
+      }
     })
   }
+
+  /**
+   * References to terms the filter above dropped, removed.
+   *
+   * Ten schema.org classes name a bundled foreign class as a parent — `Brand` is a
+   * `cmns-cls:Classifier`, `Country` a `cmns-ge:GeopoliticalEntity`. Dropping the term and
+   * keeping the reference leaves `getParents` handing out a name that is in no map, which
+   * `getPathHierarchy` then walks into. Every one of the ten also has a schema.org parent, so
+   * removing the foreign half orphans nothing.
+   *
+   * domainIncludes has no such reference today. The same rule covers it so that a later release
+   * cannot introduce one quietly.
+   */
+  private def keptOnly(lookup: JsLookupResult): Seq[String] = getSeqString(lookup).filterNot(_.contains(":"))
   lazy val seqClass: Seq[SchemaType] = seqAll.filter(_.schemaType == "Class")
   lazy val seqProperty: Seq[SchemaType] = seqAll.filter(_.schemaType == "Property")
   lazy val mapAll: Map[String, SchemaType] = seqAll.map(n => (n.id, n)).toMap
