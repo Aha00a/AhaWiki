@@ -18,6 +18,7 @@ import { docsGitPath, manifestFileName, rootDir } from '../scripts/lib/ahawiki.n
 const namedOutsideTheRepository = new Map([
     ['redis.conf', "Redis's own configuration file on the host, not part of this repository"],
     ['wiki.aha00a.com.conf', 'a per-environment Play config deployed to the server; it carries secrets and is not committed'],
+    ['SchemaOrgTransform/index.js', 'the transform that produces public/schema.org/; it lives in the Aha00a/SchemaOrgTransform repository, and Dev SchemaOrgVocabulary explains why the files here look nothing like what schema.org publishes'],
 ]);
 
 // Deliberately narrow. Prose, SQL fragments and config keys also live in backticks, and a

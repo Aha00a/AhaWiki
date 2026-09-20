@@ -1,0 +1,67 @@
+= [Dev] SchemaOrgVocabulary
+[Dev]
+
+`public/schema.org/<버전>/` 아래 파일들은 '''schema.org 가 배포하는 것이 아니다.''' 가공을 거친 것이고, 그 가공이 [InterpreterSchema] 와 `SchemaOrg.scala` 가 읽는 모양을 만든다. 버전을 올리려면 같은 가공을 다시 해야 한다.
+
+== 무엇이 실려 있나
+
+[[[#!Table tsv 1
+파일	읽는 곳	쓰임
+`schemaorg-current-https.jsonld`	`CalculatedSchemaOrg.jsonAllLayers`	class·property 정의 전부. `mapAll`·`mapClass`·`mapProperty` 가 여기서 나온다
+`tree.jsonld`	(읽지 않음)	아래 pruned 를 만드는 재료로만 둔다
+`tree.pruned.jsonld`	`CalculatedSchemaOrg.jsonTree`	class 계층 트리. `getHtmlTree`·`renderExistingPages` 가 걷는다
+]]]
+
+`5.0`·`14.0`·`26.0` 셋이 있지만 '''애플리케이션이 읽는 것은 `26.0` 뿐이다''' — `SchemaOrg.scala` 두 곳에 경로가 박혀 있다. 나머지는 과거 것이다.
+
+== 어디서 와서 어떻게 가공되나
+
+원본 둘은 서로 다른 곳에서 온다. '''같은 릴리스 페이지에 있지 않다.'''
+
+ * `schemaorg-current-https.jsonld` — `https://github.com/schemaorg/schemaorg/blob/v<버전>/data/releases/<버전>/`
+ * `tree.jsonld` — `https://schema.org/docs/tree.jsonld`. 릴리스에는 이 파일이 없다. 문서 경로가 내주는 '''현재''' 버전이므로, 릴리스 직후가 아니면 어휘와 버전이 어긋날 수 있다
+
+가공은 별도 저장소 [https://github.com/Aha00a/SchemaOrgTransform SchemaOrgTransform] 이 한다. `original/<버전>/` 에 원본 둘을 넣고 `node SchemaOrgTransform/index.js` 를 돌리면 `transformed/<버전>/` 에 셋이 나온다.
+
+ 1. `{"@id": "schema:Movie"}` 처럼 '''키가 `@id` 하나뿐인 객체를 그 값으로 푼다'''
+ 1. 모든 키와 잎에서 `@`·`rdf:`·`rdfs:`·`schema:`·`http://schema.org/` 접두어를 '''벗긴다'''
+ 1. `tree.jsonld` 에서 `id`·`children` 만 남겨 `tree.pruned.jsonld` 를 만든다
+
+그래서 배포본이 `@graph`·`@id`·`@type`·`rdfs:Class`·`rdf:Property` 라고 적는 자리를 우리 파일은 `graph`·`id`·`type`·`Class`·`Property` 라고 적는다. `SchemaOrg.scala` 는 그 가공된 모양을 `(v \ "id").as[String]` 로 '''바로''' 읽는다 — 가공 안 한 파일을 떨어뜨리면 Schema 블록이 있는 첫 페이지에서 `JsResultException` 이 난다.
+
+`test/schema-org-vocabulary.test.mjs` 가 그 모양을 이름 붙여 고정한다. 가공을 빠뜨리면 런타임이 아니라 거기서 실패한다.
+
+== 버전 올릴 때
+
+[[[#!Vim bash
+# 1. 원본 둘을 SchemaOrgTransform/original/<새버전>/ 에 놓는다
+# 2. index.js 의 버전 목록에 <새버전> 을 더한다  ← 하드코딩이다
+# 3. node index.js
+# 4. transformed/<새버전>/ 셋을 AhaWiki public/schema.org/<새버전>/ 로 옮긴다(줄끝 LF)
+# 5. SchemaOrg.scala 두 곳과 테스트의 경로·개수를 갱신한다
+]]]
+
+'''`SchemaOrgTransform/index.js` 의 prune 단계는 버전을 하드코딩한다.''' 목록에 없는 버전은 `tree.pruned.jsonld` 가 만들어지지 않고, 그 사실을 아무것도 말해 주지 않는다 — 앞 둘만 나오고 조용히 끝난다.
+
+옮길 때 '''줄끝을 LF 로 맞춘다.''' `SchemaOrgTransform/index.js` 는 CRLF 로 쓰고 이 저장소는 LF 로 정규화한다. 2026-09-20 에 `transformed/26.0` 과 실린 `26.0` 을 비교하니 바이트는 달랐고 파싱한 내용은 완전히 같았다 — 차이는 줄끝뿐이었다. 그 확인이 곧 이 파이프라인이 실린 파일을 재현한다는 증거다.
+
+== 26.0 → 30.1 로 올릴 때 알고 있을 것
+
+2026-09-20 에 30.1(2026-09-15 배포)을 실제로 가공해 재 본 것이다.
+
+[[[#!Table tsv 1
+	26.0	30.1
+`mapAll`	2853	3256
+`mapClass`	906	1016
+`mapProperty`	1469	1694
+]]]
+
+ * '''사라진 class·property 가 하나도 없다.''' 위키의 어느 페이지도 쓰던 용어를 잃지 않는다.
+ * '''`owner` 가 생겼다''' — `domain=Thing`, `range=Organization·Person`. [InterpreterSchema] 의 변환 표가 소유자를 일부러 비워 둔 이유가 «schema.org 에 없어서» 였고, 그 자리가 채워졌다. `public/js/AhaWiki.WikipediaToSchema.js` 의 주석과 테스트에 «생기면 다시 보라» 고 걸어 둔 줄이 이때 터진다.
+ * '''외부 어휘가 딸려 온다.''' 27.0 부터 릴리스가 다른 어휘의 용어를 함께 싣는다 — `bibo:`·`cmns-*:`·`fibo-*:`·`gs1:`·`unece:`·`eli:`. 가공은 schema.org 접두어만 벗기므로 이것들은 namespace 를 단 채 남고, 30.1 기준 '''class 77개·property 154개''' 가 `mapClass`·`mapProperty` 에 들어가 클래스 브라우저와 property 추천에 섞인다. 올리기 전에 이것들을 어떻게 할지 정해야 한다.
+
+== 트리와 어휘가 어긋나는 세 개
+
+`tree.pruned.jsonld` 에는 있는데 어휘에는 없는 이름이 셋 있다 — `ProductReturnEnumeration`, `ProductReturnPolicy`, `StupidType`. 앞 둘은 attic 으로 물러났고 `StupidType` 은 schema.org 자신의 시험용이다. 둘이 서로 다른 곳에서 오기 때문에 생기는 일이고, 클래스 브라우저가 없는 용어 셋을 보여 준다는 뜻이다. 테스트가 이 셋을 그대로 고정하므로, 목록이 달라지면 실패한다.
+
+의료 전공명들(`Dermatology`·`Nursing` 등)은 다르다. 어휘에 `type="MedicalSpecialty"` 로 '''있고''', 트리에 나오는 것이 맞다 — Class 가 아니라 열거형 값일 뿐이다.
