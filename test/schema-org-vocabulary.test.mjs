@@ -9,7 +9,7 @@
 // first page that renders a Schema block. These tests fail by name instead.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readVocabularyFile, schemaOrgTerms, schemaOrgVersion } from '../scripts/lib/schema-org.mjs';
+import { readCustomVocabulary, readVocabularyFile, schemaOrgTerms, schemaOrgVersion } from '../scripts/lib/schema-org.mjs';
 
 const vocabulary = readVocabularyFile('schemaorg-current-https.jsonld');
 const graph = vocabulary.graph;
@@ -106,6 +106,33 @@ test('the tree names no term the maps have thrown away, bar the one known stray'
     // disagreement itself. On 26.0 this list also held ProductReturnEnumeration and
     // ProductReturnPolicy, retired to the attic; 30.1's tree no longer names them.
     assert.deepEqual(missing.sort(), ['StupidType']);
+});
+
+test('every class we define ourselves names a real schema.org parent', () => {
+    // A custom class earns its place by declaring a parent: that is what gives it inherited
+    // properties and a spot in the class tree instead of the flat "Custom" list, and it is also
+    // the whole of a proposal to schema.org. A parent that does not exist grafts onto nothing.
+    const custom = readCustomVocabulary().graph;
+    const classes = new Set(schemaOrgTerms(graph).filter((node) => typesOf(node).includes('Class')).map((node) => node.id));
+
+    assert.ok(custom.length > 0, 'custom.jsonld should not be empty while the code reads it');
+    for (const node of custom) {
+        assert.equal(typeof node.id, 'string');
+        assert.deepEqual(typesOf(node), ['Class'], `${node.id}: only classes are supported`);
+        assert.equal(typeof node.comment, 'string', `${node.id} needs a comment — it is the tooltip and the proposal`);
+        assert.ok(node.comment.length > 40, `${node.id}'s comment should say what it is for`);
+        assert.equal(typeof node.subClassOf, 'string', `${node.id} needs exactly one parent`);
+        assert.ok(classes.has(node.subClassOf), `${node.id}'s parent ${node.subClassOf} is not a schema.org class`);
+    }
+});
+
+test('no class we define has since been defined by schema.org', () => {
+    // When this fails the vocabulary has caught up: delete our entry, and close the proposal if
+    // one was filed. CalculatedSchemaOrg already prefers the real term, so the wiki keeps working
+    // either way — this is what stops a stand-in outliving its reason without anyone noticing.
+    const ours = readCustomVocabulary().graph.map((node) => node.id);
+    const theirs = new Set(schemaOrgTerms(graph).map((node) => node.id));
+    assert.deepEqual(ours.filter((id) => theirs.has(id)), []);
 });
 
 test('the vocabulary directory the tests read is the one SchemaOrg.scala loads', () => {

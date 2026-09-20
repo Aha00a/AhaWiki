@@ -10,10 +10,40 @@ object SchemaOrgUnit {
 
     // After CalculatedSchemaOrg.isSchemaOrgTerm, which drops the namespaced terms the release
     // bundles from other vocabularies and the two the prefix stripping renames to `type` and
-    // `label`. test/schema-org-vocabulary.test.mjs asserts the same three from the file side.
-    assertEquals(logics.CalculatedSchemaOrg.mapAll.size, 3023)
-    assertEquals(logics.CalculatedSchemaOrg.mapClass.size, 939)
+    // `label`, and plus the classes in public/schema.org/custom.jsonld.
+    // test/schema-org-vocabulary.test.mjs asserts the schema.org side of these from the file.
+    assertEquals(logics.CalculatedSchemaOrg.mapAll.size, 3024)
+    assertEquals(logics.CalculatedSchemaOrg.mapClass.size, 940)
     assertEquals(logics.CalculatedSchemaOrg.mapProperty.size, 1538)
+
+    // A custom class is a class like any other once merged: it has the parent it declares, so it
+    // inherits CreativeWork's properties and sits under it in the tree rather than in the flat
+    // "Custom" list renderExistingPages falls back to.
+    assertEquals(logics.CalculatedSchemaOrg.seqCustom.map(_.id), Seq("Standard"))
+    assertEquals(logics.CalculatedSchemaOrg.getClassHierarchy("Standard"), Seq("Standard", "CreativeWork", "Thing"))
+
+    // Every custom class must name a parent schema.org really has, or it is grafted onto nothing
+    // and its pages fall back to the flat list without saying why.
+    logics.CalculatedSchemaOrg.seqCustom.foreach { custom =>
+      assertEquals(custom.subClassOf.size, 1)
+      assertEquals(logics.CalculatedSchemaOrg.mapClass.isDefinedAt(custom.subClassOf.head), true)
+    }
+
+    // The graft into the tree, which is a separate file from the vocabulary: without it Standard
+    // would have a parent in the maps and still be listed in the flat "Custom" section here.
+    {
+      val rendered = CalculatedSchemaOrg.renderExistingPages(Map("Standard" -> Seq("ISO 8601")))
+      assertEquals(rendered.contains("= Custom"), false)
+      assertEquals(rendered.contains("""["schema:CreativeWork" Creative Work]"""), true)
+      assertEquals(rendered.contains("""["schema:Standard" Standard] (1)"""), true)
+    }
+
+    // A class that is in neither the vocabulary nor custom.jsonld still renders, in that flat
+    // section — which is what the other three the wiki uses (Poem, Cognac, Whiskey) rely on.
+    assertEquals(
+      CalculatedSchemaOrg.renderExistingPages(Map("Whiskey" -> Seq("The Macallan"))).contains("= Custom"),
+      true
+    )
 
 
     val schemaType: logics.CalculatedSchemaOrg.SchemaType = logics.CalculatedSchemaOrg.mapAll("Movie")

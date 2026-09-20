@@ -55,6 +55,33 @@
 
 `getClassHierarchy` 는 원래 안전했다. `mapClass.get` 이 None 이면 `Seq()` 로 끝나서 외부 이름이 결과에 끼지 않는다. 문제는 그것을 거치지 않는 `getParents` 쪽이었다.
 
+== schema.org 에 없는 class 를 직접 정의한다
+
+`public/schema.org/custom.jsonld` 가 우리가 정의하는 class 를 담는다. 버전 디렉터리 '''바깥'''에 있다 — 우리 것이고, 어휘를 올려도 바뀌지 않기 때문이다. 모양은 변환된 어휘와 같아서 `parseGraph` 가 둘 다 읽는다.
+
+'''`subClassOf` 로 진짜 schema.org class 를 가리켜야 한다.''' 그것이 이 파일의 전부이자 값어치다 — 부모가 있어야 상속 property 추천이 생기고, `jsonTree` 에 접붙일 자리가 생기고, 그대로가 schema.org 제안서의 내용이 된다.
+
+부모를 안 주면 `mapClass` 에 없는 class 와 똑같아진다. 그때도 렌더는 된다 — `getSchemaClass` 가 빈 `SchemaType` 으로 떨어지므로 — 다만 설명도 부모도 없고, 문서 목록에서 맨 아래 `= Custom` 평평한 더미로 간다.
+
+=== 지금 정의한 것
+
+[[[#!Table tsv 1
+class	부모	쓰는 곳
+`Standard`	`CreativeWork`	ISO 3166 계열 5개, ISO 8601, ISO 4217, BCP 47, RFC 2119
+]]]
+
+`Standard` 는 '''새 property 가 하나도 필요 없다.''' 쓰이는 것은 `name`·`url`·`image`·`isPartOf`·`hasPart` 뿐이고 전부 `CreativeWork` 상속분이다 — `isPartOf`·`hasPart` 가 표준과 그 부분(`ISO 3166` ↔ `ISO 3166-1`)의 관계를 그대로 담는다. [https://schema.org/Legislation Legislation] 이 같은 모양의 선례다: `CreativeWork` 하위의 규범 문서 타입이고, 외부 공동체 어휘(ELI)에서 schema.org 로 들어왔다.
+
+JSON-LD 에는 '''`"@type": "Standard"` 그대로''' 나간다. `CreativeWork` + `additionalType` 으로 희석하지 않기로 했다(2026-09-20 소유자 결정) — 주장하려는 것이 «이것은 표준이다» 라서다.
+
+=== 트리 접붙이기
+
+`jsonTree` 는 어휘와 '''다른 파일'''이라 custom class 를 모른다. `seqAll` 에만 합치면 `Standard` 는 맵에서는 부모를 갖는데 정작 문서 목록에서는 `= Custom` 으로 떨어진다. 그래서 `graftChild` 가 트리를 읽으면서 부모 노드의 `children` 에 끼워 넣는다.
+
+=== schema.org 가 나중에 같은 이름을 정의하면
+
+`seqCustom` 이 그 항목을 스스로 버린다. 진짜가 이기고, 우리 것은 쓰이지 않는다. 그리고 '''테스트가 그 충돌을 이름으로 말해 준다''' — 그때가 `custom.jsonld` 에서 항목을 지우고, 제안을 냈다면 닫을 시점이다. 맵과 트리가 같은 `seqCustom` 하나를 읽으므로 한쪽에만 남는 일은 없다.
+
 == 버전 올릴 때
 
 [[[#!Vim bash

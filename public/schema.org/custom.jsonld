@@ -1,0 +1,11 @@
+{
+    "comment": "Classes this wiki needs that schema.org does not define. Same shape as the transformed vocabulary beside it, so CalculatedSchemaOrg can merge the two without a second parser. Every entry needs `subClassOf` naming a real schema.org class: that is what gives it a place in the class tree and a set of inherited properties, and it is also the whole of a proposal to schema.org. See docs/ahawiki.net/'Dev SchemaOrgVocabulary'.",
+    "graph": [
+        {
+            "id": "Standard",
+            "type": "Class",
+            "subClassOf": "CreativeWork",
+            "comment": "A published technical standard: a normative document issued by a standards body, such as ISO 8601, ISO 4217, BCP 47 or RFC 2119. Modelled on Legislation, which is the same shape — a CreativeWork subtype for a normative document — and which entered schema.org from an outside community's vocabulary. Needs no properties of its own: the nine pages using it are served by name, url, image, isPartOf and hasPart, all inherited, with isPartOf and hasPart carrying the relation between a standard and its parts (ISO 3166 to ISO 3166-1)."
+        }
+    ]
+}

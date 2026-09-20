@@ -30,6 +30,14 @@ export function readVocabularyFile(name) {
 }
 
 /**
+ * The classes this wiki defines because schema.org does not. Beside the version directories
+ * rather than inside one: it is ours, and does not change when the vocabulary is raised.
+ */
+export function readCustomVocabulary() {
+    return JSON.parse(fs.readFileSync(path.join(rootDir, 'public', 'schema.org', 'custom.jsonld'), 'utf8'));
+}
+
+/**
  * The terms the application keeps, applying the same two filters as
  * `CalculatedSchemaOrg.isSchemaOrgTerm`: no namespaced id, and a comment present. Duplicated as
  * behaviour rather than as a constant, because a JS test cannot call the Scala — the tests below

@@ -6,6 +6,7 @@ import com.aha00a.commons.utils.Using
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.ContextWikiPage
 import play.api.libs.json.JsLookupResult
+import play.api.libs.json.JsObject
 import play.api.libs.json.JsValue
 import play.api.libs.json.Json
 
@@ -57,7 +58,41 @@ object CalculatedSchemaOrg {
   // SchemaOrgVocabulary' for what produces them and how to raise this.
   private val version = "30.1"
 
-  lazy val jsonTree: JsValue = Json.parse(readResourceString(s"public/schema.org/$version/tree.pruned.jsonld"))
+  /**
+   * Classes this wiki needs that schema.org does not define, in the same shape as the vocabulary.
+   *
+   * Without this a class the vocabulary does not know still renders — `getSchemaClass` falls back
+   * to an empty SchemaType — but it has no parent, no description and no inherited properties, and
+   * `renderExistingPages` drops its pages into a flat "Custom" heap at the bottom. Naming a parent
+   * is what puts them back in the tree.
+   */
+  lazy val jsonCustom: JsValue = Json.parse(readResourceString("public/schema.org/custom.jsonld"))
+
+  /**
+   * The class tree, with each custom class grafted under the parent it declares.
+   *
+   * The tree is a separate file from the vocabulary and knows nothing about custom classes, so
+   * merging only into `seqAll` would give `Standard` a parent everywhere except the one place that
+   * lists pages by class.
+   */
+  lazy val jsonTree: JsValue = {
+    val base = Json.parse(readResourceString(s"public/schema.org/$version/tree.pruned.jsonld"))
+    seqCustom.filter(_.schemaType == "Class").foldLeft(base) { (tree, custom) =>
+      custom.subClassOf.headOption.fold(tree)(parent => graftChild(tree, parent, custom.id))
+    }
+  }
+
+  /** `tree` with `{"id": child}` appended to the children of the node named `parent`. */
+  private def graftChild(tree: JsValue, parent: String, child: String): JsValue = tree match {
+    case node: JsObject =>
+      val children = (node \ "children").asOpt[Seq[JsValue]].getOrElse(Seq())
+      if ((node \ "id").asOpt[String].contains(parent))
+        node ++ Json.obj("children" -> (children :+ Json.obj("id" -> child)))
+      else if (children.isEmpty) node
+      else node ++ Json.obj("children" -> children.map(graftChild(_, parent, child)))
+    case other => other
+  }
+
   def getHtmlTree(q:String, node:JsValue = jsonTree): NodeSeq = {
     val id = (node \ "id").as[String]
     val idWithNameSpace = withNameSpace(id)
@@ -156,8 +191,8 @@ object CalculatedSchemaOrg {
   private def isSchemaOrgTerm(id: String, comment: Option[String]): Boolean =
     !id.contains(":") && comment.nonEmpty
 
-  lazy val seqAll:Seq[SchemaType] = {
-    val values: Seq[JsValue] = (jsonAllLayers \ "graph").as[Seq[JsValue]]
+  private def parseGraph(json: JsValue): Seq[SchemaType] = {
+    val values: Seq[JsValue] = (json \ "graph").as[Seq[JsValue]]
     values.flatMap(v =>{
       val id = (v \ "id").as[String]
       // Both spellings occur: a plain string, or {language, value} once the term is localised.
@@ -169,6 +204,25 @@ object CalculatedSchemaOrg {
       }
     })
   }
+
+  private lazy val seqSchemaOrg: Seq[SchemaType] = parseGraph(jsonAllLayers)
+
+  /**
+   * Our own terms, minus any that schema.org has since defined.
+   *
+   * The moment schema.org defines a name we had been filling in, the real one wins and ours stops
+   * being used — otherwise a stand-in would quietly outlive its reason. A test names the collision
+   * rather than leaving it to be noticed: that is when to delete our entry and, if it was ever
+   * proposed, close the proposal.
+   *
+   * The maps and the tree both read this one list, so a dropped term cannot linger in one of them.
+   */
+  lazy val seqCustom: Seq[SchemaType] = {
+    val taken = seqSchemaOrg.map(_.id).toSet
+    parseGraph(jsonCustom).filterNot(custom => taken.contains(custom.id))
+  }
+
+  lazy val seqAll:Seq[SchemaType] = seqSchemaOrg ++ seqCustom
 
   /**
    * References to terms the filter above dropped, removed.
