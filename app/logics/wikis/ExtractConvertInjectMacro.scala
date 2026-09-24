@@ -89,8 +89,16 @@ class ExtractConvertInjectMacro extends ExtractConvertInject {
     })
   }
 
+  // The argument group is optional, so `[[Kbd]]` -- no parentheses at all -- matches with a null
+  // argument where `[[Kbd()]]` gives "". A macro that reads its argument then threw a
+  // NullPointerException, which nothing caught, so the whole page answered 500: Image, Attachment,
+  // Copyable, Embed and Kbd all did until 2026-09-25. Writing the macro without parentheses is an
+  // ordinary thing to type, and it means the same as writing them empty.
+  private def argumentOrEmpty(argument: String): String = Option(argument).getOrElse("")
+
   override def convert(s: String)(implicit wikiContext: ContextWikiPage): String = s match {
-    case regex(name, argument) =>
+    case regex(name, argumentOrNull) =>
+      val argument = argumentOrEmpty(argumentOrNull)
       val result = ExtractConvertInjectMacro.mapMacros.get(name).map(_.toHtmlString(argument)).getOrElse {
         // Set and Get were handled here, outside mapMacros -- which is why neither ever appeared
         // in the editor's completion list or in the "Available Macros" list below, though both
@@ -133,8 +141,8 @@ class ExtractConvertInjectMacro extends ExtractConvertInject {
 
   def toSeqLink()(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
     arrayBuffer.map(_._2).flatMap {
-      case regex(name, argument) => ExtractConvertInjectMacro.mapMacros.get(name)
-        .map(_.toSeqLink(argument))
+      case regex(name, argumentOrNull) => ExtractConvertInjectMacro.mapMacros.get(name)
+        .map(_.toSeqLink(argumentOrEmpty(argumentOrNull)))
         .getOrElse(Seq())
       case _ => Seq()
     }.toSeq

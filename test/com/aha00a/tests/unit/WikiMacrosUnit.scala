@@ -42,6 +42,18 @@ object WikiMacrosUnit {
     // An argument these two cannot read is an error box, not an exception that fails the page.
     assertEquals(MacroMonthName.toHtmlString("Tuesday"), """<div class="error">Argument Error - [[MonthName(Tuesday)]]</div>""")
     assertEquals(MacroPercentLinkTitle.toHtmlString("no commas here"), """<div class="error">Argument Error - [[PercentLinkTitle(no commas here)]]</div>""")
+    // A macro written without parentheses means the same as one written with them empty. The
+    // extractor's argument group is optional, so `[[Kbd]]` used to hand the macro a null and the
+    // NullPointerException took the whole page to 500 -- for Image, Attachment, Copyable, Embed
+    // and Kbd, the five that read their argument straight away. Rendering goes through the
+    // extractor here, which is where the null was.
+    val macroExtractor = new logics.wikis.ExtractConvertInjectMacro()
+    def renderMacroCall(call: String): String = macroExtractor.convert(call)
+    Seq("Image", "Attachment", "Copyable", "Embed", "Kbd").foreach { name =>
+      assertEquals(renderMacroCall(s"[[$name]]"), renderMacroCall(s"[[$name()]]"))
+    }
+    assertEquals(renderMacroCall("[[Kbd]]").contains("""<kbd class="MacroKbd">"""), true)
+
     val uptime = MacroUptime.toHtmlString("")
     assertEquals(MacroUptime.name, "Uptime")
     assertEquals(uptime.matches("""\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z"""), true)
