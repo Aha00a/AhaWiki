@@ -5,7 +5,8 @@
 `[[RecentChanges]]` - 기본 100개 표시
 `[[RecentChanges(50)]]` - 최대 50개 표시 (1~1000 범위)
 
-목록 위의 `Include minor edits` · `Include via API edits` 는 처음에 꺼져 있습니다. 그래서 minor edit와 API로 저장한 변경은 기본으로 목록에 나오지 않고, 켜면 함께 보입니다.
+목록 위의 `Include via API edits` 는 처음에 켜져 있습니다. 그래서 API로 저장한 변경도 기본으로 목록에 나오고, 끄면 빠집니다.
+`Include minor edits` 는 처음에 꺼져 있습니다. 그래서 minor edit는 기본으로 목록에 나오지 않고, 켜면 함께 보입니다.
 
 == 관련
  * [MacroPageList]
