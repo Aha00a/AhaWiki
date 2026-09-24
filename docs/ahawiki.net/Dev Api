@@ -127,9 +127,8 @@ AhaWiki API 밖에서 받는 `403` 은 둘 중 어느 쪽도 아니라서, key �
 저장 API는 JSON body의 `revision`, `text`, `comment`, `minorEdit`를 사용한다.
 revision이 최신과 다르면 `409 Conflict`를 반환한다.
 
-현재 API 저장은 `PageLogic.insert(..., viaApi = true)`, cache invalidate, page calculation enqueue까지만 수행한다.
-웹 편집의 websocket broadcast와 Telegram 알림은 보내지 않는다.
-Telegram 알림은 `minorEdit`와 `viaApi` 저장을 제외한다.
+API 저장은 `PageLogic.insert(..., viaApi = true)`, cache invalidate, page calculation enqueue를 하고, 2026-09-25부터 `page.updated` 도 발행한다 — 그 페이지를 열어 둔 사람에게 웹 저장과 똑같이 새로고침 토스트가 뜬다([Dev WebSocket] '''발행하는 경로''').
+Telegram 알림은 보내지 않는다 — `minorEdit`와 `viaApi` 저장을 제외한다.
 
 === AhaWikiDoc Sync 지원
 

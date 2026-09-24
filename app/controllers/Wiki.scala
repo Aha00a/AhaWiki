@@ -36,7 +36,6 @@ import play.api.data.Form
 import play.api.data.Forms._
 import play.api.db.Database
 import play.api.libs.json.JsValue
-import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
@@ -64,9 +63,10 @@ object Wiki {
  * service. The rendering helpers stayed because view and preview render the same way, and
  * the page-permission helpers stayed because view shows the summary and save applies it.
  *
- * `save` still reaches [[logics.PageCursorHub]] to announce the change. That is deliberate:
- * the hub is shared with the WebSocket rather than owned by it, so the two can live apart
- * without each keeping half the watchers.
+ * `save` still announces the change to watchers, through [[logics.CrossInstanceBus]]. That is
+ * deliberate: the bus and the [[logics.PageCursorHub]] under it are shared with the WebSocket
+ * rather than owned by it, so the two can live apart without each keeping half the watchers.
+ * The other paths that write a revision announce it the same way — see the bus.
  */
 class Wiki @Inject()(implicit val
 controllerComponents: ControllerComponents,
@@ -516,14 +516,7 @@ controllerComponents: ControllerComponents,
                 else
                   telegramLogic.notifyPageEdited(request.host, name, nextRevision, editorNickname, comment, Config.Query.Telegram.chatId())
               }
-              val pageUpdatedPayload = Json.obj(
-                "type" -> "page.updated",
-                "pageName" -> name,
-                "revision" -> nextRevision,
-                "editorNickname" -> editorNickname,
-                "dateInserted" -> now.toString
-              ).toString()
-              crossInstanceBus.publishPageUpdated(PageCursorHub.roomKeyForPage(site.seq, name), saveSenderId.map(_.trim).filter(_.nonEmpty), pageUpdatedPayload)
+              crossInstanceBus.publishPageUpdated(site.seq, name, nextRevision, editorNickname, now, saveSenderId)
 
               name match {
                 case ".footer" => ahaWikiCache.Footer.invalidate()

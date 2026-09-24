@@ -5,6 +5,7 @@ import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
 import logics.AhaWikiCache
 import logics.ApplicationConf
+import logics.CrossInstanceBus
 import logics.SiteLogic
 import logics.TelegramLogic
 import logics.wikis.PageLogic
@@ -30,6 +31,7 @@ class Diary @Inject()(implicit val
                       applicationConf: ApplicationConf,
                       ahaWikiCache: AhaWikiCache,
                       telegramLogic: TelegramLogic,
+                      crossInstanceBus: CrossInstanceBus,
                       wsClient: WSClient,
                       executionContext: ExecutionContext
                      ) extends BaseController {
@@ -58,8 +60,12 @@ class Diary @Inject()(implicit val
             s"$latestText\n * $q"
 
         val nextRevision = latestRevision + 1
-        PageLogic.insert(name, nextRevision, LocalDateTime.now(), "add item", isMinorEdit = false, body)
+        val dateInserted = LocalDateTime.now()
+        PageLogic.insert(name, nextRevision, dateInserted, "add item", isMinorEdit = false, body)
         val editorNickname = provider.getUser.map(_.nickname).getOrElse("Guest")
+        // Today's page is one anyone may be watching, and this appends a line to it. The writer's
+        // own browser is redirected to the page, so there is no watcher of it to skip.
+        crossInstanceBus.publishPageUpdated(site.seq, name, nextRevision, editorNickname, dateInserted, None)
         val siteChatId = models.tables.Config.Query.Telegram.chatId()
         if (latestText.isEmpty)
           telegramLogic.notifyPageCreated(request.host, name, editorNickname, "add item", siteChatId)

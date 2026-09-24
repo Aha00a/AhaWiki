@@ -14,8 +14,10 @@ import scala.collection.concurrent.TrieMap
  * hold half the subscribers, so half the readers would miss every update.
  *
  * Being process-local also means it only reaches the instance the socket landed on. With two
- * instances behind nginx, an edit on one is not pushed to watchers on the other. Live
- * cursors are a convenience, so that is accepted rather than solved with a shared broker.
+ * instances behind nginx, what happens on one does not reach watchers on the other. Live
+ * cursors are a convenience, so that is accepted for them. `page.updated` is not, and since
+ * 2026-09-15 it is relayed between instances by [[CrossInstanceBus]] -- which is what every
+ * save path calls, rather than [[broadcastPageUpdated]] here.
  */
 object PageCursorHub {
   private case class PageSubscriber(

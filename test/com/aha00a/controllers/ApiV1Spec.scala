@@ -5,12 +5,18 @@ import com.aha00a.tests.TestApplication
 import com.aha00a.tests.TestSchema
 import anorm.SqlStringInterpolation
 import logics.AhaWikiCacheMemoryPermission
+import logics.PageCursorHub
 import logics.SessionLogic
 import models.WikiActors
 import models.tables.Page
 import models.tables.Site
 import models.tables.UserApiKey
 import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.stream.Materializer
+import org.apache.pekko.stream.OverflowStrategy
+import org.apache.pekko.stream.scaladsl.Keep
+import org.apache.pekko.stream.scaladsl.Sink
+import org.apache.pekko.stream.scaladsl.Source
 import org.scalatest.BeforeAndAfterAll
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
@@ -24,6 +30,8 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
 import java.time.LocalDateTime
+import scala.concurrent.Await
+import scala.concurrent.duration._
 
 class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll {
 
@@ -309,6 +317,31 @@ class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll
       val readResult = route(app, apiV1Request(GET, "/api/v1/page/ApiSave", created.rawKey)).get
       status(readResult) mustBe OK
       (contentAsJson(readResult) \ "userApiKeyName").as[String] mustBe "test key"
+    }
+
+    // Until 2026-09-25 this path told nobody, so a page a bot had rewritten stayed stale on every
+    // screen that had it open. The hub is process-local here (no Redis under test), which is
+    // exactly the delivery this asserts: the bus hands the payload to local watchers first.
+    "announce the new revision to whoever is watching the page" in {
+      val created = createApiKey()
+      insertPage("ApiSaveWatched", 1, "= ApiSaveWatched\nold")
+
+      implicit val materializer: Materializer = app.materializer
+      val roomKey = PageCursorHub.roomKeyForPage(site.seq, "ApiSaveWatched")
+      val (queue, received) = Source.queue[String](8, OverflowStrategy.dropHead).toMat(Sink.seq)(Keep.both).run()
+      PageCursorHub.subscribe(roomKey, "watcher-connection", queue)
+
+      val request = apiV1Request(POST, "/api/v1/page/ApiSaveWatched", created.rawKey)
+        .withJsonBody(Json.obj("revision" -> 1, "text" -> "= ApiSaveWatched\nnew"))
+
+      try status(route(app, request).get) mustBe OK
+      finally PageCursorHub.unsubscribe(roomKey, "watcher-connection") // also completes the queue
+
+      val payloads = Await.result(received, 5.seconds).map(Json.parse)
+      payloads.map(payload => (payload \ "type").as[String]) mustBe Seq("page.updated")
+      (payloads.head \ "pageName").as[String] mustBe "ApiSaveWatched"
+      (payloads.head \ "revision").as[Long] mustBe 2
+      (payloads.head \ "editorNickname").as[String] mustBe "alice"
     }
 
     "return 409 when request revision is stale" in {

@@ -44,6 +44,7 @@ class WikiSpreadsheet @Inject()(
   wsClient: WSClient,
   executionContext: ExecutionContext,
   telegramLogic: TelegramLogic,
+  crossInstanceBus: CrossInstanceBus,
 ) extends BaseController with Logging {
 
   val regexGoogleSpreadsheetUrl: Regex = """https://docs\.google\.com/spreadsheets/d/([^/?#\s]+).*""".r
@@ -100,8 +101,13 @@ class WikiSpreadsheet @Inject()(
               page.content
             }
             if (page.content != newPageBody) {
-              PageLogic.insert(pageName, page.revision + 1, LocalDateTime.now(), "Sync Google Spreadsheet", isMinorEdit = false, newPageBody)
-              telegramLogic.notifySpreadsheetSynced(request.host, pageName, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())
+              val nextRevision = page.revision + 1
+              val dateInserted = LocalDateTime.now()
+              val editorNickname = provider.getUser.map(_.nickname).getOrElse("Guest")
+              PageLogic.insert(pageName, nextRevision, dateInserted, "Sync Google Spreadsheet", isMinorEdit = false, newPageBody)
+              // The table on the page just changed under whoever is reading it.
+              crossInstanceBus.publishPageUpdated(site.seq, pageName, nextRevision, editorNickname, dateInserted, None)
+              telegramLogic.notifySpreadsheetSynced(request.host, pageName, editorNickname, Config.Query.Telegram.chatId())
               Ok("")
             } else {
               Ok("NotChanged")

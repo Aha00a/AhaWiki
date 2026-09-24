@@ -6,6 +6,7 @@ import play.api.libs.json.Json
 import play.api.{Configuration, Environment, Logging, Mode}
 import redis.clients.jedis.{DefaultJedisClientConfig, HostAndPort, Jedis, JedisPooled, JedisPubSub}
 
+import java.time.LocalDateTime
 import java.util.UUID
 import javax.inject._
 import scala.concurrent.Future
@@ -68,11 +69,28 @@ class CrossInstanceBus @Inject()(
     logger.info("CrossInstanceBus off (test mode or disabled) -- page.updated stays instance-local")
   }
 
-  /** Deliver to local watchers now, then fan the event out to the other instance. */
-  def publishPageUpdated(roomKey: String, saveSenderId: Option[String], payload: String): Unit = {
-    PageCursorHub.broadcastPageUpdated(roomKey, saveSenderId, payload)
+  /**
+   * Announce a new revision of one page: deliver to local watchers now, then fan the event out
+   * to the other instance.
+   *
+   * Every path that writes a revision calls this, so the room key and the payload are built here
+   * rather than at each call site. `saveSenderId` is the browser that saved, if the save came
+   * from one -- it is the only watcher that already knows, and gets skipped.
+   */
+  def publishPageUpdated(
+    siteSeq: Long,
+    pageName: String,
+    revision: Long,
+    editorNickname: String,
+    dateInserted: LocalDateTime,
+    saveSenderId: Option[String],
+  ): Unit = {
+    val roomKey = PageCursorHub.roomKeyForPage(siteSeq, pageName)
+    val sender = saveSenderId.map(_.trim).filter(_.nonEmpty)
+    val payload = pageUpdatedPayload(pageName, revision, editorNickname, dateInserted)
+    PageCursorHub.broadcastPageUpdated(roomKey, sender, payload)
     if (enabled) {
-      try publisher.publish(channel, encode(instanceId, roomKey, saveSenderId, payload))
+      try publisher.publish(channel, encode(instanceId, roomKey, sender, payload))
       catch { case NonFatal(e) => logger.warn(s"CrossInstanceBus publish failed (delivered locally only): $e") }
     }
   }
@@ -114,6 +132,19 @@ class CrossInstanceBus @Inject()(
 
 object CrossInstanceBus {
   case class Msg(origin: String, roomKey: String, saveSenderId: Option[String], payload: String)
+
+  /**
+   * What a watching browser receives. `app/views/Wiki/view.scala.html` reads `revision` to drop
+   * an event it has already shown, and `editorNickname` to name who saved.
+   */
+  def pageUpdatedPayload(pageName: String, revision: Long, editorNickname: String, dateInserted: LocalDateTime): String =
+    Json.obj(
+      "type" -> "page.updated",
+      "pageName" -> pageName,
+      "revision" -> revision,
+      "editorNickname" -> editorNickname,
+      "dateInserted" -> dateInserted.toString,
+    ).toString()
 
   /** Wire format on the channel: the room, the saver to exclude, and the exact client payload. */
   def encode(origin: String, roomKey: String, saveSenderId: Option[String], payload: String): String =

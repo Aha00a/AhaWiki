@@ -11,6 +11,7 @@ import io.circe.syntax._
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.AttachmentLogic
+import logics.CrossInstanceBus
 import logics.SessionLogic
 import logics.SiteLogic
 import logics.wikis.PageLogic
@@ -41,6 +42,7 @@ class ApiV1 @Inject()(
   wikiActors: WikiActors,
   applicationConf: ApplicationConf,
   ahaWikiCache: AhaWikiCache,
+  crossInstanceBus: CrossInstanceBus,
 ) extends BaseController with JsonResults with Logging {
 
   private def decodePageName(nameEncoded: String): String =
@@ -303,6 +305,10 @@ class ApiV1 @Inject()(
                   val now = LocalDateTime.now()
                   val nextRevision = latestRevision + 1
                   PageLogic.insert(name, nextRevision, now, comment, isMinorEdit, text, viaApi = true, userApiKey = Some(apiKey.seq))
+                  // A watcher has the page open in a browser and gets the refresh toast, exactly
+                  // as for a web save. There is no saveSenderId to skip: the saver here is a
+                  // script, not one of the browsers on the page.
+                  crossInstanceBus.publishPageUpdated(site.seq, name, nextRevision, user.nickname, now, None)
                   name match {
                     case ".footer" => ahaWikiCache.Footer.invalidate()
                     case ".config" => ahaWikiCache.Config.invalidate()
