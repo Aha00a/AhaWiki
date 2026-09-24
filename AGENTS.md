@@ -17,6 +17,7 @@ once by someone who could have read it instead. Add a line here when you add a d
 
 | | |
 |---|---|
+| [README.md](README.md) | The front door, for someone arriving from GitHub who has never heard of this: what the engine is for, how to run it, and where the real documentation is. It is a map, not a copy — every detail it needs belongs to a wiki page it links to, so there is one place to fix when that detail changes. It replaced a `README.wiki` on 2026-09-25: GitHub renders MediaWiki, but the repository's other READMEs are Markdown, and two spellings of the same thing is one more than anyone maintains. |
 | [docs/ahawiki.net/Dev RunningLocally](docs/ahawiki.net/Dev%20RunningLocally) | What has to be arranged before `sbt run` produces a working server. Three things, each of which fails without naming itself. |
 | [docs/ahawiki.net/Dev Deploying](docs/ahawiki.net/Dev%20Deploying) | `deploy.sh`, what it does, and why each of its awkward steps is there. Where it deploys comes from the environment — this repository names no machine. |
 | [docs/ahawiki.net/Dev Testing](docs/ahawiki.net/Dev%20Testing) | How the specs get a schema, what building it from the committed dump found, and what it still does not cover. |
