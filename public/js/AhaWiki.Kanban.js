@@ -716,6 +716,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Every write from the board carries the CSRF token, and each of the five used to fetch and
+    // unwrap it in its own four lines. Play reads either header name, so both go on every request.
+    var fetchCsrfTokenValue = function () {
+        return fetch('/api/csrf', { credentials: 'same-origin' })
+            .then(function (response) { return response.json().catch(function () { return {}; }); })
+            .then(function (csrfToken) { return csrfToken && csrfToken.value ? csrfToken.value : ''; });
+    };
+
+    var withCsrfHeaders = function (tokenValue, headers) {
+        return Object.assign({ 'Csrf-Token': tokenValue, 'X-CSRF-Token': tokenValue }, headers || {});
+    };
+
     var extractActivityDetailFromRevisionComment = function (comment) {
         var raw = String(comment || '').trim();
         var marker = ' - ';
@@ -729,14 +741,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return Promise.resolve(null);
         }
 
-        return fetch('/api/csrf', {
-            credentials: 'same-origin'
-        }).then(function (csrfResponse) {
-            return csrfResponse.json().catch(function () {
-                return {};
-            });
-        }).then(function (csrfToken) {
-            var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
+        return fetchCsrfTokenValue().then(function (tokenValue) {
             var formData = new FormData();
             formData.append('csrfToken', tokenValue);
             formData.append('pageName', pageName);
@@ -745,10 +750,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return fetch('/api/uploadClipboardImage', {
                 method: 'POST',
                 credentials: 'same-origin',
-                headers: {
-                    'Csrf-Token': tokenValue,
-                    'X-CSRF-Token': tokenValue
-                },
+                headers: withCsrfHeaders(tokenValue),
                 body: formData
             }).then(function (response) {
                 return response.json().catch(function () {
@@ -769,14 +771,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return Promise.resolve(null);
         }
 
-        return fetch('/api/csrf', {
-            credentials: 'same-origin'
-        }).then(function (csrfResponse) {
-            return csrfResponse.json().catch(function () {
-                return {};
-            });
-        }).then(function (csrfToken) {
-            var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
+        return fetchCsrfTokenValue().then(function (tokenValue) {
             var formData = new FormData();
             formData.append('csrfToken', tokenValue);
             formData.append('pageName', pageName);
@@ -785,10 +780,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return fetch('/api/uploadAttachment', {
                 method: 'POST',
                 credentials: 'same-origin',
-                headers: {
-                    'Csrf-Token': tokenValue,
-                    'X-CSRF-Token': tokenValue
-                },
+                headers: withCsrfHeaders(tokenValue),
                 body: formData
             }).then(function (response) {
                 return response.json().catch(function () {
@@ -849,14 +841,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!pageName || !objectKey) {
             return Promise.resolve(false);
         }
-        return fetch('/api/csrf', {
-            credentials: 'same-origin'
-        }).then(function (csrfResponse) {
-            return csrfResponse.json().catch(function () {
-                return {};
-            });
-        }).then(function (csrfToken) {
-            var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
+        return fetchCsrfTokenValue().then(function (tokenValue) {
             var params = new URLSearchParams();
             params.append('csrfToken', tokenValue);
             params.append('pageName', pageName);
@@ -865,11 +850,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return fetch('/api/deleteAttachment', {
                 method: 'POST',
                 credentials: 'same-origin',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                    'Csrf-Token': tokenValue,
-                    'X-CSRF-Token': tokenValue
-                },
+                headers: withCsrfHeaders(tokenValue, { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }),
                 body: params.toString()
             }).then(function (response) {
                 if (!response.ok) {
@@ -935,18 +916,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!pageName) {
             return Promise.resolve('');
         }
-        return fetch('/api/csrf', { credentials: 'same-origin' })
-            .then(function (csrfResponse) { return csrfResponse.json().catch(function () { return {}; }); })
-            .then(function (csrfToken) {
-                var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
+        return fetchCsrfTokenValue()
+            .then(function (tokenValue) {
                 return fetch('/api/renderAhaMark/' + encodeURIComponent(pageName), {
                     method: 'POST',
                     credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Csrf-Token': tokenValue,
-                        'X-CSRF-Token': tokenValue
-                    },
+                    headers: withCsrfHeaders(tokenValue, { 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ comment: comment || '' })
                 }).then(function (response) {
                     return response.json().catch(function () { return {}; }).then(function (payload) {
@@ -1091,15 +1066,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 return requestSaveKanban(pageName, lineStart, lineEnd, content, actionType, actionMeta, attempt, replayOntoServer);
             });
         }
-        return Promise.all([
-            fetch('/api/csrf', { credentials: 'same-origin' })
-                .then(function (csrfResponse) { return csrfResponse.json().catch(function () { return {}; }); }),
-            getSaveRecaptchaToken()
-        ])
+        return Promise.all([fetchCsrfTokenValue(), getSaveRecaptchaToken()])
             .then(function (tokens) {
-                var csrfToken = tokens[0];
+                var tokenValue = tokens[0];
                 var recaptchaToken = tokens[1];
-                var tokenValue = csrfToken && csrfToken.value ? csrfToken.value : '';
                 var actionMetaWithPageName = Object.assign({ pageName: pageName }, actionMeta || {});
                 var comment = buildKanbanSaveComment(actionType, actionMetaWithPageName);
                 var params = new URLSearchParams();
@@ -1114,11 +1084,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return fetch('/w/' + encodeURIComponent(pageName), {
                     method: 'POST',
                     credentials: 'same-origin',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                        'Csrf-Token': tokenValue,
-                        'X-CSRF-Token': tokenValue
-                    },
+                    headers: withCsrfHeaders(tokenValue, { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }),
                     body: params.toString()
                 }).then(function (response) {
                     if (!response.ok) {

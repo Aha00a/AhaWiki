@@ -19,7 +19,7 @@ const page = lines => ['#!var x y', '= Title', '[[[#!Kanban', ...lines, ']]]', '
 const drawnAt = { lineStart: 2, lineEnd: 15 };
 
 function fakeServer({ text, revision, beforeSave = () => {} }) {
-    const server = { text, revision, posts: [] };
+    const server = { text, revision, posts: [], postHeaders: [] };
     server.fetch = async (url, options = {}) => {
         if (url === '/api/csrf') return { ok: true, json: async () => ({ value: 'csrf' }) };
         if (url.startsWith('/api/pageRevision/')) return { ok: true, json: async () => ({ revision: server.revision }) };
@@ -27,6 +27,7 @@ function fakeServer({ text, revision, beforeSave = () => {} }) {
         if (url.startsWith('/w/') && options.method === 'POST') {
             const params = Object.fromEntries(new URLSearchParams(options.body));
             server.posts.push(params);
+            server.postHeaders.push(options.headers || {});
             beforeSave(server, server.posts.length);
             if (Number(params.revision) !== server.revision) return { ok: false, status: 409 };
             const lines = server.text.split('\n');
@@ -73,6 +74,10 @@ test("the first save on a page that opens with #! lines writes the board's own l
     assert.equal(server.posts.length, 1);
     assert.equal(server.posts[0].lineStart, '4');
     assert.equal(server.posts[0].lineEnd, '16');
+    // Play accepts either spelling and the save sends both; the form field carries it as well.
+    assert.equal(server.postHeaders[0]['Csrf-Token'], 'csrf');
+    assert.equal(server.postHeaders[0]['X-CSRF-Token'], 'csrf');
+    assert.equal(server.postHeaders[0]['Content-Type'], 'application/x-www-form-urlencoded; charset=UTF-8');
     assertMovedIntoPlace(server.text);
 });
 
