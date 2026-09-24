@@ -41,6 +41,10 @@ object WikiMacrosUnit {
     assertEquals(MacroAttachment.toHtmlString("Attachment/987654/Page/a.png").contains("not an attachment of this site"), true)
     // An argument these two cannot read is an error box, not an exception that fails the page.
     assertEquals(MacroMonthName.toHtmlString("Tuesday"), """<div class="error">Argument Error - [[MonthName(Tuesday)]]</div>""")
+    // Date-shaped is not the same as a date. WeekdayName matched the shape and then LocalDate.parse
+    // threw, so [[WeekdayName(2026-13-45)]] answered 500 for the whole page until 2026-09-25.
+    assertEquals(MacroWeekdayName.toHtmlString("2026-13-45"), """<div class="error">Argument Error - [[WeekdayName(2026-13-45)]]</div>""")
+    assertEquals(MacroWeekdayName.toHtmlString("2026-09-25").nonEmpty, true)
     assertEquals(MacroPercentLinkTitle.toHtmlString("no commas here"), """<div class="error">Argument Error - [[PercentLinkTitle(no commas here)]]</div>""")
     // A macro written without parentheses means the same as one written with them empty. The
     // extractor's argument group is optional, so `[[Kbd]]` used to hand the macro a null and the

@@ -47,8 +47,10 @@ object InterpreterMap extends TraitInterpreter {
     val setPageName: Set[String] = wikiContext.setPageNameByPermission
     Using(new CsvListReader(new StringReader(pageContent.content), CsvPreference.TAB_PREFERENCE)) { listReader =>
       val rowColumnData: Seq[Seq[String]] = convert(listReader)
-      val head: Seq[String] = rowColumnData.head
-      val tail: Seq[Seq[String]] = rowColumnData.tail
+      // An empty block has no header row to read. `.head` threw here, which the page answered as
+      // a 500; now an empty block parses to nothing and toHtmlString says what is missing.
+      val head: Seq[String] = rowColumnData.headOption.getOrElse(Seq.empty)
+      val tail: Seq[Seq[String]] = rowColumnData.drop(1)
 
       val indexName = head.indexOf("Name")
       val indexScore = head.indexOf("Score")
@@ -73,6 +75,12 @@ object InterpreterMap extends TraitInterpreter {
     }
 
     val (seqHeader, seqLocation) = parse(pageContent)
+    // A block with no header row, or one that names neither column the map reads, has nothing to
+    // put on a map. Saying so is the same answer the missing-key case above gives; before
+    // 2026-09-25 it was an exception and the page did not open.
+    if (seqHeader.isEmpty || (!seqHeader.contains("Name") && !seqHeader.contains("Address"))) {
+      return MacroError.toHtmlString("[[[#!Map Error - The first line has to name the columns, and needs at least Name or Address.]]]")
+    }
 
     wikiContext.database.withConnection { implicit connection =>
       implicit val site: Site = wikiContext.site

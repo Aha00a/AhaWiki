@@ -92,3 +92,11 @@ Play 는 evolution 파일을 DB 에 넘기기 전에 '''모든 `;` 에서''' 문
 2026-09-02 evolution 69 의 첫 배포가 그렇게 실패했다 — "onto bin; requestedNickname is then put back…" 이라는 주석 한 줄 때문에 `requestedNickname is then put back to …` 가 MariaDB 에 문장으로 들어갔다. 인스턴스 하나가 "inconsistent state" 로 못 떴고, 다른 하나가 옛 릴리스로 버텨 사이트는 멀쩡했다. `play_evolutions` 의 실패 행은 옛 릴리스도 막으므로, 롤백은 `current` 만 되돌리는 것으로 끝나지 않고 그 행을 지우는 것이 먼저다(문장이 하나도 실행되지 않은 것을 `SHOW CREATE TABLE` 로 확인한 뒤).
 
 68 의 주석이 통과한 것은 거기 `;` 가 없었기 때문이지 주석이 안전해서가 아니다. `EvolutionConventionSpec` 이 이제 모든 evolution 의 주석 줄에서 `;` 를 찾아 실패한다.
+
+== 빈 목록을 IN 에 넣지 말 것
+
+anorm 은 `IN ($seq)` 의 Seq 를 값 목록으로 펼친다. 빈 Seq 는 `IN ()` 이 되는데, 이건 «아무것도 안 맞음» 이 아니라 '''문법 오류'''다 — MySQL 도 H2 도 거절한다. 예외는 그대로 올라가 요청이 500 이 된다.
+
+'''막는 자리는 쿼리 함수 안이다.''' 빈 목록을 넘기는 호출부는 대개 자기가 틀렸다고 생각하지 않고, 호출부마다 검사를 두면 새 호출부가 그 검사를 빠뜨린다. `CalculatedTerm.select` · `PageMeta.selectImageMap` · `UserApiKey.selectNamesBySeqs` · `Attachment` · `CalculatedSchemaOrg.selectWherePageOrValueIn` 은 이미 그렇게 막고 있었다.
+
+빠져 있던 셋은 2026-09-25 에 막았다 — `GeocodeCache.select`, `CalculatedLink.selectDstMaxMinCountWhereSrcIsDatePage`, `Page.selectLastRevision(Seq)`. 앞의 둘 때문에 장소가 하나도 없는 `#!Map` 블록이 문서를 500 으로 만들고 있었다([InterpreterMap]). `EmptyInClauseSpec` 이 셋을 빈 Seq 로 불러 확인한다.

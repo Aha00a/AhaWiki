@@ -27,7 +27,10 @@ object CalculatedLink {
   def tupled = (apply _).tupled
 
   case class DstMaxMinCount(dst: String, max: String, min: String, count: Long)
+  // `IN ()` is a syntax error, not an empty match -- see the same guard in GeocodeCache.select.
   def selectDstMaxMinCountWhereSrcIsDatePage(seqName: Seq[String])(implicit connection: Connection, site: Site): Seq[DstMaxMinCount] = {
+    if (seqName.isEmpty) return Seq.empty
+
     SQL"""
         SELECT dst, MAX(src) max, MIN(src) min, COUNT(*) count
             FROM CalculatedLink

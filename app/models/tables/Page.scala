@@ -77,7 +77,11 @@ SELECT P.name, P.revision, dateTime, U.nickname AS nickname, P.`user` AS `user`,
       .map(Page.tupled)
   }
 
+  // `IN ()` is a syntax error, not an empty match -- see the same guard in GeocodeCache.select.
+  // One caller checked before calling and the others had not needed to yet.
   def selectLastRevision(seqName: Seq[String])(implicit connection: Connection, site: Site): Seq[Page] = {
+    if (seqName.isEmpty) return Seq.empty
+
     //language=sql
     SQL"""
 SELECT P.name, P.revision, dateTime, U.nickname AS nickname, P.`user` AS `user`, remoteAddress, comment, isMinorEdit, content, viaApi, P.userApiKey

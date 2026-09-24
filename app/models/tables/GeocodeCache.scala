@@ -19,10 +19,17 @@ object GeocodeCache {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
+  // An empty Seq interpolates to `IN ()`, which is a syntax error rather than a query that finds
+  // nothing, so the guard has to be here and not at each call site. It was missing here, and a
+  // `#!Map` block whose body held no location answered 500 for the whole page.
   def select(seqAddress: Seq[String])(implicit connection: Connection): Seq[GeocodeCache] = {
-    SQL"SELECT address, lat, lng, created FROM GeocodeCache WHERE address IN ($seqAddress)"
-      .as(str("address") ~ double("lat") ~ double("lng") ~ localDateTime("created") *).map(flatten)
-      .map(tupled)
+    if (seqAddress.isEmpty) {
+      Seq.empty
+    } else {
+      SQL"SELECT address, lat, lng, created FROM GeocodeCache WHERE address IN ($seqAddress)"
+        .as(str("address") ~ double("lat") ~ double("lng") ~ localDateTime("created") *).map(flatten)
+        .map(tupled)
+    }
   }
 
   def replace(address: String, latLng: LatLng)(implicit connection: Connection): Int = {
