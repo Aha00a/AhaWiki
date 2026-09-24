@@ -72,6 +72,41 @@ object BackQuoteBlockUnit {
       assertEquals(e.extract(input), input)
       assertEquals(e.arrayBuffer.isEmpty, true)
     }
+    // 2026-09-25: the same has to hold for a block that hands its body on as source rather than
+    // showing it. Kanban is the one that was losing text: the board reads its source out of the
+    // rendered <pre> with textContent, which drops the <code> tags a pulled backtick left behind,
+    // so the next board save wrote the page back with the backticks gone.
+    {
+      val e = new ExtractConvertInjectBackQuote()
+      val input = "[[[#!Kanban\n=== ToDo\n==== card ==== #c1\n===== Description\nuse `Delete(32)`\n]]]"
+      assertEquals(e.extract(input), input)
+      assertEquals(e.arrayBuffer.isEmpty, true)
+    }
+    {
+      val e = new ExtractConvertInjectBackQuote()
+      val input = "[[[#!Mermaid\ngraph TD;\n  A[`tick`]-->B;\n]]]"
+      assertEquals(e.extract(input), input)
+      assertEquals(e.arrayBuffer.isEmpty, true)
+    }
+    {
+      val e = new ExtractConvertInjectBackQuote()
+      val input = "[[[#!Math\na = `b`\n]]]"
+      assertEquals(e.extract(input), input)
+      assertEquals(e.arrayBuffer.isEmpty, true)
+    }
+    {
+      val e = new ExtractConvertInjectBackQuote()
+      val input = "[[[#!Gantt\ntitle\tstart\tend\n`task`\t2026-01-01\t2026-01-02\n]]]"
+      assertEquals(e.extract(input), input)
+      assertEquals(e.arrayBuffer.isEmpty, true)
+    }
+    {
+      val e = new ExtractConvertInjectBackQuote()
+      val input = "[[[#!Html\n<p>a `b` c</p>\n]]]"
+      assertEquals(e.extract(input), input)
+      assertEquals(e.arrayBuffer.isEmpty, true)
+    }
+
     // A #!read directive before the interpreter is skipped; #!Vim still reads as literal.
     {
       val e = new ExtractConvertInjectBackQuote()
@@ -130,9 +165,25 @@ object BackQuoteBlockUnit {
       assertEquals(e.arrayBuffer.isEmpty, true)
     }
 
+    // Markdown is deliberately NOT in the set: txtmark makes the same code span out of what it is
+    // handed, so leaving it alone keeps one behaviour rather than two that agree.
+    {
+      val e = new ExtractConvertInjectBackQuote()
+      val out = e.extract("[[[#!Markdown\nuse `code` here\n]]]")
+      assertEquals(out.contains("`code`"), false)
+      assertEquals(values(e), List("<code>code</code>"))
+    }
+
     // End to end: a #!Text block shows the literal backtick, not a code span.
     assertEquals(Interpreters.toHtmlString("[[[#!Text\n`code`\n]]]").contains("`code`"), true)
     assertEquals(Interpreters.toHtmlString("[[[#!Text\n`code`\n]]]").contains("<code>code</code>"), false)
+    // End to end: what a Mermaid block hands to the browser is the diagram source, backtick and all.
+    assertEquals(Interpreters.toHtmlString("[[[#!Mermaid\nA[`x`]\n]]]").contains("A[`x`]"), true)
+    // End to end: the Kanban source the board parses still holds the backtick the card was written
+    // with. This is the round trip -- what the board reads here is what it saves back.
+    val kanbanHtml = Interpreters.toHtmlString("[[[#!Kanban\n=== ToDo\n==== card ==== #c1\n===== Description\nuse `Delete(32)`\n]]]")
+    assertEquals(kanbanHtml.contains("use `Delete(32)`"), true)
+    assertEquals(kanbanHtml.contains("<code>Delete(32)</code>"), false)
     // A wiki-like block still turns the backtick into a code span (unchanged behavior).
     assertEquals(Interpreters.toHtmlString("[[[#!Quote\n`code`\n]]]").contains("<code>code</code>"), true)
     // Outside a block a backtick still becomes a code span.

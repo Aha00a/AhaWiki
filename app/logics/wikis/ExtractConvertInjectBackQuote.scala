@@ -8,13 +8,25 @@ import scala.collection.mutable.ArrayBuffer
 
 class ExtractConvertInjectBackQuote() extends ExtractConvertInject {
   // Backticks are pulled before [[[blocks]]] are, so a backtick can shield a [[[ or {{var}} written
-  // inside it. But a backtick written inside a LITERAL block -- #!Text, #!Vim, or the Raw side of
-  // #!WikiSyntaxPreview, and a bare [[[...]]] which defaults to Text -- must be left as the literal
-  // character the block shows, and left unchanged between renders so a Vim block's md5 cache key
-  // (built from its body) does not shift every time. Wiki-like blocks (#!Quote, #!Table, #!Fold,
-  // #!Paper, #!Wiki, ...) re-render their body as wiki and turn the backtick into a code span either
-  // way, so they are left exactly as before: pulling the backtick here rather than in the nested
-  // render keeps their <p> wrapping and line breaks unchanged.
+  // inside it. But a block whose body is not wiki text must keep the backtick it was written with.
+  // Two kinds:
+  //
+  //   - What the block SHOWS verbatim -- #!Text, #!Vim, the Raw side of #!WikiSyntaxPreview, and a
+  //     bare [[[...]]] which defaults to Text. A code span there is not what the page said, and a
+  //     Vim block's cache key (md5 of its body) shifted every render because the body held a fresh
+  //     placeholder.
+  //   - What the block HANDS ON as source -- #!Kanban, #!Gantt, #!Mermaid, #!Math, #!Html. The body
+  //     goes to a client-side consumer or straight into the page, so <code> lands inside a Mermaid
+  //     diagram, a MathJax expression or the author's own HTML. Worst is Kanban: the board reads its
+  //     source with textContent, which drops the tags, so the next board save wrote the page back
+  //     with the backticks silently gone. Its card text is rendered as AhaMark by the client anyway,
+  //     which is where a backtick there becomes a code span -- as the author meant.
+  //
+  // Wiki-like blocks (#!Quote, #!Table, #!Fold, #!Paper, #!Wiki, ...) re-render their body as wiki
+  // and turn the backtick into a code span either way, so they are left exactly as before: pulling
+  // the backtick here rather than in the nested render keeps their <p> wrapping and line breaks
+  // unchanged. #!Markdown is left alone too -- txtmark makes the same code span out of what it is
+  // handed. #!Graph and #!Map parse their body as data, where a backtick has never appeared.
   //
   // So the text is read once, left to right: a literal block's [[[...]]] is set aside untouched,
   // everything else (plain text and non-literal blocks) keeps having its backticks pulled. Backtick
@@ -47,11 +59,14 @@ class ExtractConvertInjectBackQuote() extends ExtractConvertInject {
 
   private val regexDoubleBackquotePrefix = """``.+?``""".r
   private val regexSingleBackquotePrefix = """`.+?`""".r
-  private val literalInterpreters = Set("text", "vim", "wikisyntaxpreview")
+  private val literalInterpreters = Set(
+    "text", "vim", "wikisyntaxpreview", // shown verbatim
+    "kanban", "gantt", "mermaid", "math", "html", // handed on as source
+  )
 
   // The interpreter a [[[block]]] body reads as, matching how Interpreters/ShebangUtil resolve it:
   // a body with no shebang is Text, a body that has only directives (#!read etc.) is Wiki, otherwise
-  // the first shebang word. Only Text / Vim / WikiSyntaxPreview keep their backticks literal.
+  // the first shebang word. Which names keep their backticks literal, and why, is on the set above.
   private def keepsBackticksLiteral(body: String): Boolean = {
     val name =
       if (!body.trim.startsWith("#!")) "text"
