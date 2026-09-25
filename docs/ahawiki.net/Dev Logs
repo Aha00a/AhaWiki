@@ -5,16 +5,18 @@
 
 == 어디에 있나
 
-인스턴스 둘이 같은 파일에 쓴다 — `shared/logs/application.log`. 릴리스마다 링크로 들어가므로 배포해도 이어진다([Dev Deploying]).
+`shared/logs/` 아래, '''인스턴스마다 한 파일''' — `application-10001.log` 와 `application-10000.log`. 릴리스마다 링크로 들어가므로 배포해도 이어진다([Dev Deploying]). 두 인스턴스의 시간순을 한 줄로 보려면 둘을 `sort -m` 하면 된다.
 
-'''로테이션이 없다.''' 2026-09-25 기준 한 파일에 8-03 부터 53일치, 491MB 다. 하루 9MB 쯤 늘고 디스크는 74% 차 있다. `/hc` 는 여유가 5% 아래로 떨어지면 실패하므로([Dev Deploying] 의 헬스체크), 이대로 두면 언젠가 배포가 디스크 때문에 멈춘다. 아직 손대지 않았다 — 무엇으로 자를지(logrotate·Play 설정) 정하는 일이라서.
+날마다 `application-<port>.<날짜>.log.gz` 로 말아 30일, 합쳐서 1GB 까지만 둔다. 설정은 `conf/logback.xml` 이고 서버에는 아무것도 없다 — Play 가 릴리스의 `conf/` 를 읽는다.
+
+'''2026-09-26 전에는 한 파일에 둘이 같이 썼고 아무것도 안 잘랐다.''' 8-03 부터 53일치가 491MB 로 쌓였고 디스크는 74% 였다. `/hc` 는 여유가 5% 아래면 실패하니([Dev Deploying] 의 헬스체크) 그대로면 언젠가 배포가 디스크에서 멈췄을 것이다. 파일을 인스턴스마다 나눈 것은 취향이 아니다 — 프로세스 둘이 한 파일을 자정에 서로 이름 바꾸려 들면 한쪽이 진다. 옛 `application.log` 는 그대로 남아 있고, 필요 없어지면 손으로 지운다.
 
 == 무엇이 얼마나 나는지 세기
 
 문제를 찾는 데 쓴 것은 이 한 줄이다. 500 응답마다 `Unexpected exception[...]` 줄이 남으므로, 그것을 종류별로 세면 «지금 무엇이 깨져 있나» 가 그대로 나온다.
 
 [[[#!Vim bash
-sudo grep -h 'Unexpected exception\[' application.log \
+sudo grep -h 'Unexpected exception\[' application-*.log \
   | sed -E 's/.*Unexpected exception\[//; s/\].*//; s/[0-9]+/<n>/g' \
   | sort | uniq -c | sort -rn | head -20
 ]]]
@@ -23,7 +25,7 @@ sudo grep -h 'Unexpected exception\[' application.log \
 
 [[[#!Vim bash
 sudo awk '/^[0-9]{4}-[0-9]{2}-[0-9]{2} /{d=substr($0,1,10)}
-          /Unexpected exception\[/{e=$0; sub(/.*Unexpected exception\[/,"",e); sub(/:.*/,"",e); print d, e}' application.log \
+          /Unexpected exception\[/{e=$0; sub(/.*Unexpected exception\[/,"",e); sub(/:.*/,"",e); print d, e}' application-10001.log \
   | sort | uniq -c
 ]]]
 
@@ -31,7 +33,7 @@ sudo awk '/^[0-9]{4}-[0-9]{2}-[0-9]{2} /{d=substr($0,1,10)}
 
 [[[#!Vim bash
 sudo awk '/Unexpected exception\[NoSuchElementException/{f=1;next}
-          f&&/^[[:space:]]*at (controllers|logics|models|actors)\./{print $0; f=0}' application.log \
+          f&&/^[[:space:]]*at (controllers|logics|models|actors)\./{print $0; f=0}' application-*.log \
   | sort | uniq -c | sort -rn
 ]]]
 

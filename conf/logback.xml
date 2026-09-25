@@ -1,8 +1,24 @@
 <!-- https://www.playframework.com/documentation/latest/SettingsLogger -->
 <configuration>
 
-  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-    <file>${application.home:-.}/logs/application.log</file>
+  <!--
+    One file per instance, rolled daily and capped.
+
+    Until 2026-09-26 this was a plain FileAppender on logs/application.log, and both production
+    instances wrote to that one file: nothing ever rolled it, and it reached 491MB of 53 days on a
+    disk at 74% (see the wiki page Dev Logs). A RollingFileAppender cannot be shared by two
+    processes - both would try to rename the same file at midnight - so the port each instance is
+    started with (-Dhttp.port, which the systemd unit passes) goes into the name. Reading both
+    timelines at once is `sort -m` of the two files; losing that is the price of a file that is
+    rolled at all. Outside production http.port is usually unset and the name falls back to "app".
+  -->
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${application.home:-.}/logs/application-${http.port:-app}.log</file>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${application.home:-.}/logs/application-${http.port:-app}.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>1GB</totalSizeCap>
+    </rollingPolicy>
     <encoder>
       <charset>UTF-8</charset>
       <pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern>

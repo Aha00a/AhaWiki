@@ -76,9 +76,12 @@ for i in 1 2 3 4 5 6 7 8; do curl -s -X POST -H 'content-type: application/json'
 ssh <host> "sudo -n readlink -f /proc/\$(systemctl show ahawiki@10001 -p MainPID --value)/exe"
 ]]]
 
-2026-09-25 에 실제로 그 상태였다. 인스턴스는 9-20 19:06 부터, JDK 는 9-23 06:29 에 갈렸다. AhaWiki 에서 자식 프로세스를 띄우는 곳은 `InterpreterVim` 의 `vi` 하나뿐이라, 증상은 '''캐시에 없는 Vim 블록을 그리는 문서가 전부 500''' 이었다 — 이미 캐시에 있는 블록은 멀쩡해서 사이트는 정상으로 보였다. 3일간 아무도 몰랐다.
+2026-09-25 에 실제로 그 상태였다. 인스턴스는 9-20 19:06 부터 돌고 있었고, JDK 는 9-23 06:29 에 '''`unattended-upgrade`''' 가 갈았다(`/var/log/apt/history.log`: openjdk-17 17.0.20+8 → 17.0.20.1+1). 즉 사람이 한 일이 아니고, 다음 JDK 보안 업데이트에도 같은 일이 난다. AhaWiki 에서 자식 프로세스를 띄우는 곳은 `InterpreterVim` 의 `vi` 하나뿐이라, 증상은 '''캐시에 없는 Vim 블록을 그리는 문서가 전부 500''' 이었다 — 이미 캐시에 있는 블록은 멀쩡해서 사이트는 정상으로 보였다. 3일간 아무도 몰랐다.
 
-'''고치는 방법은 재시작뿐이다.''' 그래서 JDK·JRE 를 올리는 무인 업그레이드가 도는 서버에서는, 업그레이드 뒤 인스턴스를 재시작해 주는 것이 맞다. 배포는 어차피 재시작하므로 배포 한 번이 곧 치료다.
+'''고치는 방법은 재시작뿐이다.''' 배포는 어차피 재시작하므로 배포 한 번이 곧 치료다. 다시 나지 않게 하려면 둘 중 하나인데 아직 어느 쪽도 하지 않았다.
+ * 서버 쪽: apt 가 openjdk 를 올리면 `ahawiki@*` 를 재시작하는 hook(`DPkg::Post-Invoke`). 운영 저장소의 일이다.
+ * 앱 쪽: JVM 을 `-Djdk.lang.Process.launchMechanism=VFORK` 로 띄운다. `jspawnhelper` 를 안 쓰므로 JDK 가 갈려도 프로세스를 띄울 수 있다. 이 앱이 띄우는 프로세스는 `vi` 하나뿐이라 부담이 없다. systemd unit 의 한 줄이라 이것도 운영 쪽이다.
+그 사이에는 `InterpreterVim` 이 강조 없이 본문을 보여 주는 것으로 버틴다([InterpreterVim]).
 
 == 비밀이 든 설정을 conf/ 밖에
 
