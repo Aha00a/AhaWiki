@@ -127,6 +127,20 @@
                 }
                 var wsUrl = wsProtocol + '://' + window.location.host + wsPath;
                 var reconnectDelayMs = 1500;
+                // A socket that never opened was refused at the handshake -- the server answers
+                // 403 for a page this visitor may not read, and the browser shows that only as a
+                // close. Until 2026-09-26 that was retried every 1.5s for as long as the tab lived:
+                // one address made 44,249 such attempts in August. A refused handshake is retried
+                // with the delay doubling and given up after `handshakeGiveUpAfter` tries; a socket
+                // that had been open and dropped (idle timeout, a deploy) reconnects as before.
+                var handshakeGiveUpAfter = 5;
+                var failedHandshakes = 0;
+                function reconnectDelayAfterClose(wasOpen) {
+                    if (wasOpen) return reconnectDelayMs;
+                    failedHandshakes += 1;
+                    if (failedHandshakes >= handshakeGiveUpAfter) return -1;
+                    return reconnectDelayMs * Math.pow(2, failedHandshakes - 1);
+                }
                 var socket;
                 var heartbeatTimer = null;
                 var mySenderId = null;
@@ -302,8 +316,11 @@
                 }
 
                 function connect() {
+                    var wasOpen = false;
                     socket = new WebSocket(wsUrl);
                     socket.onopen = function () {
+                        wasOpen = true;
+                        failedHandshakes = 0;
                         saveSenderId = getOrCreateSaveSenderId();
                         socket.send(JSON.stringify({ type: 'cursor.hello', saveSenderId: saveSenderId }));
                         try {
@@ -380,7 +397,12 @@
                             heartbeatTimer = null;
                         }
                         console.warn('websocket closed', wsUrl, 'code=' + event.code, 'reason=' + event.reason);
-                        setTimeout(connect, reconnectDelayMs);
+                        var delay = reconnectDelayAfterClose(wasOpen);
+                        if (delay < 0) {
+                            console.warn('websocket handshake refused ' + failedHandshakes + ' times, not retrying', wsUrl);
+                            return;
+                        }
+                        setTimeout(connect, delay);
                     };
                 }
 
