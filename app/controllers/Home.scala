@@ -47,7 +47,11 @@ class Home @Inject() (
   def random: Action[AnyContent] = Action { implicit request =>
     implicit val site: Site = SiteLogic.get(request.host)
     val contextSite: ContextSite = ContextSite()
-    val name = contextSite.seqPageByPermission.random().name
+    // Nothing this visitor may read means there is nothing to pick from, and picking from nothing
+    // threw `bound must be positive` -- a 500 a reader could hit by pressing Random on a site whose
+    // pages are private to them. The front page is where they land everywhere else.
+    val pages = contextSite.seqPageByPermission
+    val name = if (pages.isEmpty) "FrontPage" else pages.random().name
     Redirect(routes.Wiki.view(PageNameUrl.encode(name), 0, "")).flashing(request.flash)
   }
 

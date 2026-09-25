@@ -81,7 +81,7 @@ controllerComponents: ControllerComponents,
                      configuration: Configuration,
                      telegramLogic: TelegramLogic,
                      crossInstanceBus: CrossInstanceBus,
-) extends BaseController with JsonResults with AdminAuth with Logging {
+) extends BaseController with JsonResults with FormResults with AdminAuth with Logging {
   implicit class RichResult(result: Result) {
     def withHeaderRobotNoIndexNoFollow: Result = result.withHeaders("X-Robots-Tag" -> "noindex, nofollow")
   }
@@ -442,20 +442,34 @@ controllerComponents: ControllerComponents,
   }
 
 
+  private val saveForm = Form(tuple(
+    "revision" -> number,
+    "text" -> text,
+    "comment" -> text,
+    "minorEdit" -> optional(boolean),
+    "recaptcha" -> default(text, ""),
+    "lineStart" -> optional(number),
+    "lineEnd" -> optional(number),
+    "saveSenderId" -> optional(text),
+    "pagePermissionMode" -> optional(text),
+  ))
+
   def save(nameEncoded: String): Action[AnyContent] = Action.async { implicit request =>
     val name = PageNameUrl.decode(nameEncoded)
+    // A POST that does not carry the save form is the caller's mistake, not the server's. It used
+    // to be `.get` on the bound form, which threw and answered 500: bots posting junk to the front
+    // page made that the most common 500 the application produced. See FormResults.
+    saveForm.bindFromRequest().fold(
+      withErrors => Future.successful(badForm(withErrors)),
+      bound => saveBound(name, bound),
+    )
+  }
 
-    val (revision, body, comment, minorEdit, recaptcha, partialLineStart, partialLineEnd, saveSenderId, pagePermissionModeRaw) = Form(tuple(
-      "revision" -> number,
-      "text" -> text,
-      "comment" -> text,
-      "minorEdit" -> optional(boolean),
-      "recaptcha" -> default(text, ""),
-      "lineStart" -> optional(number),
-      "lineEnd" -> optional(number),
-      "saveSenderId" -> optional(text),
-      "pagePermissionMode" -> optional(text),
-    )).bindFromRequest().get
+  private def saveBound(
+    name: String,
+    bound: (Int, String, String, Option[Boolean], String, Option[Int], Option[Int], Option[String], Option[String]),
+  )(implicit request: Request[AnyContent]): Future[Result] = {
+    val (revision, body, comment, minorEdit, recaptcha, partialLineStart, partialLineEnd, saveSenderId, pagePermissionModeRaw) = bound
     val isMinorEdit = minorEdit.getOrElse(false)
     val reCaptcha = applicationConf.AhaWiki.google.reCAPTCHA
     val remoteAddress = request.remoteAddressWithXRealIp
@@ -585,8 +599,7 @@ controllerComponents: ControllerComponents,
   }
 
 
-  def delete(): Action[AnyContent] = Action { implicit request =>
-    val name = Form("name" -> text).bindFromRequest().get
+  def delete(): Action[AnyContent] = Action { implicit request => withForm(Form("name" -> text)) { name =>
     database.withTransaction { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
@@ -612,11 +625,10 @@ controllerComponents: ControllerComponents,
           Forbidden("")
       }
     }
-  }
+  }}
 
-  def deleteLastRevision(): Action[AnyContent] = Action { implicit request =>
+  def deleteLastRevision(): Action[AnyContent] = Action { implicit request => withForm(Form("name" -> text)) { name =>
     database.withTransaction { implicit connection =>
-      val name = Form("name" -> text).bindFromRequest().get
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
@@ -638,12 +650,11 @@ controllerComponents: ControllerComponents,
           NotFound("")
       }
     }
-  }
+  }}
 
-  def rename(): Action[AnyContent] = Action { implicit request =>
+  def rename(): Action[AnyContent] = Action { implicit request => withForm(Form(tuple("name" -> text, "newName" -> text))) { case (name, newName) =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      val (name, newName) = Form(tuple("name" -> text, "newName" -> text)).bindFromRequest().get
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       (Page.selectLastRevision(name), Page.selectLastRevision(newName)) match {
@@ -664,16 +675,15 @@ controllerComponents: ControllerComponents,
         case _ => Forbidden("")
       }
     }
-  }
+  }}
 
 
-  def preview(): Action[AnyContent] = Action { implicit request =>
-    val (name, body, partialLineStart, partialLineEnd) = Form(tuple(
+  def preview(): Action[AnyContent] = Action { implicit request => withForm(Form(tuple(
       "name" -> text,
       "text" -> text,
       "lineStart" -> optional(number),
       "lineEnd" -> optional(number)
-    )).bindFromRequest().get
+    ))) { case (name, body, partialLineStart, partialLineEnd) =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage.preview(name)
@@ -688,6 +698,6 @@ controllerComponents: ControllerComponents,
         Interpreters.toHtmlString(body + additionalInfo)
       Ok(s"""<div class="wikiContent preview"><div class="limitWidth">$contentHtml</div></div>""")
     }
-  }
+  }}
 
 }

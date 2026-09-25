@@ -1,0 +1,60 @@
+= [Dev] Logs
+[Dev]
+
+운영 로그를 어디서 보고, 거기서 무엇을 셀 수 있는지. 2026-09-25 에 처음 제대로 읽어 보고 만든 페이지다.
+
+== 어디에 있나
+
+인스턴스 둘이 같은 파일에 쓴다 — `shared/logs/application.log`. 릴리스마다 링크로 들어가므로 배포해도 이어진다([Dev Deploying]).
+
+'''로테이션이 없다.''' 2026-09-25 기준 한 파일에 8-03 부터 53일치, 491MB 다. 하루 9MB 쯤 늘고 디스크는 74% 차 있다. `/hc` 는 여유가 5% 아래로 떨어지면 실패하므로([Dev Deploying] 의 헬스체크), 이대로 두면 언젠가 배포가 디스크 때문에 멈춘다. 아직 손대지 않았다 — 무엇으로 자를지(logrotate·Play 설정) 정하는 일이라서.
+
+== 무엇이 얼마나 나는지 세기
+
+문제를 찾는 데 쓴 것은 이 한 줄이다. 500 응답마다 `Unexpected exception[...]` 줄이 남으므로, 그것을 종류별로 세면 «지금 무엇이 깨져 있나» 가 그대로 나온다.
+
+[[[#!Vim bash
+sudo grep -h 'Unexpected exception\[' application.log \
+  | sed -E 's/.*Unexpected exception\[//; s/\].*//; s/[0-9]+/<n>/g' \
+  | sort | uniq -c | sort -rn | head -20
+]]]
+
+날짜별로 보려면 직전 날짜 줄을 기억하며 세면 된다. 예외 줄 자체에는 시각이 없다.
+
+[[[#!Vim bash
+sudo awk '/^[0-9]{4}-[0-9]{2}-[0-9]{2} /{d=substr($0,1,10)}
+          /Unexpected exception\[/{e=$0; sub(/.*Unexpected exception\[/,"",e); sub(/:.*/,"",e); print d, e}' application.log \
+  | sort | uniq -c
+]]]
+
+어느 코드에서 났는지는 예외 줄 다음의 스택에서 첫 애플리케이션 프레임만 보면 된다.
+
+[[[#!Vim bash
+sudo awk '/Unexpected exception\[NoSuchElementException/{f=1;next}
+          f&&/^[[:space:]]*at (controllers|logics|models|actors)\./{print $0; f=0}' application.log \
+  | sort | uniq -c | sort -rn
+]]]
+
+== 2026-09-25 에 나온 것
+
+53일치에 `[ERROR]` 8,403 줄, `[WARN]` 262,607 줄. 500 을 종류별로 세니 이렇게 나왔다.
+
+[[[#!Table tsv 1
+건수	예외	무엇이었나
+7,103	`SQLTransientConnectionException` (커넥션 풀 고갈)	9-03·9-04 에 몰려 있다(하루 5,804). 9-16 이후로는 없다. 그날 무슨 일이 있었는지는 [Dev BotDetection] 과 [Dev Deploying] 의 9-04 항목
+727	`NoSuchElementException: None.get`	726 이 `POST /w/FrontPage` — 폼이 아닌 본문을 던지는 봇. 고침(아래)
+131	`IOException: Failed to exec spawn helper`	JDK 가 돌고 있는 JVM 아래에서 갈렸을 때. [Dev Deploying] 의 그 절
+62	`SQLSyntaxErrorException`	전부 9-25, 빈 `IN ()` 를 찾느라 내가 낸 것이다([Dev Database])
+35	`IllegalArgumentException: bound must be positive`	`Home.random` — 읽을 수 있는 페이지가 하나도 없는 방문자가 Random 을 누르면. 고침(아래)
+20	`NoSuchElementException: head of empty list`	빈 `#!Map` 블록([InterpreterMap])
+13	`FileNotFoundException` (schema.org jsonld)	전부 8-03 하루. 지금 버전은 멀쩡하다
+10+3+2	`NullPointerException` · `DateTimeParseException`	괄호 없는 매크로와 없는 날짜([Macro], [MacroWeekdayName])
+]]]
+
+'''고친 것(2026-09-25).''' 폼이 아닌 본문은 이제 400 이다 — `FormResults` 를 쓰는 일곱 엔드포인트 전부. 읽을 수 있는 페이지가 없을 때의 Random 은 FrontPage 로 보낸다. 나머지는 위 표의 링크에 있다.
+
+=== WARN 쪽에서 눈에 띈 것
+
+ * '''`cookie has invalid signature` 63,953''' — 8-23~8-27 에 몰려 있다(하루 1,400 대). 그 뒤로는 거의 없다. 서명 키가 바뀌면 그때까지의 세션 쿠키가 전부 이렇게 되므로([AccessControl] 의 signed read URL 절에 같은 이야기가 있다), 그 무렵에 키를 바꾼 것으로 보인다. 추측이니 확인이 필요하다.
+ * '''`WebSocket watch denied` 76,000''' — 8월에 몰려 있고 주소 셋이 대부분이다(한 주소가 44,249). 읽기 권한이 없는 페이지의 소켓은 거절되는데, 브라우저 쪽은 닫히면 다시 연결하므로([Dev WebSocket] 의 재연결) 탭 하나가 며칠을 두드릴 수 있다. 지금은 하루 한두 건이라 그대로 두었지만, '''거절된 소켓은 다시 연결하지 않는 편이 맞다.'''
+ * `HTTP idle-timeout` 하루 60~90 건은 정상 범위로 본다 — 탭이 잠들면 나는 것이다.

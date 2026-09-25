@@ -45,7 +45,7 @@ class WikiSpreadsheet @Inject()(
   executionContext: ExecutionContext,
   telegramLogic: TelegramLogic,
   crossInstanceBus: CrossInstanceBus,
-) extends BaseController with Logging {
+) extends BaseController with FormResults with Logging {
 
   val regexGoogleSpreadsheetUrl: Regex = """https://docs\.google\.com/spreadsheets/d/([^/?#\s]+).*""".r
 
@@ -54,10 +54,9 @@ class WikiSpreadsheet @Inject()(
     matrix.map(_.padTo(maxLength, default))
   }
 
-  def syncGoogleSpreadsheet: Action[AnyContent] = Action { implicit request =>
+  def syncGoogleSpreadsheet: Action[AnyContent] = Action { implicit request => withForm(Form(tuple("pageName" -> text, "url" -> text, "sheetName" -> text))) { case (pageName, url, sheetName) =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      val (pageName, url, sheetName) = Form(tuple("pageName" -> text, "url" -> text, "sheetName" -> text)).bindFromRequest().get
       Page.selectLastRevision(pageName) match {
         case Some(page) =>
           implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
@@ -119,5 +118,5 @@ class WikiSpreadsheet @Inject()(
           NotFound("")
       }
     }
-  }
+  }}
 }

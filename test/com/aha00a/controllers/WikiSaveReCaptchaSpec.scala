@@ -115,5 +115,24 @@ class WikiSaveReCaptchaNotConfiguredSpec extends WikiSaveReCaptchaSpecBase(10, "
       status(save("NoReCaptcha", Some(""))) mustBe OK
       revisionOf("NoReCaptcha") mustBe Some(1L)
     }
+
+    // A body that is not the save form is the caller's mistake. It used to be `.get` on the bound
+    // form, which threw NoSuchElementException and answered 500 -- 726 of the 727 500s this
+    // application logged in seven weeks were bots posting junk to POST /w/FrontPage.
+    "answer 400 rather than 500 when the body is not the save form" in {
+      val result = route(app, FakeRequest(POST, "/w/JunkBody")
+        .withHeaders(HOST -> "save-recaptcha-off.test")
+        .withFormUrlEncodedBody("name" -> "spam", "message" -> "buy things")).get
+      status(result) mustBe BAD_REQUEST
+      revisionOf("JunkBody") mustBe None
+    }
+
+    "answer 400 when a field is there but unreadable" in {
+      val result = route(app, FakeRequest(POST, "/w/BadRevision")
+        .withHeaders(HOST -> "save-recaptcha-off.test")
+        .withFormUrlEncodedBody("revision" -> "not a number", "text" -> "body", "comment" -> "")).get
+      status(result) mustBe BAD_REQUEST
+      revisionOf("BadRevision") mustBe None
+    }
   }
 }

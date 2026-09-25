@@ -34,9 +34,8 @@ class Diary @Inject()(implicit val
                       crossInstanceBus: CrossInstanceBus,
                       wsClient: WSClient,
                       executionContext: ExecutionContext
-                     ) extends BaseController {
-  def write(): Action[AnyContent] = Action { implicit request: Request[Any] =>
-    val q = Form("q" -> text).bindFromRequest().get
+                     ) extends BaseController with FormResults {
+  def write(): Action[AnyContent] = Action { implicit request: Request[Any] => withForm(Form("q" -> text)) { q =>
     val now: LocalDateTime = LocalDateTime.now
     val name: String = now.toIsoLocalDateString
 
@@ -78,6 +77,6 @@ class Diary @Inject()(implicit val
         Redirect(request.refererOrRoot).flashing("error" -> "forbidden.")
       }
     }
-  }
+  }}
 
 }

@@ -176,6 +176,14 @@ https://www.wikimatrix.org/ 발견. 여기 기준에 좀 맞춰볼까.. --[2020-
   * Scala 263 통과. 셋 다 가드를 빼면 실패하는 것을 확인했다(H2 가 운영과 같은 문법 오류를 낸다).
   * '''배포했다(2026-09-25).''' 배포 전 인스턴스에서는 500, 새 인스턴스에서는 오류 상자인 것을 같은 요청으로 대조했다.
 
+=== 로그를 읽고 나온 것들
+ * '''고쳤다(2026-09-25). 배포 전.''' 운영 로그 53일치를 종류별로 세어 «지금도 나는 500» 둘을 찾았다. 세는 방법과 나온 표는 [Dev Logs].
+  * '''폼이 아닌 본문에 500.''' `POST /w/FrontPage` 에 아무 필드나 던지는 봇 때문에 `bindFromRequest().get` 이 `None.get` 으로 죽었다 — 7주에 727건, 그중 726건이 그 한 경로다. 지금은 400 이다. `.get` 을 쓰던 일곱 엔드포인트(save·delete·deleteLastRevision·rename·preview·Diary·Spreadsheet)가 모두 같은 `FormResults.withForm` 을 쓴다. 검사는 `WikiSaveReCaptchaNotConfiguredSpec` 의 두 항목.
+  * '''읽을 게 없을 때 Random 이 500.''' `Home.random` 이 빈 목록에서 고르려다 `bound must be positive` 를 냈다. 읽을 수 있는 페이지가 하나도 없는 방문자(전부 비공개인 사이트)가 Random 을 누르면 매일 한두 번씩 나고 있었다. 이제 FrontPage 로 보낸다.
+ * [ ] 로그 파일이 안 잘린다 — 한 파일에 53일치 491MB, 디스크 74%. `/hc` 는 여유 5% 아래면 실패하므로 언젠가 배포가 멈춘다. 무엇으로 자를지 정해야 한다([Dev Logs]).
+ * [ ] 거절된 WebSocket 을 클라이언트가 계속 다시 연다 — 8월에 한 주소가 44,249번. 지금은 하루 한두 건이라 급하진 않다([Dev Logs]).
+ * [ ] 8-23~8-27 에 `cookie has invalid signature` 가 하루 1,400건씩 났다. 서명 키를 그때 바꿨는지 확인이 필요하다 — 맞다면 그 자체는 정상이고, 기록만 남기면 된다.
+
 === 괄호 없는 매크로가 문서를 500 으로 만든다
  * '''고쳤다(2026-09-25).''' `[[Image]]` 처럼 괄호 없이 쓰면 매크로에 인자로 null 이 가서, 인자를 바로 읽는 다섯(Image · Attachment · Copyable · Embed · Kbd)이 NullPointerException 을 냈고 문서 전체가 500 이었다. `[[Image()]]` 는 멀쩡했다. 운영에서 매크로 42개 · 인터프리터 19개를 `/api/renderAhaMark` 로 하나씩 그려 보다 찾았다. 고친 자리는 매크로 하나하나가 아니라 인자를 넘기는 곳(`ExtractConvertInjectMacro`) 하나 — 괄호 없음은 빈 인자와 같게 읽는다. 단위테스트 `WikiMacrosUnit` 이 다섯의 «괄호 없음 == 빈 괄호» 를 확인하고, 고치기 전 코드로 돌리면 운영과 같은 NPE 로 실패한다. Scala 261 통과. 문서는 [Macro] '''괄호를 빼고 써도 됩니다'''.
  * '''배포했다(2026-09-25).''' `[[Image]]` · `[[Kbd]]` 가 옛 인스턴스에서 500, 새 인스턴스에서 200 인 것을 대조했다.
