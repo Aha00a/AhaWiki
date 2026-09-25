@@ -5,9 +5,13 @@ import logics.wikis.macros._
 import models.ContextWikiPage
 import models.tables.CalculatedLink
 
+import com.aha00a.commons.Implicits._
+import play.api.Logging
+
+import scala.util.control.NonFatal
 import scala.util.matching.Regex
 
-object ExtractConvertInjectMacro {
+object ExtractConvertInjectMacro extends Logging {
   private val mapMacros: Map[String, TraitMacro] = Seq(
 
     MacroSiteName,
@@ -64,6 +68,19 @@ object ExtractConvertInjectMacro {
   ).map(m => m.name -> m).toMap ++ Map("CB" -> MacroCheckBox)
 
   val macroNames: Seq[String] = mapMacros.keys.toSeq.sorted
+
+  /**
+   * One macro's failure stays in that macro, for the reason Interpreters.render gives for blocks:
+   * `[[Image]]` with a null argument and `[[WeekdayName(2026-13-45)]]` each answered 500 for the
+   * whole page until they were fixed one by one. The next such macro shows its error box instead.
+   */
+  def render(theMacro: TraitMacro, argument: String)(implicit wikiContext: ContextWikiPage): String =
+    try theMacro.toHtmlString(argument)
+    catch {
+      case NonFatal(e) =>
+        logger.error(s"[[${theMacro.name}]] failed on page '${wikiContext.name}'", e)
+        MacroError.toHtmlString(s"[[${theMacro.name}(${argument.escapeHtml()})]] failed - ${e.toString.escapeHtml()}")
+    }
 }
 
 class ExtractConvertInjectMacro extends ExtractConvertInject {
@@ -99,7 +116,7 @@ class ExtractConvertInjectMacro extends ExtractConvertInject {
   override def convert(s: String)(implicit wikiContext: ContextWikiPage): String = s match {
     case regex(name, argumentOrNull) =>
       val argument = argumentOrEmpty(argumentOrNull)
-      val result = ExtractConvertInjectMacro.mapMacros.get(name).map(_.toHtmlString(argument)).getOrElse {
+      val result = ExtractConvertInjectMacro.mapMacros.get(name).map(ExtractConvertInjectMacro.render(_, argument)).getOrElse {
         // Set and Get were handled here, outside mapMacros -- which is why neither ever appeared
         // in the editor's completion list or in the "Available Macros" list below, though both
         // worked. Removed 2026-09-08 for the #!var directive and {{name}}; see the Variable page.

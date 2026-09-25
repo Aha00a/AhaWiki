@@ -14,6 +14,25 @@ object InterpreterBlockUnit {
     assertEquals(Interpreters.getInterpreter("#!read all\n#!write aha00a\n#!Vim scala\nprintln(1)").map(_.name), Some("Vim"))
     assertEquals(Interpreters.getInterpreter("plain text").map(_.name), Some("Wiki"))
 
+    // A block that throws while rendering shows an error box where it stands; the page around it
+    // lives. Until 2026-09-26 the exception went up and the whole page answered 500.
+    def testFailingBlockStaysInItsBox(): Unit = {
+      val failing = new logics.wikis.interpreters.TraitInterpreter {
+        override val name: String = "Failing"
+        override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String =
+          throw new IllegalStateException("<boom>")
+        override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[models.tables.CalculatedLink] = Seq()
+      }
+      val html = Interpreters.render(failing, "#!Failing\nbody")
+      assertEquals(html.startsWith("<div class=\"error\">#!Failing failed - "), true)
+      assertEquals(html.contains("IllegalStateException"), true)
+      // What the exception says is text, not markup.
+      assertEquals(html.contains("<boom>"), false)
+      assertEquals(html.contains("&lt;boom&gt;"), true)
+      // A block that renders is untouched by the net.
+      assertEquals(Interpreters.render(InterpreterWiki, "plain") == InterpreterWiki.toHtmlString("plain"), true)
+    }; testFailingBlockStaysInItsBox()
+
     def testInterpreterTable(): Unit = {
       assertEquals(Interpreters.toHtmlString("#!table tsv\na\tb"), <table class="InterpreterTable wikiTableSimple tablesorter"><tbody><tr><td><div><p>a</p></div></td><td><div><p>b</p></div></td></tr></tbody></table>.toString())
       assertEquals(Interpreters.toHtmlString("#!table\n#!tsv\na\tb"), <table class="InterpreterTable wikiTableSimple tablesorter"><tbody><tr><td><div><p>a</p></div></td><td><div><p>b</p></div></td></tr></tbody></table>.toString())

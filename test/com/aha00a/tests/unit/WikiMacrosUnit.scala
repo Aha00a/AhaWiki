@@ -58,6 +58,18 @@ object WikiMacrosUnit {
     }
     assertEquals(renderMacroCall("[[Kbd]]").contains("""<kbd class="MacroKbd">"""), true)
 
+    // A macro that throws while rendering shows an error box where it stands, so the next macro
+    // with a hole like the ones above does not take the page down. Its argument and the exception
+    // are text in the box, not markup.
+    val failingMacro = new logics.wikis.macros.TraitMacro {
+      override val name: String = "Failing"
+      override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String =
+        throw new IllegalStateException("<boom>")
+    }
+    val failed = logics.wikis.ExtractConvertInjectMacro.render(failingMacro, "<arg>")
+    assertEquals(failed, "<div class=\"error\">[[Failing(&lt;arg&gt;)]] failed - java.lang.IllegalStateException: &lt;boom&gt;</div>")
+    assertEquals(logics.wikis.ExtractConvertInjectMacro.render(MacroBr, ""), "<br/>")
+
     val uptime = MacroUptime.toHtmlString("")
     assertEquals(MacroUptime.name, "Uptime")
     assertEquals(uptime.matches("""\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z"""), true)
