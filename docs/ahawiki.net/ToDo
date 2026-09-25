@@ -181,8 +181,8 @@ https://www.wikimatrix.org/ 발견. 여기 기준에 좀 맞춰볼까.. --[2020-
   * '''폼이 아닌 본문에 500.''' `POST /w/FrontPage` 에 아무 필드나 던지는 봇 때문에 `bindFromRequest().get` 이 `None.get` 으로 죽었다 — 7주에 727건, 그중 726건이 그 한 경로다. 지금은 400 이다. `.get` 을 쓰던 일곱 엔드포인트(save·delete·deleteLastRevision·rename·preview·Diary·Spreadsheet)가 모두 같은 `FormResults.withForm` 을 쓴다. 검사는 `WikiSaveReCaptchaNotConfiguredSpec` 의 두 항목.
   * '''읽을 게 없을 때 Random 이 500.''' `Home.random` 이 빈 목록에서 고르려다 `bound must be positive` 를 냈다. 읽을 수 있는 페이지가 하나도 없는 방문자(전부 비공개인 사이트)가 Random 을 누르면 매일 한두 번씩 나고 있었다. 이제 FrontPage 로 보낸다.
   * '''배포했다(2026-09-25).''' 릴리스 `20260925-210723`, 태그 `v20260925T211116-aha00a`. canary 로 옛 인스턴스와 대조했다 — 폼 아닌 POST 가 500 대 400, Random 은 양쪽 303, preview 는 UUID 말고 같은 HTML(옛 인스턴스끼리도 그 UUID 만 다르다). 그 뒤 나머지를 올리고 밖에서 세 URL 확인.
- * [[CB(x)]] 로그 파일이 안 잘린다 — 한 파일에 53일치 491MB, 디스크 74%. '''`conf/logback.xml` 에서 인스턴스별 파일로 나눠 날마다 말고 30일·1GB 로 잡았다(2026-09-26). 배포 전.''' 옛 `application.log` 는 손으로 지운다([Dev Logs]).
- * [[CB(x)]] 거절된 WebSocket 을 클라이언트가 계속 다시 연다 — 8월에 한 주소가 44,249번. '''고쳤다(2026-09-26). 배포 전.''' 한 번도 안 열린 소켓은 두 배씩 늦추며 다섯 번에서 그만두고, 열렸다 끊긴 소켓은 전처럼 바로 다시 연다([Dev WebSocket]).
+ * [[CB(x)]] 로그 파일이 안 잘린다 — 한 파일에 53일치 491MB, 디스크 74%. '''`conf/logback.xml` 에서 인스턴스별 파일로 나눠 날마다 말고 30일·1GB 로 잡았다(2026-09-26). 배포함 — 릴리스 `20260926-015144`, 태그 `v20260926T015509-aha00a`. 재시작 직후 `application-10001.log`·`application-10000.log` 가 생겨 쓰이는 것을 봤다.''' 옛 `application.log` 는 손으로 지운다([Dev Logs]).
+ * [[CB(x)]] 거절된 WebSocket 을 클라이언트가 계속 다시 연다 — 8월에 한 주소가 44,249번. '''고쳤다(2026-09-26). 배포함 — 같은 릴리스.''' 한 번도 안 열린 소켓은 두 배씩 늦추며 다섯 번에서 그만두고, 열렸다 끊긴 소켓은 전처럼 바로 다시 연다([Dev WebSocket]).
  * [ ] `PageMeta.upsert` 의 외래키 경합이 아직 난다(마지막 9-22). 계산 중에 그 리비전이 사라지면 나는 것이고 한 시간 안에 저절로 낫지만, ERROR 로 남아 진짜 오류를 가린다([Dev Logs] '''액터 쪽 경합''').
  * [[CB(x)]] 문서 sync 가 올리는 편집은 이제 minor 다 — 소유자가 2026-09-25 에 그렇게 정했다. 목록에서 접어도 되는 편집이라는 뜻이고, 「누가 올렸나」는 `viaApi` 가 이미 답한다. 아닌 경우에 쓰는 `--major` 가 생겼다(전에는 반대로 `--minor` 를 줘야 했다). 플래그는 저장소의 `scripts/README.md`.
  * [ ] 8-23~8-27 에 `cookie has invalid signature` 가 하루 1,400건씩 났다. 서명 키를 그때 바꿨는지 확인이 필요하다 — 맞다면 그 자체는 정상이고, 기록만 남기면 된다.
