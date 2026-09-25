@@ -160,7 +160,12 @@ function argValues(argv, flag) {
 async function main(argv) {
   const apiKey = process.env.AHAWIKI_API_KEY;
   const apply = argv.includes('--apply');
-  const minorEdit = argv.includes('--minor');
+  // Minor by default, on the owner's instruction (2026-09-19): a page the wiki's own mirror
+  // uploaded is the tool keeping itself in step, not somebody writing. `viaApi` already answers
+  // "who uploaded this"; `minorEdit` answers "may the recent-changes list fold it away", and
+  // these may be folded. `--major` is for the sync that is the point of the change rather than
+  // a consequence of it. Until 2026-09-25 this was the other way round: major unless --minor.
+  const minorEdit = !argv.includes('--major');
   const only = argValues(argv, '--only');
   const comment = argValue(argv, '--comment');
 
@@ -280,7 +285,7 @@ async function main(argv) {
       continue;
     }
 
-    console.log(`OK   ${target.name} r${current.json.revision} -> r${verified.json.revision}`);
+    console.log(`OK   ${target.name} r${current.json.revision} -> r${verified.json.revision}${minorEdit ? ' (minor)' : ''}`);
   }
 
   if (failures > 0) {

@@ -70,11 +70,15 @@ history, so it should say what actually changed:
 npm run sync:ahawiki.net -- --apply --comment="Dev Testing: record what the H2 schema misses"
 ```
 
-Restrict to named pages by repeating `--only`, and add `--minor` for an edit not worth
-announcing:
+Restrict to named pages by repeating `--only`.
+
+Uploads are **minor edits by default**, so the recent-changes list can fold them away: the
+mirror catching up is the tool keeping itself in step, and `viaApi` already says it was a tool.
+Pass `--major` when the upload is the point of the change rather than a consequence of it.
 
 ```bash
-npm run sync:ahawiki.net -- --apply --comment="fix a stale path" --only="Dev Testing" --minor
+npm run sync:ahawiki.net -- --apply --comment="fix a stale path" --only="Dev Testing"
+npm run sync:ahawiki.net -- --apply --comment="AccessControl: the new permission model" --major
 ```
 
 The classification is what decides whether a live page gets overwritten, so it is covered by
