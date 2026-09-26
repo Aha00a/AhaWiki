@@ -49,6 +49,22 @@ file that never arrived.
 URLs still holding a template placeholder (`https://${host}/...`) are skipped — the server
 fills those in and there is nothing to fetch.
 
+## Comparing two instances
+
+`compare-instances.sh` renders every page of a site on two instances and reports what
+differs: the check between the canary of a deploy and the instance still on the old code.
+Where it sits in a deploy is on the wiki page `Dev Deploying`; what it sets aside before
+comparing, why, and how to read the report are in the script's header.
+
+```bash
+AHAWIKI_DEPLOY_HOST=<ssh host> bash scripts/compare-instances.sh 10000 10001            # ahawiki.net
+AHAWIKI_DEPLOY_HOST=<ssh host> bash scripts/compare-instances.sh 10000 10001 <site>
+```
+
+Exit status 0 when nothing changed, 1 when something did, 2 when there is nothing to compare —
+it refuses two instances running the same release. It needs `ssh` to the server and `node`
+locally.
+
 ## Wiki page sync
 
 `sync.ahawiki.net.mjs` compares the **committed** copies under `docs/ahawiki.net/` against the
