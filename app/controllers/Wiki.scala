@@ -314,19 +314,19 @@ controllerComponents: ControllerComponents,
             .flatMap(_.description)
             .orElse(PageLogic.extractDescription(page.content))
             .getOrElse(name)
-          Ok(pageContent.interpreter match {
-              case None | Some("Wiki") =>
-                val contentInterpreted = Interpreters.toHtmlString(page.content + additionalInfo)
-                views.html.Wiki.view(name, description, "Wiki", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction, permissionDetail)
-              case Some("Paper") =>
-                // additionalInfo(See Also 등)를 Paper 바깥에 독립 렌더링, 흰색 배경 보장
-                val contentInterpreted = Interpreters.toHtmlString(page.content) +
-                  s"""<div class="paperAdditionalSection">${Interpreters.toHtmlString(additionalInfo)}</div>"""
-                views.html.Wiki.view(name, description, "Paper", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction, permissionDetail)
-              case _ =>
-                val contentInterpreted = s"""<h1>$name</h1>""" + Interpreters.toHtmlString(page.content) + Interpreters.toHtmlString(additionalInfo)
-                views.html.Wiki.view(name, description, pageContent.interpreter.getOrElse(""), contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction, permissionDetail)
-            })
+          val (interpreter, contentInterpreted) = pageContent.interpreter match {
+            case None | Some("Wiki") =>
+              ("Wiki", Interpreters.toHtmlString(page.content + additionalInfo))
+            case Some("Paper") =>
+              // additionalInfo (See Also and the rest) is rendered outside the paper, on the page's own surface color.
+              ("Paper", Interpreters.toHtmlString(page.content) +
+                s"""<div class="paperAdditionalSection">${Interpreters.toHtmlString(additionalInfo)}</div>""")
+            case Some(other) =>
+              (other, s"""<h1>$name</h1>""" + Interpreters.toHtmlString(page.content) + Interpreters.toHtmlString(additionalInfo))
+          }
+          // `page` is the revision asked for, which is not always the latest: the view tells an old
+          // revision apart by comparing it with pageLastRevision.
+          Ok(views.html.Wiki.view(name, description, interpreter, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction, permissionDetail, Some(page)))
       }
     }
     finally {

@@ -24,4 +24,9 @@ object UserPageLogic {
         s"""<span class="userInlineProfile"><img src="${imageUrl.escapeHtmlAttribute()}" alt="${nickname.escapeHtmlAttribute()}" class="userInlineProfileImage"/><a href="${href(nickname).escapeHtmlAttribute()}">${nickname.escapeHtml()}</a></span>"""
       }
       .getOrElse(logics.wikis.interpreters.InterpreterWiki.inlineToHtmlString(wikiMarkup(nickname)))
+
+  /** Who saved a revision. A revision with no user behind it -- saved while signed out -- has no
+    * nickname, and the pages that list revisions all call it Anonymous. */
+  def toHtmlStringOrAnonymous(nickname: Option[String])(implicit wikiContext: models.ContextWikiPage): String =
+    nickname.map(n => toHtmlString(n)).getOrElse("Anonymous")
 }

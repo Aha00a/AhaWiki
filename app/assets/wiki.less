@@ -716,6 +716,35 @@
 		}
 	}
 
+	// Above a page opened at ?revision=N that is not the latest (Wiki/view.scala.html). The
+	// revisionInfo box describes the latest revision, so this is what says the content is older.
+	.oldRevisionNotice {
+		clear: both;
+		margin: 10px 0;
+		padding: 8px 12px;
+		border: 1px solid var(--color-flash-warning-border);
+		border-radius: 8px;
+		color: var(--color-flash-warning-text);
+		background-color: var(--color-flash-warning-bg);
+		// .wikiContent breaks words anywhere, which is for the content. On a phone this sentence
+		// came out as "The lat / est", so it breaks between words, as the permission flash does.
+		word-break: break-word;
+
+		// Kept whole: on a phone the timestamp otherwise broke in the middle of its time.
+		time, .oldRevisionActions {
+			white-space: nowrap;
+		}
+
+		.oldRevisionActions a {
+			margin-left: 8px;
+			font-weight: bold;
+		}
+
+		@media print {
+			display: none;
+		}
+	}
+
 	.revisionInfo {
 		clear: right;
 		float: right;

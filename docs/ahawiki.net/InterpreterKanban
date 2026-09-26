@@ -355,6 +355,7 @@ RelatedCard	회색 (muted)
 
 InterpreterKanban은 일반 위키 페이지와 같은 쓰기 권한 정책을 따른다.
 페이지 렌더링 시 계산된 `isWritable` 값은 `.wikiContent`의 `data-wiki-writable` 속성으로 전달되고, Kanban UI는 이 값을 기준으로 root별 read-only 모드를 결정한다.
+옛 리비전을 보는 화면(`?revision=N` 이 최신이 아닐 때)은 쓰기 권한이 있어도 read-only 이고, 실시간 동기화도 하지 않는다 — [Dev Page] '''옛 리비전 화면'''.
 
 쓰기 권한이 없는 사용자는 Kanban 보드를 조회할 수 있지만, 내용을 변경하는 UI는 노출되지 않는다.
 

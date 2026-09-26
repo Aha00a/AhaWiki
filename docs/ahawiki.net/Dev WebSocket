@@ -9,7 +9,7 @@
  * 클라이언트는 위키 뷰 페이지에서 현재 경로(`/w/...`)를 `/ws/w/...`로 치환해 WebSocket URL을 만들고,
   * `https`면 `wss://`, 그 외에는 `ws://`를 사용합니다.
 
-즉, 사용자가 문서 보기 화면에 진입하면 브라우저 JS가 해당 문서용 WebSocket에 자동 연결을 시도합니다.
+즉, 사용자가 문서 보기 화면에 진입하면 브라우저 JS가 해당 문서용 WebSocket에 자동 연결을 시도합니다. 옛 리비전(`?revision=N` 이 최신이 아닐 때)을 보는 화면은 예외로, 연결하지 않습니다 — 까닭은 [Dev Page] '''옛 리비전 화면'''.
 
 == 서버 측 구조 (`controllers.WikiRealtime` + `logics.PageCursorHub`)
 

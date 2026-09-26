@@ -1435,6 +1435,29 @@
     margin-top: 12px;
   }
 }
+.AhaWiki .oldRevisionNotice {
+  clear: both;
+  margin: 10px 0;
+  padding: 8px 12px;
+  border: 1px solid var(--color-flash-warning-border);
+  border-radius: 8px;
+  color: var(--color-flash-warning-text);
+  background-color: var(--color-flash-warning-bg);
+  word-break: break-word;
+}
+.AhaWiki .oldRevisionNotice time,
+.AhaWiki .oldRevisionNotice .oldRevisionActions {
+  white-space: nowrap;
+}
+.AhaWiki .oldRevisionNotice .oldRevisionActions a {
+  margin-left: 8px;
+  font-weight: bold;
+}
+@media print {
+  .AhaWiki .oldRevisionNotice {
+    display: none;
+  }
+}
 .AhaWiki .revisionInfo {
   clear: right;
   float: right;

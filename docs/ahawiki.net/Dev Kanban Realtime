@@ -33,6 +33,8 @@ Tab B 저장 성공
 
 WebSocket 이 다시 열릴 때(`wiki:ws.connected`)도 같은 경로를 탄다. `AhaWiki.Kanban.js` 가 `/api/pageRevision/{pageName}` 으로 최신 revision 을 물어, 로컬보다 크면 `handleRemotePageUpdated(revision)` 을 부른다. 끊긴 동안 놓친 저장을 이렇게 따라잡는다.
 
+옛 리비전을 보는 화면에는 이 흐름이 없다. 소켓을 열지 않으므로 두 이벤트 모두 오지 않는다 — [Dev Page] '''옛 리비전 화면'''.
+
 == 주요 상태 변수 (`initKanban` 클로저)
 
 [[[#!Table tsv 1

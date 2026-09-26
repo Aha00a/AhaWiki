@@ -77,7 +77,7 @@
                                 <a href="?revision=@(history.revision)" rel="nofollow">@(history.revision)</a>
                             </td>
                             <td>@(history.toIsoLocalDateTimeString)</td>
-                            <td>@history.nickname.map { nickname => @Html(logics.wikis.UserPageLogic.toHtmlString(nickname)) }.getOrElse(Html("Anonymous"))</td>
+                            <td>@Html(logics.wikis.UserPageLogic.toHtmlStringOrAnonymous(history.nickname))</td>
                             <td>@(com.aha00a.commons.utils.IpAddressUtil.mask(history.remoteAddress))</td>
                             <td class="revisionFlagColumn">@if(history.isMinorEdit){<span class="revisionFlagIcon" title="Minor edit" aria-label="Minor edit">✏️</span>}</td>
                             <td class="revisionFlagColumn">@if(history.viaApi){<span class="revisionFlagIcon" title="@(history.userApiKeyName.fold("Via API")(name => "Via API: " + name))" aria-label="Via API">🔌</span>@history.userApiKeyName.map { name => <span class="revisionFlagApiKeyName">@name</span> }}</td>
