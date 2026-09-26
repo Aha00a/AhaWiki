@@ -94,6 +94,7 @@ AHAWIKI_DEPLOY_HOST=… bash scripts/compare-instances.sh 10000 10001
  * 해시는 인스턴스마다 파일당 한 번, 실제로 서비스되는 파일(classpath 의 `public/…`)에서 계산한다. 릴리스는 새 디렉터리와 재시작이라 도는 중에는 파일이 바뀌지 않는다. 배포가 `admin.js` 를 다시 빌드해도 해시는 실제로 나가는 쪽을 따른다. dev 모드(`sbt run`)에서는 파일을 고쳐도 해시가 다음 reload 까지 그대로인데, dev 모드는 자산을 `no-cache` 로 내보내므로 브라우저가 매번 다시 묻는다.
  * 템플릿에 CSS·JS 를 새로 넣을 때도 `PublicAsset.url` 로 부른다. 맨 주소로 쓰면 그 파일은 예전처럼 배포 뒤 최대 한 시간 늦게 닿는다. `test/templates.public-assets.test.mjs` 가 맨 주소와 없는 파일 이름을 잡고, `PublicAssetVersionSpec` 은 렌더된 페이지의 해시가 그 주소에서 실제로 받는 내용의 해시인지 본다.
  * 이미지·파비콘과 CSS 안의 `url(…)` 에는 붙이지 않았다. 배포에서 HTML 과 맞물려 바뀌는 일이 없어서, 한 시간 늦어도 깨지는 것이 없다.
+ * 앞단 리버스 프록시가 query string 을 그대로 넘기고 캐시하지 않아야 이것이 듣는다. 2026-09-27 운영에서 `/public/wiki.css` 와 `?v=` 를 붙인 주소가 같은 파일을 같은 `Cache-Control` 로 돌려줬고, 캐시 헤더(`Age` 같은)는 없었다. 앞단에 query 를 캐시 키에서 빼는 캐시를 두면 이 방식은 소리 없이 무력해진다.
 
 고르지 않은 것:
 
