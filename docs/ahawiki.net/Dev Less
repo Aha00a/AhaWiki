@@ -39,3 +39,5 @@ lessc --source-map wiki.less wiki.css
 `diff.less`	`.AhaWiki .diff`	`diff.scala.html` 에서만
 ]]]
 
+템플릿은 `.css` 를 `/public/wiki.css` 같은 맨 주소가 아니라 `PublicAsset.url` 로 부른다. 주소에 내용 해시가 붙어서 배포한 CSS 가 브라우저에 바로 닿는다 — [Dev Deploying] '''CSS·JS 주소에는 내용 해시가 붙는다'''.
+

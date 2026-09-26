@@ -59,13 +59,15 @@
             })();
         </script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-        <link rel="stylesheet" href="/public/less.css">
-        <link rel="stylesheet" href="/public/wiki.css">
-        <link rel="stylesheet" href="/public/search.css">
-        <link rel="stylesheet" href="/public/kanban.css">
-        <link rel="stylesheet" href="/public/gantt.css">
-        <link rel="stylesheet" href="/public/interpreter.css">
-        <link rel="stylesheet" href="/public/adjacent.css">
+        @* Every CSS and JS file of the wiki's own goes through PublicAsset.url, which puts a digest
+           of the file in its address. Dev Deploying has why. *@
+        <link rel="stylesheet" href="@logics.PublicAsset.url("less.css")">
+        <link rel="stylesheet" href="@logics.PublicAsset.url("wiki.css")">
+        <link rel="stylesheet" href="@logics.PublicAsset.url("search.css")">
+        <link rel="stylesheet" href="@logics.PublicAsset.url("kanban.css")">
+        <link rel="stylesheet" href="@logics.PublicAsset.url("gantt.css")">
+        <link rel="stylesheet" href="@logics.PublicAsset.url("interpreter.css")">
+        <link rel="stylesheet" href="@logics.PublicAsset.url("adjacent.css")">
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js" integrity="sha512-jGsMH83oKe9asCpkOVkBnUrDDTp8wl+adkB2D+//JtlxO4SrLoJdhbOysIFQJloQFD+C4Fl1rMsQZF76JjV0eQ==" crossorigin="anonymous"></script>        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.14.0/jquery.validate.min.js" integrity="sha256-Lj47JmDL+qxf6/elCzHQSUFZmJYmqEECssN5LP/ifRM=" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js" integrity="sha256-jkaBMXLp+mraE29Q0r6gtTniSfPhS1N0R7YcQwdt7nQ=" crossorigin="anonymous"></script>
@@ -73,7 +75,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.min.js" integrity="sha512-qzgd5cYSZcosqpzpn7zF2ZId8f/8CHmFKZ8j7mU4OUXTNRd5g+ZHBPsgKEwoqxCtdQvExE5LprwwPAgoicguNg==" crossorigin="anonymous"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.widgets.min.js" integrity="sha512-dj/9K5GRIEZu+Igm9tC16XPOTz0RdPk9FGxfZxShWf65JJNU2TjbElGjuOo3EhwAJRPhJxwEJ5b+/Ouo+VqZdQ==" crossorigin="anonymous"></script>
         @* Vendored because this copy carries a local options signature change. *@
-        <script type="text/javascript" src="/public/js/jquery.hotkeys.js"></script>
+        <script type="text/javascript" src="@logics.PublicAsset.url("js/jquery.hotkeys.js")"></script>
 
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
 
@@ -122,15 +124,15 @@
             mermaid.initialize({ startOnLoad: true });
         </script>
 
-        <script type="text/javascript" src="/public/js/js.js"></script>
-        <script type="text/javascript" src="/public/js/AhaWiki.Clipboard.js"></script>
-        <script type="text/javascript" src="/public/js/AhaWiki.ReCaptcha.js"></script>
-        <script type="text/javascript" src="/public/js/AhaWiki.DomUtil.js"></script>
-        <script type="text/javascript" src="/public/js/AhaWiki.Kanban.js"></script>
-        <script type="text/javascript" src="/public/js/AhaWiki.Gantt.js"></script>
-        <script type="text/javascript" src="/public/js/AhaWiki.Slide.js"></script>
-        <script type="text/javascript" src="/public/js/AhaWiki.D3CanvasControls.js"></script>
-        <script type="text/javascript" src="/public/js/AhaWiki.Loader.js"></script>
+        <script type="text/javascript" src="@logics.PublicAsset.url("js/js.js")"></script>
+        <script type="text/javascript" src="@logics.PublicAsset.url("js/AhaWiki.Clipboard.js")"></script>
+        <script type="text/javascript" src="@logics.PublicAsset.url("js/AhaWiki.ReCaptcha.js")"></script>
+        <script type="text/javascript" src="@logics.PublicAsset.url("js/AhaWiki.DomUtil.js")"></script>
+        <script type="text/javascript" src="@logics.PublicAsset.url("js/AhaWiki.Kanban.js")"></script>
+        <script type="text/javascript" src="@logics.PublicAsset.url("js/AhaWiki.Gantt.js")"></script>
+        <script type="text/javascript" src="@logics.PublicAsset.url("js/AhaWiki.Slide.js")"></script>
+        <script type="text/javascript" src="@logics.PublicAsset.url("js/AhaWiki.D3CanvasControls.js")"></script>
+        <script type="text/javascript" src="@logics.PublicAsset.url("js/AhaWiki.Loader.js")"></script>
 
         @head
     </head>

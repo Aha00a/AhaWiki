@@ -20,14 +20,14 @@
     </span>
 }
 @_base(page.name, "") {
-    <script type="text/javascript" src="/public/js/jquery.paste_image_reader.js"></script>
-    <script type="text/javascript" src="/public/js/AhaWiki.Editor.js"></script>
-    <script type="text/javascript" src="/public/js/AhaWiki.Format.js"></script>
+    <script type="text/javascript" src="@logics.PublicAsset.url("js/jquery.paste_image_reader.js")"></script>
+    <script type="text/javascript" src="@logics.PublicAsset.url("js/AhaWiki.Editor.js")"></script>
+    <script type="text/javascript" src="@logics.PublicAsset.url("js/AhaWiki.Format.js")"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@@5.65.20/lib/codemirror.min.css"/>
-    <link rel="stylesheet" href="/public/edit.css">
+    <link rel="stylesheet" href="@logics.PublicAsset.url("edit.css")">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/codemirror@@5.65.20/lib/codemirror.min.js"></script>
-    <script type="text/javascript" src="/public/js/AhaWiki.CodeMirror.AhaMark.js"></script>
-    <script type="text/javascript" src="/public/js/AhaWiki.WikipediaToSchema.js"></script>
+    <script type="text/javascript" src="@logics.PublicAsset.url("js/AhaWiki.CodeMirror.AhaMark.js")"></script>
+    <script type="text/javascript" src="@logics.PublicAsset.url("js/AhaWiki.WikipediaToSchema.js")"></script>
     <div id="wikiEditConfig" data-page-name="@page.name"></div>
     <script type="text/javascript">
         (function () {
@@ -44,11 +44,11 @@
             };
         })();
     </script>
-    <script type="text/javascript" src="/public/js/Wiki/edit.page.js"></script>
+    <script type="text/javascript" src="@logics.PublicAsset.url("js/Wiki/edit.page.js")"></script>
 
 } {
-    <script type="text/javascript" src="/public/js/Wiki/edit.hotkeyAlt.js"></script>
-    <script type="text/javascript" src="/public/js/Wiki/edit.divider.js"></script>
+    <script type="text/javascript" src="@logics.PublicAsset.url("js/Wiki/edit.hotkeyAlt.js")"></script>
+    <script type="text/javascript" src="@logics.PublicAsset.url("js/Wiki/edit.divider.js")"></script>
     <div class="wikiContent">
         <div id="uploadDragOverlay" class="uploadDragOverlay">파일을 여기에 놓아 업로드</div>
         <div class="limitWidth">
