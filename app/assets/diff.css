@@ -14,4 +14,29 @@
 .AhaWiki .diff .d2h-code-side-linenumber {
   line-height: 20px;
 }
+.AhaWiki .diff .d2h-diff-table {
+  width: 100%;
+}
+.AhaWiki .diff .d2h-diff-table td {
+  vertical-align: top;
+}
+.AhaWiki .diff .d2h-file-side-diff {
+  overflow-x: hidden;
+}
+.AhaWiki .diff .d2h-code-line,
+.AhaWiki .diff .d2h-code-side-line {
+  display: block;
+  width: auto;
+  white-space: normal;
+}
+.AhaWiki .diff .d2h-code-line-ctn {
+  display: inline;
+  width: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.AhaWiki .diff .d2h-code-line-ctn ins,
+.AhaWiki .diff .d2h-code-line-ctn del {
+  display: inline;
+}
 /*# sourceMappingURL=diff.css.map */

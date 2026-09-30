@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<title>diff long-line harness</title>
+<!-- Same order as diff.scala.html: our stylesheet first, diff2html's after it. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script>
+// The files under test, by relative paths. ?css=<url> and ?script=<url> point at other copies --
+// the pre-fix ones, to check that the harness can fail.
+(function () {
+    const q = new URLSearchParams(location.search);
+    const esc = (s) => s.replace(/"/g, '&quot;');
+    document.write('<link rel="stylesheet" href="' + esc(q.get('css') || '../../../app/assets/diff.css') + '">');
+    document.write('<link rel="stylesheet" href="https://unpkg.com/diff2html@3.4.52/bundles/css/diff2html.min.css" crossorigin="anonymous" />');
+    document.write('<script src="https://unpkg.com/diff2html@3.4.52/bundles/js/diff2html-ui.min.js" crossorigin="anonymous"><\/script>');
+    document.write('<script src="' + esc(q.get('script') || '../../../public/js/Wiki/diff.js') + '"><\/script>');
+})();
+</script>
+<style>
+    body { font: 14px/1.5 system-ui, sans-serif; margin: 24px; }
+</style>
+</head>
+<body class="AhaWiki">
+<!-- The part of diff.scala.html that diff.js reads. The diff is what UnifiedDiffUtils produces
+     for a page written one paragraph per line: a particle changed in the middle of a long line,
+     a short line, and a long line changed on one side only, so the two sides wrap differently. -->
+<div class="wikiContent diff">
+    <div class="limitWidth">
+        <h1>Diff of TestPage</h1>
+        <div>
+            <select class="selectOutputFormat" name="outputFormat">
+                <option value="line-by-line">Line by Line</option>
+                <option value="side-by-side" selected="selected">Side by Side</option>
+            </select>
+        </div>
+        <div class="diff2HtmlResult"></div>
+        <pre class="unifiedDiff">--- TestPage
++++ TestPage
+@@ -1,5 +1,5 @@
+ = TestPage
+-위키는 한 문단을 한 줄로 쓰는 것이 작문법에 맞지만, 한 줄이 길어지면 조사 하나나 단어 하나만 바뀌어도 수정 내역을 보기가 힘들어지는데, 이 문장은 그 상황을 재현하려고 일부러 길게 쓴 문단이며 화면 폭을 넘어설 만큼 충분히 길어야 줄바꿈이 필요한지 알 수 있다.
++위키가 한 문단을 한 줄로 쓰는 것이 작문법에 맞지만, 한 줄이 길어지면 조사 하나나 낱말 하나만 바뀌어도 수정 내역을 보기가 힘들어지는데, 이 문장은 그 상황을 재현하려고 일부러 길게 쓴 문단이며 화면 폭을 넘어설 만큼 충분히 길어야 줄바꿈이 필요한지 알 수 있다.
+ 짧은 줄.
+-짧게 쓴 줄.
++이 줄은 오른쪽에서만 길어진다. 왼쪽은 한 줄에 들어가고 오른쪽은 여러 줄로 접히므로, 양쪽 표의 행 높이가 달라지면 그 아래 줄들이 서로 어긋나 보이게 된다. 그래서 행 높이를 맞추는지 확인하려고 쓴 줄이다.
+ 마지막 줄.</pre>
+    </div>
+</div>
+<pre id="result">running…</pre>
+<script>
+// Checked in both layouts: no line runs past its column, and side by side, row i on the left
+// is as tall as row i on the right — the rows below a wrapped line would drift apart otherwise.
+function check() {
+    const out = [];
+    for (const format of ['side-by-side', 'line-by-line']) {
+        $('.selectOutputFormat').val(format).change();
+        const scrolls = [...document.querySelectorAll('.d2h-file-side-diff, .d2h-file-diff')]
+            .filter(e => e.scrollWidth > e.clientWidth + 1).length;
+        out.push((scrolls ? 'FAIL' : 'PASS') + ` ${format}: ${scrolls} column(s) scroll sideways`);
+        if (format === 'side-by-side') {
+            const [left, right] = [...document.querySelectorAll('.d2h-file-side-diff')].map(s => [...s.querySelectorAll('tr')]);
+            const off = left.filter((tr, i) => Math.abs(tr.getBoundingClientRect().top - right[i].getBoundingClientRect().top) > 0.5).length;
+            out.push((off ? 'FAIL' : 'PASS') + ` ${format}: ${off} row(s) out of line with the other side`);
+        }
+    }
+    $('.selectOutputFormat').val('side-by-side').change();
+    document.getElementById('result').textContent = out.join('\n');
+    console.log(out.join('\n'));
+}
+$(function () { check(); });
+$(window).on('resize', () => setTimeout(check, 0));
+</script>
+</body>
+</html>

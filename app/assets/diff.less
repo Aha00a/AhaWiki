@@ -20,5 +20,43 @@
 		.d2h-code-side-linenumber {
 			line-height: 20px;
 		}
+
+		// Pages are written one paragraph per line, so a line is often wider than the screen.
+		// diff2html keeps each line on one row and scrolls sideways; wrap it instead, so the whole
+		// paragraph and the change inside it are visible at once. Side by side, the two halves are
+		// separate tables and wrap to different heights — diff.js evens the rows out after drawing.
+		.d2h-diff-table {
+			width: 100%;
+
+			// A row made taller to match the other side keeps its text next to its line number.
+			td {
+				vertical-align: top;
+			}
+		}
+
+		.d2h-file-side-diff {
+			overflow-x: hidden;
+		}
+
+		.d2h-code-line,
+		.d2h-code-side-line {
+			display: block;
+			width: auto;
+			white-space: normal;
+		}
+
+		.d2h-code-line-ctn {
+			display: inline;
+			width: auto;
+			white-space: pre-wrap;
+			overflow-wrap: anywhere;
+
+			// diff2html makes the marked span an inline-block, which is one unbreakable box:
+			// a line changed from end to end would drop below its +/- and never wrap inside.
+			ins,
+			del {
+				display: inline;
+			}
+		}
 	}
 }
