@@ -25,6 +25,12 @@
 
 알아 둘 결과 하나: 배포는 staged 출력만 나르면 된다. 그 옆에 따로 올려야 하는 것이 없다.
 
+== 운영에서는 jar 안에서 읽는다
+
+같은 `getResourceAsStream` 이 dev·테스트에서는 디스크의 파일을(`FileInputStream`), 운영에서는 assets jar 안의 항목을 돌려준다. 후자의 클래스는 `sun.net.www.protocol.jar.JarURLConnection$JarURLInputStream` — `java.base` 가 열어 주지 않는 패키지의 것이라, 그 클래스에서 메서드를 리플렉션으로 찾아 부르면 `InaccessibleObjectException` 이다. 스트림은 `InputStream`·`AutoCloseable` 같은 공개 타입을 통해서만 다룬다.
+
+2026-10-01 에 실제로 났다. `PublicAsset.url` 이 CSS·JS 의 해시를 구하려고 읽은 스트림을 `Using` 으로 닫았는데, 그때 `Using` 은 `close()` 가 있는 무엇이든 받는 구조적 타입이라 호출이 리플렉션이었다. canary 한 대가 모든 페이지에 500 을 답했고, 로컬과 테스트는 디스크에서 읽어 통과했다. `Using` 은 이제 `AutoCloseable` 만 받는다. `UsingSpec` 이 jar 안의 리소스(`scala/Option.class`)로 이것을 재현한다 — 이 저장소의 파일은 테스트에서 jar 에 들어 있지 않아서다.
+
 == dev 모드에서
 
 [[[#!Vim text
