@@ -64,6 +64,8 @@ echo "  stage ($(du -sh "$STAGE" | cut -f1))"
 tar -C "$STAGE" -cf - . | ssh "$HOST" "sudo -n tar -C '$ROOT/releases/$REL' -xf -"
 
 say "4/7 Point current at it"
+# Kept so that an instance which comes back unable to render can be put back on it in step 5.
+PREV="$(ssh "$HOST" "readlink -f '$ROOT/current' || true")"
 ssh "$HOST" "
   set -e
   R='$ROOT/releases/$REL'
@@ -78,10 +80,8 @@ ssh "$HOST" "
 say "5/7 Restart, one instance at a time"
 # Restarting both at once empties the proxy's pool of healthy upstreams for a moment and readers
 # get a 502. Each one has to answer before the next goes down.
-for p in "${PORTS[@]}"; do
-  echo "  restarting $p"
-  ssh "$HOST" "sudo -n systemctl restart ahawiki@$p"
-  ok=0
+wait_healthy() {
+  local p=$1 i code
   for i in $(seq 1 "$HEALTH_TRIES"); do
     sleep 3
     # /hc rather than a wiki page. It runs SELECT 1 and checks free disk, so it answers for the
@@ -92,11 +92,50 @@ for p in "${PORTS[@]}"; do
     # human signals in 30s. Polling /w/FrontPage every 3s is precisely that, so on 2026-09-04
     # this loop banned itself on the fifth poll: every later poll got 403 and a tarpit, and the
     # deploy died with "never became healthy" while the instance was serving readers normally.
-    # Whether the site renders is verified through the proxy below, from a whitelisted address.
+    # Whether the site renders is checked once it answers, by render_failures below.
     code=$(ssh "$HOST" "curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:$p/hc" 2>/dev/null || echo 000)
-    if [ "$code" = "200" ]; then echo "    healthy after $i"; ok=1; break; fi
+    if [ "$code" = "200" ]; then echo "    healthy after $i"; return 0; fi
   done
-  [ "$ok" = "1" ] || { echo "    $p never became healthy — stopping here, the other instance is still up" >&2; exit 1; }
+  return 1
+}
+
+# /hc renders no page, and every check through the proxy can be answered by the instance not
+# restarted. On 2026-10-01 a canary answered 500 on every page while all of this deploy's checks
+# passed; a comparison run afterwards was the first thing to see it. So each restarted instance
+# renders the verify URLs itself, on its own port over loopback -- the whitelisted address, so
+# these requests count toward no ban. Prints "<code> <url>" for each one it does not render.
+render_failures() {
+  local p=$1 u rest h path code
+  for u in "${VERIFY_URLS[@]}"; do
+    [ -n "$u" ] || continue
+    rest="${u#*://}"; h="${rest%%/*}"; path="/${rest#*/}"
+    [ "$rest" = "$h" ] && path=/
+    # -L: a site's / answers 303 to a path on the same port, and curl keeps the Host header for it.
+    code=$(ssh "$HOST" "curl -sL -o /dev/null -w '%{http_code}' --max-time 60 -H 'Host: $h' 'http://127.0.0.1:$p$path'" 2>/dev/null || echo 000)
+    [ "$code" = "200" ] || echo "$code $u"
+  done
+}
+
+for p in "${PORTS[@]}"; do
+  echo "  restarting $p"
+  ssh "$HOST" "sudo -n systemctl restart ahawiki@$p"
+  wait_healthy "$p" || { echo "    $p never became healthy — stopping here, the other instance is still up" >&2; exit 1; }
+
+  failures="$(render_failures "$p")"
+  if [ -n "$failures" ]; then
+    echo "    $p answers /hc but does not render:" >&2
+    printf '%s\n' "$failures" | sed 's/^/      /' >&2
+    # The proxy is sending readers to it already, so it does not stay on this release while
+    # someone reads the message.
+    if [ -n "$PREV" ] && [ "$PREV" != "$ROOT/releases/$REL" ]; then
+      echo "    putting current back to $PREV and restarting $p on it" >&2
+      ssh "$HOST" "sudo -n -u $SERVICE_USER ln -sfn '$PREV' '$ROOT/current' && sudo -n systemctl restart ahawiki@$p"
+      wait_healthy "$p" || echo "    !! $p did not come back on $PREV either" >&2
+    fi
+    echo "    stopping: nothing tagged. Instances restarted before $p are still on $REL." >&2
+    exit 1
+  fi
+  echo "    renders ${#VERIFY_URLS[@]} verify URL(s)"
 
   # An instance answering is not the same as the proxy knowing it. A proxy that drops a failing
   # upstream holds it out for a fixed interval, so restarting the next one while this is still
