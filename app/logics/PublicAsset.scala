@@ -28,12 +28,16 @@ object PublicAsset {
   /** What goes in `v`. Its own function so a test can check an address against what is served there. */
   def version(content: Array[Byte]): String = Codecs.sha1(content).take(10)
 
-  /** `file` is the path under /public/, as in `js/js.js`; `app/assets/wiki.css` is served as `wiki.css`. */
-  def url(file: String): String = {
-    val bare = s"/public/$file"
+  /** The digest of the file this instance serves at /public/`file`, or None when it has none. */
+  def versionOf(file: String): Option[String] =
     versions.getOrElseUpdate(file) {
       Option(getClass.getClassLoader.getResourceAsStream(s"public/$file"))
         .map(stream => Using(stream)(stream => version(stream.readAllBytes())))
-    }.fold(bare)(v => s"$bare?v=$v")
+    }
+
+  /** `file` is the path under /public/, as in `js/js.js`; `app/assets/wiki.css` is served as `wiki.css`. */
+  def url(file: String): String = {
+    val bare = s"/public/$file"
+    versionOf(file).fold(bare)(v => s"$bare?v=$v")
   }
 }

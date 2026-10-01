@@ -126,5 +126,5 @@ GET           /dev/gradient                          controllers.Dev.gradient
 GET           /dev/deleteVimCache                    controllers.Dev.deleteVimCache(md5:String)
 
 # Map static resources from the /public folder to the /assets URL path
-GET           /public/*file                          controllers.Assets.at(path="/public", file)
+GET           /public/*file                          controllers.PublicAssets.at(file)
 GET           /assets/*file                          controllers.Assets.at(path="/public", file)
