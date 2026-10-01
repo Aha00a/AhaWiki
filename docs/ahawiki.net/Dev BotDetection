@@ -11,15 +11,15 @@
   │
   ├─[0] ipWhitelist 에 있나? ────────YES─► 아래 전부 건너뛰고 정상 처리
   │
-  ├─[1] IpRateLimiter.isKnownBanned? ─YES─► tarpit(1~6분) + 403
+  ├─[1] IpRateLimiter.isKnownBanned? ─YES─► tarpit(20~55초) + 403
   │         (인메모리, DB 없음)
   │
   ├─[·] IpRateLimiter.isKnownClean? ─YES─► [2] 를 건너뛴다 (60초 TTL)
   │
-  ├─[2] IpDeny DB 조회 ──────────────YES─► ban() 캐시 + tarpit(1~6분) + 403
+  ├─[2] IpDeny DB 조회 ──────────────YES─► ban() 캐시 + tarpit(20~55초) + 403
   │         (0·1 이 false이고 clean 캐시도 없을 때만 실행)
   │
-  ├─[3] UriAttackDetector.isAttack? ─YES─► ban() + IpDeny 등록(async) + tarpit(1~11분) + 403
+  ├─[3] UriAttackDetector.isAttack? ─YES─► ban() + IpDeny 등록(async) + tarpit(20~55초) + 403
   │
   ├─[4] IpRateLimiter.recordAndCheck? YES─► ban() + IpDeny 등록(async) + 즉시 403
   │
@@ -32,9 +32,10 @@
  * '''`[1]` 인메모리 ban 확인''': `IpRateLimiter.knownBanned` 셋을 조회한다. DB 없음. `[2]`~`[4]`에서 차단된 IP가 재요청하면 여기서 바로 잡힌다.
  * '''`[·]` 인메모리 clean 캐시''': `knownClean` 에 있으면 `[2]` 의 DB 조회를 건너뛴다. TTL 은 `cleanTtlMs`(현재 60초). 정상 방문자가 매 요청마다 `IpDeny` 를 조회하지 않게 하는 것이 목적이다.
  * '''`[2]` IpDeny DB 조회''': 서버 재시작 전에 등록된 영구 차단 IP를 처리한다. 조회 결과가 있으면 `ban()`을 호출해 이후 요청은 `[1]`에서 처리되도록 캐시한다. 결과가 없으면 `markClean()` 으로 60초 동안 `knownClean` 에 넣는다 — `[·]` 는 여기서만 채워진다.
- * '''`[3]` UriAttackDetector''': WordPress·phpinfo 등 알려진 공격 URI를 차단한다. 탐지 즉시 `ban()`을 호출해 actor가 DB에 쓰기 전 같은 IP의 재요청을 `[1]`에서 막는다. `IpDeny` 등록 메시지는 tarpit 이 끝난 뒤(1~11분 뒤)에야 actor 로 간다 — 그 사이 재시작하면 행이 남지 않는다. `/public/`·`/assets/` 요청에서 잡힌 경우는 AccessLog 와 함께 IpDeny 등록도 건너뛴다(`shouldSkipAccessLogUri`).
+ * '''`[3]` UriAttackDetector''': WordPress·phpinfo 등 알려진 공격 URI를 차단한다. 탐지 즉시 `ban()`을 호출해 actor가 DB에 쓰기 전 같은 IP의 재요청을 `[1]`에서 막는다. `IpDeny` 등록 메시지는 tarpit 이 끝난 뒤(20~55초 뒤)에야 actor 로 간다 — 그 사이 재시작하면 행이 남지 않는다. `/public/`·`/assets/` 요청에서 잡힌 경우는 AccessLog 와 함께 IpDeny 등록도 건너뛴다(`shouldSkipAccessLogUri`).
  * '''`[4]` IpRateLimiter.recordAndCheck''': 고속 요청 또는 페이지만 긁는 패턴을 탐지한다. tarpit 없이 즉시 응답한다(고볼륨 봇에 tarpit을 걸면 서버 커넥션이 쌓임). 등록 메시지의 조건은 `[3]` 과 같다.
  * '''tarpit''': `after(delay, scheduler)` + 지연 응답. 스레드는 잡히지 않지만 TCP 커넥션은 열려 있다. `[1]``[2]` 와 `[3]` 에 쓰고, `[4]` 만 tarpit 없이 바로 403 이다.
+  * '''시간은 20~55초다(`FilterAccessLog.TarpitMax`).''' 서버가 연결을 끊는 유휴 시간(`play.server.http.idleTimeout`, 기본 75초)과 nginx 의 기본 `proxy_read_timeout`(60초) 아래여야 한다. 2026-10-02 까지는 1~6분(공격 URI 는 1~11분)이었고, 그래서 거의 모든 tarpit 이 403 이 아니라 75초째의 연결 리셋으로 끝났다. 프록시는 리셋을 그 인스턴스의 장애로 세어 잠시 빼고, 요청을 다른 인스턴스로 다시 보낸다 — 거기서도 tarpit 에 걸려 75초 뒤 리셋된다. 차단된 봇 하나로 두 대가 다 빠졌고, 그동안 일반 독자도 502 를 받았다. 2026-10-01 하루에 75초짜리 502 가 360건, "no live upstreams" 가 248건이었다. 이 상한이 유휴 시간 아래인지는 `FilterAccessLogSpec` 이 실제 설정을 읽어 확인한다.
 
 == IpRateLimiter
 
@@ -96,9 +97,9 @@
 운영은 인스턴스 둘이 동시에 요청을 받는다(측정은 [Dev Deploying]). `IpRateLimiter` 의 창·`knownBanned`·`knownClean` 은 인스턴스마다 따로라서, 이 페이지의 흐름은 인스턴스 하나가 보는 것이다.
 
  * '''임계값은 인스턴스마다 센다.''' 프록시가 요청을 나눠 보내므로 한 인스턴스가 보는 것은 그 주소 요청의 일부다. 두 인스턴스에 고르게 가면, 위 탐지 패턴의 수보다 대략 두 배를 보내야 걸린다.
- * '''한쪽이 잡은 주소를 다른 쪽이 아는 길은 `IpDeny` 행뿐이다.''' `[4]` 는 곧바로 행을 쓰지만(actor, 비동기), 다른 인스턴스가 그 주소를 `knownClean` 에 넣어 두었다면 그것이 끝날 때까지(`cleanTtlMs`) DB 를 다시 보지 않는다. `[3]` 은 tarpit 이 끝난 뒤에야 행을 쓰므로, 그 몇 분 동안 다른 인스턴스는 그 주소의 공격 URI 가 아닌 요청을 정상으로 처리한다.
+ * '''한쪽이 잡은 주소를 다른 쪽이 아는 길은 `IpDeny` 행뿐이다.''' `[4]` 는 곧바로 행을 쓰지만(actor, 비동기), 다른 인스턴스가 그 주소를 `knownClean` 에 넣어 두었다면 그것이 끝날 때까지(`cleanTtlMs`) DB 를 다시 보지 않는다. `[3]` 은 tarpit 이 끝난 뒤에야 행을 쓰므로, 그 1분이 안 되는 동안 다른 인스턴스는 그 주소의 공격 URI 가 아닌 요청을 정상으로 처리한다.
 
-행이 쓰이고 나면 양쪽이 모두 막으므로, 이 틈은 분 단위다. 차단 기간과 견줄 크기는 아니다.
+행이 쓰이고 나면 양쪽이 모두 막으므로, 이 틈은 1분 남짓이다(`cleanTtlMs` 60초와 tarpit 중 긴 쪽). 차단 기간과 견줄 크기는 아니다.
 
 == 관련 파일
 

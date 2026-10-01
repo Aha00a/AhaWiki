@@ -84,12 +84,12 @@ class FilterAccessLog @Inject()(
   private def enqueueAndDeny(insert: ActorAccessLog.Insert, reason: String): Unit =
     actorAccessLog ! ActorAccessLog.InsertAndDeny(insert, reason)
 
-  private def rejectWithTarpit(label: String, maxExtraMin: Int, startTime: Long)
+  private def rejectWithTarpit(label: String, startTime: Long)
                                (onLog: Int => Unit)
                                (implicit site: Site, rh: RequestHeader): Future[Result] = {
     val url = s"${rh.scheme}://${rh.host}${rh.uri}"
     logger.warn(s"\t\t${rh.method}\t$FORBIDDEN\t${rh.remoteAddressWithXRealIp}\t$label\t$url\t${rh.userAgent.getOrElse("")}")
-    after((Random.nextInt(maxExtraMin * 60) + 60).seconds, actorSystem.scheduler)({
+    after(FilterAccessLog.tarpitDelay(), actorSystem.scheduler)({
       val duration = (System.currentTimeMillis - startTime).toInt
       logRequest(rh.method, FORBIDDEN, duration, rh.remoteAddressWithXRealIp, rh.uri, url, rh.userAgent.getOrElse(""))
       if (!shouldSkipAccessLogUri(rh.uri)) onLog(duration)
@@ -135,12 +135,12 @@ class FilterAccessLog @Inject()(
 
     if (isBannedInMemory || optionIpDeny.isDefined) {
       val label = if (isBannedInMemory) "IpDeny:Cache" else "IpDeny:DB"
-      rejectWithTarpit(label, maxExtraMin = 5, startTime) { duration =>
+      rejectWithTarpit(label, startTime) { duration =>
         enqueue(makeInsert(FORBIDDEN, duration, optionIpDeny.map(_.seq)))
       }
     } else if (!isWhitelisted && UriAttackDetector.isAttack(uri)) {
       ipRateLimiter.ban(remoteAddress)
-      rejectWithTarpit("UriAttack", maxExtraMin = 10, startTime) { duration =>
+      rejectWithTarpit("UriAttack", startTime) { duration =>
         enqueueAndDeny(makeInsert(FORBIDDEN, duration), url)
       }
     } else if (!isWhitelisted && ipRateLimiter.recordAndCheck(remoteAddress, uri)) {
@@ -161,4 +161,23 @@ class FilterAccessLog @Inject()(
       }
     }
   }
+}
+
+object FilterAccessLog {
+  // A tarpit has to answer before anything between it and the bot gives up on the connection.
+  // Until 2026-10-02 it held for 1 to 6 or 11 minutes, and the server closes a connection idle for
+  // play.server.http.idleTimeout (75s by default) -- so almost every tarpit ended in a reset, not a
+  // 403. The proxy counts a reset against the instance, takes it out of rotation for a while, and
+  // retries the request on the other one, which tarpits it too and is reset 75s later. One banned
+  // bot was enough to leave the proxy with no live instance: 248 "no live upstreams" and 360
+  // 75-second 502s on 2026-10-01, and ordinary readers got the 502s.
+  //
+  // 55s also stays under nginx's default proxy_read_timeout (60s), which would do the same. Still
+  // long enough to make each request expensive for the bot. FilterAccessLogSpec holds the ceiling
+  // under the configured idle timeout.
+  val TarpitMin: FiniteDuration = 20.seconds
+  val TarpitMax: FiniteDuration = 55.seconds
+
+  def tarpitDelay(): FiniteDuration =
+    TarpitMin + Random.nextLong((TarpitMax - TarpitMin).toMillis + 1).millis
 }
