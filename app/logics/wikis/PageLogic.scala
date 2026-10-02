@@ -155,7 +155,7 @@ object PageLogic {
     Page.selectLastRevision(name) foreach { page =>
       implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
 
-      PageMeta.upsert(
+      val revisionIsStillThere = PageMeta.upsert(
         pageName = page.name,
         revision = page.revision,
         image = extractRepresentativeImage(page.content, page.name),
@@ -163,43 +163,49 @@ object PageLogic {
         size = page.content.length,
       )
 
-      val text = Interpreters.toText(page.content)
-      if (!text.isNullOrEmpty) {
-        val seqWord = decodePercentEncodedText(text)
-          .replaceAll("""([a-z])([A-Z])""", "$1 $2")
-          .replaceAll("""(\d{4})-(\d{2})-(\d{2})""", "$1$2$3")
-          .replaceAll("""(\d{2}):(\d{2}):(\d{2})""", "$1$2$3")
-          .replaceAll("""[{}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", " ")
-          .toLowerCase()
-          .split("""\s""").toSeq
-          .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
-          .filterNot(s => s.length < 2)
-          .filterNot(s => s.length > 15)
-          .filterNot(s => s.matches("""\d{1,2}"""))
-        val seqWordFiltered = seqWord.filter(w => !seqStopWord.contains(w))
-        val wordCount = seqWordFiltered.groupByCount()
-        val seqWordCountSorted = wordCount.toSeq.sortBy(-_._2)
-
-        val termByWord = CalculatedTerm.ensureSeqByTerm(seqWordCountSorted.map(_._1))
-        val seqTermFrequency = seqWordCountSorted.flatMap { case (term, frequency) => termByWord.get(term).map(_ -> frequency) }
-        CalculatedTermFrequency.replace(name, seqTermFrequency)
-
-        if(verbose)
-          logger.info(seqWordCountSorted.take(10).mkString(" "))
-
-        CalculatedCosineSimilarity.recalc(name)
+      if (!revisionIsStillThere) {
+        // Deleted or renamed since it was read a few lines up. Nothing more is derived from a
+        // revision that is gone; the request that removed it queues its own calculation.
+        logger.info(s"\t\tCalculate: ${site.name}(${site.seq})\t$name\trevision ${page.revision} is gone, skipped")
       } else {
-        CalculatedTermFrequency.delete(name)
-        CalculatedCosineSimilarity.delete(name)
+        val text = Interpreters.toText(page.content)
+        if (!text.isNullOrEmpty) {
+          val seqWord = decodePercentEncodedText(text)
+            .replaceAll("""([a-z])([A-Z])""", "$1 $2")
+            .replaceAll("""(\d{4})-(\d{2})-(\d{2})""", "$1$2$3")
+            .replaceAll("""(\d{2}):(\d{2}):(\d{2})""", "$1$2$3")
+            .replaceAll("""[{}\[\]/?.,;:|)*~`!^\-_+<>@#$%&\\=('"]""", " ")
+            .toLowerCase()
+            .split("""\s""").toSeq
+            .flatMap(s => s.replaceAll("""^(\d{8})t(\d{6})$""", "$1").split(" ").toSeq)
+            .filterNot(s => s.length < 2)
+            .filterNot(s => s.length > 15)
+            .filterNot(s => s.matches("""\d{1,2}"""))
+          val seqWordFiltered = seqWord.filter(w => !seqStopWord.contains(w))
+          val wordCount = seqWordFiltered.groupByCount()
+          val seqWordCountSorted = wordCount.toSeq.sortBy(-_._2)
+
+          val termByWord = CalculatedTerm.ensureSeqByTerm(seqWordCountSorted.map(_._1))
+          val seqTermFrequency = seqWordCountSorted.flatMap { case (term, frequency) => termByWord.get(term).map(_ -> frequency) }
+          CalculatedTermFrequency.replace(name, seqTermFrequency)
+
+          if(verbose)
+            logger.info(seqWordCountSorted.take(10).mkString(" "))
+
+          CalculatedCosineSimilarity.recalc(name)
+        } else {
+          CalculatedTermFrequency.delete(name)
+          CalculatedCosineSimilarity.delete(name)
+        }
+
+        val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(CalculatedLink(page.name, "", ""))
+        CalculatedLink.delete(name)
+        CalculatedLink.insert(seqLink)
+
+        val seqSchemaOrg: Seq[CalculatedSchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
+        CalculatedSchemaOrg.delete(name)
+        CalculatedSchemaOrg.insert(seqSchemaOrg)
       }
-
-      val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(CalculatedLink(page.name, "", ""))
-      CalculatedLink.delete(name)
-      CalculatedLink.insert(seqLink)
-
-      val seqSchemaOrg: Seq[CalculatedSchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
-      CalculatedSchemaOrg.delete(name)
-      CalculatedSchemaOrg.insert(seqSchemaOrg)
     }
   }
 

@@ -7,6 +7,7 @@ import com.aha00a.play.AnormSqlParser.localDateTime
 import models.PageLatestSummary
 
 import java.sql.Connection
+import java.sql.SQLIntegrityConstraintViolationException
 import java.time.LocalDateTime
 
 case class PageMeta(
@@ -32,6 +33,18 @@ object PageMeta {
   private val rowParser = str("name") ~ long("revision") ~ localDateTime("dateInserted") ~ localDateTime("dateUpdated").? ~ str("image").? ~ str("description").? ~ long("size")
   private val rowParserPageLatestSummary = str("name") ~ long("revision") ~ localDateTime("dateTime") ~ long("user").? ~ str("image").? ~ str("description").? ~ long("size")
 
+  /**
+   * False, with nothing written, when the revision the row describes no longer exists.
+   *
+   * The caller is the page calculation, which runs after the request that asked for it: it reads
+   * the latest revision, and before it gets here another request may delete that revision or
+   * rename the page. The foreign key to Page then refuses the row. That is not an error --
+   * whoever removed the revision queues a calculation of their own -- but it used to reach the
+   * actor's supervisor as one, and an ERROR that means nothing hides the ones that do.
+   *
+   * The foreign key decides, rather than a look at Page beforehand, because a look beforehand is
+   * the same race one step later. Any other constraint failure is still thrown.
+   */
   def upsert(
     pageName: String,
     revision: Long,
@@ -39,19 +52,24 @@ object PageMeta {
     description: Option[String],
     size: Long,
     dateUpdated: LocalDateTime = LocalDateTime.now(),
-  )(implicit connection: Connection, site: Site): Int = {
+  )(implicit connection: Connection, site: Site): Boolean = {
     val savedImage = image.map(img => truncate(img, ImageMaxLength))
     val savedDescription = description.map(value => truncate(value, DescriptionMaxLength))
-    SQL"""
-      INSERT INTO PageMeta (site, name, revision, dateUpdated, image, description, size)
-      VALUES (${site.seq}, $pageName, $revision, $dateUpdated, $savedImage, $savedDescription, $size)
-      ON DUPLICATE KEY UPDATE
-        revision = VALUES(revision),
-        dateUpdated = VALUES(dateUpdated),
-        image = VALUES(image),
-        description = VALUES(description),
-        size = VALUES(size)
-    """.executeUpdate()
+    try {
+      SQL"""
+        INSERT INTO PageMeta (site, name, revision, dateUpdated, image, description, size)
+        VALUES (${site.seq}, $pageName, $revision, $dateUpdated, $savedImage, $savedDescription, $size)
+        ON DUPLICATE KEY UPDATE
+          revision = VALUES(revision),
+          dateUpdated = VALUES(dateUpdated),
+          image = VALUES(image),
+          description = VALUES(description),
+          size = VALUES(size)
+      """.executeUpdate()
+      true
+    } catch {
+      case _: SQLIntegrityConstraintViolationException if Page.selectSpecificRevision(pageName, revision.toInt).isEmpty => false
+    }
   }
 
   def delete(name: String)(implicit connection: Connection, site: Site): Int = {
