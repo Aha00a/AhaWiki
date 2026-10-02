@@ -1,6 +1,7 @@
 package models.tables
 
 import java.sql.Connection
+import java.sql.SQLTransactionRollbackException
 import java.sql.Savepoint
 
 /**
@@ -19,6 +20,29 @@ import java.sql.Savepoint
  * describe.
  */
 object LocalTransaction {
+  /**
+   * The same, and when the database picks the block as a deadlock victim, the block again -- up to
+   * three runs in all. Only for a block that can be run twice with the same result, which is what
+   * recalculating derived rows is.
+   *
+   * Two instances recalculate pages on their own traffic, and two pages similar to each other
+   * write the same CalculatedCosineSimilarity rows. With each recalculation one transaction they
+   * can deadlock: none in the 53 days of log before 2026-10-03, one within the hour after. The
+   * victim's exception stopped the rest of that page's calculation, links included, so it is
+   * retried rather than only logged. MySQL's own message for it is "try restarting transaction".
+   *
+   * Not retried inside a transaction the caller opened: a deadlock rolls back all of it, and
+   * running this block alone again would commit the caller's work without its earlier half.
+   */
+  def retryingDeadlock[T](f: => T)(implicit connection: Connection): T = {
+    def run(runsLeft: Int): T =
+      try apply(f)
+      catch {
+        case _: SQLTransactionRollbackException if runsLeft > 1 && connection.getAutoCommit => run(runsLeft - 1)
+      }
+    run(3)
+  }
+
   def apply[T](f: => T)(implicit connection: Connection): T = {
     if (connection.getAutoCommit) {
       connection.setAutoCommit(false)

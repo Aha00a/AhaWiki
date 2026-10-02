@@ -62,7 +62,7 @@ object CalculatedTermFrequency {
     * delete and the insert committed separately they read the page with some or all of its terms
     * missing. */
   def replace(name: String, termFrequencies: Seq[(Long, Int)])(implicit connection: Connection, site: Site): Unit =
-    LocalTransaction {
+    LocalTransaction.retryingDeadlock {
       delete(name)
       insert(name, termFrequencies)
       replaceNorm(name)

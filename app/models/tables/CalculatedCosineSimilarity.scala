@@ -24,7 +24,7 @@ object CalculatedCosineSimilarity {
 
   // One transaction, so a reader of SimilarPages sees the page's similarities before or after,
   // never with them deleted and not yet inserted -- see CalculatedTermFrequency.replace.
-  def recalc(name: String)(implicit connection: Connection, site: Site): Int = LocalTransaction {
+  def recalc(name: String)(implicit connection: Connection, site: Site): Int = LocalTransaction.retryingDeadlock {
     delete(name)
     SQL"""
 INSERT INTO CalculatedCosineSimilarity (site1, name1, site2, name2, similarity)
