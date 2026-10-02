@@ -19,6 +19,8 @@ InterpreterVim	파일 캐시	cache/Vim/	7일마다, 1년 넘게 안 읽은 파�
 
 Play Framework의 `SyncCacheApi`를 사용하는 분산 캐시 계층입니다. 백엔드는 Redis 입니다(`play-redis`, `conf/application.conf` 의 `play.cache.redis`). Memcached 지원은 없습니다.
 
+읽기는 동기입니다 — 요청 스레드가 Redis 의 future 를 기다립니다. 그 future 를 마무리하는 스레드는 요청이 도는 dispatcher 와 달라야 하고, 그래서 `conf/base.conf` 에 `ahawiki-redis-dispatcher` 가 있습니다. 같았을 때 무슨 일이 났는지는 [Dev Database] 의 «렌더링 중에는 커넥션을 새로 얻지 않는다».
+
 === 캐시 패턴
 
 ==== 예외 시 stale 값 반환

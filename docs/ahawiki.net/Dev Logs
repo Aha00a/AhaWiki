@@ -80,7 +80,7 @@ sudo awk '/Unexpected exception\[NoSuchElementException/{f=1;next}
 [[[#!Table tsv 1
 건수	예외	무엇이었나
 977	`InaccessibleObjectException`	10-01 05:03~05:15 의 12분, 새 릴리스를 먼저 올린 한 대에서. 그 사고의 실제 크기다. 원인과 고친 것은 [Dev Resources] 의 «운영에서는 jar 안에서 읽는다»
-63	`SQLTransientConnectionException` (커넥션 풀 고갈)	9-26·9-28·10-01 에 한두 분씩, 두 인스턴스가 같은 분에. 렌더링 중에 커넥션을 하나 더 얻던 것이 원인이다 — [Dev Database] 의 «렌더링 중에는 커넥션을 새로 얻지 않는다»
+63	`SQLTransientConnectionException` (커넥션 풀 고갈)	9-26·9-28·10-01 에 한두 분씩, 두 인스턴스가 같은 분에. 원인은 둘이다: 렌더링 중에 커넥션을 하나 더 얻던 것, 그리고 캐시 읽기가 요청과 같은 스레드 풀에서 마무리되던 것 — [Dev Database] 의 «렌더링 중에는 커넥션을 새로 얻지 않는다»
 ]]]
 
 같은 분에 `[[SimilarPages]] failed on page …` · `#!Wiki failed on page …` ERROR 가 같이 찍혀 있으면 풀 고갈의 일부다. 커넥션을 못 얻은 매크로가 오류 상자로 그려진 것이다.
