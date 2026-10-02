@@ -164,7 +164,6 @@ object PageLogic {
       )
 
       val text = Interpreters.toText(page.content)
-      CalculatedTermFrequency.delete(name)
       if (!text.isNullOrEmpty) {
         val seqWord = decodePercentEncodedText(text)
           .replaceAll("""([a-z])([A-Z])""", "$1 $2")
@@ -183,14 +182,14 @@ object PageLogic {
 
         val termByWord = CalculatedTerm.ensureSeqByTerm(seqWordCountSorted.map(_._1))
         val seqTermFrequency = seqWordCountSorted.flatMap { case (term, frequency) => termByWord.get(term).map(_ -> frequency) }
-        CalculatedTermFrequency.insert(name, seqTermFrequency)
-        CalculatedTermFrequency.replaceNorm(name)
+        CalculatedTermFrequency.replace(name, seqTermFrequency)
 
         if(verbose)
           logger.info(seqWordCountSorted.take(10).mkString(" "))
 
         CalculatedCosineSimilarity.recalc(name)
       } else {
+        CalculatedTermFrequency.delete(name)
         CalculatedCosineSimilarity.delete(name)
       }
 

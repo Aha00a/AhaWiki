@@ -57,6 +57,17 @@ object CalculatedTermFrequency {
     """.executeUpdate()
   }
 
+  /** The page's frequencies and norm, swapped for `termFrequencies` in one transaction. A page view
+    * recalculates the page one time in ten, so readers of SimilarPages are always nearby; with the
+    * delete and the insert committed separately they read the page with some or all of its terms
+    * missing. */
+  def replace(name: String, termFrequencies: Seq[(Long, Int)])(implicit connection: Connection, site: Site): Unit =
+    LocalTransaction {
+      delete(name)
+      insert(name, termFrequencies)
+      replaceNorm(name)
+    }
+
   def delete(name: String)(implicit connection:Connection, site: Site): Int = {
     val count = SQL"DELETE FROM CalculatedTermFrequency WHERE site = ${site.seq} AND name = $name".executeUpdate()
     SQL"DELETE FROM CalculatedTermFrequencyNorm WHERE site = ${site.seq} AND name = $name".executeUpdate()
