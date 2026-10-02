@@ -60,6 +60,7 @@ sudo awk '/Unexpected exception\[NoSuchElementException/{f=1;next}
  * '''`cookie has invalid signature` 63,953''' — 8-13 20:45 에 시작해 8-14 하루 32,828건, 그 뒤 8-25 까지 하루 1,440건 안팎, 8-27 뒤로는 거의 없다. '''세션 서명 키를 8-13 에 바꾼 것이 원인이고 정상이다'''(2026-10-03 확인 — 교체 기록은 운영 저장소에 있다). 서명 키가 바뀌면 그때까지의 세션 쿠키가 전부 이렇게 된다([AccessControl] 의 signed read URL 절에 같은 이야기가 있다). 건수가 이렇게 많은 까닭은 바로 아래 항목이다: 옛 쿠키를 든 채 열려 있던 탭이 거절된 WebSocket 을 계속 다시 열었다. 8-14 의 이 경고 32,828건 옆에 `WebSocket watch denied` 가 32,742건이고, 하루 1,440건은 탭 하나가 1분에 한 번씩 두드린 수다. 이 항목은 2026-10-03 까지 «8-23~8-27 에 몰려 있다, 그 무렵 키를 바꾼 것으로 보인다» 고 적혀 있었다 — 날짜는 틀렸고 추측은 맞았다.
  * '''`WebSocket watch denied` 76,000''' — 8월에 몰려 있고 주소 셋이 대부분이다(한 주소가 44,249). 읽기 권한이 없는 페이지의 소켓은 거절되는데, 브라우저 쪽은 닫히면 다시 연결하므로([Dev WebSocket] 의 재연결) 탭 하나가 며칠을 두드릴 수 있다. 2026-09-26 부터 거절된 핸드셰이크는 다섯 번에서 그만둔다([Dev WebSocket] 의 연결/재연결).
  * `HTTP idle-timeout` 하루 60~90 건은 정상 범위로 본다 — 탭이 잠들면 나는 것이다.
+ * '''재시작 때의 `Internal server error, sending 500 response` 몇 줄은 새 릴리스의 오류가 아니다.''' `Stopping Pekko HTTP server...` 바로 뒤, `OnApplicationStop` 앞에 `OutputTruncationException` 과 함께 찍히면, 내려가는 프로세스가 아직 답하지 않은 요청을 끊은 것이다 — 대부분 tarpit 에 붙잡아 둔 봇 요청이다([Dev BotDetection]). 2026-10-03 배포에서 네 줄이 났고, 그 순간 앞단이 5xx 로 답한 요청은 공격 URI 하나였다. 새 프로세스의 것인지는 `OnApplicationStarting` 보다 앞인지 뒤인지로 가린다.
 
 === 액터 쪽 경합
 
