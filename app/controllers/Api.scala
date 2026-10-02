@@ -158,7 +158,7 @@ class Api @Inject()(
   def change(name: String, includeMinorEdit: Int, includeViaApi: Int, limit: Int): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name).holding(connection)
 
       case class ChangeRow(name: String, revision: Long, dateTime: String, nickname: Option[String], profileImageUrl: Option[String], remoteAddressMasked: String, comment: String, commentInlineHtml: String, isMinorEdit: Boolean, viaApi: Boolean, userApiKeyName: Option[String])
       case class ChangeSourceRow(name: String, revision: Long, dateTime: String, nickname: Option[String], profileImageUrl: Option[String], remoteAddress: String, comment: String, isMinorEdit: Boolean, viaApi: Boolean, userApiKeyName: Option[String])
@@ -381,7 +381,7 @@ class Api @Inject()(
     val name = PageNameUrl.decode(nameEncoded)
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name).holding(connection)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
 
       Page.selectLastRevision(name) match {
@@ -477,7 +477,7 @@ class Api @Inject()(
   def statistics(): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("")
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("").holding(connection)
 
       val seqPage: Seq[PageLatestSummary] = contextWikiPage.seqPageByPermission
       val selectYmdCountOfFirstRevision: Seq[(String, Long)] = Page.selectYmdCountOfFirstRevision()

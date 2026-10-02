@@ -36,7 +36,7 @@ controllerComponents: ControllerComponents,
     import models.tables.SearchResultSummary
     import models.tables.Site
     implicit val site: Site = SiteLogic.get(request.host)
-    implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("")
+    implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("").holding(connection)
     implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
 
     val wikiPermission = WikiPermission()

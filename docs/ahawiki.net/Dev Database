@@ -21,11 +21,11 @@
 
 그래서 요청이 쥔 커넥션을 컨텍스트가 넘겨받는다.
 
- * 커넥션을 쥔 쪽이 컨텍스트를 만들 때 `holding(connection)` 으로 알린다. 지금은 `Wiki.view` 와 `PageLogic.calculate` 둘이다.
+ * 커넥션을 쥔 쪽이 컨텍스트를 만들 때 `holding(connection)` 으로 알린다. 읽기만 하는 진입점은 다 그렇게 한다 — `Wiki.view`(보기·히스토리·diff·blame·편집 화면이 모두 여기를 지난다), `Wiki.preview`, `Search.index`, `Api` 의 `pagePreview`·`statistics`·`change`, 그리고 `PageLogic.calculate`.
  * 렌더링 중에 도는 코드는 `wikiContext.withConnection { … }` 을 쓴다. 쥔 것이 있으면 그것을, 없으면 새것을 준다. `wikiContext.database.withConnection` 을 쓰지 않는다.
  * `Database` 를 받는 쪽 — 캐시 로더, `AhaWikiCacheMemoryDomainSite`, `AdminLogic` — 에는 `wikiContext.databaseHeldFirst` 를 넘긴다. 그것의 `withConnection` 이 위와 같다. `tupleDatabaseSite` 가 이미 그것을 담고 있다.
 
-`SingleConnectionRenderSpec` 이 지킨다 — '''풀을 1 개로''' 줄여 페이지를 그린다. 쥔 채로 하나 더 달라는 곳이 하나라도 있으면 반드시 타임아웃이 난다. 고치는 동안 이 스펙이 빠진 곳을 차례로 짚어 줬다: 매크로 열 곳 다음에 캐시 로더, 사용자 프로필 이미지, 그리고 로그인한 독자의 화면마다 돌던 사이트 관리자 확인(`_base.scala.html`).
+`SingleConnectionRenderSpec` 이 지킨다 — '''풀을 1 개로''' 줄여 페이지를 그린다. 쥔 채로 하나 더 달라는 곳이 하나라도 있으면 반드시 타임아웃이 난다. 고치는 동안 이 스펙이 빠진 곳을 차례로 짚어 줬다: 매크로 열 곳 다음에 캐시 로더, 사용자 프로필 이미지, 그리고 로그인한 독자의 화면마다 돌던 사이트 관리자 확인(`_base.scala.html`). 그 뒤 같은 스펙을 페이지의 다른 화면과 그 둘레의 요청(`/api/links`·`/api/pagePreview`·`/sitemap.xml`·`/preview` …)으로 넓혔고, 거기서 `pagePreview`·`statistics`·`preview` 가 더 나왔다. `/search`·`/api/change`·`/api/statistics` 는 SQL 이 MySQL 문법이라 H2 에서 못 돌려, 스펙이 아니라 눈으로 확인한 것이다([Dev Testing]).
 
 === 이것만으로는 안 고쳐졌다 — 캐시 읽기가 나머지 절반이다
 
@@ -45,7 +45,7 @@ dispatcher 까지 준 릴리스 (06:17)	전부 200·303	3.1초	0	0
 
 남긴 것:
 
- * `holding` 을 안 한 진입점(API 의 렌더, 미리보기, Diary, 삭제·rename)은 전처럼 새 커넥션을 얻는다. 요청이 적은 경로이고, 쓰기 경로 둘은 트랜잭션 안이라 따로 봐야 해서 손대지 않았다.
+ * 쓰는 진입점(저장, Diary, 삭제, 마지막 리비전 삭제, rename)은 `holding` 을 하지 않았고 전처럼 새 커넥션을 얻는다. 요청이 적은 경로이고, 그중 둘은 트랜잭션 안이라 — 안쪽 읽기가 그 트랜잭션에 들어가게 된다 — 따로 봐야 해서 손대지 않았다. `/api/renderAhaMark` 는 커넥션을 쥐지 않고 그리므로 해당이 없다.
  * 사이트 조회 캐시(`AhaWikiCacheMemoryDomainSite`)가 비어 있을 때의 첫 채움은 컨텍스트가 생기기 전이라 새 커넥션을 쓴다. 운영에서는 필터가 액션보다 먼저 채운다.
  * 고르지 않은 것: `Database` 바인딩 자체를 «같은 스레드면 쥔 커넥션을 다시 준다» 로 바꾸는 방법. 한 번에 모든 곳이 고쳐지지만 트랜잭션 안의 코드까지 앱 전체의 동작이 소리 없이 바뀐다. 풀을 키우는 것도 답이 아니다 — 동시에 그리는 수가 풀 크기에 닿으면 같은 일이 난다.
 

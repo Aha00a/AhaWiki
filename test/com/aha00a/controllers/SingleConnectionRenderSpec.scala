@@ -11,6 +11,7 @@ import play.api.Application
 import play.api.cache.SyncCacheApi
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.test.CSRFTokenHelper._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
@@ -78,14 +79,16 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
       Seq(
         "INSERT INTO Site (seq, name, abbr, mainDomain) VALUES (61, 'SingleConnection', 'SingleConnection', 'single-connection.test')",
         "INSERT INTO SiteDomain (site, domain) VALUES (61, 'single-connection.test')",
-        "INSERT INTO Permission (site, target, targetType, actor, actorType, action) VALUES (61, '', 'All', '', 'All', 1)",
+        "INSERT INTO Permission (site, target, targetType, actor, actorType, action) VALUES (61, '', 'All', '', 'All', 255)",
         "INSERT INTO `User` (seq, nickname) VALUES (61, 'writer')",
         "INSERT INTO Page (site, name, revision, dateTime, `user`, remoteAddress, comment, content) VALUES (61, 'Other', 1, NOW(), 61, '127.0.0.1', '', 'other-marker links to [Pool]')",
         "INSERT INTO PageMeta (site, name, revision) VALUES (61, 'Other', 1)",
       ).foreach(sql => SQL(sql).execute())
       SQL("INSERT INTO Page (site, name, revision, dateTime, `user`, remoteAddress, comment, content) VALUES (61, 'Pool', 1, NOW(), 61, '127.0.0.1', '', {content})")
         .on("content" -> pageContent).execute()
-      SQL("INSERT INTO PageMeta (site, name, revision) VALUES (61, 'Pool', 1)").execute()
+      SQL("INSERT INTO Page (site, name, revision, dateTime, `user`, remoteAddress, comment, content) VALUES (61, 'Pool', 2, NOW(), 61, '127.0.0.1', '', {content})")
+        .on("content" -> s"${pageContent}second revision").execute()
+      SQL("INSERT INTO PageMeta (site, name, revision) VALUES (61, 'Pool', 2)").execute()
     }
     TestApplication.resetMemoryCaches()
     // In production the access-log filter resolves the site before the action opens its
@@ -98,26 +101,97 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
     super.afterAll()
   }
 
-  private def mustRenderWhole(html: String): Unit = {
-    html must include("pool-marker")
-    html must include("other-marker")
-    // What a macro or block that could not get a connection leaves in the page.
+  // What a macro or block that could not get a connection leaves in the page.
+  private def mustNotHaveStarved(html: String): Unit = {
     html must not include "failed - "
     html must not include "Connection is not available"
   }
 
+  private def mustRenderWhole(html: String): Unit = {
+    html must include("pool-marker")
+    html must include("other-marker")
+    mustNotHaveStarved(html)
+  }
+
+  private def get(path: String, loggedIn: Boolean) = {
+    val request = FakeRequest(GET, path).withHeaders(HOST -> host)
+    val withReader = if (loggedIn) request.withSession(SessionLogic.sessionKeySeq -> "61", SessionLogic.sessionKeyNickname -> "writer") else request
+    // The edit, rename and delete screens draw a form, and a form wants the token the CSRF filter
+    // would have added. Specs run without filters.
+    route(app, withReader.withCSRFToken).get
+  }
+
   "a page view" should {
     "render its macros, its include and its caches without asking the pool for a second connection" in {
-      val result = route(app, FakeRequest(GET, "/w/Pool").withHeaders(HOST -> host)).get
+      val result = get("/w/Pool", loggedIn = false)
       status(result) mustBe OK
       mustRenderWhole(contentAsString(result))
     }
 
     "do the same for a reader who is logged in" in {
-      val result = route(app, FakeRequest(GET, "/w/Pool").withHeaders(HOST -> host).withSession(
-        SessionLogic.sessionKeySeq -> "61",
-        SessionLogic.sessionKeyNickname -> "writer",
-      )).get
+      val result = get("/w/Pool", loggedIn = true)
+      status(result) mustBe OK
+      mustRenderWhole(contentAsString(result))
+    }
+
+    // Crawlers ask for these far more than readers do, and the 2026-09-28 burst had the edit
+    // screen among its pool timeouts. Every one of them goes through Wiki.view.
+    "draw every other screen of a page on the one connection too" in {
+      val screens = Seq(
+        "/w/Pool?revision=1" -> OK,
+        "/w/Pool?action=history" -> OK,
+        "/w/Pool?action=diff&after=2" -> OK,
+        "/w/Pool?action=blame" -> OK,
+        "/w/Pool?action=raw" -> OK,
+        "/w/Pool?action=edit" -> OK,
+        "/w/Pool?action=edit&lineStart=1&lineEnd=3" -> OK,
+        "/w/Pool?action=rename" -> OK,
+        "/w/Pool?action=delete" -> OK,
+        "/w/NoSuchPage" -> NOT_FOUND,
+        "/w/NoSuchPage?action=edit" -> OK,
+      )
+      for ((path, expected) <- screens; loggedIn <- Seq(false, true)) withClue(s"$path loggedIn=$loggedIn: ") {
+        val result = get(path, loggedIn)
+        status(result) mustBe expected
+        mustNotHaveStarved(contentAsString(result))
+      }
+    }
+  }
+
+  // What a browser asks for after a page, and what a crawler asks for besides pages.
+  "the requests around a page view" should {
+    "be answered on one connection as well" in {
+      val paths = Seq(
+        "/api/links/Pool",
+        "/api/pagePreview/Pool",
+        "/api/pageRevision/Pool",
+        "/api/pageNames",
+        "/api/pageMap",
+        // Not /search, /api/change and /api/statistics: their SQL is MySQL's and H2 will not run
+        // it. All three build their context the same way, holding the connection.
+        "/sitemap.xml",
+        "/robots.txt",
+        "/r",
+      )
+      // Collected rather than stopping at the first, so that one run names every path that starves.
+      val starved = for {
+        path <- paths
+        loggedIn <- Seq(false, true)
+        problem <- scala.util.Try {
+          val result = get(path, loggedIn)
+          val body = contentAsString(result)
+          if (status(result) >= INTERNAL_SERVER_ERROR) Some(s"answered ${status(result)}")
+          else if (body.contains("failed - ") || body.contains("Connection is not available")) Some("drew a failure")
+          else None
+        }.recover { case e => Some(e.toString.take(80)) }.get
+      } yield s"$path loggedIn=$loggedIn: $problem"
+
+      starved mustBe empty
+    }
+
+    "draw the editor's preview on one connection" in {
+      val result = route(app, FakeRequest(POST, "/preview").withHeaders(HOST -> host)
+        .withFormUrlEncodedBody("name" -> "Pool", "text" -> pageContent)).get
       status(result) mustBe OK
       mustRenderWhole(contentAsString(result))
     }

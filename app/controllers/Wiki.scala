@@ -686,7 +686,7 @@ controllerComponents: ControllerComponents,
     ))) { case (name, body, partialLineStart, partialLineEnd) =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage.preview(name)
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage.preview(name).holding(connection)
       val isPartialEditPreview = partialLineStart.isDefined && partialLineEnd.isDefined
       val hasPaperContent = body.contains("#!Paper")
       val hasGanttContent = body.trim.toLowerCase.startsWith("#!gantt")
