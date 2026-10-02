@@ -87,4 +87,4 @@ sudo awk '/Unexpected exception\[NoSuchElementException/{f=1;next}
 
 `Deadlock found` 한 건(10-03 05:35)은 그날 넣은 트랜잭션이 만든 것이고, 재시도로 고쳤다([Dev Page] 의 Calculation).
 
-WARN 쪽도 같은 기간을 셌고 고칠 것은 없었다. 거의 전부가 차단 기록(`IpDeny:Cache`)이다. 가장 많은 한 덩어리 — 서버의 EC2 호스트 이름으로 온 HEAD 4,680건과, 그 호스트에 사이트가 없어 남는 `Skip AccessLog insert: site not found` 4,752건 — 는 모니터링이 아니라 `/application/backup.sql` 같은 경로를 찔러 보는 스캐너 하나다. 설계대로 막히고 있다([Dev BotDetection]).
+WARN 쪽도 같은 기간을 셌고 고칠 것은 없었다. 거의 전부가 차단 기록(`IpDeny:Cache`)이다. 가장 많은 한 덩어리 — 서버의 EC2 호스트 이름으로 온 HEAD 4,680건과, 그 호스트에 사이트가 없어 남는 `Skip AccessLog insert: site not found` 4,752건 — 는 모니터링이 아니라 백업 파일이나 자격증명 파일 이름을 붙인 주소를 찔러 보는 스캐너 하나다. 설계대로 막히고 있다([Dev BotDetection]).
