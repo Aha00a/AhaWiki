@@ -17,10 +17,10 @@ object MacroSimilarPages extends TraitMacro with Logging {
   }
 
   def getMarkupSimilarPages(name: String)(implicit wikiContext: ContextWikiPage): String = {
-    wikiContext.database.withConnection { implicit connection =>
+    wikiContext.withConnection { implicit connection =>
       implicit val site: Site = wikiContext.site
 
-      val siteBySeq: Map[Long, Site] = logics.AhaWikiCacheMemoryDomainSite.getSites()(wikiContext.database).map(site => site.seq -> site).toMap
+      val siteBySeq: Map[Long, Site] = logics.AhaWikiCacheMemoryDomainSite.getSites()(wikiContext.databaseHeldFirst).map(site => site.seq -> site).toMap
       val sameSiteSimilarities: immutable.Seq[CalculatedCosineSimilarity] = CalculatedCosineSimilarity
         .selectSameSite(name)
         .view

@@ -13,7 +13,7 @@ import java.sql.Connection
 object MacroInclude extends TraitMacro {
   override def isBlock: Boolean = true
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
-    wikiContext.database.withConnection { implicit connection =>
+    wikiContext.withConnection { implicit connection =>
       doApply(argument, s => s)
     }
   }

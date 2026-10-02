@@ -90,8 +90,7 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
 
       if (isUserPage) {
         val nickname = uriNormalized.stripPrefix("User:").trim
-        implicit val userProfileImageCacheKey: (play.api.db.Database, models.tables.Site, String) = (wikiContext.database, wikiContext.site, nickname)
-        val profileImageUrl = wikiContext.ahaWikiCache.UserProfileImageUrl.get()
+        val profileImageUrl = logics.wikis.UserPageLogic.profileImageUrlByNickname(nickname)
 
         profileImageUrl
           .map { imageUrl =>

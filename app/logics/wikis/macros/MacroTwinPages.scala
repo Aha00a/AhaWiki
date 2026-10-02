@@ -16,13 +16,13 @@ object MacroTwinPages extends TraitMacro {
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String = {
     val pageName = argument.getOrElse(wikiContext.name)
     val sites = AhaWikiCacheMemoryDomainSite
-      .getSites()(wikiContext.database)
+      .getSites()(wikiContext.databaseHeldFirst)
       .filter(_.seq != wikiContext.site.seq)
 
-    wikiContext.database.withConnection { implicit connection =>
+    wikiContext.withConnection { implicit connection =>
       val twinPages = collectTwinPages(pageName, sites, wikiContext.site)(
         pageExists = targetSite => {
-          implicit val databaseSite: (play.api.db.Database, Site) = (wikiContext.database, targetSite)
+          implicit val databaseSite: (play.api.db.Database, Site) = (wikiContext.databaseHeldFirst, targetSite)
           wikiContext.ahaWikiCache.PageMeta.SeqPageLatestSummary
             .get()
             .exists(_.name == pageName)

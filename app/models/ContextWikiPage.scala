@@ -92,8 +92,11 @@ class ContextWikiPage(
   def push(name: String): ContextWikiPage = contextForPage(name +: seqName, renderingMode, localDateNow)
 
   /** The same page as of another date. Specs use it to pin "today". */
-  def at(localDateNow: LocalDate): ContextWikiPage =
-    new ContextWikiPage(seqName, renderingMode, parent)(
+  def at(localDateNow: LocalDate): ContextWikiPage = {
+    val copy = new ContextWikiPage(seqName, renderingMode, parent)(
       database, wikiActors, applicationConf, ahaWikiCache, requestWrapper, site, localDateNow,
     )
+    heldConnection.foreach(copy.holding)
+    copy
+  }
 }

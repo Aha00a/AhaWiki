@@ -166,7 +166,7 @@ controllerComponents: ControllerComponents,
 
       val name = PageNameUrl.decode(nameEncoded)
 
-      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name).holding(connection)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
 
       val pageFirstRevision = Page.selectFirstRevision(name)
@@ -416,17 +416,17 @@ controllerComponents: ControllerComponents,
 
   private def hasTwinPages(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection): Boolean = {
     AhaWikiCacheMemoryDomainSite
-      .getSites()(wikiContext.database)
+      .getSites()(wikiContext.databaseHeldFirst)
       .filter(_.seq != wikiContext.site.seq)
       .exists { targetSite =>
-        implicit val databaseSite: (Database, Site) = (wikiContext.database, targetSite)
+        implicit val databaseSite: (Database, Site) = (wikiContext.databaseHeldFirst, targetSite)
         wikiContext.ahaWikiCache.PageMeta.SeqPageLatestSummary.get().exists(_.name == name) &&
           anonymousCanRead(targetSite.seq, name)
       }
   }
 
   private def anonymousCanRead(siteSeq: Long, pageName: String)(implicit wikiContext: ContextWikiPage, connection: Connection): Boolean =
-    PermissionLogic.anonymousCanRead(siteSeq, pageName)(connection, wikiContext.database)
+    PermissionLogic.anonymousCanRead(siteSeq, pageName)(connection, wikiContext.databaseHeldFirst)
 
   private def getMarkupSchema(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection, site: Site) = {
     import models.tables.CalculatedSchemaOrg

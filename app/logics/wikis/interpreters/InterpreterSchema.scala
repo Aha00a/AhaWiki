@@ -356,7 +356,7 @@ object InterpreterSchema extends TraitInterpreter {
         // Recommendations come from every declared class, deduplicated: a page typed as both a
         // program and its source should be offered the properties of both.
         val recommendedProperties = if (parseResult.hasClass) {
-          val listPropCount = wikiContext.database.withConnection { implicit connection =>
+          val listPropCount = wikiContext.withConnection { implicit connection =>
             import models.tables.CalculatedSchemaOrg
             parseResult.schemaClasses.flatMap(CalculatedSchemaOrg.selectPropCountWhereCls)
           }

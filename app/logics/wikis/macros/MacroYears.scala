@@ -8,7 +8,7 @@ import models.tables.Site
 
 object MacroYears extends TraitMacro {
   override def isBlock: Boolean = true
-  override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = { wikiContext.database.withConnection { implicit connection =>
+  override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = { wikiContext.withConnection { implicit connection =>
     implicit val site: Site = wikiContext.site
     CalculatedLink.selectDistinctDstWhereDstIsYear()
       .filter(v => wikiContext.setPageNameByPermission.contains(v) || DefaultPageLogic.isDefined(v))

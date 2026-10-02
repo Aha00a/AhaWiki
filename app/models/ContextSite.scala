@@ -8,9 +8,12 @@ import logics.wikis.RenderingMode.RenderingMode
 import models.tables.Config
 import models.tables.Site
 import play.api.db.Database
+import play.api.db.TransactionIsolationLevel
 import play.api.mvc.Request
 
+import java.sql.Connection
 import java.time.LocalDate
+import javax.sql.DataSource
 
 object ContextSite {
   def apply()(
@@ -64,13 +67,62 @@ class ContextSite(parent: Option[ContextSite] = None)(
   val requestWrapper: RequestWrapper,
   val site: Site,
 ) extends Context {
-  implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+  /**
+   * `database` for code that takes a Database rather than this context -- the cache loaders do,
+   * through [[tupleDatabaseSite]]. Its plain `withConnection` is [[withConnection]], so a cache
+   * that has to be filled in the middle of a render is filled over the connection already held.
+   * Everything else, transactions included, goes to the real database.
+   */
+  val databaseHeldFirst: Database = new Database {
+    override def name: String = database.name
+    override def dataSource: DataSource = database.dataSource
+    override def url: String = database.url
+    override def getConnection(): Connection = database.getConnection()
+    override def getConnection(autocommit: Boolean): Connection = database.getConnection(autocommit)
+    override def withConnection[A](block: Connection => A): A = ContextSite.this.withConnection(block)
+    override def withConnection[A](autocommit: Boolean)(block: Connection => A): A = database.withConnection(autocommit)(block)
+    override def withTransaction[A](block: Connection => A): A = database.withTransaction(block)
+    override def withTransaction[A](isolationLevel: TransactionIsolationLevel)(block: Connection => A): A = database.withTransaction(isolationLevel)(block)
+    override def shutdown(): Unit = database.shutdown()
+  }
+
+  implicit val tupleDatabaseSite: (Database, Site) = (databaseHeldFirst, site)
+
+  protected var heldConnection: Option[Connection] = None
+
+  /**
+   * Says the request that built this context already holds `connection`, so that everything
+   * rendered under it uses that one ([[withConnection]]) instead of asking the pool for another.
+   *
+   * A page view opens a connection and renders inside it, and macros used to open a second for
+   * themselves. A pool of N then stops dead the moment N views are being drawn at once: each
+   * holds one connection and waits for another that only the others could give back. Three times
+   * in the week before 2026-10-03 a crawler opening many pages together did exactly that -- every
+   * macro waited out the pool's timeout, pages took 20 to 47 seconds, and other requests got 500.
+   * `SingleConnectionRenderSpec` renders a page with a pool of one to keep it from coming back.
+   */
+  def holding(connection: Connection): this.type = {
+    heldConnection = Some(connection)
+    this
+  }
+
+  /**
+   * A connection for the length of `f`: the one the request holds if it said so, a new one if not.
+   *
+   * Use this, not `database.withConnection`, in anything that runs during a render. A held
+   * connection that has since been closed -- a context that outlived the block it was built in --
+   * is not used.
+   */
+  def withConnection[A](f: Connection => A): A =
+    parent.map(_.withConnection(f)).getOrElse(
+      heldConnection.filterNot(_.isClosed).map(f).getOrElse(database.withConnection(f))
+    )
 
   lazy val setPageName: Set[String] =
     parent.map(_.setPageName).getOrElse(ahaWikiCache.PageMeta.SeqPageName.get().toSet)
 
   lazy val seqPageByPermission: Seq[PageLatestSummary] =
-    parent.map(_.seqPageByPermission).getOrElse(database.withConnection { implicit connection =>
+    parent.map(_.seqPageByPermission).getOrElse(withConnection { implicit connection =>
       PageLogic.getListPageByPermission()(requestWrapper, connection, this, ahaWikiCache)
     })
 
@@ -81,7 +133,7 @@ class ContextSite(parent: Option[ContextSite] = None)(
     parent.map(_.setPageNameByPermission).getOrElse(seqPageNameByPermission.toSet)
 
   lazy val defaultHue: Option[Int] =
-    parent.map(_.defaultHue).getOrElse(database.withConnection { implicit connection =>
+    parent.map(_.defaultHue).getOrElse(withConnection { implicit connection =>
       Config.select(SiteThemeLogic.DefaultHueKey).flatMap(c => SiteThemeLogic.parseHue(c.v))
     })
 

@@ -82,7 +82,7 @@ object InterpreterMap extends TraitInterpreter {
       return MacroError.toHtmlString("[[[#!Map Error - The first line has to name the columns, and needs at least Name or Address.]]]")
     }
 
-    wikiContext.database.withConnection { implicit connection =>
+    wikiContext.withConnection { implicit connection =>
       implicit val site: Site = wikiContext.site
 
       val seqDstMaxMinCount: Seq[DstMaxMinCount] = CalculatedLink.selectDstMaxMinCountWhereSrcIsDatePage(seqLocation.map(_.name))

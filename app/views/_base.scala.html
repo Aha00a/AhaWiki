@@ -34,7 +34,7 @@
     </div>
 }
 @isAdmin = @{ logics.AdminLogic.isAdmin(contextSite.requestWrapper) }
-@canAccessAdmin = @{ isAdmin || logics.AdminLogic.isSiteAdmin(contextSite.site.seq, contextSite.requestWrapper)(contextSite.database) }
+@canAccessAdmin = @{ isAdmin || logics.AdminLogic.isSiteAdmin(contextSite.site.seq, contextSite.requestWrapper)(contextSite.databaseHeldFirst) }
 @canWrite = @{ contextSite.requestWrapper.getUser.isDefined }
 @wikiContextOpt = @{ contextSite match {
     case wikiContext: models.ContextWikiPage => Some(wikiContext)

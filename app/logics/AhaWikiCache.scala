@@ -144,7 +144,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
   object Footer extends CacheEntityWithContextSite[String] {
     override val durationExpire: FiniteDuration = if (environment.mode == Dev) 1 minute else 1 hour
 
-    override def orElse()(implicit contextSite: ContextSite): String = contextSite.database.withConnection { implicit connection =>
+    override def orElse()(implicit contextSite: ContextSite): String = contextSite.withConnection { implicit connection =>
       implicit val context: ContextWikiPage = contextSite.toContextWikiPage(Seq(""), RenderingMode.Normal)
       implicit val site: Site = context.site
       removePartialEditDataAttrs(
@@ -162,7 +162,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
   }
 
   object Config extends CacheEntityWithContextSite[String] {
-    override def orElse()(implicit contextSite: ContextSite): String = contextSite.database.withConnection { implicit connection =>
+    override def orElse()(implicit contextSite: ContextSite): String = contextSite.withConnection { implicit connection =>
       implicit val site: Site = contextSite.site
       models.tables.Page.selectLastRevision(".config").map(_.content).getOrElse("")
     }

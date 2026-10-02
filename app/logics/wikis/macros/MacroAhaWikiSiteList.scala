@@ -14,13 +14,13 @@ object MacroAhaWikiSiteList extends TraitMacro {
   override def isBlock: Boolean = true
 
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String =
-    wikiContext.database.withConnection { implicit connection =>
+    wikiContext.withConnection { implicit connection =>
       val sites = Site.selectPublicListed()
       render(sites, faviconUrlsFor(sites, wikiContext.applicationConf))
     }
 
   override def toSeqLink(argument: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] =
-    toCalculatedLinks(wikiContext.database.withConnection { implicit connection =>
+    toCalculatedLinks(wikiContext.withConnection { implicit connection =>
       Site.selectPublicListed().map(siteUrl)
     })
 

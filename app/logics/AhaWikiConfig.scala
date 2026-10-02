@@ -22,7 +22,7 @@ class AhaWikiConfig(implicit contextSite: ContextSite) {
 
   private def readFaviconConfig(): String = {
     implicit val site: Site = contextSite.site
-    contextSite.database.withConnection { implicit connection =>
+    contextSite.withConnection { implicit connection =>
       Config.select(faviconConfigKey).map(_.v.trim).getOrElse("")
     }
   }

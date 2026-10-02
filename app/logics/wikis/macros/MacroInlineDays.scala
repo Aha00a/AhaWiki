@@ -43,7 +43,7 @@ object MacroInlineDays extends TraitMacro {
     case "" | null => toHtmlString(wikiContext.name)
     case "-" => toHtmlString(wikiContext.name + ",-")
     case regex(y, m) =>
-      implicit val database: Database = wikiContext.database
+      implicit val database: Database = wikiContext.databaseHeldFirst
       implicit val site: Site = wikiContext.site
 
       val set = wikiContext.setPageNameByPermission
@@ -51,7 +51,7 @@ object MacroInlineDays extends TraitMacro {
       if (seq.isEmpty) {
         ""
       } else {
-        wikiContext.database.withConnection { implicit connection =>
+        wikiContext.withConnection { implicit connection =>
           val assembled = assemble(models.tables.Page.selectLastRevision(seq))
           InterpreterWiki.toHtmlStringInlined(assembled.markup, assembled.sourceAt)
         }

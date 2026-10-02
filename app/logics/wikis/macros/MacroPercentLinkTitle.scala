@@ -37,7 +37,7 @@ object MacroPercentLinkTitle extends TraitMacro {
   private[macros] case class ResolvedLink(href: String, displayLink: String, external: Boolean)
 
   private def resolveLink(link: String)(implicit wikiContext: ContextWikiPage): ResolvedLink =
-    resolveLink(link, wikiContext.setPageName, () => logics.AhaWikiCacheMemoryDomainSite.getSites()(wikiContext.database))
+    resolveLink(link, wikiContext.setPageName, () => logics.AhaWikiCacheMemoryDomainSite.getSites()(wikiContext.databaseHeldFirst))
 
   private[macros] def resolveLink(link: String, pageNames: Set[String], sites: Seq[Site]): ResolvedLink = {
     resolveLink(link, pageNames, () => sites)

@@ -128,7 +128,7 @@ object PageLogic {
 
   def getListPageByPermission()(implicit provider: RequestWrapper, connection: Connection, contextSite: ContextSite, ahaWikiCache: AhaWikiCache): Seq[PageLatestSummary] = {
     implicit val site: Site = contextSite.site
-    implicit val tupleDatabaseSite: (Database, Site) = (contextSite.database, site)
+    implicit val tupleDatabaseSite: (Database, Site) = contextSite.tupleDatabaseSite
 
     val wikiPermission = WikiPermission()
 
@@ -153,7 +153,7 @@ object PageLogic {
     val seqStopWord: Seq[String] = """at in on of by to is the gmail com http https""".stripMargin.split("""\s""").toSeq
 
     Page.selectLastRevision(name) foreach { page =>
-      implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal)
+      implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(page.name), RenderingMode.Normal).holding(connection)
 
       val revisionIsStillThere = PageMeta.upsert(
         pageName = page.name,
