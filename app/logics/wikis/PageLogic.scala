@@ -89,8 +89,21 @@ object PageLogic {
       .headOption
   }
 
-  private def extractMacroImage(content: String): Option[String] = {
-    regexMacroImage.findAllMatchIn(content).flatMap { m =>
+  // A page's markup as the renderer reads it (ExtractConvertInjectBackQuote.markupOnly). The image
+  // macros are looked for in this rather than in the raw text, because a [[Image(...)]] written in
+  // a code span or a #!Vim block is shown, not run. Until 2026-10-03 it became the page's image
+  // anyway: Dev Page, which lists the image sources in backticks, had "..." for its image, and
+  // every graph that showed the page asked for /... and got a 404.
+  private[wikis] def markupOnly(content: String): String = new ExtractConvertInjectBackQuote().markupOnly(content)
+
+  private[wikis] def extractMacroImage(markup: String): Option[String] = {
+    regexMacroImage.findAllMatchIn(markup).flatMap { m =>
+      m.group(1).split(",").headOption.map(_.trim).filter(_.nonEmpty)
+    }.toSeq.headOption
+  }
+
+  private[wikis] def extractMacroAttachmentKey(markup: String): Option[String] = {
+    regexMacroAttachment.findAllMatchIn(markup).flatMap { m =>
       m.group(1).split(",").headOption.map(_.trim).filter(_.nonEmpty)
     }.toSeq.headOption
   }
@@ -102,15 +115,11 @@ object PageLogic {
   }
 
   private def extractRepresentativeImage(content: String, pageName: String)(implicit connection: Connection, site: models.tables.Site): Option[String] = {
+    lazy val markup = markupOnly(content)
     extractSchemaImage(content).map(normalizeImageValue(_, pageName))
       .orElse(extractAttachmentImage(pageName))
-      .orElse(extractMacroImage(content))
-      .orElse {
-        regexMacroAttachment.findAllMatchIn(content).flatMap { m =>
-          m.group(1).split(",").headOption.map(_.trim).filter(_.nonEmpty)
-            .map(MacroAttachment.toAttachmentUri(_, site.seq, pageName))
-        }.toSeq.headOption
-      }
+      .orElse(extractMacroImage(markup))
+      .orElse(extractMacroAttachmentKey(markup).map(MacroAttachment.toAttachmentUri(_, site.seq, pageName)))
   }
 
   import models.RequestWrapper

@@ -38,6 +38,17 @@ class ExtractConvertInjectBackQuote() extends ExtractConvertInject {
       case (false, text) => extractBackQuotes(text)
     }.mkString
 
+  /**
+   * Only what the renderer reads as markup: literal blocks left out, code spans replaced by
+   * placeholders. A [[Macro]] found in what is left is one the page runs; one written in a code
+   * span or a #!Vim block is one the page only shows. For code that reads a page's markup without
+   * rendering it -- PageLogic's representative image -- and must tell the two apart the same way.
+   */
+  def markupOnly(s: String): String =
+    partitionLiteralBlocks(s).collect {
+      case (false, text) => extractBackQuotes(text)
+    }.mkString
+
   private def extractBackQuotes(s: String): String = {
     val regexDoubleBackquote = """``(.+?)``""".r
     val s1 = regexDoubleBackquote.replaceAllIn(s, _ match {
