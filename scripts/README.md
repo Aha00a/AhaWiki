@@ -82,6 +82,15 @@ Chrome (`CHROME`, or the usual install path) and Node 22 or later for the built-
 It opens pages back to back, which is what the bot detection bans — run it from an address the
 wiki whitelists.
 
+A site of thousands of pages is quicker split into path files and run a few at a time, each
+writing its own report. Four Chromes at once kept a desktop machine busy but working; six
+starved it, and pages it had no time for came out as slow. That is the second thing to know
+when reading a report from parallel runs: a page reported only as slow — no load event in 20s,
+or a navigation not answered in 30s — has not been shown to be slow until it is opened again on
+its own, and its requests looked up in the server's access log. On aha00a.com in 2026-10 every
+one of them was the machine running the sweep, or an advertising frame holding the load event —
+never the server.
+
 ## Wiki page sync
 
 `sync.ahawiki.net.mjs` compares the **committed** copies under `docs/ahawiki.net/` against the
