@@ -161,6 +161,15 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
       }
     }
 
+    // scripts/compare-instances.sh sets aside a page that differs from itself, so until 2026-10-03,
+    // when the map drew a dashless id and moved its markers at random, no page with a map had ever
+    // been compared between two releases. The mask is the script's canon() rule, in Scala.
+    "draw the same map on every render, apart from the per-render id" in {
+      def render(): String = contentAsString(get("/w/Places", loggedIn = false))
+        .replaceAll("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", "UUID")
+      render() mustBe render()
+    }
+
     "draw every other screen of a page on the one connection too" in {
       val screens = Seq(
         "/w/Pool?revision=1" -> OK,

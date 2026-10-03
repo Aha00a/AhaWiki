@@ -130,8 +130,8 @@
                         <tr
                             data-i="@i"
                             data-position='{
-                                "lat": @locationLastVisited.latLng.latWithNoise(),
-                                "lng": @locationLastVisited.latLng.lngWithNoise()
+                                "lat": @locationLastVisited.latLng.nudged(locationLastVisited.location.name).lat,
+                                "lng": @locationLastVisited.latLng.nudged(locationLastVisited.location.name).lng
                             }'
                             data-icon='{
                                 "path": 0 @*google.maps.SymbolPath.CIRCLE*@,
