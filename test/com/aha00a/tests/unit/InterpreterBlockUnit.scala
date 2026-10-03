@@ -159,6 +159,14 @@ object InterpreterBlockUnit {
       // adjacent-pages graph asked /api/links for it and got a 404.
       assertEquals(InterpreterWiki.toSeqLink("[#section] [#section label] [?q=10] [?q=10 label] [b]").toList, Seq(CalculatedLink("UnitTest", "b", "")))
 
+      // WikiSyntaxPreview draws its Preview side with the interpreter it names, so its links are
+      // that interpreter's. A JavaScript example shown through Vim has none -- until 2026-10-03 the
+      // body was read as wiki text whatever the name, and InterpreterVim's [...Array(1000).keys()]
+      // was stored as a link to a page of that name.
+      assertEquals(logics.wikis.interpreters.InterpreterWikiSyntaxPreview.toSeqLink("#!WikiSyntaxPreview Vim javascript\n[...Array(1000).keys()].slice(1)\n").toList, Seq())
+      assertEquals(logics.wikis.interpreters.InterpreterWikiSyntaxPreview.toSeqLink("#!WikiSyntaxPreview\n[b]\n").toList, Seq(CalculatedLink("UnitTest", "b", "")))
+      assertEquals(logics.wikis.interpreters.InterpreterWikiSyntaxPreview.toSeqLink("#!WikiSyntaxPreview Wiki\n[b]\n").toList, Seq(CalculatedLink("UnitTest", "b", "")))
+
     }; testInterpreterWiki()
 
     def testInterpreterSchema(): Unit = {
