@@ -466,7 +466,10 @@ object InterpreterWiki extends TraitInterpreter {
       .filter(_.group(1) == null)   // an escaped link is text, not a link
       .flatMap(uriAndAlias)
       .map { case (uri, alias) => AhaMarkLink(uri, alias) }
-      .filterNot(_.uri.startsWith("#"))
+      // An anchor (#x) and a query (?x) both point back at the page they are on, so neither is a
+      // link to another page. The query was kept until 2026-10-03: it was stored as a link to a
+      // page named "?q=10", and the adjacent-pages graph asked /api/links for it and got a 404.
+      .filterNot(link => link.uri.startsWith("#") || link.uri.startsWith("?"))
   }
 
   def inlineToHtmlString(line: String)(implicit wikiContext:ContextWikiPage): String = {

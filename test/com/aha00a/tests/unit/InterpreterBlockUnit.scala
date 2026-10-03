@@ -154,6 +154,11 @@ object InterpreterBlockUnit {
       assertEquals(InterpreterWiki.toSeqLink("[link alias][b]").toList, Seq(CalculatedLink("UnitTest", "link alias", ""), CalculatedLink("UnitTest", "b", "")))
       assertEquals(InterpreterWiki.toSeqLink("[link|alias][b]").toList, Seq(CalculatedLink("UnitTest", "link", "alias"), CalculatedLink("UnitTest", "b", "")))
 
+      // An anchor and a query point back at the page they are on, so neither is a link to a page.
+      // Until 2026-10-03 the query was stored as one, to a page named "?q=10", and the
+      // adjacent-pages graph asked /api/links for it and got a 404.
+      assertEquals(InterpreterWiki.toSeqLink("[#section] [#section label] [?q=10] [?q=10 label] [b]").toList, Seq(CalculatedLink("UnitTest", "b", "")))
+
     }; testInterpreterWiki()
 
     def testInterpreterSchema(): Unit = {
