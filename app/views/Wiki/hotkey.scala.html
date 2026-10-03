@@ -34,7 +34,7 @@
                         lookup: data,
                         onSelect: function (suggestion) {
                             hideSearch();
-                            go('/w/' + suggestion.value);
+                            go('/w/' + encodeURIComponent(suggestion.value));
                             return false;
                         }
                     }).focus();

@@ -458,7 +458,7 @@
             if(!name || state.fetchedSet.has(name) || state.inFlightSet.has(name)) return;
             state.inFlightSet.add(name);
             $.ajax({
-                url: '/api/links/' + name,
+                url: '/api/links/' + encodeURIComponent(name),
                 success: function(data) {
                     state.queueGraph = state.queueGraph.concat(data);
                     state.fetchedSet.add(name);
@@ -653,7 +653,7 @@
                 if(n && state.mouseDownNodeId === n.id && diff < 300) {
                     @if(enableWikiLink) {
                     stop();
-                    location.href = '/w/' + n.id;
+                    location.href = '/w/' + encodeURIComponent(n.id);
                     }
                 } else if(n) {
                     fetchLinks(n.id);

@@ -313,7 +313,7 @@
                     if(n && state.mouseDownNodeId === n.id && diff < 300) {
                         @if(enableWikiLink) {
                         stop();
-                        location.href = '/w/' + n.id;
+                        location.href = '/w/' + encodeURIComponent(n.id);
                         }
                     }
 
