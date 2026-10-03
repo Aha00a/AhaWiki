@@ -223,7 +223,10 @@ https://www.wikimatrix.org/ 발견. 여기 기준에 좀 맞춰볼까.. --[2020-
 === 브라우저로 열어 본 것
 `scripts/browser-sweep.mjs` 로 ahawiki.net 전체, aha00a.com 표본 187개, whohow.net 전체를 헤드리스 Chrome 으로 열었다(2026-10-03). 엔진 쪽 문제는 고쳐서 배포했다 — 사이트 목록의 `/favicon.ico`, aha00a.com PageMap 의 스크립트 오류(줄을 넘는 링크와 이스케이프 안 된 이름). 남은 것:
  * [ ] 인접 페이지 그래프가 실패한 썸네일을 다시 받을 때 주소 뒤에 `_imgRetry=…` 를 붙인다(`adjacentPagesD3Canvas.scala.html`). S3 서명 URL 에 쿼리를 더하면 서명이 맞지 않아 403 이므로, S3 이미지의 재시도는 언제나 실패한다 — 서명 URL 은 그대로 200, 붙이면 403 인 것을 확인했다. 첫 로드가 실패할 때만 일어나고, 그런 실패는 대개 이미지가 정말 없는 경우라 영향은 작다. 고친다면 서명 URL(`X-Amz-Signature`)에는 붙이지 않는다. --[2026-10-03]
- * [ ] aha00a.com·whohow.net 콘텐츠 — 엔진이 아니라 본문이 가리키는 것이 사라졌다. 소유자 판단. aha00a.com 은 위키미디어에서 지워진 이미지 13개, GitHub camo·namu.la·페이스북 CDN 이미지, 인증서가 맞지 않는 bbc.co.uk 이미지, Trac 에서 옮겨 온 `htdocs:` 경로 이미지, 없는 페이지로 가는 리다이렉트(Windows7). whohow.net 은 위키미디어에서 지워진 인물 사진 하나인데, 그 페이지의 대표 이미지라 그래프 썸네일로 26페이지 중 11곳에서 실패한다 — 대표 이미지가 죽은 페이지는 이렇게 다른 페이지들에도 실패를 퍼뜨린다. 목록은 낡으므로 적지 않는다 — `node scripts/browser-sweep.mjs https://aha00a.com` 처럼 다시 뽑는다(aha00a.com 전체는 세 시간 남짓). --[2026-10-03]
+ * [ ] aha00a.com 콘텐츠 — 엔진이 아니라 본문이 가리키는 것이 사라졌다. 대표 이미지가 죽은 페이지는 그래프 썸네일로 다른 페이지들에도 실패를 퍼뜨린다. --[2026-10-03]
+  * 위키미디어 이미지는 전부 봤다(`upload.wikimedia.org` 를 쓰는 281페이지, 주소 291개 중 13개가 죽어 있었다). 원본 직접 주소는 파일 이름이 바뀌면 따라가지 않아서, 같은 그림인데 404 였던 것이 5개 — Commons/위키백과 API 로 새 이름을 확인해 새 주소로 바꿨다(부산광역시·CAP Theorem·J·Haskell·C, 사소한 편집). 부산광역시의 것은 2023 년에 바뀌기 전 상징이라는 이름이 붙었다 — 같은 그림이지만 지금 상징으로 바꿀지는 소유자 판단. whohow.net 의 `이재명` 사진도 같은 경우라 고쳤다 — 그 사이트 26페이지가 이제 다 깨끗하다.
+  * 남은 8개는 위키백과에서 지워진 파일이라 새 주소가 없다 — 다른 그림을 고르거나 지운다. 카지노·The Blacklist·Prison Break·Dexter·Boston Legal·Westworld(타이틀 카드·포스터), ClamAv·Perl(로고).
+  * 위키미디어 밖의 것은 표본(187페이지)에서만 봤다 — GitHub camo·namu.la·페이스북 CDN 이미지, 인증서가 맞지 않는 bbc.co.uk 이미지, Trac 에서 옮겨 온 `htdocs:` 경로 이미지, 없는 페이지로 가는 리다이렉트(Windows7). 전체는 `node scripts/browser-sweep.mjs https://aha00a.com` (세 시간 남짓).
 
 === 기타
  * 마크업 규칙 추가
