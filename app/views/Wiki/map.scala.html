@@ -8,7 +8,7 @@
         seqLocationWithCalculatedField: Seq[InterpreterMap.LocationLatLngDstMaxMinCount],
         query: Map[String, String]
 )(implicit wikiContext: ContextWikiPage)
-@for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newStringWithoutDash)) {
+@for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
     <div class="interpreterMap">
         <div class="mapArea">
             <div class="aspectRatioWrapper">

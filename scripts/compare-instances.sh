@@ -43,8 +43,11 @@ compare_on_server() {
   cd "$work" || return 2
 
   # Two renders of the same code already differ in these, so every render has them taken out:
-  # the adjacent-pages graph draws a new UUID each time, an S3 presigned URL carries the moment
-  # it was signed, and a template edit moves blank lines and doubled spaces around.
+  # every id a template draws fresh on each render is a new UUID (UuidUtil.newString -- the
+  # adjacent-pages graph, Kanban, Gantt, maps), an S3 presigned URL carries the moment it was
+  # signed, and a template edit moves blank lines and doubled spaces around. An id in any other
+  # form makes its page differ from itself and drops it from the comparison: maps did until
+  # 2026-10-03.
   canon() {
     sed -E -e 's/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/UUID/g' \
            -e 's/(X-Amz-[A-Za-z]+=)[^&"]*/\1SIGNED/g' \

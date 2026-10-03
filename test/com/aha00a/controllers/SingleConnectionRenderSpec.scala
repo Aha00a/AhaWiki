@@ -42,6 +42,10 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
         "db.default.hikaricp.maximumPoolSize" -> 1,
         "db.default.hikaricp.minimumIdle" -> 1,
         "db.default.hikaricp.connectionTimeout" -> 1000,
+        // Without them a #!Map block draws an error box instead of the map. The address is in
+        // GeocodeCache below, so nothing asks Google for it -- an address missing there would.
+        "AhaWiki.google.credentials.api.Geocoding.key" -> "spec-only",
+        "AhaWiki.google.credentials.api.MapsJavaScriptAPI.key" -> "spec-only",
       ))
       .overrides(bind[SyncCacheApi].toInstance(new TestApplication.TestSyncCacheApi))
       .build()
@@ -72,6 +76,12 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
       |]]]
       |""".stripMargin
 
+  private val mapContent = Seq(
+    "#!Map",
+    Seq("Name", "Address", "Category", "Comment", "Score").mkString("\t"),
+    Seq("Pool", "Somewhere 1", "Place", "map-marker", "10").mkString("\t"),
+  ).mkString("\n")
+
   override def beforeAll(): Unit = {
     super.beforeAll()
     app.injector.instanceOf[play.api.db.Database].withConnection { implicit connection =>
@@ -89,6 +99,11 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
       SQL("INSERT INTO Page (site, name, revision, dateTime, `user`, remoteAddress, comment, content) VALUES (61, 'Pool', 2, NOW(), 61, '127.0.0.1', '', {content})")
         .on("content" -> s"${pageContent}second revision").execute()
       SQL("INSERT INTO PageMeta (site, name, revision) VALUES (61, 'Pool', 2)").execute()
+      // A map page: InterpreterMap reads geocodes and link counts while it draws.
+      SQL("INSERT INTO Page (site, name, revision, dateTime, `user`, remoteAddress, comment, content) VALUES (61, 'Places', 1, NOW(), 61, '127.0.0.1', '', {content})")
+        .on("content" -> mapContent).execute()
+      SQL("INSERT INTO PageMeta (site, name, revision) VALUES (61, 'Places', 1)").execute()
+      SQL("INSERT INTO GeocodeCache (address, lat, lng) VALUES ('Somewhere 1', 37.55, 126.92)").execute()
     }
     TestApplication.resetMemoryCaches()
     // In production the access-log filter resolves the site before the action opens its
@@ -136,6 +151,16 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
 
     // Crawlers ask for these far more than readers do, and the 2026-09-28 burst had the edit
     // screen among its pool timeouts. Every one of them goes through Wiki.view.
+    "draw a map page on the one connection too" in {
+      for (loggedIn <- Seq(false, true)) withClue(s"loggedIn=$loggedIn: ") {
+        val result = get("/w/Places", loggedIn)
+        status(result) mustBe OK
+        val html = contentAsString(result)
+        html must include("map-marker")
+        mustNotHaveStarved(html)
+      }
+    }
+
     "draw every other screen of a page on the one connection too" in {
       val screens = Seq(
         "/w/Pool?revision=1" -> OK,
