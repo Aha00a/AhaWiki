@@ -359,7 +359,13 @@ class Api @Inject()(
     if (normalized.length <= maxLength) normalized else normalized.take(maxLength).trim + "..."
   }
 
-  private def previewImageUrl(raw: String)(implicit request: RequestHeader, site: Site): String = {
+  /** A page's image (`PageMeta.image`) as an address a browser can load: a page preview and the
+    * adjacent-pages graph both hand it out. The graph had a copy of its own that knew only full
+    * URLs and `attachment:`, and glued anything else after `https://<host>/` -- `/public/x.png`
+    * became `https://<host>//public/x.png`. nginx merged the two slashes until 2026-10-04, when
+    * proxy_pass stopped rewriting paths (wiki page ToDo), and from then on that address was a
+    * 404. */
+  private def pageImageUrl(raw: String)(implicit request: RequestHeader, site: Site): String = {
     val trimmed = Option(raw).map(_.trim).getOrElse("")
     if (trimmed.isEmpty) {
       ""
@@ -405,7 +411,7 @@ class Api @Inject()(
             val description = pageContent.redirect
               .map(target => s"Redirect: $target")
               .getOrElse(compactPreviewText(renderedText))
-            val image = models.tables.PageMeta.select(name).flatMap(_.image).map(image => previewImageUrl(image)).getOrElse("")
+            val image = models.tables.PageMeta.select(name).flatMap(_.image).map(image => pageImageUrl(image)).getOrElse("")
 
             Ok(Json.obj(
               "success" -> Json.fromBoolean(true),
@@ -428,15 +434,6 @@ class Api @Inject()(
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextSite: ContextSite = ContextSite()
 
-      def toAbsoluteImageUrl(raw: String): String = {
-        if (raw.startsWith("http://") || raw.startsWith("https://")) raw
-        else if (raw.startsWith("attachment:")) {
-          val objectKey = s"Attachment/${site.seq}/${raw.stripPrefix("attachment:")}"
-          S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, objectKey).toOption.getOrElse("")
-        }
-        else s"https://${request.host}/$raw"
-      }
-
       val links = ahaWikiCacheMemoryApiLinks.getOrElseUpdate(site.seq, name) {
         Adjacent.getSeqLinkFiltered(name)
       }.filter(_.and(contextSite.pageCanSee))
@@ -444,7 +441,7 @@ class Api @Inject()(
       val pageNamesForImages = links.flatMap(link => Seq(link.src, link.dst)).distinct
       val imageUrlByPageName = models.tables.PageMeta.selectImageMap(pageNamesForImages)
         .view
-        .mapValues(toAbsoluteImageUrl)
+        .mapValues(image => pageImageUrl(image))
         .toMap
 
       val linksWithImage = links.map { link =>
