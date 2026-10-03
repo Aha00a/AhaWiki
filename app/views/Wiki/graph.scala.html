@@ -31,7 +31,7 @@
                 linkKeySet: new Set(),
                 adjacency: new Map(),
                 running: false,
-                rootNodeName: '@wikiContext.name',
+                rootNodeName: @Html(logics.HtmlJson.string(wikiContext.name)),
                 hoverNodeId: null,
                 mouseDownAt: 0,
                 mouseDownNodeId: null,
@@ -57,7 +57,7 @@
             var rawLinks = [
                 @for((link, i) <- links.zipWithIndex) {
                     @if(i > 0) {,}
-                    [@for((node, j) <- link.zipWithIndex) {@if(j > 0) {,}'@node'}]
+                    [@for((node, j) <- link.zipWithIndex) {@if(j > 0) {,}@Html(logics.HtmlJson.string(node))}]
                 }
             ];
 

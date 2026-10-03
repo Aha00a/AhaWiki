@@ -13,6 +13,13 @@ import play.api.libs.json.Json
  * that does not exist takes its name from the URL, so sending a link was enough. Here `<`, `>`
  * and `&` become unicode escapes, which mean the same to a JSON or JavaScript reader; so do the
  * two line separators, which older JavaScript took for the end of a line inside a string.
+ *
+ * Any value a template puts into a script, or into an attribute that a script parses as JSON, goes
+ * through here -- not '@value', which is HTML escaping and makes neither a JavaScript string nor
+ * JSON. Until 2026-10-03 five templates did that: a backslash or newline in a name broke the script
+ * (aha00a.com's PageMap stopped with a SyntaxError), an apostrophe arrived as "&#x27;" (the history
+ * page's delete posted the wrong name), and the map wrote marker names into JSON by hand.
+ * ScriptLiteralSpec renders those with such names.
  */
 object HtmlJson {
   def stringify(json: JsValue): String =

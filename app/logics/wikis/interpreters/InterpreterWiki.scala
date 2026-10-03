@@ -462,7 +462,11 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
   def extractLinkMarkup(content:String)(implicit wikiContext:ContextWikiPage):Iterator[AhaMarkLink] = {
-    regexLink.findAllMatchIn(content)
+    // Line by line, as the renderer draws links (inlineToHtmlString gets one line), so a link never
+    // spans lines. Over the whole text, an unclosed [ -- the half-open interval [0, size) in a
+    // programming note -- ran to the next ] lines further on, and that stretch of text was stored as
+    // a link to a page of that name; with a newline in it, it also broke the page map's script.
+    content.linesIterator.flatMap(regexLink.findAllMatchIn)
       .filter(_.group(1) == null)   // an escaped link is text, not a link
       .flatMap(uriAndAlias)
       .map { case (uri, alias) => AhaMarkLink(uri, alias) }

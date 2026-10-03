@@ -2,7 +2,7 @@
 @_base("Search " + q, "") {
     <script type="text/javascript">
         $(function () {
-            $('.wikiContent').mark('@q');
+            $('.wikiContent').mark(@Html(logics.HtmlJson.string(q)));
         });
     </script>
 } {

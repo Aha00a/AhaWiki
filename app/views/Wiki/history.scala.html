@@ -30,7 +30,7 @@
                                 'Csrf-Token': csrfData.value
                             },
                             data: {
-                                name: '@title'
+                                name: @Html(logics.HtmlJson.string(title))
                             },
                             success: function (data, textStatus, jqXHR) {
                                 location.reload();

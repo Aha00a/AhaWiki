@@ -159,6 +159,10 @@ object InterpreterBlockUnit {
       // adjacent-pages graph asked /api/links for it and got a 404.
       assertEquals(InterpreterWiki.toSeqLink("[#section] [#section label] [?q=10] [?q=10 label] [b]").toList, Seq(CalculatedLink("UnitTest", "b", "")))
 
+      // A link does not span lines, as the renderer draws it. An unclosed [ -- a half-open interval
+      // in a note -- used to run to the next ] and become a link named after the text in between.
+      assertEquals(InterpreterWiki.toSeqLink("index in [0, size) - half open\n\n== Counting ==\nsee [b]").toList, Seq(CalculatedLink("UnitTest", "b", "")))
+
       // WikiSyntaxPreview draws its Preview side with the interpreter it names, so its links are
       // that interpreter's. A JavaScript example shown through Vim has none -- until 2026-10-03 the
       // body was read as wiki text whatever the name, and InterpreterVim's [...Array(1000).keys()]

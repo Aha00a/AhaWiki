@@ -71,9 +71,9 @@
                                                 'Csrf-Token': csrfValue
                                             },
                                             data: {
-                                                pageName: '@wikiContext.name',
-                                                url: '@url',
-                                                sheetName: '@sheetName',
+                                                pageName: @Html(logics.HtmlJson.string(wikiContext.name)),
+                                                url: @Html(logics.HtmlJson.string(url)),
+                                                sheetName: @Html(logics.HtmlJson.string(sheetName)),
                                             },
                                             success: function (data, textStatus, jqXHR) {
                                                 AhaWiki.Loader.close();
@@ -145,12 +145,12 @@
                                     "y": 2
                                 }
                             }'
-                            data-title='"@locationLastVisited.location.name - @locationLastVisited.location.address"'
-                            data-label='{
-                                "fontWeight": "bold",
-                                "color": "@(locationLastVisited.location.strokeColor)",
-                                "text": "@Html(locationLastVisited.location.name)"
-                            }'
+                            @* JSON from an encoder, then HTML-escaped as any attribute is: the browser decodes the
+                               attribute back to exactly this JSON. Written by hand until 2026-10-03, with the name
+                               raw in data-label, so a name holding ' " or \ broke JSON.parse below and stopped every
+                               marker after it. *@
+                            data-title='@logics.HtmlJson.stringify(play.api.libs.json.JsString(s"${locationLastVisited.location.name} - ${locationLastVisited.location.address}"))'
+                            data-label='@logics.HtmlJson.stringify(play.api.libs.json.Json.obj("fontWeight" -> "bold", "color" -> locationLastVisited.location.strokeColor, "text" -> locationLastVisited.location.name))'
                         >
                             @for((s, i) <- locationLastVisited.location.raw.zipWithIndex) {
                                 @{
