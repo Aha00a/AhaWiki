@@ -29,6 +29,8 @@
 
 `Connection is not available` 이 이 문제만 뜻하지는 않는다 — DB 가 멈춰도 같은 메시지가 난다. 2026-10-04 06:02~06:05 의 것은 데이터베이스가 메모리에 눌려 멈췄고 RDS 가 스스로 재시작한 것이었다. 구별은 그 바로 앞 줄로 한다: 그때는 `HikariPool-default - Failed to validate connection ... (No operations allowed after connection closed.)` — DB 가 커넥션을 끊었다는 말 — 가 두 인스턴스에 같은 초로 찍혔다. `/hc` 는 풀에서 커넥션을 얻어 `SELECT 1` 을 하므로(`Health.hc`) 어느 쪽이든 500 이라 구별에 쓰지 못한다. DB 가 돌아오자 앱은 재시작 없이 다시 붙었다. 경위와 근거는 운영 저장소의 `server/README.md`.
 
+다만 그 순간 '''실행 중이던''' 쿼리는 돌아오지 못했다. 끊긴 연결에서 답을 기다리다 커널의 TCP keepalive 가 연결을 죽일 때까지 — 약 두 시간 — 매달려 있었다: 8개가 `The last packet successfully received from the server was 7,220,186 milliseconds ago` 로 끝났고, 하나는 독자의 요청이라 두 시간 뒤에 500 을 받았다. 그동안 저마다 풀의 커넥션 하나를 쥐고 있었으니, 몇 개만 더 겹쳤으면 3분짜리 DB 재시작이 두 시간짜리 장애가 됐다. 그래서 MySQL 드라이버에 `socketTimeout` 10분을 준다(`conf/base.conf` 의 `hikaricp.dataSource.socketTimeout`). 위키의 쿼리는 가장 느린 것이 초 단위라 닿을 일이 없고, 큰 테이블을 바꾸는 evolution 을 위한 여유다. DB 가 멈춘 상황에서 실제로 끊기는지는 아직 본 적이 없다 — 다음에 같은 일이 나면 로그에서 이 메시지의 시간이 10분 안쪽인지 볼 것.
+
 === 이것만으로는 안 고쳐졌다 — 캐시 읽기가 나머지 절반이다
 
 위를 한 대에 올리고 서로 다른 페이지 30개를 동시에 요청해 봤다(2026-10-03 06:04, 루프백). 500 이 9건, 가장 느린 요청이 37초였다. 커넥션을 하나 더 얻다 난 타임아웃은 사라졌지만, '''캐시 읽기 41건이 버스트 5초 뒤에 한꺼번에 타임아웃'''했다(`Future timed out after [5 seconds]`). 9-28 의 사고 로그를 다시 세니 그때도 풀 타임아웃 49건 옆에 이것이 36건 있었다. 같은 시각 다른 인스턴스는 멀쩡했다 — Redis 도 장비도 아니고 그 JVM 안의 일이다.
