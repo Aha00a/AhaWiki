@@ -276,7 +276,10 @@
             };
 
             state.imageCache.set(node.imageUrl, img);
-            var retrySuffix = retryCount > 0 ? ((node.imageUrl.indexOf('?') >= 0 ? '&' : '?') + '_imgRetry=' + retryCount + '_' + Date.now()) : '';
+            // A presigned S3 URL (an attachment's thumbnail) signs every query parameter, so one more
+            // breaks the signature and S3 answers 403 to every retry. It is retried as it is.
+            var signed = /[?&]X-Amz-Signature=/.test(node.imageUrl);
+            var retrySuffix = retryCount > 0 && !signed ? ((node.imageUrl.indexOf('?') >= 0 ? '&' : '?') + '_imgRetry=' + retryCount + '_' + Date.now()) : '';
             img.src = node.imageUrl + retrySuffix;
         }
 
