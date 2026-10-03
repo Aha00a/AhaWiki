@@ -171,6 +171,14 @@ object InterpreterBlockUnit {
       assertEquals(logics.wikis.interpreters.InterpreterWikiSyntaxPreview.toSeqLink("#!WikiSyntaxPreview\n[b]\n").toList, Seq(CalculatedLink("UnitTest", "b", "")))
       assertEquals(logics.wikis.interpreters.InterpreterWikiSyntaxPreview.toSeqLink("#!WikiSyntaxPreview Wiki\n[b]\n").toList, Seq(CalculatedLink("UnitTest", "b", "")))
 
+      // A block with no #! line is drawn as text, so it has no links either, and its wrapper says
+      // Text. Until 2026-10-03 its links were read as wiki markup -- the [options...] of a usage
+      // line was stored as a link to a page of that name -- and the wrapper said Wiki. A block that
+      // names Wiki still links.
+      assertEquals(InterpreterWiki.toSeqLink("[[[\ncurl [options...] <url>\n]]]\nsee [b]").toList, Seq(CalculatedLink("UnitTest", "b", "")))
+      assertEquals(InterpreterWiki.toSeqLink("[[[#!Wiki\n[b]\n]]]").toList, Seq(CalculatedLink("UnitTest", "b", "")))
+      assertEquals(InterpreterWiki.toHtmlString("[[[\ncurl [options...] <url>\n]]]").contains("""class="InterpreterRenderMetaWrapper Text""""), true)
+
     }; testInterpreterWiki()
 
     def testInterpreterSchema(): Unit = {

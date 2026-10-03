@@ -80,14 +80,21 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
     }
   }
 
-  override def convert(s: String)(implicit wikiContext: ContextWikiPage): String = Interpreters.toHtmlString(ShebangUtil.addWhenNotExist(s, "text"))
+  // A block with no #! line is text: [[[ ... ]]] around a usage line or a code sample shows it as
+  // it is. Everything that reads a block reads it through this, so the page, the class on its
+  // wrapper, its links and its schema.org all agree on what the block is. Until 2026-10-03 only the
+  // drawing did: the links were read from a bare block as wiki markup, so the `[options...]` of a
+  // usage line was stored as a link to a page called "options...", and the wrapper was classed Wiki.
+  private def withInterpreter(body: String): String = ShebangUtil.addWhenNotExist(body, "text")
+
+  override def convert(s: String)(implicit wikiContext: ContextWikiPage): String = Interpreters.toHtmlString(withInterpreter(s))
 
   override def inject(s: String)(implicit wikiContext: ContextWikiPage): String = {
     var result = s
     val revision = PartialEdit.revision
     for ((key, value) <- arrayBuffer) {
-      val converted = Interpreters.toHtmlString(ShebangUtil.addWhenNotExist(value, "text"))
-      val maybeInterpreter = Interpreters.getInterpreter(value)
+      val converted = convert(value)
+      val maybeInterpreter = Interpreters.getInterpreter(withInterpreter(value))
 
       val withMeta = chunkMap.get(key) match {
         case Some(chunk) =>
@@ -110,11 +117,11 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
   }
 
   def extractLink()(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
-    arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqLink(c)).toSeq
+    arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqLink(withInterpreter(c))).toSeq
   }
 
   def extractSchemaOrg()(implicit wikiContext: ContextWikiPage): Seq[CalculatedSchemaOrg] = {
-    arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqSchemaOrg(c)).toSeq
+    arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqSchemaOrg(withInterpreter(c))).toSeq
   }
 
   private def lineNumber(s: String, charIndexInclusive: Int): Int = {
