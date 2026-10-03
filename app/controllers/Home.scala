@@ -4,6 +4,7 @@ import org.apache.pekko.actor.ActorSystem
 import com.aha00a.commons.Implicits._
 import logics.wikis.PageNameUrl
 import logics.AhaWikiCache
+import logics.AhaWikiConfig
 import logics.ApplicationConf
 import logics.SiteLogic
 import models.ContextSite
@@ -53,6 +54,18 @@ class Home @Inject() (
     val pages = contextSite.seqPageByPermission
     val name = if (pages.isEmpty) "FrontPage" else pages.random().name
     Redirect(routes.Wiki.view(PageNameUrl.encode(name), 0, "")).flashing(request.flash)
+  }
+
+  // Browsers and crawlers ask every host for /favicon.ico whatever a page declares, and
+  // MacroAhaWikiSiteList points each listed site's icon here. Until 2026-10-03 there was no such
+  // route: about a hundred 404s a day in the proxy log, and a failed request for each site in every
+  // site list drawn. It sends the request on to the site's own favicon (AhaWikiConfig), which can be
+  // a presigned S3 URL -- hence a redirect rather than the bytes, cached for an hour, well inside
+  // the day such a URL stays valid.
+  def favicon: Action[AnyContent] = Action { implicit request =>
+    implicit val site: Site = SiteLogic.get(request.host)
+    implicit val contextSite: ContextSite = ContextSite()
+    Redirect(AhaWikiConfig().site.favicon(), FOUND).withHeaders(CACHE_CONTROL -> "public, max-age=3600")
   }
 
   def robotsTxt: Action[AnyContent] = Action { implicit request =>

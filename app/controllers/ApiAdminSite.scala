@@ -11,13 +11,13 @@ import io.circe.syntax._
 import logics.AhaWikiCache
 import logics.AhaWikiCacheMemoryDomainSite
 import logics.AhaWikiCacheMemoryPermission
+import logics.AhaWikiConfig
 import logics.ApplicationConf
 import logics.AttachmentLogic
 import logics.PermissionLogic
 import logics.S3Logic
 import logics.SiteLogic
 import logics.SiteThemeLogic
-import logics.wikis.macros.S3AttachmentUrlLogic
 import models.WikiActors
 import models.tables.Config
 import models.tables.Permission
@@ -72,8 +72,6 @@ class ApiAdminSite @Inject()(
   private def withAdminSite(seq: Long)(block: Site => Result)(implicit request: RequestHeader): Result =
     if (!isAdmin) AccessDenied
     else SiteLogic.get(seq)(database).fold(siteNotFound(seq))(block)
-
-  private val adminFaviconConfigKey: String = "site.favicon.objectKey"
 
   private val adminFaviconTimestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
 
@@ -417,12 +415,12 @@ class ApiAdminSite @Inject()(
         case Left(errorResult) => errorResult
         case Right(siteValue) =>
           implicit val site: Site = siteValue
-          val objectKeyOption = Config.select(adminFaviconConfigKey).map(_.v.trim).filter(_.nonEmpty)
-          val faviconUrlOption = objectKeyOption.flatMap(objectKey => S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, objectKey).toOption)
+          val objectKeyOption = Config.select(AhaWikiConfig.FaviconConfigKey).map(_.v.trim).filter(_.nonEmpty)
+          val faviconUrlOption = AhaWikiConfig.resolveFavicon(objectKeyOption.getOrElse(""), applicationConf)
           Ok(Json.obj(
             "siteSeq" -> Json.fromLong(site.seq),
             "objectKey" -> Json.fromString(objectKeyOption.getOrElse("")),
-            "faviconUrl" -> Json.fromString(faviconUrlOption.getOrElse("/public/favicon.png")),
+            "faviconUrl" -> Json.fromString(faviconUrlOption.getOrElse(AhaWikiConfig.DefaultFaviconPath)),
           ))
       }
     }
@@ -457,8 +455,8 @@ class ApiAdminSite @Inject()(
                     } finally {
                       inputStream.close()
                     }
-                    Config.upsert(adminFaviconConfigKey, objectKey)
-                    val faviconUrl = S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, objectKey).toOption.getOrElse("/public/favicon.png")
+                    Config.upsert(AhaWikiConfig.FaviconConfigKey, objectKey)
+                    val faviconUrl = AhaWikiConfig.resolveFavicon(objectKey, applicationConf).getOrElse(AhaWikiConfig.DefaultFaviconPath)
                     Ok(Json.obj(
                       "ok" -> Json.fromBoolean(true),
                       "siteSeq" -> Json.fromLong(site.seq),
@@ -482,7 +480,7 @@ class ApiAdminSite @Inject()(
           case Left(errorResult) => errorResult
           case Right(siteValue) =>
             implicit val site: Site = siteValue
-            val objectKeyOption = Config.select(adminFaviconConfigKey).map(_.v.trim).filter(_.nonEmpty)
+            val objectKeyOption = Config.select(AhaWikiConfig.FaviconConfigKey).map(_.v.trim).filter(_.nonEmpty)
             objectKeyOption.foreach { objectKey =>
               try {
                 val amazonS3 = S3Logic.client(applicationConf)
@@ -493,11 +491,11 @@ class ApiAdminSite @Inject()(
                   logger.warn(s"adminDeleteSiteFavicon: failed to delete old object from S3. objectKey=$objectKey", error)
               }
             }
-            Config.delete(adminFaviconConfigKey)
+            Config.delete(AhaWikiConfig.FaviconConfigKey)
             Ok(Json.obj(
               "ok" -> Json.fromBoolean(true),
               "siteSeq" -> Json.fromLong(site.seq),
-              "faviconUrl" -> Json.fromString("/public/favicon.png"),
+              "faviconUrl" -> Json.fromString(AhaWikiConfig.DefaultFaviconPath),
             ))
       }
     }

@@ -1,22 +1,17 @@
 package logics.wikis.macros
 
 import com.aha00a.commons.Implicits._
-import logics.ApplicationConf
+import logics.AhaWikiConfig
 import models.ContextWikiPage
-import models.tables.Config
 import models.tables.CalculatedLink
 import models.tables.Site
 
 object MacroAhaWikiSiteList extends TraitMacro {
-  private val defaultFavicon = "/public/favicon.png"
-  private val faviconConfigKey = "site.favicon.objectKey"
-
   override def isBlock: Boolean = true
 
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String =
     wikiContext.withConnection { implicit connection =>
-      val sites = Site.selectPublicListed()
-      render(sites, faviconUrlsFor(sites, wikiContext.applicationConf))
+      render(Site.selectPublicListed())
     }
 
   override def toSeqLink(argument: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] =
@@ -24,16 +19,19 @@ object MacroAhaWikiSiteList extends TraitMacro {
       Site.selectPublicListed().map(siteUrl)
     })
 
-  private[macros] def render(sites: Seq[Site]): String =
-    render(sites, Map.empty)
-
-  private[macros] def render(sites: Seq[Site], faviconUrlsBySiteSeq: Map[Long, String]): String = {
-    val fallbackFavicon = defaultFavicon.escapeHtmlAttribute()
+  // Each site's icon is its own /favicon.ico, which that site answers by sending the request on to
+  // the favicon it has configured (Home.favicon). Until 2026-10-03 this macro read every listed
+  // site's Config itself and resolved it with its own copy of AhaWikiConfig's rules, and fell back
+  // to /favicon.ico for the rest -- a route that did not exist, so every unconfigured site in the
+  // list cost a failed request before the onerror fallback below took over. The fallback stays for
+  // a site that does not answer.
+  private[macros] def render(sites: Seq[Site]): String = {
+    val fallbackFavicon = AhaWikiConfig.DefaultFaviconPath.escapeHtmlAttribute()
     val items = sites.map { site =>
       val url = siteUrl(site)
       val href = url.escapeHtmlAttribute()
       val displayName = site.name.escapeHtml()
-      val faviconUrl = faviconUrlsBySiteSeq.getOrElse(site.seq, defaultFaviconUrlFor(site)).escapeHtmlAttribute()
+      val faviconUrl = s"$url/favicon.ico".escapeHtmlAttribute()
 
       s"""<li><a href="$href" target="_blank" rel="noopener"><img src="$faviconUrl" alt="" loading="lazy" onerror="this.onerror=null;this.src='$fallbackFavicon';"/>$displayName</a></li>"""
     }.mkString
@@ -48,25 +46,4 @@ object MacroAhaWikiSiteList extends TraitMacro {
 
   private[macros] def siteUrl(site: Site): String =
     s"https://${site.mainDomain}"
-
-  private def defaultFaviconUrlFor(site: Site): String =
-    s"${siteUrl(site)}/favicon.ico"
-
-  private def faviconUrlsFor(sites: Seq[Site], applicationConf: ApplicationConf)(implicit connection: java.sql.Connection): Map[Long, String] =
-    sites.flatMap { site =>
-      implicit val configSite: Site = site
-      Config.select(faviconConfigKey)
-        .map(_.v.trim)
-        .filter(_.nonEmpty)
-        .flatMap(resolveConfiguredFavicon(_, applicationConf))
-        .map(site.seq -> _)
-    }.toMap
-
-  private def resolveConfiguredFavicon(v: String, applicationConf: ApplicationConf): Option[String] = {
-    if (v.startsWith("/") || v.startsWith("http://") || v.startsWith("https://")) {
-      Some(v)
-    } else {
-      S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, v).toOption
-    }
-  }
 }

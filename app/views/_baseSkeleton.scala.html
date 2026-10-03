@@ -32,9 +32,9 @@
             <meta property="og:url" content="@(resolvedCanonicalUrl)" />
         }
 
-        <link rel="icon" type="image/png" href="/public/favicon.png">
+        <link rel="icon" type="image/png" href="@logics.AhaWikiConfig.DefaultFaviconPath">
         @defining(logics.AhaWikiConfig().site.favicon()) { adminFavicon =>
-            @if(adminFavicon != "/public/favicon.png") {
+            @if(adminFavicon != logics.AhaWikiConfig.DefaultFaviconPath) {
                 <link rel="icon" href="@adminFavicon">
             } else {
                 <link rel="icon" type="image/svg+xml" href="/public/img/favicon.svg">
