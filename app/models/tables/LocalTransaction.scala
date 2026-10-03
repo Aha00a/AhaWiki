@@ -1,5 +1,7 @@
 package models.tables
 
+import play.api.Logging
+
 import java.sql.Connection
 import java.sql.SQLTransactionRollbackException
 import java.sql.Savepoint
@@ -19,7 +21,7 @@ import java.sql.Savepoint
  * because it is the only version that leaves the connection in a state the caller can
  * describe.
  */
-object LocalTransaction {
+object LocalTransaction extends Logging {
   /**
    * The same, and when the database picks the block as a deadlock victim, the block again -- up to
    * three runs in all. Only for a block that can be run twice with the same result, which is what
@@ -33,12 +35,17 @@ object LocalTransaction {
    *
    * Not retried inside a transaction the caller opened: a deadlock rolls back all of it, and
    * running this block alone again would commit the caller's work without its earlier half.
+   *
+   * Each retry leaves one INFO line, "deadlock victim, running again". A retry that succeeds is
+   * otherwise invisible, and that line is the only way to tell how often this happens.
    */
   def retryingDeadlock[T](f: => T)(implicit connection: Connection): T = {
     def run(runsLeft: Int): T =
       try apply(f)
       catch {
-        case _: SQLTransactionRollbackException if runsLeft > 1 && connection.getAutoCommit => run(runsLeft - 1)
+        case e: SQLTransactionRollbackException if runsLeft > 1 && connection.getAutoCommit =>
+          logger.info(s"LocalTransaction: deadlock victim, running again (${runsLeft - 1} more at most): ${e.getMessage}")
+          run(runsLeft - 1)
       }
     run(3)
   }

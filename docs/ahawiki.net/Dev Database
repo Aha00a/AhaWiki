@@ -11,7 +11,7 @@
 
 중첩된 경우가 테이블마다 달랐다. `Page` 는 savepoint 를 잡았고, `User` 와 `UserMerge` 는 블록을 맨몸으로 돌리다 예외를 그대로 흘려보냈다 — 블록의 부분 쓰기가 걸린 채로. 셋 다 rethrow 하므로 전부 롤백하는 바깥 핸들러에게는 차이가 없었다 — 잡고 계속 가는 바깥 핸들러에게는 있었다. 남긴 것은 savepoint 판이다. 호출자가 서술할 수 있는 상태로 연결을 남기는 것이 그것뿐이라서다.
 
-교착(deadlock)의 희생자가 됐을 때 다시 도는 `LocalTransaction.retryingDeadlock` 도 있다. 두 번 돌아도 결과가 같은 블록에만 쓴다 — 지금은 페이지 계산의 파생 데이터 둘이다([Dev Page] 의 Calculation).
+교착(deadlock)의 희생자가 됐을 때 다시 도는 `LocalTransaction.retryingDeadlock` 도 있다. 두 번 돌아도 결과가 같은 블록에만 쓴다 — 지금은 페이지 계산의 파생 데이터 둘이다([Dev Page] 의 Calculation). 다시 돌 때마다 INFO 로 `deadlock victim, running again` 한 줄을 남긴다. 성공한 재시도는 그 밖에 아무 흔적이 없어서, 얼마나 자주 나는지는 그 줄을 세어야 안다. 세 번째에도 지면 예외가 그대로 나가 액터의 ERROR 가 된다.
 
 == 렌더링 중에는 커넥션을 새로 얻지 않는다
 
