@@ -1,21 +1,4 @@
 @font-face {
-  font-family: 'Noto Sans KR';
-  font-style: normal;
-  font-weight: 300;
-  font-display: swap;
-  src: url(https://fonts.gstatic.com/s/notosanskr/v39/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzrQySLPg9A.ttf) format('truetype');
-}
-@font-face {
-  font-family: 'Noto Sans KR';
-  font-style: normal;
-  font-weight: 700;
-  font-display: swap;
-  src: url(https://fonts.gstatic.com/s/notosanskr/v39/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzg01SLPg9A.ttf) format('truetype');
-}
-.defaultFont {
-  font-family: 'Noto Sans KR', sans-serif;
-}
-@font-face {
   font-family: 'Noto Sans';
   font-style: italic;
   font-weight: 400;
@@ -252,7 +235,6 @@ body {
   padding: 0;
   margin: 0;
   font-family: 'Noto Sans', 'Noto Sans KR', sans-serif;
-  font-family: 'Noto Sans KR', sans-serif;
   font-family: 'Noto Sans', sans-serif;
   background-color: var(--color-bg);
   color: var(--color-text);
@@ -329,7 +311,6 @@ nav.topNavbar a.homeLink svg.homeLogo {
 nav.topNavbar .navDrawerToggle {
   display: none;
   font-family: 'Noto Sans', 'Noto Sans KR', sans-serif;
-  font-family: 'Noto Sans KR', sans-serif;
   font-family: 'Noto Sans', sans-serif;
   border: 0;
   cursor: pointer;
@@ -354,7 +335,6 @@ nav.topNavbar i.fas {
 nav.topNavbar .groupMenu .groupMenuToggle {
   display: none;
   font-family: 'Noto Sans', 'Noto Sans KR', sans-serif;
-  font-family: 'Noto Sans KR', sans-serif;
   font-family: 'Noto Sans', sans-serif;
   border: 0;
   cursor: pointer;
@@ -394,7 +374,6 @@ nav.topNavbar .actionAuth .authMenu {
 }
 nav.topNavbar .actionAuth .authMenuToggle {
   font-family: 'Noto Sans', 'Noto Sans KR', sans-serif;
-  font-family: 'Noto Sans KR', sans-serif;
   font-family: 'Noto Sans', sans-serif;
   border: 0;
   display: inline-flex;
@@ -522,7 +501,6 @@ nav.topNavbar .themePickerInline .themeOptionLabel {
 }
 nav.topNavbar .themeOption {
   font-family: 'Noto Sans', 'Noto Sans KR', sans-serif;
-  font-family: 'Noto Sans KR', sans-serif;
   font-family: 'Noto Sans', sans-serif;
   justify-content: center;
   gap: 6px;

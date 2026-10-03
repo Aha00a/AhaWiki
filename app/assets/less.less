@@ -1,10 +1,8 @@
 @import "_mixins";
 
-@import url('https://fonts.googleapis.com/css?family=Noto+Sans+KR:300,700&display=swap');
-.defaultFont {
-	font-family: 'Noto Sans KR', sans-serif;
-}
-
+// Noto Sans KR was imported here until 2026-10-04 and never drew a Hangul glyph: lessc inlines a
+// remote @import url(), and what Google answered it held no Hangul. The .defaultFont below
+// overrode it anyway. Hangul is drawn by the system's sans-serif. Wiki page Dev Less.
 @import url(https://fonts.googleapis.com/css?family=Noto+Sans:400,700,400italic,700italic);
 .defaultFont {
 	font-family: 'Noto Sans', sans-serif;
