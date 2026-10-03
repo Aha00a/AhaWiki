@@ -65,14 +65,16 @@ async function finish(code) {
   process.exit(code);
 }
 
-// Chrome writes the port it picked to DevToolsActivePort in the profile once it listens.
+// Chrome writes the port it picked to DevToolsActivePort in the profile once it listens. On Windows
+// the file can be locked while Chrome is still writing it -- EBUSY, seen when three sweeps started
+// at once -- so a failed read is retried like a missing file.
 async function devtoolsPort() {
   const file = join(profile, 'DevToolsActivePort');
   for (let i = 0; i < 150; i++) {
-    if (existsSync(file)) {
+    try {
       const port = Number(readFileSync(file, 'utf8').split('\n')[0]);
       if (port) return port;
-    }
+    } catch { /* not there yet, or still being written */ }
     await sleep(100);
   }
   throw new Error('Chrome did not open a DevTools port');
@@ -102,9 +104,12 @@ ws.addEventListener('message', (ev) => {
   if (m.id && waiting.has(m.id)) { waiting.get(m.id)(m); waiting.delete(m.id); }
   else if (m.method) events.push(m);
 });
-const send = (method, params = {}) => new Promise((resolve) => {
+// Every command has a deadline. A page whose script holds the renderer can leave a navigation
+// unanswered, and without one the whole sweep waited on it.
+const send = (method, params = {}, timeoutMs = 30000) => new Promise((resolve) => {
   const id = ++nextId;
-  waiting.set(id, resolve);
+  const timer = setTimeout(() => { waiting.delete(id); resolve({ timedOut: true }); }, timeoutMs);
+  waiting.set(id, (m) => { clearTimeout(timer); resolve(m); });
   ws.send(JSON.stringify({ id, method, params }));
 });
 for (const domain of ['Page', 'Runtime', 'Log', 'Network']) await send(`${domain}.enable`);
@@ -113,9 +118,11 @@ function problemsIn(events) {
   // Only requests this page made: one still running from the previous page reports its abort after
   // the navigation and must not be charged to this one.
   const urlOf = new Map();
+  const done = new Set();
   const problems = [];
   for (const { method, params: p } of events) {
     if (method === 'Network.requestWillBeSent') urlOf.set(p.requestId, p.request.url);
+    else if (method === 'Network.loadingFinished') done.add(p.requestId);
     else if (method === 'Runtime.exceptionThrown') {
       const d = p.exceptionDetails;
       problems.push(`exception: ${(d.exception?.description || d.text || '').split('\n')[0]} @ ${d.url || ''}:${d.lineNumber}`);
@@ -126,24 +133,33 @@ function problemsIn(events) {
       problems.push(`log(${p.entry.source}): ${p.entry.text.slice(0, 200)}`);
     } else if (method === 'Network.responseReceived' && p.response.status >= 400) {
       problems.push(`HTTP ${p.response.status}: ${p.response.url.slice(0, 200)}`);
-    } else if (method === 'Network.loadingFailed' && !p.canceled && urlOf.has(p.requestId)) {
-      problems.push(`failed ${p.errorText}: ${urlOf.get(p.requestId).slice(0, 200)}`);
+    } else if (method === 'Network.loadingFailed') {
+      done.add(p.requestId);
+      if (!p.canceled && urlOf.has(p.requestId)) problems.push(`failed ${p.errorText}: ${urlOf.get(p.requestId).slice(0, 200)}`);
     }
   }
-  if (!events.some((e) => e.method === 'Page.loadEventFired')) problems.push('no load event in 20s');
+  if (!events.some((e) => e.method === 'Page.loadEventFired')) {
+    // What the load event is still waiting for -- usually an external host that never answers.
+    const pending = [...urlOf].filter(([id]) => !done.has(id)).map(([, url]) => url.slice(0, 160));
+    problems.push(`no load event in 20s${pending.length ? `; still loading: ${pending.slice(0, 3).join(' , ')}` : ''}`);
+  }
   return problems;
 }
 
 let withProblems = 0;
 for (const path of paths) {
   events = [];
-  await send('Page.navigate', { url: origin + path });
   const started = Date.now();
+  const navigation = await send('Page.navigate', { url: origin + path });
   while (Date.now() - started < 20000 && !events.some((e) => e.method === 'Page.loadEventFired')) await sleep(100);
   await sleep(settleMs); // what the page fetches after load -- the adjacent-pages graph, previews
   const problems = problemsIn(events);
+  if (navigation.timedOut) problems.unshift('the navigation was not answered in 30s');
   if (problems.length) withProblems++;
-  console.log(`${problems.length ? 'PROBLEM' : 'ok     '} ${path}${problems.map((x) => `\n    ${x}`).join('')}`);
+  const seconds = ((Date.now() - started) / 1000).toFixed(1);
+  console.log(`${problems.length ? 'PROBLEM' : 'ok     '} ${path} (${seconds}s)${problems.map((x) => `\n    ${x}`).join('')}`);
+  // Whatever the page still runs or loads stops here, so it cannot hold up the next one.
+  await send('Page.stopLoading', {}, 5000);
 }
 console.log(`\n${paths.length} pages, ${withProblems} with problems`);
 ws.close();
