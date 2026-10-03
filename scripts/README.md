@@ -65,6 +65,23 @@ Exit status 0 when nothing changed, 1 when something did, 2 when there is nothin
 it refuses two instances running the same release. It needs `ssh` to the server and `node`
 locally.
 
+## Opening every page in a browser
+
+`browser-sweep.mjs` opens every page of a site in headless Chrome and lists, page by page, the
+uncaught exceptions, `console.error` calls, responses of 400 and over, and failed requests. It
+sees what the comparison above cannot — that compares the HTML the server sends, not what the
+browser does with it. Why it was written is in its header.
+
+```bash
+node scripts/browser-sweep.mjs https://ahawiki.net              # every page the site lists
+node scripts/browser-sweep.mjs https://ahawiki.net paths.txt    # one path per line
+```
+
+Exit status 0 when every page was clean, 1 when any was not, 2 when it could not run. It needs
+Chrome (`CHROME`, or the usual install path) and Node 22 or later for the built-in `WebSocket`.
+It opens pages back to back, which is what the bot detection bans — run it from an address the
+wiki whitelists.
+
 ## Wiki page sync
 
 `sync.ahawiki.net.mjs` compares the **committed** copies under `docs/ahawiki.net/` against the
