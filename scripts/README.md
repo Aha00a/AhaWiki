@@ -29,6 +29,9 @@ npm run admin:watch
 
 This is a Node.js + esbuild flow (`scripts/admin.mjs`); Bun and TypeScript are not required.
 
+The bundle is committed, so commit it with the `.jsx` change. CI (`.github/workflows/ci.yml`)
+rebuilds it and fails when the result differs from what is committed.
+
 ## External asset check
 
 `check-cdn-assets.mjs` fetches every external stylesheet, script, and importmap entry the
