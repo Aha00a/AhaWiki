@@ -200,6 +200,7 @@ timestamp 성격의 값만 변환한다.
 
 == Verification Checklist
 
+ * [[CB(x)]] 스펙이 JVM 타임존과 무관하게 통과한다(2026-10-04). 이관이 스위트를 깨지는 않지만, 스위트 통과가 UTC 운영의 정합성을 말해 주지도 않는다 — [Dev Testing].
  * [ ] 운영 DB 백업을 완료했다.
  * [ ] timestamp 성격의 `DATETIME`/`TIMESTAMP` 컬럼 목록을 확정했다.
  * [ ] 변환 대상과 제외 대상을 구분했다.

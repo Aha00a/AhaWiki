@@ -2,12 +2,12 @@ package com.aha00a.tests.unit
 
 import com.aha00a.tests.TestUtil
 import models.JsonEncoderDecoderForDate._
-import com.aha00a.commons.Implicits.RichDate
 import zio.json._
 
-import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Date
 
 object JsonUnit {
@@ -29,10 +29,16 @@ object JsonUnit {
     val res: Either[String, Banana] = JsonCodec.parse[Banana]("""{"curvature":0.5, "date":"2015-11-26T14:26:09.729+09:00", "instant": "2015-11-26T14:26:09.729Z", "localDateTime": "2015-11-26T14:26:09.729"}""")
     assertEquals(res.isRight, true)
 
-    val date = new SimpleDateFormat("yyyy-MM-dd").parse("2025-05-16")
+    // A fixed instant rather than "2025-05-16" parsed in the machine's zone: that made every field
+    // below depend on where the test ran, and the expectation was KST's answer.
+    val instant = Instant.parse("2025-05-15T15:00:00Z")
+    // `dateEncoder` writes the JVM zone's wall clock with that zone's offset, so the expected string
+    // is this instant seen from the JVM zone: "2025-05-16T00:00:00.000+09:00" in KST,
+    // "2025-05-15T15:00:00.000Z" in UTC. The JVM zone is the app's to decide, not this test's.
+    val dateInJvmZone = instant.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX"))
     assertEquals(
-      JsonCodec.toJson(Banana(0.5, date.toInstant, date, date.toLocalDateTime)),
-      """{"curvature":0.5,"instant":"2025-05-15T15:00:00Z","date":"2025-05-16T00:00:00.000+09:00","localDateTime":"2025-05-16T00:00:00"}"""
+      JsonCodec.toJson(Banana(0.5, instant, Date.from(instant), LocalDateTime.parse("2025-05-16T00:00:00"))),
+      s"""{"curvature":0.5,"instant":"2025-05-15T15:00:00Z","date":"$dateInJvmZone","localDateTime":"2025-05-16T00:00:00"}"""
     )
   }
 }
