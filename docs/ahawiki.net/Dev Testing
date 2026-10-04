@@ -63,6 +63,28 @@ ssh <host> "mysqldump --defaults-file=<admin cnf> --default-character-set=utf8mb
 
 `UserMergeSpec` 은 운영의 `Page` 에 `User` 로의 외래 키가 없다는 믿음으로, 그 키를 단 자기만의 최소 `Page` 테이블까지 만들어 갖고 있었다. 있다 — `Page_User_seq_fk` — 그래서 대역은 불필요했고 스펙은 이제 진짜 테이블을 쓴다.
 
+== 타임존
+
+스펙은 기계의 타임존과 무관하게 통과한다. 2026-10-04 실측: `TZ=UTC sbt test`, `TZ=Asia/Seoul sbt test`, 그리고 반 시간 offset 에 서머타임까지 있는 `TZ=America/St_Johns sbt test` 가 셋 다 319개 전부 통과.
+
+그 전에는 하나가 KST 에서만 통과했다. `JsonUnit` 이 `"2025-05-16"` 을 기계의 기본 타임존으로 파싱해 모든 필드를 거기서 만들고, 기대값에는 KST 의 답(`+09:00`, `15:00:00Z`)을 박아 두었다. 개발 기계가 KST 라 가려져 있었다 — UTC 에서는 319개 중 그것 하나만 실패했다. 지금은 고정된 `Instant` 에서 출발하고, `dateEncoder` 처럼 앱이 JVM 타임존의 벽시계로 쓰는 값은 기대값도 `ZoneId.systemDefault()` 에서 계산한다.
+
+스펙은 이미 포크된 JVM 에서 돈다. `build.sbt` 가 아니라 Play 의 sbt 플러그인이 `Test / fork := true` 를 켠다(`sbt 'inspect Test / fork'` 가 `PlaySettings` 를 가리킨다). 그래서 '''sbt 명령줄의 `-Duser.timezone=…` 은 스펙에 닿지 않는다''' — sbt 자신의 JVM 에만 간다. 2026-10-04 실측: 고치기 전 `JsonUnit` 이 `TZ=Asia/Seoul` 에서 `sbt -Duser.timezone=UTC` 로는 통과했고, 스펙의 로그 시각도 KST 였다. 포크된 JVM 에 닿는 것은 환경 변수 `TZ` 와 `Test / javaOptions` 다.
+
+고른 것은 테스트를 타임존과 무관하게 고치는 쪽이다. 기각한 것:
+
+ * '''`Test / javaOptions` 에 `-Duser.timezone=Asia/Seoul` 을 넣어 스펙의 JVM 을 KST 에 고정.''' 포크는 이미 켜져 있으니 한 줄이고, 비용 때문에 기각한 것이 아니다. 실패를 고치지 않고 다시 가리기 때문이다: 기계가 우연히 맞추던 KST 를 빌드가 일부러 맞출 뿐, 기대값이 KST 의 답이라는 사실은 그대로다. [ToDo-Timezone-KST-To-UTC] 가 바로 그 JVM 타임존을 UTC 로 바꾸는 일이라, 고정된 스위트는 이관 때 같이 바꿔야 하고 그 전에는 UTC 에서 맞는지 물어볼 길이 없다. 그리고 `javaOptions` 는 sbt 가 띄운 JVM 에만 간다 — sbt 를 거치지 않는 실행(IDE 의 테스트 실행기 같은)은 고정을 못 받아서, 같은 스펙이 어디서 돌리느냐에 따라 갈린다.
+ * '''테스트 안에서 `TimeZone.setDefault(...)` 로 바꿨다가 되돌리기.''' 같은 고정을 테스트 하나 크기로 한 것이라 위의 이유가 그대로 걸리고, 거기에 JVM 전역 상태다: 그 스펙이 띄운 Play 앱의 스케줄러 스레드가 그 사이에 바뀐 타임존을 보고, 되돌리기를 놓치면 같은 JVM 에서 뒤에 도는 스위트 전부가 본다.
+
+앱 코드의 `ZoneId.systemDefault()`(`LocalDateTimeUtil`)는 그대로 두었다. 운영 JVM 은 KST 로 뜨고 `datetime` 컬럼도 KST 다([Dev Database]). 그것을 바꾸는 것은 이관의 범위이고, 여기서 한 것은 스펙이 그 선택에 기대지 않게 한 것뿐이다. 그래서 '''스위트가 UTC 에서 통과한다고 앱이 UTC 에서 맞다는 뜻은 아니다''' — 스펙은 앱이 JVM 타임존을 따르는지를 볼 뿐이고, UTC 운영이 맞는 값을 쓰는지는 이관의 검증 목록이 따로 본다.
+
+시각을 다루는 새 스펙도 같은 규칙을 따른다. 리터럴 `+09:00` 은 KST 에서만 참이다. 기계에서 확인하는 방법은 둘이다. Linux·macOS 에서는 `TZ=UTC sbt test`. Windows 의 JVM 은 `TZ` 를 보지 않고 Windows 의 타임존 설정을 읽으므로, 어디서나 되는 쪽은 sbt 셸에서 포크된 JVM 에 직접 넘기는 것이다:
+
+[[[#!Vim text
+set Test / javaOptions += "-Duser.timezone=UTC"
+test
+]]]
+
 == 알려진 구멍
 
  * 스키마를 덤프 대신 evolution 에서 만들면 테스트가 마이그레이션 자체에 묶인다. 그런데 안 된다: 2026-08-10 실측으로 67개 파일 중 '''17개가 실패했다 — 41문장''' — 그 뒤 들어온 69 도 `MODIFY … COLLATE` 에서 걸린다. H2 가 MySQL 모드에서도 거부하는 MySQL 문법이다.
