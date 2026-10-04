@@ -1,6 +1,5 @@
 package controllers
 
-import com.amazonaws.services.s3.model.ObjectMetadata
 import com.aha00a.commons.Implicits._
 import com.aha00a.play.Implicits._
 import logics._
@@ -18,10 +17,7 @@ import play.api.libs.Files.TemporaryFile
 import play.api.libs.json.Json
 import play.api.mvc._
 
-import java.nio.file.Files
 import java.sql.Connection
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import javax.inject._
 import java.util.UUID
 import scala.jdk.CollectionConverters._
@@ -49,20 +45,6 @@ class WikiAttachment @Inject()(
   wikiActors: WikiActors,
   telegramLogic: TelegramLogic,
 ) extends BaseController with JsonResults with Logging {
-
-  private val attachmentTimestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
-
-  private def buildAttachmentObjectKey(siteSeq: Long, pageName: String, originalFileName: String, extension: String, now: LocalDateTime = LocalDateTime.now()): String = {
-    val sanitizedPageName = AttachmentLogic.sanitizePathSegment(pageName)
-    val sanitizedOriginalFileName = AttachmentLogic.sanitizePathSegment(originalFileName)
-    val sanitizedExtension = AttachmentLogic.sanitizePathSegment(extension).toLowerCase
-    val sanitizedOriginalFileNameWithoutExtension = {
-      val stripped = sanitizedOriginalFileName.stripSuffix(s".$sanitizedExtension")
-      if (stripped.nonEmpty) stripped else sanitizedOriginalFileName
-    }
-    val formattedDateTime = now.format(attachmentTimestampFormatter)
-    s"${AttachmentLogic.sitePrefix(siteSeq)}$sanitizedPageName/$sanitizedOriginalFileName/${sanitizedOriginalFileNameWithoutExtension}.$formattedDateTime.$sanitizedExtension"
-  }
 
   private def toAttachmentMacroArgument(objectKey: String, siteSeq: Long, pageName: String): String = {
     val sitePrefix = AttachmentLogic.sitePrefix(siteSeq)
@@ -122,7 +104,6 @@ class WikiAttachment @Inject()(
   }
 
   def uploadAttachment(): Action[MultipartFormData[TemporaryFile]] = Action(parse.multipartFormData) { implicit request =>
-    import com.amazonaws.services.s3.model.ObjectMetadata
     import logics.wikis.macros.S3AttachmentUrlLogic
     import play.api.libs.json.Json
 
@@ -143,7 +124,7 @@ class WikiAttachment @Inject()(
                 BadRequest("invalid file name")
               } else {
                 val extension = originalFileName.split('.').lastOption.getOrElse("bin").replaceAll("[^a-zA-Z0-9]", "").toLowerCase
-                val objectKey = buildAttachmentObjectKey(
+                val objectKey = AttachmentLogic.objectKey(
                   site.seq,
                   pageName,
                   originalFileName = originalFileName,
@@ -151,30 +132,17 @@ class WikiAttachment @Inject()(
                 )
 
                 val contentType = filePart.contentType.getOrElse("application/octet-stream")
-                val contentLength = filePart.fileSize
-                val metadata = new ObjectMetadata()
-                metadata.setContentType(contentType)
-                metadata.setContentLength(contentLength)
-
-                val bucket = applicationConf.AhaWiki.aws.s3.bucket()
-                val amazonS3 = S3Logic.client(applicationConf)
                 insertInitiatedAttachment(
                   siteSeq = site.seq,
                   pageName = pageName,
                   originalFilename = originalFileName,
                   objectKey = objectKey,
                   contentType = contentType,
-                  fileSize = contentLength,
+                  fileSize = filePart.fileSize,
                 )
 
                 try {
-                  val inputStream = Files.newInputStream(filePart.ref.path)
-                  try {
-                    val putResult = amazonS3.putObject(bucket, objectKey, inputStream, metadata)
-                    Attachment.markUploaded(objectKey, Option(putResult.getETag))
-                  } finally {
-                    inputStream.close()
-                  }
+                  Attachment.markUploaded(objectKey, S3Logic.putFile(applicationConf, objectKey, contentType, filePart.ref.path))
 
                   val fileUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
                   telegramLogic.notifyAttachmentUploaded(request.host, pageName, originalFileName, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())
@@ -270,11 +238,8 @@ class WikiAttachment @Inject()(
                   case None =>
                     NotFound("Attachment not found")
                   case Some(_) =>
-                    val amazonS3 = S3Logic.client(applicationConf)
-                    val bucket = applicationConf.AhaWiki.aws.s3.bucket()
-
                     try {
-                      amazonS3.deleteObject(bucket, resolvedObjectKey)
+                      S3Logic.deleteObject(applicationConf, resolvedObjectKey)
                       Attachment.markDeleted(resolvedObjectKey)
                       val attachFilename = resolvedObjectKey.split("/").lastOption.getOrElse(resolvedObjectKey)
                       telegramLogic.notifyAttachmentDeleted(request.host, pageName, attachFilename, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())
@@ -292,7 +257,6 @@ class WikiAttachment @Inject()(
   }
 
   def uploadClipboardImage(): Action[MultipartFormData[TemporaryFile]] = Action(parse.multipartFormData) { implicit request =>
-    import com.amazonaws.services.s3.model.ObjectMetadata
     import logics.wikis.macros.S3AttachmentUrlLogic
     import play.api.libs.json.Json
 
@@ -313,18 +277,13 @@ class WikiAttachment @Inject()(
                 BadRequest("only image is supported")
               } else {
                 val extension = contentType.split("/").lastOption.getOrElse("png").replace("+xml", "").replaceAll("[^a-zA-Z0-9]", "").toLowerCase
-                val objectKey = buildAttachmentObjectKey(
+                val objectKey = AttachmentLogic.objectKey(
                   site.seq,
                   pageName,
                   originalFileName = "clipboard",
                   extension = extension,
                 )
 
-                val amazonS3 = S3Logic.client(applicationConf)
-                val bucket = applicationConf.AhaWiki.aws.s3.bucket()
-                val metadata = new ObjectMetadata()
-                metadata.setContentType(contentType)
-                metadata.setContentLength(filePart.fileSize)
                 insertInitiatedAttachment(
                   siteSeq = site.seq,
                   pageName = pageName,
@@ -335,13 +294,7 @@ class WikiAttachment @Inject()(
                 )
 
                 try {
-                  val inputStream = Files.newInputStream(filePart.ref.path)
-                  try {
-                    val putResult = amazonS3.putObject(bucket, objectKey, inputStream, metadata)
-                    Attachment.markUploaded(objectKey, Option(putResult.getETag))
-                  } finally {
-                    inputStream.close()
-                  }
+                  Attachment.markUploaded(objectKey, S3Logic.putFile(applicationConf, objectKey, contentType, filePart.ref.path))
 
                   val imageUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
                   telegramLogic.notifyClipboardImageUploaded(request.host, pageName, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())

@@ -3,7 +3,6 @@ package controllers
 import org.apache.pekko.actor.ActorSystem
 import anorm.SqlParser.{get, long, str}
 import anorm._
-import com.amazonaws.services.s3.model.ObjectMetadata
 import com.aha00a.commons.Implicits._
 import io.circe.Json
 import io.circe.generic.auto._
@@ -28,7 +27,6 @@ import play.api.db.Database
 import play.api.libs.Files.TemporaryFile
 import play.api.mvc._
 
-import java.nio.file.Files
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.inject._
@@ -442,19 +440,9 @@ class ApiAdminSite @Inject()(
                 case Right(siteValue) =>
                   implicit val site: Site = siteValue
                   val objectKey = buildAdminFaviconObjectKey(site.seq, filePart.filename.trim)
-                  val amazonS3 = S3Logic.client(applicationConf)
-                  val bucket = applicationConf.AhaWiki.aws.s3.bucket()
-                  val metadata = new ObjectMetadata()
-                  metadata.setContentType(contentType)
-                  metadata.setContentLength(filePart.fileSize)
 
                   try {
-                    val inputStream = Files.newInputStream(filePart.ref.path)
-                    try {
-                      amazonS3.putObject(bucket, objectKey, inputStream, metadata)
-                    } finally {
-                      inputStream.close()
-                    }
+                    S3Logic.putFile(applicationConf, objectKey, contentType, filePart.ref.path)
                     Config.upsert(AhaWikiConfig.FaviconConfigKey, objectKey)
                     val faviconUrl = AhaWikiConfig.resolveFavicon(objectKey, applicationConf).getOrElse(AhaWikiConfig.DefaultFaviconPath)
                     Ok(Json.obj(
@@ -483,9 +471,7 @@ class ApiAdminSite @Inject()(
             val objectKeyOption = Config.select(AhaWikiConfig.FaviconConfigKey).map(_.v.trim).filter(_.nonEmpty)
             objectKeyOption.foreach { objectKey =>
               try {
-                val amazonS3 = S3Logic.client(applicationConf)
-                val bucket = applicationConf.AhaWiki.aws.s3.bucket()
-                amazonS3.deleteObject(bucket, objectKey)
+                S3Logic.deleteObject(applicationConf, objectKey)
               } catch {
                 case error: Throwable =>
                   logger.warn(s"adminDeleteSiteFavicon: failed to delete old object from S3. objectKey=$objectKey", error)

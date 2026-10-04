@@ -26,17 +26,20 @@ Attachment/{siteSeq}/{pageName}/{originalFilename}/{basename}.{timestamp}.{ext}
 Attachment/1/MyPage/photo.jpg/photo.2024-01-01T12-00-00.jpg
 Attachment/1/MyPage/clipboard/clipboard.2024-01-01T12-00-00.png
 ]]]
- * 타임스탬프 형식은 `yyyy-MM-dd'T'HH-mm-ss` 다(`WikiAttachment` 의 `attachmentTimestampFormatter`). 이 문서는 2026-09-10 까지 있어 본 적 없는 17자리 숫자 형식을 예시로 들고 있었다.
+ * 타임스탬프 형식은 `yyyy-MM-dd'T'HH-mm-ss` 다(`AttachmentLogic.objectKey`). 이 문서는 2026-09-10 까지 있어 본 적 없는 17자리 숫자 형식을 예시로 들고 있었다.
  * `pageName`과 파일명의 특수문자는 `[^\p{IsHangul}\p{IsHan}\p{IsHiragana}\p{IsKatakana}a-zA-Z0-9._-]` 패턴으로 `_` 치환
  * 클립보드 이미지는 `{pageName}/clipboard/` 하위에 저장
 
-프리픽스 조각(`Root`, `sitePrefix`, `pagePrefix`, `sanitizePathSegment`)은 `logics.AttachmentLogic` 에 있고, 전체 키는 `WikiAttachment.buildAttachmentObjectKey` 가 만든다. 다 모이지는 않았다 — `Api`(`previewImageUrl`·`links`), `PageLogic.extractAttachmentImage`, `MacroAttachment.normalizeObjectKey`·`toAttachmentUri` 는 아직 `Attachment/{siteSeq}/` 를 문자열로 직접 붙이거나 떼어 낸다.
+프리픽스 조각(`Root`, `sitePrefix`, `pagePrefix`, `sanitizePathSegment`)과 업로드가 쓰는 전체 키(`objectKey`)가 `logics.AttachmentLogic` 에 있다. 전체 키는 2026-10-04 까지 `WikiAttachment` 의 private 메서드라 테스트할 수 없었다 — 지금은 `AttachmentLogicSpec` 이 위 예시 그대로의 키와, 그 키가 목록 조회의 프리픽스 아래에 든다는 것을 확인한다. 다 모이지는 않았다 — `Api.pageImageUrl`(미리보기와 `links` 가 같이 쓴다. 2026-10-04 까지는 미리보기 쪽 `previewImageUrl` 과 두 벌이었다), `PageLogic.extractAttachmentImage`, `MacroAttachment.normalizeObjectKey`·`toAttachmentUri` 는 아직 `Attachment/{siteSeq}/` 를 문자열로 직접 붙이거나 떼어 낸다.
 
 키를 쓰는 쪽과 읽는 쪽이 프리픽스를 각자 조립하면, 어긋나도 컴파일은 통과하고 **첨부가 사라진 뒤에야** 드러난다. 실제로 치환 함수가 `Api`·`ApiV1`·`Wiki`·`MacroAttachment` 에 네 벌 있었다.
 
 == presigned URL
  * 오브젝트에 접근 시 AWS S3 presigned URL 생성 (유효기간 24시간)
  * 매크로 렌더링마다 URL이 새로 생성됨
+ * 서명은 `S3AttachmentUrlLogic` 이 SDK 의 `S3Presigner` 로 한다. 로컬 연산이라 S3 에 묻지 않는다. S3 가 설정돼 있지 않으면 서명하지 않고 `S3 is not configured.` 를 돌려주고, 매크로는 그 문구로 오류 상자를 그린다.
+ * SDK 2.x 로 옮기며(2026-10-04) 같은 키를 두 SDK 로 서명해 비교했다. 버킷 이름에 점이 없으면 호스트(`<bucket>.s3.<region>.amazonaws.com`)와 경로 — 한글과 `+`·`&`·`=`·`?`·공백의 인코딩까지 — 는 같다. 쿼리는 두 가지가 다르다: `X-Amz-Credential` 과 `X-Amz-Expires` 의 자리가 바뀌었고, 1.x 는 하루를 `X-Amz-Expires=86399` 로 썼다(이제 86400). 그래서 1.x 와 2.x 인스턴스를 대조하면 서명 URL 이 든 페이지는 모두 다르게 나온다 — `scripts/compare-instances.sh` 는 값만 가리고 이름의 순서는 둔다.
+ * 버킷 이름에 점이 있으면 호스트도 다르다. 1.x 는 그래도 `<bucket>.s3.<region>.amazonaws.com` 에 붙였고 — 인증서의 와일드카드는 한 단계만 덮으므로 HTTPS 에서는 이름이 맞지 않는다 — 2.x 는 `s3.<region>.amazonaws.com/<bucket>/…` 경로 방식으로 바꾼다. 운영 버킷 이름은 이 저장소에 없다.
 
 == DB 스키마 (Attachment 테이블)
 [[[#!Table tsv 1 1
@@ -152,18 +155,43 @@ Content-Type: multipart/form-data
 
 == S3 클라이언트
 
-`logics.S3Logic` 이 자격증명별로 캐시해 돌려준다.
+AWS SDK for Java 2.x 의 `S3Client` 다. `logics.S3Logic` 이 자격증명별로 캐시해 돌려주고, presigned URL 을 만드는 `S3Presigner` 도 같은 식으로 캐시한다. S3 를 부르는 작업 — 파일 올리기(`putFile`), 하나 지우기(`deleteObject`), 한 번에 여럿 지우기(`deleteObjects`) — 도 거기 있다. 목록은 부르는 쪽(`AttachmentLogic`, 관리 화면의 `ApiAdminS3`)이 각자 요청을 만든다.
 
-`AmazonS3` 는 커넥션 풀을 들고 있고 공유하도록 만들어진 객체다. 컨트롤러 3곳이 각자 `buildAmazonS3Client()` 를 갖고 **요청마다 새로 만들고 있었다**(호출부 11곳). 만든 클라이언트를 닫는 곳은 없었으므로 풀이 요청마다 쌓였다. 어디서도 클라이언트를 닫거나 상태를 바꾸지 않으므로 자격증명당 한 개를 공유해도 안전하다.
+SDK 에서 들어오는 것은 S3 모듈과 HTTP 클라이언트뿐이다. 다른 AWS 서비스를 쓰게 되면 그 서비스의 모듈을 `build.sbt` 에 같은 버전으로 따로 넣는다.
 
-SDK 는 AWS SDK for Java 1.x 의 S3 모듈만 들어온다. 2026-10-04 전에는 모든 AWS 서비스를 담은 번들이었고, 릴리스에 실린 jar 의 대부분이 쓰지 않는 서비스였다. 다른 AWS 서비스를 쓰게 되면 그 서비스의 모듈을 `build.sbt` 에 따로 넣는다. SDK 밑에서 도는 Apache HttpClient 의 버전도 `build.sbt` 가 정하고, 왜 그 버전인지는 그 자리의 주석에 있다.
+클라이언트는 커넥션 풀을 들고 있고 공유하도록 만들어진 객체다. 컨트롤러 3곳이 각자 `buildAmazonS3Client()` 를 갖고 **요청마다 새로 만들고 있었다**(호출부 11곳). 만든 클라이언트를 닫는 곳은 없었으므로 풀이 요청마다 쌓였다. 어디서도 클라이언트를 닫거나 상태를 바꾸지 않으므로 자격증명당 한 개를 공유해도 안전하다.
 
-스펙은 S3 를 부르지 않는다 — 스펙이 읽는 설정에는 AWS 자격증명이 비어 있다. 그래서 S3 쪽 의존성을 바꾼 배포는 손으로 확인한다.
+S3 가 설정돼 있지 않으면 — `AWS_REGION`·`AWS_ACCESS_KEY_ID`·`AWS_SECRET_ACCESS_KEY`·`bucket` 중 하나라도 비면 — 클라이언트도 presigner 도 만들지 않고 `S3Logic.NotConfigured` 로 실패한다. 업로드·삭제는 각자의 실패 응답으로 끝나고, 서명 URL 은 위 오류가 된다.
+
+스펙은 S3 를 부르지 않는다 — 스펙이 읽는 설정에는 AWS 자격증명이 비어 있다. 대신 `S3LogicSpec` 이 루프백 서버를 S3 대신 세우고 앱이 만드는 클라이언트로 요청을 보내, JVM 을 떠나는 요청과 응답을 읽는 방식을 확인한다. S3 가 그 요청을 받는지는 거기서 보이지 않으므로, S3 쪽 코드나 의존성을 바꾼 배포는 손으로 확인한다.
 
  * '''읽기는 canary 한 대에서 본다.''' 서버에서 루프백으로 그 포트에 `GET /api/pageAttachments` 를 첨부가 있는 공개 페이지의 `pageName` 으로 부르면, 로그인 없이 서명 URL 생성과 S3 목록 조회(`AttachmentLogic.listPageObjectKeys`)를 둘 다 탄다. 목록 조회가 실패하면 500 이다. 받은 서명 URL 은 S3 에 그대로 요청한다 — 403 이 아니면 서명이 맞다(객체가 없으면 404 `NoSuchKey`). 주소에 쿼리를 덧붙이면 서명이 깨져 403 이 된다.
  * '''쓰기는 두 대를 다 올린 뒤에 본다.''' 업로드·삭제는 로그인이 필요하고 프록시가 두 대에 나눠 보내므로 한 대를 고를 수 없다. 작은 파일을 올려 서명 URL 로 열리는지 보고 지운다. 지운 뒤 목록에 `S3_ONLY` 로 다시 나타나지 않으면 S3 에서도 지워진 것이다 — 목록은 S3 를 직접 훑어 DB 에 없는 객체를 그렇게 보여 준다. 업로드와 삭제는 각각 텔레그램 알림을 보낸다.
 
 2026-10-04 의 SDK 축소 배포를 이렇게 확인했다([ToDo] '''쓰지 않는 의존성''').
+
+=== SDK 1.x 에서 2.x 로
+
+2026-10-04 에 두 번에 걸쳐 바뀌었다. 그때까지 선언돼 있던 것은 모든 AWS 서비스를 담은 1.x 번들이어서 릴리스에 실린 jar 의 대부분이 쓰지 않는 서비스였다. 먼저 1.x 의 S3 모듈로 좁혔고, 그 위에서 2.x 로 옮겼다. 1.x 는 2025-12-31 에 지원이 끝났다.
+
+2.x 에서 동작이 달라진 셋은 1.x 쪽에 맞췄다. 셋 다 `S3LogicSpec` 이 지킨다. 앞의 둘은 맞추는 코드를 빼면 그 스펙이 실패하는 것까지 돌려 봤다.
+
+ * '''ETag 의 따옴표.''' 1.x 는 따옴표를 떼고 돌려줬고 2.x 는 S3 가 보낸 그대로(`"…"`) 준다. `Attachment.etag` 의 기존 행은 모두 따옴표 없이 쓰였으므로 `putFile` 이 뗀다.
+ * '''Content-Type.''' `RequestBody.fromFile` 은 파일 이름으로 형식을 짐작한다. 업로드된 파일은 이름이 아무것도 말하지 않는 임시 파일이라, 요청에 형식을 직접 적는다(1.x 에서 `ObjectMetadata` 가 하던 일).
+ * '''여럿 지우기의 부분 실패.''' S3 는 일부 키가 실패해도 200 으로 답하고 실패한 키를 본문에 적는다. 1.x 는 그것을 예외로 바꿨고 2.x 는 응답으로 돌려준다 — 예외만 잡는 코드는 부분 실패를 다 지운 것으로 보고하게 된다. `deleteObjects` 는 지우지 못한 키를 돌려주고, 관리 화면 S3 Browser 는 하나라도 있으면 전처럼 실패로 답한다.
+
+달라지지 않은 것: presigned URL 의 호스트와 경로(버킷 이름에 점이 없을 때 — 위 '''presigned URL'''), 그리고 목록이 키를 받는 방식이다 — 두 SDK 모두 S3 에 키의 URL 인코딩을 요청하지 않는다. 2.x 가 요청한다고 짐작하고 테스트를 썼다가 틀렸고, 1.x 도 요청에 직접 지정할 때만 보냈다는 것을 바이트코드에서 확인했다.
+
+=== HTTP 클라이언트는 Apache 5
+
+2.x 는 HTTP 클라이언트를 갈아 끼울 수 있다. Apache HttpClient 5 를 쓰는 `apache5-client` 를 쓰고, `S3Logic` 이 코드에서 직접 고른다.
+
+ * SDK 가 동기 클라이언트의 기본값으로 싣는 것이 2.46.0 부터 이것이다(2.45.0 까지는 Apache 4 를 쓰는 `apache-client`). 기본값을 따르되 클래스패스에서 찾게 두지 않고 코드에 적었다 — SDK 가 기본값을 다시 바꾸거나 동기 클라이언트가 둘 올라와도 조용히 바뀌지 않게.
+ * `apache-client` 는 고르지 않았다. 1.x 가 쓰던 것과 같은 httpclient 4.5 라는 점이 끌리지만, Apache HttpComponents 의 현재 줄기는 5.x 이고 SDK 도 기본값을 5 로 옮겼다.
+ * JDK 를 쓰는 `url-connection-client` 도 고르지 않았다. 의존성이 없고 가벼운 대신, 커넥션을 JVM 전체의 `HttpURLConnection` 설정으로만 다룰 수 있다.
+ * 비동기 클라이언트는 쓰지 않으므로 그 기본값인 `netty-nio-client` 는 의존성에서 뺐다. 왜 빼는지는 `build.sbt` 의 주석에 있다.
+
+HTTP 클라이언트의 버전은 SDK 버전이 정한다 — httpclient5·httpcore5 는 SDK 가 선언한 버전 그대로 들어오고, 그것을 찾는 다른 라이브러리는 없다. 1.x 를 S3 모듈로 좁히며 SDK 밑의 httpclient 4 를 운영이 써 온 4.5.14 로 붙잡아 두는 `dependencyOverrides` 를 넣었는데, 2.x 로 오며 뺐다. 1.x 가 httpclient 4 를 찾는 마지막 라이브러리여서 이제 클래스패스에 httpclient 4 가 없다 — 남겨 두었다면 아무것도 붙잡지 않는 설정이었다.
 
 == 설계 결정사항
  * 저장소: [S3] presigned URL 방식 (직접 S3 URL 노출 없음)
