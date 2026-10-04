@@ -1,18 +1,17 @@
 package controllers
 
-import com.amazonaws.services.s3.model.DeleteObjectsRequest
-import com.amazonaws.services.s3.model.ListObjectsV2Request
-import com.amazonaws.services.s3.model.ListObjectsV2Result
-import com.amazonaws.services.s3.model.S3ObjectSummary
 import io.circe.Json
 import logics.ApplicationConf
 import logics.S3Logic
 import logics.wikis.macros.S3AttachmentUrlLogic
 import play.api.Logging
 import play.api.mvc._
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response
 
 import javax.inject._
 import scala.collection.mutable
+import scala.jdk.CollectionConverters._
 
 /**
  * The admin bucket browser: list, delete, and hand out a download URL.
@@ -26,45 +25,30 @@ class ApiAdminS3 @Inject()(
   applicationConf: ApplicationConf,
 ) extends BaseController with JsonResults with AdminAuth with Logging {
 
-  private val maxKeysPerRequest = 1000
-
   def adminS3Objects(prefix: String = "", maxKeys: Int = 500, recursive: Boolean = false): Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
       AccessDenied
     } else {
-      val safeMaxKeys = Math.min(maxKeysPerRequest, Math.max(1, maxKeys))
+      val safeMaxKeys = Math.min(ApiAdminS3.maxKeysPerRequest, Math.max(1, maxKeys))
       val safePrefix = Option(prefix).map(_.trim).getOrElse("")
       try {
-        val amazonS3 = S3Logic.client(applicationConf)
+        val s3Client = S3Logic.client(applicationConf)
         val bucket = S3Logic.bucket(applicationConf)
-        val requestBuilder = new ListObjectsV2Request()
-          .withBucketName(bucket)
-          .withMaxKeys(safeMaxKeys)
-        if (!recursive) {
-          requestBuilder.withDelimiter("/")
-        }
-        if (safePrefix.nonEmpty) {
-          requestBuilder.withPrefix(safePrefix)
-        }
-        val results = mutable.ArrayBuffer.empty[ListObjectsV2Result]
-        var remaining = safeMaxKeys
-        var token: String = null
-        do {
-          requestBuilder.withContinuationToken(token)
-          requestBuilder.withMaxKeys(Math.min(maxKeysPerRequest, Math.max(1, remaining)))
-          val result = amazonS3.listObjectsV2(requestBuilder)
-          results += result
-          remaining -= Option(result.getObjectSummaries).map(_.size()).getOrElse(0)
-          token = result.getNextContinuationToken
-        } while (recursive && token != null && remaining > 0)
+        // Not shared with AttachmentLogic.listPageObjectKeys: that reads one page of one wiki page's
+        // prefix, this browses with a delimiter and continuation, and neither changes with the other.
+        val listRequest = ListObjectsV2Request.builder()
+          .bucket(bucket)
+          .delimiter(if (recursive) null else "/")
+          .prefix(if (safePrefix.nonEmpty) safePrefix else null)
+          .build()
+        val (results, token) = ApiAdminS3.listPages((r: ListObjectsV2Request) => s3Client.listObjectsV2(r), listRequest, safeMaxKeys, recursive)
 
-        val directories = results.flatMap(r => Option(r.getCommonPrefixes).map(_.toArray.toSeq).getOrElse(Seq.empty).map(_.toString)).distinct
-        val files = results.flatMap(r => Option(r.getObjectSummaries).map(_.toArray.toSeq).getOrElse(Seq.empty)).map { raw =>
-          val item = raw.asInstanceOf[S3ObjectSummary]
+        val directories = results.flatMap(_.commonPrefixes().asScala.map(_.prefix())).distinct
+        val files = results.flatMap(_.contents().asScala).map { item =>
           Json.obj(
-            "key" -> Json.fromString(item.getKey),
-            "size" -> Json.fromLong(item.getSize),
-            "lastModified" -> Json.fromString(Option(item.getLastModified).map(_.toInstant.toString).getOrElse("")),
+            "key" -> Json.fromString(item.key()),
+            "size" -> Json.fromLong(Option(item.size()).map(_.longValue).getOrElse(0L)),
+            "lastModified" -> Json.fromString(Option(item.lastModified()).map(_.toString).getOrElse("")),
             "isDirectory" -> Json.fromBoolean(false),
           )
         }
@@ -80,8 +64,8 @@ class ApiAdminS3 @Inject()(
           "bucket" -> Json.fromString(bucket),
           "prefix" -> Json.fromString(safePrefix),
           "maxKeys" -> Json.fromInt(safeMaxKeys),
-          "isTruncated" -> Json.fromBoolean(token != null),
-          "nextContinuationToken" -> Json.fromString(Option(token).getOrElse("")),
+          "isTruncated" -> Json.fromBoolean(token.isDefined),
+          "nextContinuationToken" -> Json.fromString(token.getOrElse("")),
           "items" -> Json.fromValues(directoryRows ++ files),
         ))
       } catch {
@@ -106,11 +90,13 @@ class ApiAdminS3 @Inject()(
         JsonError(BadRequest, "keys is required")
       } else {
         try {
-          val amazonS3 = S3Logic.client(applicationConf)
-          val bucket = S3Logic.bucket(applicationConf)
-          val deleteRequest = new DeleteObjectsRequest(bucket).withKeys(keys: _*)
-          amazonS3.deleteObjects(deleteRequest)
-          Ok(Json.obj("ok" -> Json.fromBoolean(true), "deletedCount" -> Json.fromInt(keys.size)))
+          val failures = S3Logic.deleteObjects(applicationConf, keys)
+          if (failures.isEmpty) {
+            Ok(Json.obj("ok" -> Json.fromBoolean(true), "deletedCount" -> Json.fromInt(keys.size)))
+          } else {
+            logger.error(s"adminDeleteS3Objects: S3 did not delete ${failures.size} of ${keys.size} keys. ${failures.take(10).mkString(", ")}")
+            JsonError(InternalServerError, "S3 삭제에 실패했습니다.")
+          }
         } catch {
           case error: Throwable =>
             logger.error(s"adminDeleteS3Objects failed. keys=${keys.take(10).mkString(",")}", error)
@@ -136,5 +122,31 @@ class ApiAdminS3 @Inject()(
         }
       }
     }
+  }
+}
+
+object ApiAdminS3 {
+  /** The most keys one ListObjectsV2 request returns; S3 will not send more. */
+  val maxKeysPerRequest = 1000
+
+  /**
+   * Lists the pages of a listing: until `maxKeys` objects have come back or the listing ends, and
+   * only past the first page when the listing is recursive. Returns the pages, and the token for
+   * the rest when there is a rest.
+   *
+   * `list` is the S3 call, passed in so the paging can be tried without S3. Each request is
+   * `request` with its own token and key limit.
+   */
+  def listPages(list: ListObjectsV2Request => ListObjectsV2Response, request: ListObjectsV2Request, maxKeys: Int, recursive: Boolean): (Seq[ListObjectsV2Response], Option[String]) = {
+    val results = mutable.ArrayBuffer.empty[ListObjectsV2Response]
+    var remaining = maxKeys
+    var token: String = null
+    do {
+      val result = list(request.toBuilder.continuationToken(token).maxKeys(Math.min(maxKeysPerRequest, Math.max(1, remaining))).build())
+      results += result
+      remaining -= result.contents().size()
+      token = result.nextContinuationToken()
+    } while (recursive && token != null && remaining > 0)
+    (results.toSeq, Option(token))
   }
 }

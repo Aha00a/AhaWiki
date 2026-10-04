@@ -29,14 +29,15 @@ libraryDependencies += "org.jsoup" % "jsoup" % "1.19.1"
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.2" % Test
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.3.3"
-// S3 only. The `aws-java-sdk` bundle depends on every AWS service and was most of what `stage`
-// shipped; another service means adding its own `aws-java-sdk-<service>` module next to this one.
-libraryDependencies += "com.amazonaws" % "aws-java-sdk-s3" % "1.12.288"
-// The SDK's HTTP client, at the version it ran on in production. The SDK asks for httpclient
-// 4.5.13 (and so httpcore 4.4.13); what lifted both was google-oauth-client, which nothing used and
-// is gone. S3 is the one path the specs cannot exercise, so it keeps the client it has been calling.
-dependencyOverrides += "org.apache.httpcomponents" % "httpclient" % "4.5.14"
-dependencyOverrides += "org.apache.httpcomponents" % "httpcore" % "4.4.16"
+// AWS SDK for Java 2.x, S3 only; another AWS service means adding its own module next to these, at
+// the same version. One version for every module, because the SDK's modules are released together
+// and only tested together. apache5-client is the HTTP client logics.S3Logic builds its S3 client
+// with -- wiki page Dev Attachment has why Apache 5. netty-nio-client is the SDK's default for async
+// clients, and nothing here builds one. Left in, it would also move the Netty that lettuce --
+// play-redis's Redis client -- runs on to the version the SDK was built with.
+val awsSdkVersion = "2.55.11"
+libraryDependencies += ("software.amazon.awssdk" % "s3" % awsSdkVersion).exclude("software.amazon.awssdk", "netty-nio-client")
+libraryDependencies += "software.amazon.awssdk" % "apache5-client" % awsSdkVersion
 libraryDependencies += "com.github.karelcemus" %% "play-redis" % "5.4.0"
 // Redis pub/sub for cross-instance page.updated (CrossInstanceBus). play-redis is the cache and
 // does not expose SUBSCRIBE/PUBLISH, so a dedicated client is used on the same shared Redis.
