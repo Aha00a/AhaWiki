@@ -19,21 +19,24 @@ libraryDependencies += filters
 libraryDependencies += evolutions
 libraryDependencies += "org.playframework.anorm" %% "anorm" % "2.7.0"
 libraryDependencies += "com.h2database" % "h2" % "2.3.232"
-libraryDependencies += "mysql" % "mysql-connector-java" % "8.0.33"
+libraryDependencies += "com.mysql" % "mysql-connector-j" % "8.0.33"
 libraryDependencies += "net.sf.supercsv" % "super-csv" % "2.3.1"
 libraryDependencies += "com.github.rjeschke" % "txtmark" % "0.13"
-libraryDependencies += "com.google.oauth-client" % "google-oauth-client" % "1.39.0"
 libraryDependencies += "io.github.java-diff-utils" % "java-diff-utils" % "4.15"
 libraryDependencies += "org.jsoup" % "jsoup" % "1.19.1"
 //libraryDependencies += "com.twitter.penguin" % "korean-text" % "4.1.2"
 //libraryDependencies += "org.bitbucket.eunjeon" %% "seunjeon" % "1.3.1"
-libraryDependencies += "org.scala-lang.modules" %% "scala-async" % "0.10.0"
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value % Provided
-libraryDependencies += "org.parboiled" %% "parboiled" % "2.2.0"
 libraryDependencies += "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.2" % Test
 libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.3.3"
-libraryDependencies += "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.12.1"
-libraryDependencies += "com.amazonaws" % "aws-java-sdk" % "1.12.288"
+// S3 only. The `aws-java-sdk` bundle depends on every AWS service and was most of what `stage`
+// shipped; another service means adding its own `aws-java-sdk-<service>` module next to this one.
+libraryDependencies += "com.amazonaws" % "aws-java-sdk-s3" % "1.12.288"
+// The SDK's HTTP client, at the version it ran on in production. The SDK asks for httpclient
+// 4.5.13 (and so httpcore 4.4.13); what lifted both was google-oauth-client, which nothing used and
+// is gone. S3 is the one path the specs cannot exercise, so it keeps the client it has been calling.
+dependencyOverrides += "org.apache.httpcomponents" % "httpclient" % "4.5.14"
+dependencyOverrides += "org.apache.httpcomponents" % "httpcore" % "4.4.16"
 libraryDependencies += "com.github.karelcemus" %% "play-redis" % "5.4.0"
 // Redis pub/sub for cross-instance page.updated (CrossInstanceBus). play-redis is the cache and
 // does not expose SUBSCRIBE/PUBLISH, so a dedicated client is used on the same shared Redis.
