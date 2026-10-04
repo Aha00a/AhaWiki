@@ -264,7 +264,8 @@ https://www.wikimatrix.org/ 발견. 여기 기준에 좀 맞춰볼까.. --[2020-
    * 실제 객체의 서명 URL: S3 Browser 다운로드 URL, 미리보기 그림(`/api/pagePreview`), 인접 페이지 그래프 썸네일이 모두 열렸다(aha00a.com `HJH1` 의 1080px 그림). S3 Browser 목록은 aha00a.com 객체 6개를 잘림 없이 돌려줬다.
    * favicon: ahawiki.net(원래 S3 favicon 없음)에 올려 서명 URL 로 열리는 것을 보고 지웠다 — 설정은 기본값으로 돌아갔고 S3 객체도 사라졌다(`head-object` 404).
    * 시험으로 올린 것은 모두 지웠다. 첨부 올리기 둘과 단일 삭제 하나는 텔레그램 알림을 하나씩 보냈다.
- * [ ] 첨부가 있는 페이지 지우기(`AttachmentLogic.deletePageAttachments`)는 SDK 2.x 로 실제 S3 에서 아직 안 해 봤다 — 시험용 페이지를 만들고 지워야 해서 남겼다. 쓰는 S3 호출(목록, `S3Logic.deleteObject`)은 위에서 각각 확인했다. --[2026-10-05]
+ * [[CB(x)]] 첨부가 있는 페이지 지우기(`AttachmentLogic.deletePageAttachments`)는 SDK 2.x 로 실제 S3 에서 아직 안 해 봤다 — 시험용 페이지를 만들고 지워야 해서 남겼다. 쓰는 S3 호출(목록, `S3Logic.deleteObject`)은 위에서 각각 확인했다. --[2026-10-05]
+  * 해 봤다(2026-10-05 06:00). aha00a.com 에 시험용 페이지를 API v1 로 만들고, 첨부 둘(파일·클립보드)을 올리고, 그 접두사에 DB 행 없는 객체 하나를 S3 에 직접 넣었다 — 목록에는 `OK` 둘과 `S3_ONLY` 하나. API v1 로 페이지를 지우니 200, 페이지는 404, 접두사 아래 객체는 셋 다 사라졌고(행 없는 것은 S3 목록으로 찾아 지운 것이다) 두 행은 `Deleted` 가 됐다. 다른 페이지의 첨부 객체 수는 그대로였고 로그에 오류는 없었다.
 
 === 기타
  * 마크업 규칙 추가
