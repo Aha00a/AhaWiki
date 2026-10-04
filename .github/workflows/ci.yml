@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  push:
+    branches: [ prd ]
+  pull_request:
+    branches: [ prd ]
+
+permissions:
+  contents: read
+
+jobs:
+  sbt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      # The runner is UTC, and the specs must pass in any timezone -- Dev Testing says why.
+      - run: sbt test
+
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # ahawiki.sync.test.mjs looks for a page with an older committed version, and skips
+          # rather than fails when a shallow clone has none.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      # admin.js is committed, built from app/assets/js/admin.jsx; an edit to one without
+      # rebuilding the other ships a bundle that does not match its source.
+      - run: npm run admin:build
+      - run: git diff --exit-code public/js/babel/admin.js
