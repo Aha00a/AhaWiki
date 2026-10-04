@@ -61,20 +61,47 @@ object AttachmentLogic extends Logging {
     s"${pagePrefix(siteSeq, pageName)}$sanitizedOriginalFileName/$sanitizedOriginalFileNameWithoutExtension.${now.format(timestampFormatter)}.$sanitizedExtension"
   }
 
-  def listPageObjectKeys(siteSeq: Long, pageName: String)(implicit applicationConf: ApplicationConf): Seq[String] = {
+  /** One page's S3 listing: the prefix it covers, the keys found, and whether S3 stopped short of the end. */
+  case class PageListing(prefix: String, keys: Seq[String], truncated: Boolean)
+
+  /** None when S3 is not configured. */
+  def listPageObjects(siteSeq: Long, pageName: String)(implicit applicationConf: ApplicationConf): Option[PageListing] = {
     if (!S3Logic.isConfigured(applicationConf)) {
-      Seq.empty
+      None
     } else {
+      val prefix = pagePrefix(siteSeq, pageName)
       val request = ListObjectsV2Request.builder()
         .bucket(S3Logic.bucket(applicationConf))
-        .prefix(pagePrefix(siteSeq, pageName))
+        .prefix(prefix)
         .maxKeys(listMaxKeys)
         .build()
-      S3Logic.client(applicationConf).listObjectsV2(request).contents().asScala.toSeq
+      val response = S3Logic.client(applicationConf).listObjectsV2(request)
+      val keys = response.contents().asScala.toSeq
         .map(_.key)
         .filter(key => key != null && key.nonEmpty && !key.endsWith("/"))
+      // isTruncated is a java.lang.Boolean, and the SDK leaves it null when S3 sent no IsTruncated.
+      Some(PageListing(prefix, keys, truncated = Option(response.isTruncated).exists(_.booleanValue)))
     }
   }
+
+  def listPageObjectKeys(siteSeq: Long, pageName: String)(implicit applicationConf: ApplicationConf): Seq[String] =
+    listPageObjects(siteSeq, pageName).map(_.keys).getOrElse(Seq.empty)
+
+  /**
+   * What the attachment list says about a row's object: `OK`, or `DB_ONLY` when there is reason to
+   * think S3 does not have it.
+   *
+   * Signing a URL is local and says nothing about the object, so the page's listing decides — the
+   * response reads it anyway, for `S3_ONLY`. A key is judged only by a listing that covers it: one
+   * that S3 cut short may have stopped before it, and one for another prefix never looked. Either
+   * way the row stays `OK`, as every row was before 2026-10-05.
+   */
+  def integrityStatus(objectKey: String, presigned: Boolean, listing: Option[PageListing]): String =
+    if (!presigned) "DB_ONLY"
+    else listing match {
+      case Some(l) if !l.truncated && objectKey.startsWith(l.prefix) && !l.keys.contains(objectKey) => "DB_ONLY"
+      case _ => "OK"
+    }
 
   /**
    * Deletes every attachment object of a page, from S3 and then from the table.

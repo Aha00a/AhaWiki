@@ -114,21 +114,33 @@ object S3Logic {
   private[logics] def deleteObject(client: S3Client, bucket: String, objectKey: String): Unit =
     client.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(objectKey).build())
 
+  /**
+   * What a batch delete did: the keys S3 says it deleted, and the ones it did not, each with S3's
+   * code and message. No failures means every key is gone.
+   *
+   * `deleted` relies on the request not being quiet — a quiet delete answers with the failures
+   * only. The admin browser marks the attachment rows of `deleted`, so it has to be the keys S3
+   * confirmed, not the keys asked for.
+   */
+  case class DeleteObjectsResult(deleted: Seq[String], failures: Seq[String])
+
   /** Deletes the keys in one request. See the other overload. */
-  def deleteObjects(applicationConf: ApplicationConf, objectKeys: Seq[String]): Seq[String] =
+  def deleteObjects(applicationConf: ApplicationConf, objectKeys: Seq[String]): DeleteObjectsResult =
     deleteObjects(client(applicationConf), bucket(applicationConf), objectKeys)
 
   /**
-   * Deletes the keys in one request and returns the ones S3 did not delete, each with S3's code
-   * and message. Empty means every key is gone.
+   * Deletes the keys in one request.
    *
    * S3 answers a batch delete with 200 even when some keys failed, and lists those in the body.
    * SDK 1.x turned such a list into an exception; SDK 2.x returns it, so a caller that only
    * catches exceptions would report a partial delete as a complete one.
    */
-  private[logics] def deleteObjects(client: S3Client, bucket: String, objectKeys: Seq[String]): Seq[String] = {
+  private[logics] def deleteObjects(client: S3Client, bucket: String, objectKeys: Seq[String]): DeleteObjectsResult = {
     val delete = Delete.builder().objects(objectKeys.map(key => ObjectIdentifier.builder().key(key).build()).asJava).build()
     val response = client.deleteObjects(DeleteObjectsRequest.builder().bucket(bucket).delete(delete).build())
-    response.errors().asScala.toSeq.map(error => s"${error.key()}: ${error.code()} ${error.message()}")
+    DeleteObjectsResult(
+      deleted = response.deleted().asScala.toSeq.map(_.key()),
+      failures = response.errors().asScala.toSeq.map(error => s"${error.key()}: ${error.code()} ${error.message()}"),
+    )
   }
 }

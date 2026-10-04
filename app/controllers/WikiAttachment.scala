@@ -185,7 +185,11 @@ class WikiAttachment @Inject()(
               (attachment, presignedUrlOption)
             }
             val dbObjectKeys = dbAttachments.map(_._1.objectKey).toSet
-            val s3OnlyObjects = AttachmentLogic.listPageObjectKeys(site.seq, pageName).filterNot(dbObjectKeys.contains)
+            // After the rows, not before: a row reads Uploaded only once its putObject has returned,
+            // so a listing taken later already holds it. Listed first, an upload finishing in between
+            // would show its own new row as DB_ONLY.
+            val listing = AttachmentLogic.listPageObjects(site.seq, pageName)
+            val s3OnlyObjects = listing.map(_.keys).getOrElse(Seq.empty).filterNot(dbObjectKeys.contains)
             val s3OnlyJson = s3OnlyObjects.map { objectKey =>
               val presignedUrlOption = logics.wikis.macros.S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption
               val inferredFilename = objectKey.split("/").toSeq.lastOption.getOrElse(objectKey)
@@ -206,7 +210,7 @@ class WikiAttachment @Inject()(
                 "contentType" -> attachment.contentType,
                 "fileSize" -> attachment.fileSize,
                 "fileUrl" -> presignedUrlOption,
-                "integrityStatus" -> (if (presignedUrlOption.isDefined) "OK" else "DB_ONLY"),
+                "integrityStatus" -> AttachmentLogic.integrityStatus(attachment.objectKey, presignedUrlOption.isDefined, listing),
                 "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(attachment.objectKey, site.seq, pageName)})]]",
               )} ++ s3OnlyJson)
             ))

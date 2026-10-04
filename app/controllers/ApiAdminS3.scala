@@ -4,7 +4,9 @@ import io.circe.Json
 import logics.ApplicationConf
 import logics.S3Logic
 import logics.wikis.macros.S3AttachmentUrlLogic
+import models.tables.Attachment
 import play.api.Logging
+import play.api.db.Database
 import play.api.mvc._
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response
@@ -23,6 +25,7 @@ class ApiAdminS3 @Inject()(
   implicit val
   controllerComponents: ControllerComponents,
   applicationConf: ApplicationConf,
+  database: Database,
 ) extends BaseController with JsonResults with AdminAuth with Logging {
 
   def adminS3Objects(prefix: String = "", maxKeys: Int = 500, recursive: Boolean = false): Action[AnyContent] = Action { implicit request =>
@@ -34,7 +37,7 @@ class ApiAdminS3 @Inject()(
       try {
         val s3Client = S3Logic.client(applicationConf)
         val bucket = S3Logic.bucket(applicationConf)
-        // Not shared with AttachmentLogic.listPageObjectKeys: that reads one page of one wiki page's
+        // Not shared with AttachmentLogic.listPageObjects: that reads one page of one wiki page's
         // prefix, this browses with a delimiter and continuation, and neither changes with the other.
         val listRequest = ListObjectsV2Request.builder()
           .bucket(bucket)
@@ -90,11 +93,17 @@ class ApiAdminS3 @Inject()(
         JsonError(BadRequest, "keys is required")
       } else {
         try {
-          val failures = S3Logic.deleteObjects(applicationConf, keys)
-          if (failures.isEmpty) {
-            Ok(Json.obj("ok" -> Json.fromBoolean(true), "deletedCount" -> Json.fromInt(keys.size)))
+          val result = S3Logic.deleteObjects(applicationConf, keys)
+          // Marked whether or not some keys failed: what S3 did delete has no object behind its row.
+          val markedRows = markAttachmentsDeleted(result.deleted)
+          if (result.failures.isEmpty) {
+            Ok(Json.obj(
+              "ok" -> Json.fromBoolean(true),
+              "deletedCount" -> Json.fromInt(result.deleted.size),
+              "markedAttachmentRows" -> Json.fromInt(markedRows),
+            ))
           } else {
-            logger.error(s"adminDeleteS3Objects: S3 did not delete ${failures.size} of ${keys.size} keys. ${failures.take(10).mkString(", ")}")
+            logger.error(s"adminDeleteS3Objects: S3 did not delete ${result.failures.size} of ${keys.size} keys. ${result.failures.take(10).mkString(", ")}")
             JsonError(InternalServerError, "S3 삭제에 실패했습니다.")
           }
         } catch {
@@ -105,6 +114,15 @@ class ApiAdminS3 @Inject()(
       }
     }
   }
+
+  /**
+   * Marks the attachment rows of the objects this browser deleted, as `deleteAttachment` and a page
+   * delete already do. Until 2026-10-05 it left them, and a row with no object behind it stayed in
+   * the page's attachment list. A key that is not an attachment matches no row.
+   */
+  private def markAttachmentsDeleted(keys: Seq[String]): Int =
+    if (keys.isEmpty) 0
+    else database.withConnection { implicit connection => keys.map(Attachment.markDeleted).sum }
 
   def adminS3DownloadUrl(key: String): Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {

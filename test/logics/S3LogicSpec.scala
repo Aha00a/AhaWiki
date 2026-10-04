@@ -166,22 +166,26 @@ class S3LogicSpec extends AnyFreeSpec {
         s"""<?xml version="1.0" encoding="UTF-8"?><DeleteResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/">$inner</DeleteResult>""")
 
     // S3 answers 200 either way. SDK 1.x threw when the body listed failures; SDK 2.x does not.
-    "returns the keys S3 did not delete, with its reason" in {
+    "returns the keys S3 did not delete, with its reason, apart from the ones it did" in {
       withFakeS3(_ => deleteResult(
         "<Deleted><Key>Favicon/1/a.png</Key></Deleted>" +
           "<Error><Key>Favicon/1/b.png</Key><Code>AccessDenied</Code><Message>Access Denied</Message></Error>"
       )) { (client, received) =>
-        assert(S3Logic.deleteObjects(client, "example-bucket", Seq("Favicon/1/a.png", "Favicon/1/b.png")) === Seq("Favicon/1/b.png: AccessDenied Access Denied"))
+        assert(S3Logic.deleteObjects(client, "example-bucket", Seq("Favicon/1/a.png", "Favicon/1/b.png")) ===
+          S3Logic.DeleteObjectsResult(deleted = Seq("Favicon/1/a.png"), failures = Seq("Favicon/1/b.png: AccessDenied Access Denied")))
         val Seq(post) = received()
         assert(post.method === "POST")
         assert(post.rawQuery.split('&').contains("delete"))
         assert(post.body.contains("<Key>Favicon/1/a.png</Key>") && post.body.contains("<Key>Favicon/1/b.png</Key>"))
+        // Not quiet: a quiet delete would leave `deleted` empty, and the browser would mark no rows.
+        assert(!post.body.contains("<Quiet>true</Quiet>"))
       }
     }
 
-    "returns nothing when every key is gone" in {
+    "returns no failures when every key is gone" in {
       withFakeS3(_ => deleteResult("<Deleted><Key>Favicon/1/a.png</Key></Deleted>")) { (client, _) =>
-        assert(S3Logic.deleteObjects(client, "example-bucket", Seq("Favicon/1/a.png")) === Seq.empty)
+        assert(S3Logic.deleteObjects(client, "example-bucket", Seq("Favicon/1/a.png")) ===
+          S3Logic.DeleteObjectsResult(deleted = Seq("Favicon/1/a.png"), failures = Seq.empty))
       }
     }
   }
