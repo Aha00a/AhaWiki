@@ -156,6 +156,10 @@ Content-Type: multipart/form-data
 
 `AmazonS3` 는 커넥션 풀을 들고 있고 공유하도록 만들어진 객체다. 컨트롤러 3곳이 각자 `buildAmazonS3Client()` 를 갖고 **요청마다 새로 만들고 있었다**(호출부 11곳). 만든 클라이언트를 닫는 곳은 없었으므로 풀이 요청마다 쌓였다. 어디서도 클라이언트를 닫거나 상태를 바꾸지 않으므로 자격증명당 한 개를 공유해도 안전하다.
 
+SDK 는 AWS SDK for Java 1.x 의 S3 모듈만 들어온다. 2026-10-04 전에는 모든 AWS 서비스를 담은 번들이었고, 릴리스에 실린 jar 의 대부분이 쓰지 않는 서비스였다. 다른 AWS 서비스를 쓰게 되면 그 서비스의 모듈을 `build.sbt` 에 따로 넣는다. SDK 밑에서 도는 Apache HttpClient 의 버전도 `build.sbt` 가 정하고, 왜 그 버전인지는 그 자리의 주석에 있다.
+
+스펙은 S3 를 부르지 않는다 — 스펙이 읽는 설정에는 AWS 자격증명이 비어 있다. 그래서 S3 쪽 의존성을 바꾼 배포는 canary 에서 첨부 업로드·썸네일·Admin 의 S3 Browser 를 직접 눌러 본다.
+
 == 설계 결정사항
  * 저장소: [S3] presigned URL 방식 (직접 S3 URL 노출 없음)
  * 종속 방식: 페이지에 종속 (`Attachment/{siteSeq}/{pageName}/` 경로)

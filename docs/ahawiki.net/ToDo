@@ -239,6 +239,9 @@ https://www.wikimatrix.org/ 발견. 여기 기준에 좀 맞춰볼까.. --[2020-
   * 내용 스캔(API 로 본문의 그림 주소를 모아 직접 받아 본 것)에는 걸렸지만 브라우저에서는 멀쩡한 것: YouTube(문서의 예시 주소), 분개(구글 문서 iframe), ColorTemperature(출처 링크), 흡연관련법령(http 주소를 브라우저가 https 로 올려 받는다), TracSettingWikiCustomize(코드 예시). 페이스북 글 임베드 9개는 iframe 안이라 스윕이 보지 못한다.
   * 링크(불러오지 않고 가리키기만 하는 것)는 다 보지 않았다. 내용 스캔에 걸린 죽은 링크: 지워주세요(fs.textcube.com), 조형기·내가만약여자라면(clien.career.co.kr), 내가원하는글꼴(lowing.org), WhatTheCustomerWants(effectiveeng.com·blog.enzoy.kr).
 
+=== 쓰지 않는 의존성
+ * [ ] 릴리스가 모든 AWS 서비스의 SDK 를 실었다 — 코드가 쓰는 것은 S3 뿐이다. S3 모듈만 남기고, 코드가 부르는 곳이 하나도 없던 넷(google-oauth-client·scala-async·parboiled·jackson-module-scala)을 `build.sbt` 에서 지웠다. 그중 parboiled·jackson-module-scala 는 Play 쪽이 더 새 버전으로 끌어와 원래 그 버전이 실리고 있었고, 지금도 그대로 실린다. 지운 것 하나가 S3 밑의 HTTP 클라이언트 버전을 올려 주고 있어서, 그 버전은 그대로 두었다([Dev Attachment] '''S3 클라이언트'''). '''고쳤다(2026-10-04), 배포 전.''' 스펙은 S3 를 부르지 않으므로 canary 에서 첨부 업로드·썸네일·Admin 의 S3 Browser 를 눌러 본 뒤 닫는다. --[2026-10-04]
+
 === 기타
  * 마크업 규칙 추가
   * from [[[
