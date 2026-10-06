@@ -171,7 +171,8 @@ controllerComponents: ControllerComponents,
 
       val pageFirstRevision = Page.selectFirstRevision(name)
       val pageLastRevision = Page.selectLastRevision(name)
-      val pageSpecificRevision = Page.select(name, revision)
+      // Revision 0 is the latest, which was just read. Page.select would read it a second time.
+      val pageSpecificRevision = if (revision == 0) pageLastRevision else Page.select(name, revision)
 
       val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
       val wikiPermission = WikiPermission()

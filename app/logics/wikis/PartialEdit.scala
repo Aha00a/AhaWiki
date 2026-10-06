@@ -25,6 +25,9 @@ object PartialEdit {
    *
    * Carrying the revision in the link is what lets the save detect that the page moved under
    * the editor while a section was open.
+   *
+   * Every renderer of a page asks, so one view asks several times. It reads the number alone:
+   * until 2026-10-07 it read the whole latest revision -- content and all -- each time.
    */
   def revision(implicit wikiContext: ContextWikiPage): Long = {
     wikiContext.requestWrapper
@@ -35,7 +38,7 @@ object PartialEdit {
         val (database, site) = wikiContext.tupleDatabaseSite
         database.withConnection { implicit connection =>
           implicit val implicitSite: Site = site
-          Page.selectLastRevision(wikiContext.name).map(_.revision).getOrElse(0L)
+          Page.selectLastRevisionNumber(wikiContext.name).getOrElse(0L)
         }
       }
   }

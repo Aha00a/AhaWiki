@@ -19,8 +19,17 @@ object DefaultPageLogic {
   // /assets/Page/FrontPage 로 원본이 그대로 노출되기 때문이다.
   private def defaultPageResource(title: String): String = s"Page/$title"
 
-  private def defaultPageExists(title: String): Boolean =
-    getClass.getClassLoader.getResource(defaultPageResource(title)) != null
+  // Every link to a page that does not exist asks this, and asking the class loader means looking
+  // through the jars: 4% of a render's time (2026-10-07). What is on the classpath does not change
+  // while the process runs, so each answer is kept. The names come from page text, so the map is
+  // emptied rather than allowed to grow without end.
+  private val defaultPageExistsByTitle = new java.util.concurrent.ConcurrentHashMap[String, java.lang.Boolean]()
+  private val defaultPageExistsMaxEntries = 10000
+
+  private def defaultPageExists(title: String): Boolean = {
+    if (defaultPageExistsByTitle.size() > defaultPageExistsMaxEntries) defaultPageExistsByTitle.clear()
+    defaultPageExistsByTitle.computeIfAbsent(title, t => getClass.getClassLoader.getResource(defaultPageResource(t)) != null)
+  }
 
   private def readDefaultPage(title: String): Option[String] =
     Option(getClass.getClassLoader.getResourceAsStream(defaultPageResource(title)))

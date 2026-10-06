@@ -95,6 +95,13 @@ SELECT P.name, P.revision, dateTime, U.nickname AS nickname, P.`user` AS `user`,
       .map(Page.tupled)
   }
 
+  /** The latest revision number alone, for callers that would otherwise read the whole page for it. */
+  def selectLastRevisionNumber(name: String)(implicit connection: Connection, site: Site): Option[Long] = {
+    //language=sql
+    SQL"""SELECT MAX(revision) AS revision FROM Page WHERE site = ${site.seq} AND name = $name"""
+      .as(get[Option[Long]]("revision").single)
+  }
+
   // `IN ()` is a syntax error, not an empty match -- see the same guard in GeocodeCache.select.
   // One caller checked before calling and the others had not needed to yet.
   def selectLastRevision(seqName: Seq[String])(implicit connection: Connection, site: Site): Seq[Page] = {

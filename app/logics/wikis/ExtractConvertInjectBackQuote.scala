@@ -50,7 +50,7 @@ class ExtractConvertInjectBackQuote() extends ExtractConvertInject {
     }.mkString
 
   private def extractBackQuotes(s: String): String = {
-    val regexDoubleBackquote = """``(.+?)``""".r
+    import ExtractConvertInjectBackQuote._
     val s1 = regexDoubleBackquote.replaceAllIn(s, _ match {
       case regexDoubleBackquote(body) =>
         val uniqueKey = getUniqueKey
@@ -58,7 +58,6 @@ class ExtractConvertInjectBackQuote() extends ExtractConvertInject {
         uniqueKey
       case _ => "error"
     })
-    val regexSingleBackquote = """`(.+?)`""".r
     regexSingleBackquote.replaceAllIn(s1, _ match {
       case regexSingleBackquote(body) =>
         val uniqueKey = getUniqueKey
@@ -142,4 +141,10 @@ class ExtractConvertInjectBackQuote() extends ExtractConvertInject {
   }
 
   override def convert(s: String)(implicit wikiContext: ContextWikiPage): String = s
+}
+
+object ExtractConvertInjectBackQuote {
+  // Compiled once; they were compiled on every call, which is once per stretch of text between blocks.
+  private val regexDoubleBackquote = """``(.+?)``""".r
+  private val regexSingleBackquote = """`(.+?)`""".r
 }

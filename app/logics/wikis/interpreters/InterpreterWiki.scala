@@ -441,6 +441,9 @@ object InterpreterWiki extends TraitInterpreter {
   private val regexEmptyCheckbox: Regex = """\[ \]""".r
 
   def replaceLink(s:String)(implicit wikiContext:ContextWikiPage):String = {
+    // Every alternative of regexLink, and the checkbox, needs a `[` or a `://`. Most lines have
+    // neither, and trying the pattern at every position of such a line still costs.
+    if (s.indexOf('[') < 0 && !s.contains("://")) return s
     val s2 = regexEmptyCheckbox.replaceAllIn(s, Regex.quoteReplacement("""<input type="checkbox" disabled>"""))
     val set: Set[String] = wikiContext.setPageNameByPermission
 
@@ -476,15 +479,18 @@ object InterpreterWiki extends TraitInterpreter {
       .filterNot(link => link.uri.startsWith("#") || link.uri.startsWith("?"))
   }
 
+  // Compiled once. They were compiled for every line drawn.
+  private val inlineReplacements: List[(Regex, String)] = List(
+    ("""<""".r, "&lt;"),
+    ("""'''(.+?)'''""".r, "<b>$1</b>"),
+    ("""''(.+?)''""".r, "<i>$1</i>"),
+    ("""__(.+?)__""".r, "<u>$1</u>"),
+    ("""~~(.+?)~~""".r, "<s>$1</s>"),
+  )
+
   def inlineToHtmlString(line: String)(implicit wikiContext:ContextWikiPage): String = {
     var s = line
-    for((regex, replacement) <- List(
-      ("""<""".r, "&lt;"),
-      ("""'''(.+?)'''""".r, "<b>$1</b>"),
-      ("""''(.+?)''""".r, "<i>$1</i>"),
-      ("""__(.+?)__""".r, "<u>$1</u>"),
-      ("""~~(.+?)~~""".r, "<s>$1</s>"),
-    )) {
+    for((regex, replacement) <- inlineReplacements) {
       s = regex.replaceAllIn(s, replacement)
     }
     s = InterpreterWiki.replaceLink(s)

@@ -90,9 +90,9 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
   override def convert(s: String)(implicit wikiContext: ContextWikiPage): String = Interpreters.toHtmlString(withInterpreter(s))
 
   override def inject(s: String)(implicit wikiContext: ContextWikiPage): String = {
-    var result = s
+    if (arrayBuffer.isEmpty) return s
     val revision = PartialEdit.revision
-    for ((key, value) <- arrayBuffer) {
+    replaceKeys(s, arrayBuffer.map { case (key, value) =>
       val converted = convert(value)
       val maybeInterpreter = Interpreters.getInterpreter(withInterpreter(value))
 
@@ -111,9 +111,8 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
         case None =>
           converted
       }
-      result = result.replace(key, withMeta)
-    }
-    result
+      key -> withMeta
+    })
   }
 
   def extractLink()(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {

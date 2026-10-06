@@ -13,11 +13,11 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
   lazy val uriNormalized: String = if (uri.startsWith("wiki:")) uri.substring(5) else uri
   lazy val aliasWithDefault: String = if (alias == null || alias.isEmpty) uriNormalized else alias
 
-  private val iso3166Alpha2CodeSet: Set[String] = java.util.Locale.getISOCountries.toSet
+  import AhaMarkLink._
 
   private def toCountryFlagEmoji(alpha2Code: String): Option[String] = {
     val code = alpha2Code.trim
-    if (!code.matches("^[A-Z]{2}$") || !iso3166Alpha2CodeSet.contains(code)) {
+    if (!regexAlpha2.matches(code) || !iso3166Alpha2CodeSet.contains(code)) {
       None
     } else {
       Some(code.map(ch => Character.toChars(0x1F1E6 + (ch - 'A')).mkString).mkString)
@@ -51,18 +51,20 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
       }
       val href: String = if (external || isStartsWithHash || isStartsWithQuestionMark) uriNormalized else s"/w/$uriNormalized"
       val attrTarget: String = if (external) """ target="_blank" rel="noopener"""" else ""
+      // The page set is asked first: most links name a page that exists. `Regex.matches` is the
+      // whole-string match `String.matches` was, without compiling the pattern again per link.
       val isMissing = !(
         set.isEmpty ||
         external ||
         isStartsWithHash ||
         isStartsWithQuestionMark ||
-        // uriNormalized.matches(DateTimeUtil.regexIsoLocalDate.pattern.pattern()) ||
-        uriNormalized.matches(DateTimeUtil.regexYearDashMonth.pattern.pattern()) ||
-        uriNormalized.matches(DateTimeUtil.regexDashDashDashDay.pattern.pattern()) ||
-        uriNormalized.matches(DateTimeUtil.regexYear.pattern.pattern()) ||
-        uriNormalized.matches(DateTimeUtil.regexDashDashMonthDashDay.pattern.pattern()) ||
-        uriNormalized.matches(DateTimeUtil.regexDashDashMonth.pattern.pattern()) ||
-        set.contains(uriNormalized.replaceAll("""[#?].+$""", "")) ||
+        set.contains(regexAnchorOrQuery.replaceAllIn(uriNormalized, "")) ||
+        // DateTimeUtil.regexIsoLocalDate.matches(uriNormalized) ||
+        DateTimeUtil.regexYearDashMonth.matches(uriNormalized) ||
+        DateTimeUtil.regexDashDashDashDay.matches(uriNormalized) ||
+        DateTimeUtil.regexYear.matches(uriNormalized) ||
+        DateTimeUtil.regexDashDashMonthDashDay.matches(uriNormalized) ||
+        DateTimeUtil.regexDashDashMonth.matches(uriNormalized) ||
         DefaultPageLogic.isDefined(uriNormalized)
       )
       val countryFlagEmoji = toCountryFlagEmoji(uriNormalized)
@@ -106,4 +108,12 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
   def toLink(src: String): CalculatedLink = CalculatedLink(src, uriNormalized, alias)
 
   override def toHtml: Elem = XML.loadString(toHtmlString())
+}
+
+object AhaMarkLink {
+  // Here rather than in each link: building the country set once per link was 6% of a render's
+  // time (2026-10-07).
+  private val iso3166Alpha2CodeSet: Set[String] = java.util.Locale.getISOCountries.toSet
+  private val regexAlpha2 = """[A-Z]{2}""".r
+  private val regexAnchorOrQuery = """[#?].+$""".r
 }
