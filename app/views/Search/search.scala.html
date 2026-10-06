@@ -1,4 +1,4 @@
-@(q:String, seq:Seq[models.tables.SearchResultSummary])(implicit wikiContext:ContextWikiPage)
+@(q:String, seq:Seq[models.tables.SearchResultSummary], moreThanShown:Boolean)(implicit wikiContext:ContextWikiPage)
 @_base("Search " + q, "") {
     <script type="text/javascript">
         $(function () {
@@ -11,9 +11,12 @@
             @views.html.Wiki.action(isWritable = false, null, null)
             <h1>search <a href="@routes.Wiki.view(q.replaceAll("""\s""", ""))">@q</a></h1>
             @(seq.size) results.
+            @if(moreThanShown) {
+                More than @(models.tables.SearchResult.MaxPages) pages match; only the most recently changed @(models.tables.SearchResult.MaxPages) are listed. A longer query narrows it.
+            }
             @for(searchResultSummary <- seq) {
                 <div class="item">
-                    <h2 class="pageName"><a href="/w/@(searchResultSummary.name)" >@(searchResultSummary.name)</a></h2>
+                    <h2 class="pageName"><a href="/w/@(logics.wikis.PageNameUrl.encode(searchResultSummary.name))" >@(searchResultSummary.name)</a></h2>
                     last modified at @(searchResultSummary.dateTime)
                     <table class="wikiTableSimple tableSearchResult">
                         <tbody>
@@ -30,6 +33,9 @@
                             }
                         </tbody>
                     </table>
+                    @if(searchResultSummary.hitLinesNotShown > 0) {
+                        <a href="/w/@(logics.wikis.PageNameUrl.encode(searchResultSummary.name))">@(searchResultSummary.hitLinesNotShown) more matching lines</a>
+                    }
                 </div>
             }
         </div>

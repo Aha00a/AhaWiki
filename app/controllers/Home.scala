@@ -90,6 +90,7 @@ class Home @Inject() (
          |Disallow: /ws/
          |Disallow: /dev/
          |Disallow: /preview
+         |Disallow: /search
          |
          |Sitemap: https://${request.host}/sitemap.xml
          |""".stripMargin

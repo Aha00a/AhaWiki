@@ -33,6 +33,7 @@ controllerComponents: ControllerComponents,
   def index(q: String): Action[AnyContent] = Action { implicit request => database.withConnection { implicit connection =>
 
     import models.RequestWrapper
+    import models.tables.SearchResult
     import models.tables.SearchResultSummary
     import models.tables.Site
     implicit val site: Site = SiteLogic.get(request.host)
@@ -40,8 +41,12 @@ controllerComponents: ControllerComponents,
     implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
 
     val wikiPermission = WikiPermission()
+    // One more than shown, to learn whether the limit cut the list short.
+    val found = q.toOption.map(q => models.tables.Page.pageSearch(q, SearchResult.MaxPages + 1)).getOrElse(Seq.empty)
+    val moreThanShown = found.size > SearchResult.MaxPages
     val seq: Seq[SearchResultSummary] = q.toOption.map(q =>
-      models.tables.Page.pageSearch(q)
+      found
+        .take(SearchResult.MaxPages)
         .filter(sr => {
           val pageContent = PageContent(sr.content)
           wikiPermission.isReadable(sr.name, pageContent)
@@ -52,6 +57,6 @@ controllerComponents: ControllerComponents,
         .map(_.summarise(q))
     ).getOrElse(Seq.empty)
 
-    Ok(views.html.Search.search(q, seq)).withHeaders("X-Robots-Tag" -> "noindex, follow")
+    Ok(views.html.Search.search(q, seq, moreThanShown)).withHeaders("X-Robots-Tag" -> "noindex, follow")
   }}
 }

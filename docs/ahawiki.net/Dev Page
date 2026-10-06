@@ -63,6 +63,18 @@
 
 페이지 생성, 수정, 삭제, rename 시 관련 `PageMeta` row 를 갱신하거나 지우고 `SeqPageLatestSummary` 를 무효화한다. `SeqPageName` 은 그때 무효화하지 않는다 — 관리자의 캐시 삭제(`invalidateSiteCaches`)가 아니면 TTL(개발 1분, 운영 5분)로 만료된다.
 
+이 둘은 Redis 에 있지만 읽을 때마다 받아 해독하지는 않는다 — 버전 키로 해독한 값을 다시 쓴다. [Dev Cache] 의 «해독한 값을 프로세스에 둔다».
+
+=== 본문을 많이 읽는 두 경로 — blame 과 검색
+
+둘 다 익명이 열 수 있고 결과를 캐시하지 않아서, 한 번에 읽는 양에 상한을 두었다(2026-10-07). 그 전에는 둘이 JVM 의 순간 메모리를 가장 크게 밀어 올릴 수 있는 곳이었다 — 운영 저장소의 `server/README.md` 에 위키 JVM 의 anon 메모리가 요청량이 평소인데도 1분에 401MB 오른 기록이 있다.
+
+ * '''blame''' 은 `Page.selectHistoryStream` 으로 리비전을 오래된 순서로 접는다. 이름과 달리 예전에는 한 쿼리로 모든 리비전의 본문을 한꺼번에 읽었고, 드라이버가 결과셋을 통째로 버퍼에 담으므로 긴 역사를 가진 페이지에서는 모든 리비전 본문이 바이트와 문자열로 두 번 메모리에 올랐다. 지금은 기본 키 범위로 20개씩(`HistoryChunkSize`) 읽는다. 경계에서 리비전이 빠지거나 두 번 읽히지 않는지는 `PageHistoryStreamSpec` 이 본다.
+ * '''검색''' `/search` 는 `Page.pageSearch` 가 `SearchResult.MaxPages`(100) 페이지까지만 읽는다 — 이름이 검색어와 똑같은 페이지가 먼저, 나머지는 최근에 바뀐 순서다. 한 개 더 읽어 넘쳤는지 알고, 넘쳤으면 화면이 그렇다고 말한다. 읽기 권한은 그 뒤에 거르므로, 읽을 수 있는 페이지가 더 있어도 100개보다 적게 보일 수 있다. 한 페이지에서 보여 주는 일치 줄은 `SearchResult.MaxHitLinesPerPage`(20)까지이고 나머지는 개수만 적는다. 정규식은 페이지마다 한 번 컴파일한다 — 예전에는 줄마다 컴파일했다.
+  * 바꾸기 전 실측(2026-10-07, 가장 큰 사이트, 루프백): `/search?q=a` 가 HTML 14.6MB 를 1.6초에 냈다.
+  * `robots.txt` 가 `/search` 를 막는다. 검색 결과는 이미 `X-Robots-Tag: noindex` 였으니 크롤러가 긁어 갈 이유가 없었다.
+  * `IpRateLimiter` 가 `/search` 를 페이지 조회로 세게 하는 것은 '''하지 않았다'''. 검색 화면은 `/w/` 화면보다 곁들이는 요청이 적어서, 사람이 몇 번 이어 검색하는 것만으로 «페이지만 긁기» 에 걸릴 수 있다. 상한이 비용을 묶으므로 그 위험을 질 이유가 없다.
+
 == 없는 페이지 화면
 
 리비전이 없는 이름을 열면 `Wiki.view` 가 `renderNotFoundPage` 로 간다. `DefaultPageLogic.getOption(name)` 이 날짜·`schema:` 처럼 내용을 지어내는 이름이면 그 템플릿을, 아니면 `WikiSnippet.notFound(name)` 을 렌더한다.

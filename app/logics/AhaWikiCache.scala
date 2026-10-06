@@ -22,30 +22,54 @@ import scala.concurrent.duration._
 import scala.reflect.ClassTag
 import java.util.concurrent.ConcurrentHashMap
 
+/**
+ * Values shared by the instances through Redis, each kept decoded in this process as well.
+ *
+ * Next to each value Redis holds a short version key, rewritten whenever the value is. A read asks
+ * Redis for the version only, and when it matches the one this process decoded, returns that
+ * decoded value without fetching or decoding the value itself. Before this, every read fetched
+ * and decoded the whole JSON: the page list of the largest site is over a megabyte, and a page
+ * view on any other site read it to look for a twin page.
+ *
+ * Asking Redis keeps it exactly as fresh as reading the value was: an invalidation on either
+ * instance removes the version, and the next read anywhere fetches again. Decoded values are
+ * shared between callers, so every cached type must be immutable.
+ */
 @Singleton
 class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environment) extends Logging {
   private val cacheKeyLocks = new ConcurrentHashMap[String, AnyRef]()
-  private val staleEntries = new ConcurrentHashMap[String, CachedJson]()
+  private val decodedEntries = new ConcurrentHashMap[String, Decoded]()
 
-  private case class CachedJson(value: String, cachedAtEpochMs: Long)
+  /**
+   * A value as this process last decoded it. `version` is the version key read before the value
+   * was, and None when there was none -- a value written before version keys existed, or one
+   * whose version was removed in between -- so it never matches and the next read fetches again.
+   * It is still the fallback when Redis fails, for as long as `isStaleBackupExpired` allows,
+   * counted from `confirmedAtEpochMs`: the last time Redis said it was current.
+   */
+  private class Decoded(val version: Option[String], val value: Any) {
+    @volatile var confirmedAtEpochMs: Long = System.currentTimeMillis()
+  }
 
-  private val staleMaxMs: Long = 12 * 3600 * 1000L  // 12시간 이상 된 stale 엔트리 제거
-  private val staleMaxEntries: Int = 1000
+  private val VersionKeySuffix = ":version"
 
-  private def cleanupStaleEntries(): Unit = {
-    val cutoff = System.currentTimeMillis() - staleMaxMs
-    val iter   = staleEntries.entrySet().iterator()
+  private val decodedMaxMs: Long = 12 * 3600 * 1000L  // drop entries not confirmed for 12 hours
+  private val decodedMaxEntries: Int = 1000
+
+  private def cleanupDecodedEntries(): Unit = {
+    val cutoff = System.currentTimeMillis() - decodedMaxMs
+    val iter   = decodedEntries.entrySet().iterator()
     while (iter.hasNext) {
-      if (iter.next().getValue.cachedAtEpochMs < cutoff) iter.remove()
+      if (iter.next().getValue.confirmedAtEpochMs < cutoff) iter.remove()
     }
   }
 
-  private def rememberStaleEntry(cacheKey: String, json: String): Unit = {
-    staleEntries.put(cacheKey, CachedJson(json, System.currentTimeMillis()))
-    if (staleEntries.size() > staleMaxEntries) {
-      cleanupStaleEntries()
-      val iter = staleEntries.entrySet().iterator()
-      while (staleEntries.size() > staleMaxEntries && iter.hasNext) {
+  private def rememberDecoded(cacheKey: String, decoded: Decoded): Unit = {
+    decodedEntries.put(cacheKey, decoded)
+    if (decodedEntries.size() > decodedMaxEntries) {
+      cleanupDecodedEntries()
+      val iter = decodedEntries.entrySet().iterator()
+      while (decodedEntries.size() > decodedMaxEntries && iter.hasNext) {
         iter.next()
         iter.remove()
       }
@@ -68,43 +92,68 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     def keyDefault()(implicit @unused i: I): String = s"${getClass.getName}"
 
     def invalidate()(implicit i: I): Unit = {
-      StopWatch(Seq("Cache", "Invalidate", key()).mkString("\t")) {
-        syncCacheApi.remove(key())
+      val cacheKey = key()
+      StopWatch(Seq("Cache", "Invalidate", cacheKey).mkString("\t")) {
+        syncCacheApi.remove(cacheKey + VersionKeySuffix)
+        syncCacheApi.remove(cacheKey)
+        decodedEntries.remove(cacheKey)
       }
     }
 
     def get()(implicit i: I, @unused classTag: ClassTag[T], encoder: JsonEncoder[T], decoder: JsonDecoder[T]): T = {
       val cacheKey = key()
 
-      if (scala.util.Random.nextInt(500) == 0) cleanupStaleEntries()
+      if (scala.util.Random.nextInt(500) == 0) cleanupDecodedEntries()
 
-      val json: String = try {
-        syncCacheApi.get[String](cacheKey) match {
-          case Some(cachedJson) =>
-            rememberStaleEntry(cacheKey, cachedJson)
-            cachedJson
-          case None =>
-            withSingleFlight(cacheKey) {
-              syncCacheApi.get[String](cacheKey).getOrElse {
-                val freshJson = wrapOrElse().toJson
-                syncCacheApi.set(cacheKey, freshJson, durationExpire)
-                rememberStaleEntry(cacheKey, freshJson)
-                freshJson
-              }
-            }
-        }
+      try {
+        currentDecoded(cacheKey, syncCacheApi.get[String](cacheKey + VersionKeySuffix))
+          .getOrElse(withSingleFlight(cacheKey)(fetch(cacheKey)))
+          .value.asInstanceOf[T]
       } catch {
         case e: Exception =>
-          Option(staleEntries.get(cacheKey)).filterNot(isStaleBackupExpired).map(_.value) match {
-            case Some(staleJson) =>
+          Option(decodedEntries.get(cacheKey)).filterNot(isStaleBackupExpired) match {
+            case Some(stale) =>
               logger.warn(s"Cache\tError\t${cacheKey}\tServing stale cache", e)
-              staleJson
+              stale.value.asInstanceOf[T]
             case None =>
               throw e
           }
       }
+    }
 
+    private def currentDecoded(cacheKey: String, version: Option[String]): Option[Decoded] =
+      Option(decodedEntries.get(cacheKey))
+        .filter(d => d.version.isDefined && d.version == version)
+        .map { d => d.confirmedAtEpochMs = System.currentTimeMillis(); d }
 
+    /**
+     * The version is read before the value, never after. Read after, a write landing between the
+     * two reads would pair the new version with the old value, and this process would keep
+     * serving the old value for as long as the new version lasted. Read before, the worst case
+     * pairs the old version with the new value, which the next read corrects.
+     */
+    private def fetch(cacheKey: String)(implicit i: I, encoder: JsonEncoder[T], decoder: JsonDecoder[T]): Decoded = {
+      val version = syncCacheApi.get[String](cacheKey + VersionKeySuffix)
+      currentDecoded(cacheKey, version).getOrElse {
+        val decoded = syncCacheApi.get[String](cacheKey) match {
+          case Some(json) =>
+            new Decoded(version, decode(json))
+          case None =>
+            val json = wrapOrElse().toJson
+            val newVersion = java.util.UUID.randomUUID().toString
+            // Once, because some entities draw a random duration per call. The value is written
+            // first so that whoever sees the new version can also see the value.
+            val expire = durationExpire
+            syncCacheApi.set(cacheKey, json, expire)
+            syncCacheApi.set(cacheKey + VersionKeySuffix, newVersion, expire)
+            new Decoded(Some(newVersion), decode(json))
+        }
+        rememberDecoded(cacheKey, decoded)
+        decoded
+      }
+    }
+
+    private def decode(json: String)(implicit i: I, decoder: JsonDecoder[T]): T =
       json.fromJson[T] match {
         case Left(e) =>
           logger.error(s"Cache\tParse\t${key()}\terror=$e")
@@ -112,7 +161,6 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
         case Right(t) =>
           t
       }
-    }
 
     private def wrapOrElse()(implicit i: I): T = {
       StopWatch(Seq("Cache", "Miss", key()).mkString("\t")) {
@@ -120,9 +168,9 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
       }
     }
 
-    private def isStaleBackupExpired(entry: CachedJson): Boolean = {
+    private def isStaleBackupExpired(entry: Decoded): Boolean = {
       val maxStaleMs = math.max(durationExpire.toMillis * 6, 60000L)
-      System.currentTimeMillis() - entry.cachedAtEpochMs > maxStaleMs
+      System.currentTimeMillis() - entry.confirmedAtEpochMs > maxStaleMs
     }
 
     def orElse()(implicit i: I): T

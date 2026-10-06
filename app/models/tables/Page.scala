@@ -24,23 +24,41 @@ case class SearchResult(name: String, dateTime: LocalDateTime, content: String) 
 
   def summarise(q: String): SearchResultSummary = {
     val lines = content.split("""(\r\n|\n)+""").toSeq
+    // Compiled once per page. It was once compiled per line, which on a common query meant one
+    // compile for nearly every line of every page on the site.
+    val pattern = s"(?i)${Regex.quote(q)}".r
+    val hitLines = lines.indices.filter(i => pattern.findFirstIn(lines(i)).isDefined)
     tables.SearchResultSummary(
       name,
-      lines
-        .zipWithIndex
-        .filter(s => s"(?i)${Regex.quote(q)}".r.findFirstIn(s._1).isDefined)
-        .map(_._2)
+      hitLines
+        .take(SearchResult.MaxHitLinesPerPage)
         .flatMap(RangeUtil.around(_, 3))
         .distinct
         .filter(lines.isDefinedAt)
         .splitBy((a, b) => a + 1 != b)
         .map(_.map(i => (i + 1, lines(i)))).toSeq,
-      dateTime
+      dateTime,
+      math.max(0, hitLines.size - SearchResult.MaxHitLinesPerPage)
     )
   }
 }
 
-case class SearchResultSummary(name: String, summary:Seq[Seq[(Int, String)]], dateTime: LocalDateTime)
+object SearchResult {
+  /**
+   * How many pages one search reads. A short query matches nearly every page, and each match
+   * brings its whole latest content into the JVM: before this limit `/search?q=a` on the largest
+   * site answered 14.6MB of HTML. The wiki page Dev Page has the measurements.
+   */
+  val MaxPages: Int = 100
+
+  /**
+   * How many matching lines of one page are shown, each with its context. Past this the page is
+   * worth opening rather than reading here.
+   */
+  val MaxHitLinesPerPage: Int = 20
+}
+
+case class SearchResultSummary(name: String, summary:Seq[Seq[(Int, String)]], dateTime: LocalDateTime, hitLinesNotShown: Int = 0)
 
 
 object Page {
@@ -139,18 +157,38 @@ SELECT P.name, revision, dateTime, U.nickname nickname, P.`user` AS `user`, remo
       .map(PageWithoutContent.tupled)
   }
 
+  /**
+   * Folds every revision of a page, oldest first, holding at most `HistoryChunkSize` of them in
+   * memory at a time.
+   *
+   * It used to read them all in one query, and the driver buffers a whole result set: blame on a
+   * page with a long history held the full content of every revision at once, twice -- as the
+   * driver's bytes and as Strings. Each chunk is a range read on the primary key.
+   */
   def selectHistoryStream[T](name: String, t:T, f:(T, Page) => T)(implicit connection: Connection, site: Site): T = {
-    //language=sql
-    SQL"""
+    @scala.annotation.tailrec
+    def loop(acc: T, after: Long): T = {
+      //language=sql
+      val chunk = SQL"""
 SELECT name, revision, dateTime, U.nickname nickname, P.`user` AS `user`, remoteAddress, comment, isMinorEdit, content, viaApi, P.userApiKey
     FROM Page P
     LEFT JOIN User U ON U.seq = P.user
-    WHERE site = ${site.seq} AND name = $name
+    WHERE site = ${site.seq} AND name = $name AND revision > $after
     ORDER BY revision ASC
+    LIMIT $HistoryChunkSize
     """
-      .as(rowParserPage *).map(flatten)
-      .foldLeft(t)((a, v) => f(a, Page.tupled(v)))
+        .as(rowParserPage *).map(flatten).map(Page.tupled)
+      chunk.lastOption match {
+        case None => acc
+        case Some(last) =>
+          val folded = chunk.foldLeft(acc)(f)
+          if (chunk.size < HistoryChunkSize) folded else loop(folded, last.revision)
+      }
+    }
+    loop(t, 0L)
   }
+
+  private val HistoryChunkSize: Int = 20
 
   def insert(p: Page)(implicit connection: Connection, site: Site): Option[Long] = {
     //language=sql
@@ -211,7 +249,13 @@ SELECT
       .as(str("ymd") ~ long("cnt") *).map(flatten)
   }
 
-  def pageSearch(q:String)(implicit connection: Connection, site: Site): immutable.Seq[SearchResult] = {
+  /**
+   * At most `limit` pages: the page named exactly `q` first, then the most recently changed. Ask
+   * for one more than you will show to learn whether there were more. Read permission is checked
+   * by the caller afterwards, so a reader may see fewer than `limit` while more readable pages
+   * exist further down.
+   */
+  def pageSearch(q:String, limit: Int)(implicit connection: Connection, site: Site): immutable.Seq[SearchResult] = {
     //language=sql
     SQL"""
 SELECT P.name, P.dateTime, P.content
@@ -227,7 +271,8 @@ SELECT P.name, P.dateTime, P.content
              P.name LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci OR
              P.content LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci
          )
-     ORDER BY P.name"""
+     ORDER BY CASE WHEN P.name = $q THEN 0 ELSE 1 END, P.dateTime DESC
+     LIMIT $limit"""
       .as(rowParserSearchResult *).map(flatten).map(SearchResult.tupled)
   }
 }
