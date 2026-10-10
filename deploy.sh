@@ -2,10 +2,13 @@
 # Builds locally and puts the result on the server as a new release.
 #
 # The server keeps releases side by side and points `current` at one of them, so a deploy is a
-# symlink move and a rollback is the same move backwards. Two instances sit behind a reverse
-# proxy and are restarted one at a time.
+# symlink move and a rollback is the same move backwards. One instance serves behind a reverse
+# proxy. A deploy starts a second one, the standby, on the new release, restarts the first while
+# the standby answers, and stops the standby again.
 #
-#   AHAWIKI_DEPLOY_HOST=<ssh host>  AHAWIKI_HEALTH_HOST=<a site's domain>  bash deploy.sh
+#   AHAWIKI_DEPLOY_HOST=<ssh host>  AHAWIKI_HEALTH_HOST=<a site's domain>  AHAWIKI_PROXY_RELOAD=<command>  bash deploy.sh
+#   AHAWIKI_CANARY=1 ... bash deploy.sh        # stop once the standby runs the new release, to compare it
+#   AHAWIKI_RESTART_ONLY=1 ... bash deploy.sh  # no build: hand over on whatever `current` points at
 #   SKIP_TAG=1 ... bash deploy.sh     # skip the deploy tag
 #
 # Everything about where it deploys comes from the environment. This repository is public and
@@ -24,24 +27,51 @@ KEEP_RELEASES="${AHAWIKI_KEEP_RELEASES:-3}"
 # 30) timed out on a start that was fine, and the deploy stopped with one instance still on the
 # old release. 60 -> 180s. Raise it with AHAWIKI_HEALTH_TRIES on a slower box.
 HEALTH_TRIES="${AHAWIKI_HEALTH_TRIES:-60}"
-read -r -a PORTS <<< "${AHAWIKI_PORTS:-10001 10000}"
+PRIMARY="${AHAWIKI_PRIMARY_PORT:-10000}"
+STANDBY="${AHAWIKI_STANDBY_PORT:-10001}"
+# Run on the host to make the reverse proxy forget which upstreams it has seen fail; step 5 says
+# why. It names the proxy, which is the operations side's business, so it comes from there.
+PROXY_RELOAD="${AHAWIKI_PROXY_RELOAD:-}"
+CANARY="${AHAWIKI_CANARY:-0}"
+RESTART_ONLY="${AHAWIKI_RESTART_ONLY:-0}"
 # Falls back to the host the health check already uses, so forgetting the variable costs
 # coverage rather than the check itself. Left empty this loop runs zero times, reports nothing,
 # and the deploy goes on to prune and tag as if it had passed.
 read -r -a VERIFY_URLS <<< "${AHAWIKI_VERIFY_URLS:-https://${AHAWIKI_HEALTH_HOST:-}/}"
 
-for required in AHAWIKI_DEPLOY_HOST AHAWIKI_HEALTH_HOST; do
+for required in AHAWIKI_DEPLOY_HOST AHAWIKI_HEALTH_HOST AHAWIKI_PROXY_RELOAD; do
   if [ -z "${!required}" ]; then
     echo "$required is not set. See docs/ahawiki.net/'Dev Deploying'." >&2
     exit 2
   fi
 done
+if [ "$CANARY" = "1" ] && [ "$RESTART_ONLY" = "1" ]; then
+  echo "AHAWIKI_CANARY and AHAWIKI_RESTART_ONLY are two halves of one deploy; run them one after the other." >&2
+  exit 2
+fi
+# A deploy that stopped half way can leave $STANDBY serving with $PRIMARY down (step 5 says when).
+# Restarting $STANDBY first, as step 5 otherwise does, would then leave nothing answering, so in
+# that state the hand-over starts from $STANDBY as it is. A canary would need that restart, so it
+# refuses before building anything.
+STANDBY_SERVING=0
+ssh "$HOST" "systemctl is-active --quiet ahawiki@$STANDBY && ! systemctl is-active --quiet ahawiki@$PRIMARY" && STANDBY_SERVING=1
+if [ "$STANDBY_SERVING" = "1" ] && [ "$CANARY" = "1" ]; then
+  echo "$STANDBY is serving with $PRIMARY down. Hand back first with AHAWIKI_RESTART_ONLY=1, then run the canary." >&2
+  exit 2
+fi
 
 SRC="$(cd "$(dirname "$0")" && pwd)"
 REL="$(date +%Y%m%d-%H%M%S)"
 
 say() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
 
+if [ "$RESTART_ONLY" = "1" ]; then
+  say "1-4/7 Skipped: restarting on the release current points at"
+  REL="$(ssh "$HOST" "basename \"\$(readlink -f '$ROOT/current')\"")"
+  echo "  release $REL"
+  # Nothing to go back to: this run did not move current.
+  PREV=""
+else
 say "1/7 Build"
 cd "$SRC"
 git status --porcelain | grep -q . && echo "  warning: the working tree is not clean" || true
@@ -64,7 +94,7 @@ echo "  stage ($(du -sh "$STAGE" | cut -f1))"
 tar -C "$STAGE" -cf - . | ssh "$HOST" "sudo -n tar -C '$ROOT/releases/$REL' -xf -"
 
 say "4/7 Point current at it"
-# Kept so that an instance which comes back unable to render can be put back on it in step 5.
+# Kept so that a standby which comes up unable to render can leave current as it found it.
 PREV="$(ssh "$HOST" "readlink -f '$ROOT/current' || true")"
 ssh "$HOST" "
   set -e
@@ -76,10 +106,15 @@ ssh "$HOST" "
   sudo -n -u $SERVICE_USER ln -sfn \"\$R\" '$ROOT/current'
   ls -l '$ROOT/current'
 "
+fi
 
-say "5/7 Restart, one instance at a time"
-# Restarting both at once empties the proxy's pool of healthy upstreams for a moment and readers
-# get a 502. Each one has to answer before the next goes down.
+say "5/7 Hand over: $STANDBY answers while $PRIMARY restarts"
+# One instance, $PRIMARY, serves. The proxy lists $STANDBY as a backup, sent requests only while
+# $PRIMARY does not answer, and outside a deploy $STANDBY is stopped. Restarting $PRIMARY alone
+# would leave nothing to answer for the length of a JVM start, so the standby comes up first, on
+# the new release, and is checked before $PRIMARY goes down. A release or a config file that
+# cannot start or render stops the deploy there, with $PRIMARY untouched and still running what
+# it loaded at its own start.
 wait_healthy() {
   local p=$1 i code
   for i in $(seq 1 "$HEALTH_TRIES"); do
@@ -116,54 +151,107 @@ render_failures() {
   done
 }
 
-for p in "${PORTS[@]}"; do
-  echo "  restarting $p"
+# Starts or restarts one instance and checks it: 0 when it answers and renders, 1 when it answers
+# but does not render (the failures are printed), 2 when it never answers.
+start_checked() {
+  local p=$1 failures
   ssh "$HOST" "sudo -n systemctl restart ahawiki@$p"
-  wait_healthy "$p" || { echo "    $p never became healthy — stopping here, the other instance is still up" >&2; exit 1; }
-
+  wait_healthy "$p" || { echo "    $p never became healthy" >&2; return 2; }
   failures="$(render_failures "$p")"
   if [ -n "$failures" ]; then
     echo "    $p answers /hc but does not render:" >&2
     printf '%s\n' "$failures" | sed 's/^/      /' >&2
-    # The proxy is sending readers to it already, so it does not stay on this release while
-    # someone reads the message.
-    if [ -n "$PREV" ] && [ "$PREV" != "$ROOT/releases/$REL" ]; then
-      echo "    putting current back to $PREV and restarting $p on it" >&2
-      ssh "$HOST" "sudo -n -u $SERVICE_USER ln -sfn '$PREV' '$ROOT/current' && sudo -n systemctl restart ahawiki@$p"
-      wait_healthy "$p" || echo "    !! $p did not come back on $PREV either" >&2
-    fi
-    echo "    stopping: nothing tagged. Instances restarted before $p are still on $REL." >&2
-    exit 1
+    return 1
   fi
   echo "    renders ${#VERIFY_URLS[@]} verify URL(s)"
+}
 
-  # An instance answering is not the same as the proxy knowing it. A proxy that drops a failing
-  # upstream holds it out for a fixed interval, so restarting the next one while this is still
-  # serving its penalty leaves none in rotation and readers get a 502 — which happened, for about
-  # a second, on a deploy that was otherwise fine.
-  #
-  # Waiting a number tuned to that interval would put the interval in two places. Wait for the
-  # condition instead: keep going once a request through the proxy comes back.
-  if [ -n "${VERIFY_URLS[0]:-}" ]; then
-    back=0
-    for i in $(seq 1 20); do
-      [ "$(curl -sL -o /dev/null -w '%{http_code}' --max-time 15 "${VERIFY_URLS[0]}" || echo 000)" = "200" ] && { back=1; break; }
-      sleep 3
-    done
-    [ "$back" = "1" ] || { echo "    the proxy is still not serving after $p came back — stopping before touching the rest" >&2; exit 1; }
+# A proxy that drops a failing upstream keeps it out for a fixed interval, even after it answers
+# again. On 2026-08-12 one instance was restarted while the other was still serving that penalty,
+# and readers got a 502 for about a second. Waiting for the proxy to come round needs a request
+# only the restarted instance can answer, and every request through the proxy can be answered by
+# the other one; sleeping a number tuned to the interval would put the interval in two places.
+# A reload starts the proxy with no memory of failures, which makes the condition true instead of
+# waiting for it. It is a configuration reload: requests in flight finish on the old workers.
+proxy_forget() {
+  local out
+  out="$(ssh "$HOST" "$PROXY_RELOAD" 2>&1)" || {
+    printf '%s\n' "$out" | sed 's/^/      /' >&2
+    echo "    the proxy reload failed — stopping here with every instance that is up left up" >&2
+    exit 1
+  }
+}
+
+# True when there is a release to go back to: this run moved current away from one.
+can_put_back() { [ -n "$PREV" ] && [ "$PREV" != "$ROOT/releases/$REL" ]; }
+put_back() {
+  echo "    putting current back to $PREV" >&2
+  ssh "$HOST" "sudo -n -u $SERVICE_USER ln -sfn '$PREV' '$ROOT/current'"
+}
+
+if [ "$STANDBY_SERVING" = "1" ]; then
+  echo "  $STANDBY is serving and $PRIMARY is down: handing back from $STANDBY as it is"
+else
+  echo "  starting $STANDBY on $REL"
+  rc=0; start_checked "$STANDBY" || rc=$?
+  if [ "$rc" != 0 ]; then
+    # Nothing has reached readers: $PRIMARY was not touched.
+    can_put_back && put_back
+    ssh "$HOST" "sudo -n systemctl stop ahawiki@$STANDBY"
+    echo "    stopping: $PRIMARY was not touched and still serves; $STANDBY is stopped again. Nothing tagged." >&2
+    exit 1
   fi
-done
+fi
 
+if [ "$CANARY" = "1" ]; then
+  echo "  canary: $STANDBY runs $REL; $PRIMARY still runs the release before it and takes the readers."
+  echo "    compare: AHAWIKI_DEPLOY_HOST=<ssh host> bash scripts/compare-instances.sh $PRIMARY $STANDBY"
+  echo "    finish:  the same environment with AHAWIKI_RESTART_ONLY=1"
+  echo "    abandon: point current back at ${PREV:-the previous release}, then stop ahawiki@$STANDBY"
+else
+  # $STANDBY is about to be the only instance answering. If the proxy wrote it off at some earlier
+  # failure, it would still be holding it out.
+  proxy_forget
+  echo "  restarting $PRIMARY"
+  rc=0; start_checked "$PRIMARY" || rc=$?
+  if [ "$rc" != 0 ]; then
+    # Leaving it like this is not "$STANDBY serves in its place": the proxy goes back to $PRIMARY
+    # the moment it answers anything, pages that fail to render included. So either $PRIMARY goes
+    # back to the release before, where it was working, or it is stopped and $STANDBY -- which
+    # passed the same checks -- takes the readers.
+    if can_put_back; then
+      put_back
+      echo "  restarting $PRIMARY on $PREV" >&2
+      rc=0; start_checked "$PRIMARY" || rc=$?
+      if [ "$rc" = 0 ]; then
+        proxy_forget
+        ssh "$HOST" "sudo -n systemctl stop ahawiki@$STANDBY"
+        echo "    stopping: $PRIMARY is back on the release before and $STANDBY is stopped — as before this deploy. Nothing tagged." >&2
+        exit 1
+      fi
+    fi
+    ssh "$HOST" "sudo -n systemctl stop ahawiki@$PRIMARY"
+    echo "    !! stopping: $PRIMARY is stopped and $STANDBY serves alone. Find out why $PRIMARY failed, then hand back with AHAWIKI_RESTART_ONLY=1." >&2
+    exit 1
+  fi
+  # The proxy wrote $PRIMARY off while it restarted. Stopping $STANDBY before it forgets that would
+  # leave it no upstream at all.
+  proxy_forget
+  echo "  stopping $STANDBY"
+  ssh "$HOST" "sudo -n systemctl stop ahawiki@$STANDBY"
+fi
+
+if [ "$CANARY" = "1" ]; then
+  say "6/7 Verify from outside: skipped — the proxy still sends readers to the release before"
+else
 say "6/7 Verify from outside"
 verify_failed=0
 for u in "${VERIFY_URLS[@]}"; do
   [ -n "$u" ] || continue
   code=000
-  # Retried, because the instances answering does not mean the proxy has noticed yet. A proxy
-  # that drops a failing upstream for a fixed interval keeps dropping it for the rest of that
-  # interval after it recovers, so a check run the moment the last restart passes its health
-  # check reads 502 from a deploy that worked. Give it longer than that interval before
-  # believing it.
+  # Retried. It began as waiting out the proxy's penalty on an instance that had just come back,
+  # which once cost a good release its tag; step 5 now reloads the proxy instead, and the retries
+  # stay because they cost nothing when the first try passes.
   #
   # Follow the redirects. A front page that answers 303 says nothing about what it redirects to,
   # and a deploy once passed this check while every page behind it was a 500.
@@ -178,6 +266,13 @@ done
 if [ "$verify_failed" = "1" ]; then
   echo "  verification failed — not tagging. Roll back by pointing current at the previous release." >&2
   exit 1
+fi
+fi
+
+if [ "$RESTART_ONLY" = "1" ]; then
+  echo
+  echo "done: $PRIMARY restarted on release $REL, $STANDBY stopped. Nothing new was released, so nothing is tagged."
+  exit 0
 fi
 
 echo "  pruning old releases:"
@@ -196,6 +291,7 @@ ssh "$HOST" "
 
 say "7/7 Tag"
 # After verification, so the tag means "this reached the server and answered", not "this built".
+# A canary is tagged too: its standby reached the server and answered.
 if [ "${SKIP_TAG:-0}" = "1" ]; then
   echo "  SKIP_TAG=1 — not tagging"
 else

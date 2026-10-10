@@ -56,7 +56,9 @@ fills those in and there is nothing to fetch.
 
 `compare-instances.sh` renders every page of a site on two instances and reports what
 differs: the check between the canary of a deploy and the instance still on the old code.
-Where it sits in a deploy is on the wiki page `Dev Deploying`; what it sets aside before
+Production runs one instance, so the second is up only while a canary deploy
+(`AHAWIKI_CANARY=1`) has left it there. Where it sits in a deploy is on the wiki page
+`Dev Deploying`; what it sets aside before
 comparing, why, and how to read the report are in the script's header.
 
 ```bash

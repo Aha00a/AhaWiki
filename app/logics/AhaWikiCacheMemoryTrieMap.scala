@@ -8,12 +8,13 @@ object AhaWikiCacheMemoryTrieMap {
   /**
    * How long an instance may go on applying access rows it loaded before.
    *
-   * Production runs two instances behind one proxy and both answer requests (measured
-   * 2026-09-10: Dev Deploying). These caches live in one JVM each, and a change invalidates them
-   * only on the instance that handled it. Until this bound existed the other instance kept its
-   * copy until a six-hourly clear, so a page just made private stayed readable through half the
-   * traffic, and a removed site admin kept the admin screens there. Reloading costs one small
-   * indexed query per site, so the bound can be short.
+   * Production ran two instances behind one proxy, both answering requests, until 2026-10-11; it
+   * now runs one, with a second up only during a deploy (Dev Deploying). These caches live in one
+   * JVM each, and a change invalidates them only on the instance that handled it. Until this bound
+   * existed the other instance kept its copy until a six-hourly clear, so a page just made private
+   * stayed readable through half the traffic, and a removed site admin kept the admin screens
+   * there. The bound stays for the hand-over in a deploy and for going back to two. Reloading
+   * costs one small indexed query per site, so it can be short.
    */
   val AccessDecisionMaxAge: FiniteDuration = 10.seconds
 }

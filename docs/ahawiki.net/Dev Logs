@@ -5,7 +5,7 @@
 
 == 어디에 있나
 
-`shared/logs/` 아래, '''인스턴스마다 한 파일''' — `application-10001.log` 와 `application-10000.log`. 릴리스마다 링크로 들어가므로 배포해도 이어진다([Dev Deploying]). 두 인스턴스의 시간순을 한 줄로 보려면 둘을 `sort -m` 하면 된다.
+`shared/logs/` 아래, '''인스턴스마다 한 파일''' — `application-10001.log` 와 `application-10000.log`. 2026-10-11 부터 평소에는 `10000` 의 것만 자란다 — `10001` 은 배포 동안만 뜬다. 릴리스마다 링크로 들어가므로 배포해도 이어진다([Dev Deploying]). 두 인스턴스의 시간순을 한 줄로 보려면 둘을 `sort -m` 하면 된다.
 
 날마다 `application-<port>.<날짜>.log.gz` 로 말아 30일, 합쳐서 1GB 까지만 둔다. 설정은 `conf/logback.xml` 이고 서버에는 아무것도 없다 — Play 가 릴리스의 `conf/` 를 읽는다.
 
