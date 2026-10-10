@@ -278,6 +278,7 @@ https://www.wikimatrix.org/ 발견. 여기 기준에 좀 맞춰볼까.. --[2020-
    * 힙 커밋 430·387MB(사용 308·208MB, swap 119·95MB) — 배포 전 314MB 보다 크다. Metaspace 135·124MB 는 그대로.
    * 판정: `MALLOC_ARENA_MAX=2` 는 아레나 수를 묶었지만 malloc 이 쥔 양은 줄이지 못했고, 힙 커밋은 오히려 늘었다. 인스턴스당 약 1.1GB 그대로.
  * [ ] malloc 이 쥔 채 swap 으로 간 400~500MB — 이 JDK(17.0.20)에 `-XX:TrimNativeHeapInterval` 과 `jcmd <pid> System.trim_native_heap` 이 있다. 한 대에서 먼저 시험해 볼지 소유자 판단. 무엇이 malloc 하는지는 `-XX:NativeMemoryTracking=summary` 로 재시작해야 보인다. --[2026-10-10]
+  * NMT 로 보이는 것은 일부다(2026-10-11, 10000 의 jcmd 로 확인한 것과 JDK 문서). 시작할 때만 켤 수 있어 재시작이 들고(지금 `VM.native_memory` 는 «not enabled»), JVM 자신이 잡은 메모리(컴파일러·GC·스레드·심볼 등, DirectByteBuffer 는 «Other»)만 센다. zlib 처럼 JDK 의 네이티브 라이브러리가 직접 부른 malloc 은 세지 않는다. 또 지금 잡혀 있는 양만 세므로, trim 이 돌려준 «free 된 채 malloc 이 쥔» 빈자리는 NMT 에 나타나지 않는다 — 시점을 두고 `summary.diff` 로 어느 분류가 크게 오르내리는지 보는 데까지다. glibc 쪽 사정(아레나별 빈자리)을 보여 주는 `System.native_heap_info` 는 이 빌드(17.0.20.1)의 jcmd 에 없다. --[2026-10-11]
   * 소유자 승인으로 10001 한 대에 `jcmd <pid> System.trim_native_heap` 을 한 번 했다(2026-10-10 18:21, 재시작 없음 · 10000 은 비교용으로 그대로). RSS+swap 1,059 → 718MB, 그 덩어리가 약 320 → 55MB 로 줄었다 — free 된 채 malloc 이 쥐고 있던 메모리였다. 걸린 시간 약 1초. 영역별 분해·재는 법·숫자의 정본은 운영 저장소 `ahawiki/README.md` «AhaWiki 의 swap — 무엇이 쥐고 있나». --[2026-10-10]
   * 10000 에도 같은 것을 했다(2026-10-10 20:15, 소유자 지시). RSS+swap 1,232 → 795MB, 그 덩어리 502 → 74MB, 0.3초. 이제 비교용으로 남긴 인스턴스는 없다. --[2026-10-10]
   * [[CB(x)]] 며칠 가동한 뒤 두 대(10001 은 18:21, 10000 은 20:15 부터)의 그 덩어리가 다시 자라는 속도를 같은 방법으로 잰다. 자라면 `-XX:TrimNativeHeapInterval` 을 운영 유닛 드롭인으로 넣는다(재시작이 들어 소유자 판단). --[2026-10-10]
