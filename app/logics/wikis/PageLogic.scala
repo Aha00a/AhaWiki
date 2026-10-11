@@ -147,6 +147,28 @@ object PageLogic {
     listFiltered
   }
 
+  /**
+   * How long a calculation stands before a view may redo it.
+   *
+   * Almost everything `calculate` derives -- description, image, term frequencies, links, schema.org
+   * -- comes from the page's own text, which only an edit changes, and every edit queues its own
+   * calculation. What goes stale without one is the page's similar pages: `CalculatedCosineSimilarity`
+   * rows are written from the calculated page's side only, so another page's edit reaches this page's
+   * list when this page is calculated again. A view is what does that, and until 2026-10-12 one view
+   * in ten did it every time. In the first 80 minutes of one instance taking every request, views
+   * started 16 calculations, 8.7s in all and up to 3.8s each, three of them for a page calculated
+   * less than half an hour before.
+   *
+   * A day is how far behind a similar-pages list may now run. It is also how long a change to the
+   * calculation itself takes to reach a page that is viewed but not edited.
+   */
+  val ViewRecalculationInterval: java.time.Duration = java.time.Duration.ofDays(1)
+
+  /** True when the page was calculated at its latest revision less than ViewRecalculationInterval
+    * ago. No row, no update time or a revision behind the latest all mean it was not. */
+  def isCalculatedRecently(meta: Option[PageMeta], lastRevision: Option[Long], now: LocalDateTime): Boolean =
+    meta.exists(m => lastRevision.contains(m.revision) && m.dateUpdated.exists(_.isAfter(now.minus(ViewRecalculationInterval))))
+
   def calculate(name: String)(
     implicit
     database: Database,

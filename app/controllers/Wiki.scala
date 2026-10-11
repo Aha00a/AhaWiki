@@ -331,9 +331,13 @@ controllerComponents: ControllerComponents,
       }
     }
     finally {
-      //noinspection SimplifyBoolean
-      if (BooleanUtil.random(0.1) || environment.mode == Mode.Dev && request.isLocalhost)
+      // A view only refreshes what other pages' edits change, and only once the last calculation
+      // has aged -- PageLogic.ViewRecalculationInterval says why. One view in ten asks, so the age
+      // check costs one small query per ten views; a developer on localhost always recalculates.
+      if (environment.mode == Mode.Dev && request.isLocalhost)
         wikiActors.pageCalculation ! Calculate(site, name)
+      else if (BooleanUtil.random(0.1))
+        wikiActors.pageCalculation ! Calculate(site, name, onlyIfStale = true)
     }
   }
   private def renderDiffPage(name: String)(implicit request: Request[AnyContent], contextWikiPage: ContextWikiPage, connection: Connection, site: Site): Result = {
