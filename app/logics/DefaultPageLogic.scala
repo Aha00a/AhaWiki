@@ -79,7 +79,7 @@ object DefaultPageLogic {
       case DateTimeUtil.regexDashDashMonthDashDay(mm, dd) =>
         lazySome(
           s"""= $mm-$dd
-             |[--$mm $mm]-[----$dd $dd]
+             |[--$mm|$mm]-[---$dd|$dd]
              |[[OnThisDay]]
              |[[[#!Html
              |${renderMonthDaysTable(mm)}
