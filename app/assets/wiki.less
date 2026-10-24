@@ -578,8 +578,10 @@
 		// [[OnThisDay]]: a card of rows, year | property | page. Not floated like the boxes above — it
 		// is the content of a day page, not a margin note. A date written without a year has an
 		// empty .year, which gets a dash so the column still reads as a column.
+		// No `clear`: the front page has a Schema box floated right, and clearing it pushed this card
+		// below the box and left a gap under the heading. The list is overflow:hidden, so it forms
+		// its own block context and sits beside a float, narrower, instead.
 		div.Macro.OnThisDay {
-			clear: both;
 			margin: 12px 0;
 
 			ul.OnThisDay {

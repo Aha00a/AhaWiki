@@ -795,7 +795,6 @@
   clear: right;
 }
 .AhaWiki .commonAhaWiki div.Macro.OnThisDay {
-  clear: both;
   margin: 12px 0;
 }
 .AhaWiki .commonAhaWiki div.Macro.OnThisDay ul.OnThisDay {
@@ -1354,7 +1353,6 @@
   clear: right;
 }
 .AhaWiki .wikiContent div.Macro.OnThisDay {
-  clear: both;
   margin: 12px 0;
 }
 .AhaWiki .wikiContent div.Macro.OnThisDay ul.OnThisDay {
@@ -2156,7 +2154,6 @@
   clear: right;
 }
 .AhaWiki .paperContent .page .pageContent div.Macro.OnThisDay {
-  clear: both;
   margin: 12px 0;
 }
 .AhaWiki .paperContent .page .pageContent div.Macro.OnThisDay ul.OnThisDay {
