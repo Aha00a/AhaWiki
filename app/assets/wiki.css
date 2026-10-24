@@ -794,6 +794,58 @@
 .AhaWiki .commonAhaWiki div.MacroLinkDate.around {
   clear: right;
 }
+.AhaWiki .commonAhaWiki div.Macro.OnThisDay {
+  clear: both;
+  margin: 12px 0;
+}
+.AhaWiki .commonAhaWiki div.Macro.OnThisDay ul.OnThisDay {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  background: var(--color-surface-panel-frosted);
+  overflow: hidden;
+}
+.AhaWiki .commonAhaWiki div.Macro.OnThisDay ul.OnThisDay li {
+  display: grid;
+  grid-template-columns: 4em auto 1fr;
+  column-gap: 12px;
+  align-items: baseline;
+  padding: 6px 14px;
+}
+.AhaWiki .commonAhaWiki div.Macro.OnThisDay ul.OnThisDay li + li {
+  border-top: 1px solid var(--color-border-subtle);
+}
+.AhaWiki .commonAhaWiki div.Macro.OnThisDay ul.OnThisDay .year {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: bold;
+  color: var(--color-muted-strong);
+}
+.AhaWiki .commonAhaWiki div.Macro.OnThisDay ul.OnThisDay .year:empty:before {
+  content: '\2014';
+  font-weight: normal;
+  color: var(--color-muted);
+}
+.AhaWiki .commonAhaWiki div.Macro.OnThisDay ul.OnThisDay .prop {
+  justify-self: start;
+  padding: 0 0.6em;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 999px;
+  font-size: 0.8em;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+@media screen and (max-width: 767px) {
+  .AhaWiki .commonAhaWiki div.Macro.OnThisDay ul.OnThisDay li {
+    grid-template-columns: 3.5em auto;
+    row-gap: 2px;
+  }
+  .AhaWiki .commonAhaWiki div.Macro.OnThisDay ul.OnThisDay li a {
+    grid-column: 1 / -1;
+  }
+}
 .AhaWiki .commonAhaWiki .previewPane div.toc,
 .AhaWiki .commonAhaWiki .previewPane div.schema {
   max-width: 25vw;
@@ -1300,6 +1352,58 @@
 }
 .AhaWiki .wikiContent div.MacroLinkDate.around {
   clear: right;
+}
+.AhaWiki .wikiContent div.Macro.OnThisDay {
+  clear: both;
+  margin: 12px 0;
+}
+.AhaWiki .wikiContent div.Macro.OnThisDay ul.OnThisDay {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  background: var(--color-surface-panel-frosted);
+  overflow: hidden;
+}
+.AhaWiki .wikiContent div.Macro.OnThisDay ul.OnThisDay li {
+  display: grid;
+  grid-template-columns: 4em auto 1fr;
+  column-gap: 12px;
+  align-items: baseline;
+  padding: 6px 14px;
+}
+.AhaWiki .wikiContent div.Macro.OnThisDay ul.OnThisDay li + li {
+  border-top: 1px solid var(--color-border-subtle);
+}
+.AhaWiki .wikiContent div.Macro.OnThisDay ul.OnThisDay .year {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: bold;
+  color: var(--color-muted-strong);
+}
+.AhaWiki .wikiContent div.Macro.OnThisDay ul.OnThisDay .year:empty:before {
+  content: '\2014';
+  font-weight: normal;
+  color: var(--color-muted);
+}
+.AhaWiki .wikiContent div.Macro.OnThisDay ul.OnThisDay .prop {
+  justify-self: start;
+  padding: 0 0.6em;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 999px;
+  font-size: 0.8em;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+@media screen and (max-width: 767px) {
+  .AhaWiki .wikiContent div.Macro.OnThisDay ul.OnThisDay li {
+    grid-template-columns: 3.5em auto;
+    row-gap: 2px;
+  }
+  .AhaWiki .wikiContent div.Macro.OnThisDay ul.OnThisDay li a {
+    grid-column: 1 / -1;
+  }
 }
 .AhaWiki .wikiContent .previewPane div.toc,
 .AhaWiki .wikiContent .previewPane div.schema {
@@ -2050,6 +2154,58 @@
 }
 .AhaWiki .paperContent .page .pageContent div.MacroLinkDate.around {
   clear: right;
+}
+.AhaWiki .paperContent .page .pageContent div.Macro.OnThisDay {
+  clear: both;
+  margin: 12px 0;
+}
+.AhaWiki .paperContent .page .pageContent div.Macro.OnThisDay ul.OnThisDay {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 8px;
+  background: var(--color-surface-panel-frosted);
+  overflow: hidden;
+}
+.AhaWiki .paperContent .page .pageContent div.Macro.OnThisDay ul.OnThisDay li {
+  display: grid;
+  grid-template-columns: 4em auto 1fr;
+  column-gap: 12px;
+  align-items: baseline;
+  padding: 6px 14px;
+}
+.AhaWiki .paperContent .page .pageContent div.Macro.OnThisDay ul.OnThisDay li + li {
+  border-top: 1px solid var(--color-border-subtle);
+}
+.AhaWiki .paperContent .page .pageContent div.Macro.OnThisDay ul.OnThisDay .year {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: bold;
+  color: var(--color-muted-strong);
+}
+.AhaWiki .paperContent .page .pageContent div.Macro.OnThisDay ul.OnThisDay .year:empty:before {
+  content: '\2014';
+  font-weight: normal;
+  color: var(--color-muted);
+}
+.AhaWiki .paperContent .page .pageContent div.Macro.OnThisDay ul.OnThisDay .prop {
+  justify-self: start;
+  padding: 0 0.6em;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 999px;
+  font-size: 0.8em;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+@media screen and (max-width: 767px) {
+  .AhaWiki .paperContent .page .pageContent div.Macro.OnThisDay ul.OnThisDay li {
+    grid-template-columns: 3.5em auto;
+    row-gap: 2px;
+  }
+  .AhaWiki .paperContent .page .pageContent div.Macro.OnThisDay ul.OnThisDay li a {
+    grid-column: 1 / -1;
+  }
 }
 .AhaWiki .paperContent .page .pageContent .previewPane div.toc,
 .AhaWiki .paperContent .page .pageContent .previewPane div.schema {

@@ -575,6 +575,70 @@
             clear: right;
 		}
 
+		// [[OnThisDay]]: a card of rows, year | property | page. Not floated like the boxes above — it
+		// is the content of a day page, not a margin note. A date written without a year has an
+		// empty .year, which gets a dash so the column still reads as a column.
+		div.Macro.OnThisDay {
+			clear: both;
+			margin: 12px 0;
+
+			ul.OnThisDay {
+				list-style: none;
+				margin: 0;
+				padding: 0;
+				border: 1px solid var(--color-border-subtle);
+				border-radius: 8px;
+				background: var(--color-surface-panel-frosted);
+				overflow: hidden;
+
+				li {
+					display: grid;
+					grid-template-columns: 4em auto 1fr;
+					column-gap: 12px;
+					align-items: baseline;
+					padding: 6px 14px;
+
+					& + li {
+						border-top: 1px solid var(--color-border-subtle);
+					}
+				}
+
+				.year {
+					text-align: right;
+					font-variant-numeric: tabular-nums;
+					font-weight: bold;
+					color: var(--color-muted-strong);
+
+					&:empty:before {
+						content: '\2014';
+						font-weight: normal;
+						color: var(--color-muted);
+					}
+				}
+
+				.prop {
+					justify-self: start;
+					padding: 0 0.6em;
+					border: 1px solid var(--color-border-subtle);
+					border-radius: 999px;
+					font-size: 0.8em;
+					color: var(--color-muted);
+					white-space: nowrap;
+				}
+
+				@media screen and @widthTablet {
+					li {
+						grid-template-columns: 3.5em auto;
+						row-gap: 2px;
+
+						a {
+							grid-column: 1 / -1;
+						}
+					}
+				}
+			}
+		}
+
 		.previewPane {
 			div.toc, div.schema {
 				max-width: 25vw;
