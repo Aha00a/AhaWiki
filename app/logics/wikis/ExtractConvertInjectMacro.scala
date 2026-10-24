@@ -54,6 +54,7 @@ object ExtractConvertInjectMacro extends Logging {
 
     MacroDayHeader,
     MacroLinkDate,
+    MacroOnThisDay,
     MacroWeekdayName,
     MacroMonthName,
     MacroNavigationYearMonth,

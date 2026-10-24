@@ -101,6 +101,31 @@ object CalculatedSchemaOrg {
       .map(tables.CalculatedSchemaOrg.tupled)
   }
 
+  /**
+   * The date properties whose value falls on this month and day, in any year or in none.
+   *
+   * `1815-12-10` is stored as itself and as `1815-12`; `--12-10`, which is how a date is written
+   * when the year is not known (ISO 8601's reduced form), is stored as itself. So a day is either
+   * `--MM-DD` exactly or four characters of year and then `-MM-DD`. `LIKE` runs over the whole
+   * site's rows because the index leads with the value, which only an exact match can use; the
+   * `prop` test narrows it before the pattern is tried, and the caller applies
+   * `InterpreterSchema.isDateKey` to what comes back, so this need not agree with it to the letter.
+   */
+  def selectWhereDateOn(month: String, day: String)(implicit connection: Connection, site: Site): List[CalculatedSchemaOrg] = {
+    val withoutYear = s"--$month-$day"
+    val withYear = s"____-$month-$day"
+    SQL"""
+        SELECT page, cls, prop, value
+            FROM CalculatedSchemaOrg
+            WHERE
+                site = ${site.seq} AND
+                (prop LIKE 'date%' OR prop LIKE '%Date') AND
+                (value = $withoutYear OR value LIKE $withYear)
+      """
+      .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
+      .map(tables.CalculatedSchemaOrg.tupled)
+  }
+
   def selectWherePageOrValue(pageOrValue: String)(implicit connection: Connection, site: Site): List[CalculatedSchemaOrg] = {
     SQL"""
         SELECT page, cls, prop, value

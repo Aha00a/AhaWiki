@@ -48,6 +48,7 @@
  1. [MacroCalendar] - 달력 보기
  1. [MacroDayHeader] - 날짜 페이지 헤더
  1. [MacroLinkDate] - 날짜 관련 링크 모음
+ 1. [MacroOnThisDay] - 같은 월·일에 날짜 속성이 걸린 페이지 (해는 무관)
  1. [MacroWeekdayName] - 요일 이름
  1. [MacroMonthName] - 월 이름
  1. [MacroNavigationYear] - 연도 탐색 박스

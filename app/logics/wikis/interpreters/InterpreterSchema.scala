@@ -119,7 +119,9 @@ object InterpreterSchema extends TraitInterpreter {
     if (skip) seqSeqFieldNew else seqSeqFieldNew :+ seqSeqField.last
   }
 
-  private def isDateKey(key: String): Boolean = key.startsWith("date") || key.endsWith("Date")
+  // Not private: MacroOnThisDay asks the same question of the properties it finds in the database,
+  // and the answer has to be the one this renderer gives.
+  def isDateKey(key: String): Boolean = key.startsWith("date") || key.endsWith("Date")
   private def isLocationKey(key: String): Boolean = locationKeys.contains(key) || key.endsWith("Location")
   private def attachmentMacroArgument(v: String): Option[String] = v.trim match {
     case attachmentMacroRegex(argument) => Some(argument)

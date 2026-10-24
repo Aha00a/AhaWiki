@@ -80,6 +80,7 @@ object DefaultPageLogic {
         lazySome(
           s"""= $mm-$dd
              |[--$mm $mm]-[----$dd $dd]
+             |[[OnThisDay]]
              |[[[#!Html
              |${renderMonthDaysTable(mm)}
              |]]]
