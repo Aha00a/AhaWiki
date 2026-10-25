@@ -5,6 +5,7 @@
         var canvasSelector = '#graphD3Canvas-@(id)';
         var canvas = $(canvasSelector).get(0);
         var ctx = canvas.getContext('2d');
+        var glow = window.AhaWikiGraphGlow.create({ canvas: canvas, redraw: function() { draw(); } });
 
         var state = {
             simulation: null,
@@ -348,6 +349,7 @@
             bg.addColorStop(1, palette.bgEnd);
             ctx.fillStyle = bg;
             ctx.fillRect(0, 0, size.width, size.height);
+            glow.paint(ctx, state.nodes.filter(isNodeVisible), state.links, { toScreen: worldToScreen, scale: state.scale });
 
             var neighbors = state.hoverNodeId ? (state.adjacency.get(state.hoverNodeId) || new Set()) : new Set();
             var hop2 = state.hoverNodeId ? buildDepthMap(state.hoverNodeId, 2) : new Map();
@@ -412,6 +414,15 @@
                     ctx.strokeStyle = palette.rootRing;
                     ctx.lineWidth = 2.5;
                     ctx.stroke();
+                } else {
+                    var ring = glow.ringColor(n);
+                    if(ring) {
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, rScreen, 0, Math.PI * 2);
+                        ctx.strokeStyle = ring;
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+                    }
                 }
 
                 var labelSize = Math.max(9, (10 + Math.log(degree + 1) * 2) * state.labelScale);

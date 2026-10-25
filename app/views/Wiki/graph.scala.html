@@ -21,6 +21,7 @@
             var canvasSelector = '#graphD3Canvas-@(id)';
             var canvas = $(canvasSelector).get(0);
             var ctx = canvas.getContext('2d');
+            var glow = window.AhaWikiGraphGlow.create({ canvas: canvas, redraw: function() { draw(); } });
 
             var state = {
                 simulation: null,
@@ -162,6 +163,7 @@
                 var size = syncCanvasSize();
                 var palette = graphPalette();
                 ctx.clearRect(0, 0, size.width, size.height);
+                glow.paint(ctx, state.nodes, state.links, { toScreen: worldToScreen, scale: state.zoomScale });
 
                 var neighbors = state.hoverNodeId ? (state.adjacency.get(state.hoverNodeId) || new Set()) : new Set();
 
@@ -196,6 +198,13 @@
                     ctx.fillStyle = isRoot ? palette.root : (isHover ? palette.hover : (isNeighbor ? palette.neighbor : palette.other));
                     ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
                     ctx.fill();
+
+                    var ring = glow.ringColor(n);
+                    if(ring) {
+                        ctx.strokeStyle = ring;
+                        ctx.lineWidth = 1.5;
+                        ctx.stroke();
+                    }
 
                     ctx.fillStyle = isRoot ? palette.labelRoot : palette.label;
                     ctx.font = (12 * state.config.labelScale) + 'px sans-serif';

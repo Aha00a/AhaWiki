@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<title>graph glow harness</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" crossorigin="anonymous"></script>
+<!-- The file under test. ?script=<url> points at another copy, to check that the harness can fail. -->
+<script>
+(function () {
+    const q = new URLSearchParams(location.search);
+    document.write('<script src="' + (q.get('script') || '../../../public/js/AhaWiki.GraphGlow.js').replace(/"/g, '&quot;') + '"><\/script>');
+})();
+</script>
+<style>
+    body { font: 14px/1.5 system-ui, sans-serif; margin: 16px; background: #fff; color: #222; }
+    body.dark { background: #14161c; color: #ddd; }
+    canvas { width: 100%; height: 420px; display: block; border: 1px solid #8884; border-radius: 6px; }
+    .row { margin: 8px 0; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    pre { background: #8881; padding: 8px; border-radius: 6px; white-space: pre-wrap; }
+    .PASS { color: #070; } .FAIL { color: #b00; font-weight: bold; }
+    body.dark .PASS { color: #5d5; } body.dark .FAIL { color: #f77; }
+</style>
+</head>
+<body>
+<h3>graph glow harness</h3>
+<div class="row">
+    <label>Nodes <select id="size"><option value="small">small (9)</option><option value="big" selected>big (3 clusters + 2 loose)</option><option value="one">one cluster</option></select></label>
+    <label><input type="checkbox" id="dark"> dark</label>
+    <label><input type="checkbox" id="stopped"> simulation stopped</label>
+    <label><input type="checkbox" id="grow"> add a node every second</label>
+    <button id="settle" type="button">settle</button>
+</div>
+<canvas id="c"></canvas>
+<pre id="out"></pre>
+<script>
+// Same shape as the two real graphs: nodes in world coordinates, a worldToScreen, links drawn under
+// nodes, and the glow laid after the background and before the links.
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const out = document.getElementById('out');
+const view = { zoom: 1, panX: 0, panY: 0 };
+const toScreen = (x, y) => ({ x: x * view.zoom + view.panX, y: y * view.zoom + view.panY });
+
+let nodes = [], links = [], sim = null, strokeCalls = 0, exceptions = 0, frames = 0, emptyFrames = 0, firstError = '';
+const origStroke = ctx.stroke.bind(ctx);
+ctx.stroke = function () { strokeCalls++; return origStroke(); };
+
+const glow = window.AhaWikiGraphGlow.create({ canvas, redraw: () => draw() });
+
+function sizeCanvas() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    view.panX = w / 2; view.panY = h / 2;
+}
+
+function draw() {
+    sizeCanvas();
+    const before = strokeCalls;
+    try {
+        const dark = document.getElementById('dark').checked;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = dark ? '#14161c' : '#f4f6fb';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        glow.paint(ctx, nodes, links, { toScreen, scale: view.zoom });
+        ctx.globalAlpha = 0.35;
+        ctx.strokeStyle = dark ? '#8892a6' : '#7a869a';
+        links.forEach(l => {
+            const a = toScreen(l.source.x || 0, l.source.y || 0), b = toScreen(l.target.x || 0, l.target.y || 0);
+            ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        });
+        ctx.globalAlpha = 1;
+        nodes.forEach(n => {
+            const p = toScreen(n.x || 0, n.y || 0);
+            ctx.beginPath(); ctx.arc(p.x, p.y, 7, 0, Math.PI * 2);
+            ctx.fillStyle = dark ? '#7ea2df' : '#3f7bcf'; ctx.fill();
+            const ring = glow.ringColor(n);
+            if (ring) { ctx.strokeStyle = ring; ctx.lineWidth = 1.5; ctx.stroke(); }
+        });
+    } catch (e) { exceptions++; firstError = firstError || String(e); }
+    frames++;
+    if (links.length && strokeCalls === before) emptyFrames++;
+}
+
+function build(kind) {
+    nodes = []; links = [];
+    const cluster = (prefix, count) => {
+        const ids = [];
+        for (let i = 0; i < count; i++) { nodes.push({ id: prefix + i }); ids.push(prefix + i); }
+        for (let i = 0; i < count; i++) for (let j = i + 1; j < count; j++) if (Math.random() < 0.55 || j === i + 1) links.push({ source: ids[i], target: ids[j] });
+        return ids;
+    };
+    if (kind === 'small') { cluster('s', 9); }
+    else if (kind === 'one') { cluster('o', 16); }
+    else {
+        const a = cluster('a', 9), b = cluster('b', 7), c = cluster('c', 6);
+        nodes.push({ id: 'x0' }, { id: 'x1' });
+        links.push({ source: 'x0', target: a[0] }, { source: 'x0', target: b[0] }, { source: 'x1', target: c[0] });
+    }
+    if (sim) sim.stop();
+    sim = d3.forceSimulation(nodes)
+        .force('link', d3.forceLink(links).id(d => d.id).distance(l => (l.source.id || l.source)[0] === (l.target.id || l.target)[0] ? 40 : 160))
+        .force('charge', d3.forceManyBody().strength(-260))
+        .force('center', d3.forceCenter(0, 0))
+        .on('tick', draw);
+    applyStopped();
+}
+function applyStopped() {
+    if (document.getElementById('stopped').checked) sim.stop(); else sim.alphaTarget(0.3).restart();
+}
+
+document.getElementById('size').onchange = e => build(e.target.value);
+document.getElementById('dark').onchange = e => { document.body.classList.toggle('dark', e.target.checked); document.documentElement.classList.toggle('theme-ahawiki-dark', e.target.checked); draw(); };
+document.getElementById('stopped').onchange = applyStopped;
+// A pane that throttles animation frames leaves the simulation hot and the picture a clump. This runs
+// it forward by hand, as the real thing would have by the time anyone looks.
+document.getElementById('settle').onclick = () => {
+    sim.stop(); sim.alphaTarget(0).alpha(1);
+    for (let i = 0; i < 300; i++) sim.tick();
+    const ex = Math.max(1, ...nodes.map(n => Math.abs(n.x || 0))) + 60, ey = Math.max(1, ...nodes.map(n => Math.abs(n.y || 0))) + 60;
+    // clientWidth reads 0 while the pane is not laid out; fall back rather than fit into nothing.
+    view.zoom = Math.min(1, (canvas.clientWidth || 800) / 2 / ex, (canvas.clientHeight || 420) / 2 / ey);
+    draw();
+    if (!document.getElementById('stopped').checked) sim.alpha(0.05).restart();
+};
+setInterval(() => {
+    if (!document.getElementById('grow').checked || !nodes.length) return;
+    const id = 'g' + nodes.length, to = nodes[Math.floor(Math.random() * nodes.length)];
+    nodes.push({ id, x: to.x || 0, y: to.y || 0 }); links.push({ source: id, target: to.id });
+    sim.nodes(nodes); sim.force('link').links(links); sim.alpha(0.5).restart();
+}, 1000);
+
+// Report: exceptions per frame and frames that drew links but never stroked anything (the sign of a draw that died halfway).
+function report() {
+    const ok = exceptions === 0 && emptyFrames === 0;
+    out.innerHTML = '<span class="' + (ok ? 'PASS' : 'FAIL') + '">' + (ok ? 'PASS' : 'FAIL') + '</span> '
+        + frames + ' frames, ' + exceptions + ' exceptions, ' + emptyFrames + ' empty frames' + (firstError ? '\n' + firstError : '')
+        + '\nnodes ' + nodes.length + ', links ' + links.length
+        + '\ngroups ' + new Set(nodes.map(n => n.glowGroup).filter(g => g >= 0)).size;
+}
+setInterval(report, 500);
+build('big');
+window.__harness = { get nodes() { return nodes; }, get stats() { return { frames, exceptions, emptyFrames, firstError }; } };
+</script>
+</body>
+</html>
