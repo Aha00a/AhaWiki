@@ -15,6 +15,15 @@ import scala.util.matching.Regex
 
 object InterpreterWiki extends TraitInterpreter {
 
+  /**
+   * A heading line: the `=`s, an optional collapse marker, the title, and an optional closing run
+   * of `=`s with an id or class after it.
+   *
+   * It is the object's, not the handler's, so that what counts as a heading is decided in one place
+   * for the renderer, the partial edit, and `PageSection`, which cuts a section out of a page.
+   */
+  val regexHeading: Regex = """^(={1,6})(>)?\s+(.+?)(\s+\1(?:\s+([#.].+))?)?$""".r
+
   import models.tables.CalculatedLink
   import models.tables.CalculatedSchemaOrg
 
@@ -54,7 +63,6 @@ object InterpreterWiki extends TraitInterpreter {
   abstract class HandlerContentIterateBase[T](override val pageContent: PageContent) extends Handler[T](pageContent) {
     val regexHr: Regex = """^-{4,}$""".r
     val regexHr2: Regex = """^={4,}$""".r
-    val regexHeading: Regex = """^(={1,6})(>)?\s+(.+?)(\s+\1(?:\s+([#.].+))?)?$""".r
     val regexList: Regex = """^(\s+)([*-]|(\d+|[a-zA-Z]+|[ivxIVX]+|[가나다라마바사아자차카타파하]+|[ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ]+)\.)\s*(.+)""".r
     // A line indented with tabs but carrying no bullet marker is read as a bullet, nested by the
     // number of leading tabs (one tab per level, matching how regexList counts leading whitespace).
