@@ -139,6 +139,19 @@ Three outcomes need a person rather than a flag:
 * **local only** — a file that is not a page on the wiki yet.
 * **wiki only** — a page with no local copy. `npm run download:ahawiki.net` pulls copies down.
 
+## MCP server
+
+`mcp.ahawiki.mjs` lets an agent search, read and — only when told to — write a wiki through its
+API. The wiki's address comes from the environment, because this repository is public:
+
+```bash
+AHAWIKI_BASE_URL=https://<wiki host> AHAWIKI_API_KEY=<key> node scripts/mcp.ahawiki.mjs
+```
+
+It speaks MCP over stdio and has no dependencies (`lib/mcp.mjs` is the protocol half and knows
+nothing of the wiki). It is read-only unless `AHAWIKI_MCP_WRITE=1`. Why, and what it leaves out, is
+the wiki page Dev Mcp. `test/mcp.ahawiki.test.mjs` is part of `npm test`.
+
 ## Wiki page download
 
 `download.ahawiki.net.mjs` replaces everything under `docs/ahawiki.net/` with a fresh copy of

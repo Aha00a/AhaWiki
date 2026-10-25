@@ -13,6 +13,7 @@ import logics.ApplicationConf
 import logics.AttachmentLogic
 import logics.CrossInstanceBus
 import logics.SessionLogic
+import logics.SearchSnippet
 import logics.SiteLogic
 import logics.wikis.PageLogic
 import logics.wikis.RenderingMode
@@ -131,6 +132,46 @@ class ApiV1 @Inject()(
         val pages = readablePages.map(page => pageMetadataJson(page, page.userApiKey.flatMap(keyNames.get)))
 
         Ok(Json.obj("pages" -> Json.fromValues(pages)))
+      }
+    }
+  }
+
+  /**
+   * Pages whose name or text contains `q`, newest first, each with the words around the hit.
+   *
+   * The same query as the search page, and the same readability filter, so what an API key sees is
+   * what that user would see searching in a browser. `limit` is cut at 100: this is for finding the
+   * page to open, not for exporting the wiki, and `/api/v1/pages` already lists by prefix.
+   */
+  def search(q: String, limit: Int): Action[AnyContent] = Action { implicit request =>
+    withApiUser(request) { user =>
+      if (q.trim.isEmpty) {
+        JsonError(BadRequest, "q is required.")
+      } else {
+        database.withConnection { implicit connection =>
+          implicit val site: Site = SiteLogic.get(request.host)
+          implicit val requestWrapper: RequestWrapper = RequestWrapper.forUser(user)
+          implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(""), RenderingMode.Normal)
+          val wikiPermission = WikiPermission()
+          val bounded = limit.max(1).min(100)
+
+          // One more than asked, to learn whether the limit cut the list short.
+          val found = Page.pageSearch(q.trim, bounded + 1)
+          val readable = found
+            .take(bounded)
+            .filter(r => wikiPermission.isReadable(r.name, Some(PageContent(r.content))))
+            .sortBy(_.dateTime)(Ordering[java.time.LocalDateTime].reverse)
+
+          Ok(Json.obj(
+            "q" -> Json.fromString(q.trim),
+            "truncated" -> Json.fromBoolean(found.size > bounded),
+            "pages" -> Json.fromValues(readable.map(r => Json.obj(
+              "name" -> Json.fromString(r.name),
+              "dateTime" -> Json.fromString(r.dateTime.toString),
+              "snippet" -> Json.fromString(SearchSnippet.of(r.content, q)),
+            ))),
+          ))
+        }
       }
     }
   }

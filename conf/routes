@@ -49,6 +49,7 @@ GET           /Admin/*path                           controllers.Admin.spa(path)
 GET           /api/me                                controllers.Api.me
 GET           /api/csrf                              controllers.Api.csrf
 GET           /api/v1/pages                         controllers.ApiV1.listPages(prefix: String ?= "", limit: Int ?= 5000)
+GET           /api/v1/search                        controllers.ApiV1.search(q: String ?= "", limit: Int ?= 20)
 POST          /api/v1/pages/metadata                controllers.ApiV1.pageMetadata()
 GET           /api/v1/changes                       controllers.ApiV1.changes(name: String ?= "", prefix: String ?= "", since: String ?= "", afterRevision: Long ?= 0, includeMinorEdit: Int ?= 1, includeViaApi: Int ?= 1, limit: Int ?= 100)
 POST          /api/v1/rename                        controllers.ApiV1.renamePage()
