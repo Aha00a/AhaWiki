@@ -1,0 +1,84 @@
+= UserNicknameChange
+
+사용자는 닉네임을 스스로 바꾸지 못한다. Account Settings 에서 '''신청'''을 만들고, 관리자가 승인해야 `User.nickname` 이 바뀐다. 2026-09-02 에 배포했다. 이 문서는 그 구현이 어떤 결정 위에 서 있는지 적는다 — 만들 때의 체크리스트(`ToDo-User-Nickname-Change`)를 끝내며 남길 것만 옮겼다.
+
+== 흐름
+
+ 1. 사용자가 `/account` 의 닉네임 절에서 새 닉네임을 신청한다. 대기 신청이 있으면 입력과 버튼이 잠기고, 자기 대기 신청은 취소할 수 있다(`Canceled`).
+ 1. 관리자가 `/Admin/NicknameRequests` 에서 대기 목록을 보고 승인하거나 거절한다. 승인은 확인을 한 번 받고, 거절은 사유가 없으면 보내지지 않는다 — 사유가 거절의 내용 전부이고 신청자가 보는 것도 그것뿐이다.
+ 1. 승인하면 `UserNicknameChangeLogic.approve` 가 한 트랜잭션에서 `User.nickname`·`User.dateNicknameChanged` 를 바꾸고 `UserNicknameHistory` 에 옛 값·새 값·승인한 관리자를 적고 신청을 `Approved` 로 바꾼다.
+
+== 규칙
+
+닉네임은 `^[a-zA-Z0-9가-힣]{5,16}$` 이고, 검증은 `logics.UserNicknamePolicy.validate` 한 곳에서 한다. 앞뒤 공백은 자르고, 자른 뒤 비면 실패하고, 안의 공백은 실패한다. 대소문자는 표시용으로 보존하되 중복 비교는 DB collation 대로 대소문자를 가리지 않는다. 예약어 다섯 개(`Anonymous`·`Guest`·`Admin`·`AhaWiki`·`User`)는 막는다. 오류는 길이·허용 문자·이미 사용 중·이미 신청 중·대기 신청이 이미 있음으로 갈라 돌려준다(`UserNicknameChangeLogic.RequestError`).
+
+'''검증을 두 번 한다.''' 신청할 때 한 번, 승인할 때 다시 한 번. 두 번째가 군더더기가 아닌 까닭은 규칙이 그 사이에 바뀔 수 있어서다 — 오늘 통과한 이름이 관리자가 일주일 뒤 볼 때도 통과한다는 보장은 없다. 승인할 때는 중복도 다시 본다.
+
+'''기존 닉네임은 건드리지 않는다.''' 새 규칙에 맞지 않는 옛 닉네임도 그대로 산다. `User.nickname` 을 쓰는 코드는 승인 하나뿐이고 승인은 신청된 이름만 검증한다.
+
+== 데이터
+
+`UserNicknameChangeRequest` 가 신청을 담는다(컬럼·키는 `schema/schema.sql` 이 정본이라 여기 옮기지 않는다). 이유가 있는 선택만 적는다.
+
+ * '''상태에 `Canceled` 가 있다.''' 취소를 row 삭제로 처리하면 신청했다는 사실 자체가 사라진다.
+ * '''`requestedNickname` 은 `User.nickname` 과 같은 `utf8mb4_general_ci` 다.''' «이미 신청됨» 과 «이미 사용 중» 이 unique index 와 같은 대소문자 기준으로 답해야 한다. 테이블의 나머지는 다른 테이블처럼 `utf8mb4_bin` 이다 — 이것이 어긋났던 일은 아래 '''배포에서 배운 것'''과 [Dev Database].
+ * '''대기 신청의 중복은 DB 제약이 아니라 애플리케이션 트랜잭션이 막는다.''' 같은 사용자의 `Pending` 은 하나, 같은 요청 닉네임의 `Pending` 도 하나. MySQL 에는 partial unique index 가 없다. 최종 방어는 승인 시점의 `User.nickname` unique 제약이다.
+ * '''신청 생성은 이력에 적지 않는다.''' `UserNicknameHistory` 는 실제로 바뀐 경우에만, 승인한 관리자를 `changedBy` 로 적는다. 이 테이블은 evolution 38 이 만들어 두고 아무도 읽지 않던 것인데 이제 쓰인다.
+
+'''검사를 전부 끝낸 뒤에 첫 쓰기를 한다.''' `Database.withTransaction` 은 예외가 빠져나가야 롤백한다 — 중간에 `Left` 를 돌려주면 그때까지 쓴 것이 그대로 커밋된다. 신청 row 를 `FOR UPDATE`(`selectBySeqForUpdate`)로 잡고 있으니 «먼저 검사, 나중에 쓰기» 가 안전하다. 순서는 `Pending` 인지 → 닉네임 재검증 → 중복 재확인 → 쓰기.
+
+== 세션: 일부러 하지 않은 것
+
+닉네임의 source of truth 는 `User` 테이블이다. 세션의 `nickname` 은 표시용 스냅샷일 뿐이고, 권한·작성자·승인에는 쓰지 않는다 — 신원은 계속 `User.seq` 다.
+
+ * '''세션을 자동으로 갱신하지 않는다.''' Play 기본 session 은 서버 저장소가 아니라 서명된 클라이언트 쿠키라서, 승인하는 순간 다른 브라우저·기기·탭의 쿠키를 서버가 고칠 방법이 없다. 낡은 닉네임을 감지해 쿠키를 다시 쓰는 middleware, 서버 쪽 session store, session version 표는 만들지 않았다. 기존 로그인은 재로그인 전까지 옛 닉네임을 표시할 수 있다 — 주로 상단 nav 같은 표시 영역에서.
+ * '''강제 로그아웃도 하지 않는다.''' 닉네임은 인증 권한의 근거가 아니다(권한은 `User.seq` 와 연결된 email 로 평가한다). 꼭 필요하면 운영자가 Play session signing key 를 교체해 모든 세션 쿠키를 무효화한다 — 별도 운영 작업이다.
+ * '''WebSocket 은 다시 연결해야 새 닉네임을 쓴다.''' `cursor.hello` 가 연결 시점의 닉네임을 쓰고, 승인 뒤에 이미 열린 연결은 hello 를 다시 보내지 않는다. 페이지를 다시 열거나 재연결하면 새 이름이다.
+ * Account 와 Admin 화면은 세션이 아니라 DB 의 값을 읽는다 — 목록 응답의 `userNickname` 은 `User` 를 다시 읽은 값이다. 낡은 쿠키로 불러도 Account 화면이 DB 값을 답하는지 `ApiUserNicknameSpec` 이 확인한다.
+
+== 위키 내용과 링크
+
+닉네임이 바뀌어도 위키 본문을 대량으로 고치지 않는다. 옛 `[User:oldNickname]` 링크는 그대로 둔다 — 사용자가 쓴 내용을 자동으로 바꾸는 부작용이 크다. 페이지 이력과 blame 은 `User.seq` 로 join 하므로 새 이름으로 보인다.
+
+`User:<옛 닉네임>` 프로필 페이지도 자동으로 옮기지 않는다. 승인 뒤 새 프로필 링크는 `/w/User:<새 닉네임>` 이고, 옛 페이지가 있으면 관리자가 필요할 때 위키의 이름 바꾸기를 쓴다. 안전하다고 판단되면 `#!redirect User:<새 닉네임>` 을 자동으로 만드는 옵션을 더할 수 있다(하지 않았다). 페이지 캐시도 무효화하지 않는다 — 본문이 바뀌지 않기 때문이다.
+
+== API
+
+ * 사용자: `GET /api/account/NicknameRequests`(현재 닉네임·대기 신청·최근 결과), `POST /api/account/NicknameRequests`, `POST /api/account/NicknameRequests/:seq/cancel`
+ * 관리자: `GET /api/Admin/NicknameRequests?status=Pending`, `POST /api/Admin/NicknameRequests/:seq/approve`, `POST /api/Admin/NicknameRequests/:seq/reject`
+
+관리자 쪽은 다른 관리 API 처럼 `AdminAuth` 의 `isAdmin` 으로 막는다. 관리자 판정이 하드코딩인 것은 `AdminLogic.SuperAdminUserSeq` 한 곳으로 모여 있고, role 기반으로 옮기지 않기로 한 근거와 다시 볼 조건은 [AccessControl] 의 '''남은 과제'''에 있다.
+
+'''경로는 처음 계획과 다르다.''' 계획은 `POST /account/nickname/request` 와 `/api/Admin/UserNicknameChangeRequests` 였다. 실제로는 옆에 이미 있는 것과 같은 모양을 골랐다 — `/api/account/ApiKeys` 와 `/api/Admin/ApiKeys`. 둘 다 JSON API 이고 `ApiApiKey` 와 같은 컨트롤러 구조라, 한 화면에서 두 가지 경로 규칙을 쓰는 것보다 낫다. 취소도 `:seq` 를 받는다 — 계획의 `/request/cancel` 은 어느 신청인지 말하지 않고, 그러면 «내 대기 신청» 을 서버가 추측해야 한다.
+
+== 화면
+
+Account 쪽은 `Account/settings.scala.html` 의 `accountNickname` 절이고, 관리자 쪽은 Admin UI 의 `NicknameRequestsPage.jsx`(`/Admin/NicknameRequests`)다. 기본 필터는 `Pending` 이고 Approved·Rejected·Canceled·All 로 바꿀 수 있다.
+
+ * '''공용 helper 를 끌어올렸다.''' `escapeHtml`·`formatDate`·`csrfToken` 과 CSRF 헤더를 붙이는 `send` 가 API Key 절 안에 있었는데 닉네임 절도 넷 다 필요했다. 베끼면 `escapeHtml` 이 두 개인 페이지가 되고 그중 하나만 고쳐지는 날이 온다. CSS 의 `apiKeyForm`·`apiKeyMessage` 도 같은 이유로 `accountForm`·`accountMessage` 로 바꿔 둘이 같이 쓴다.
+ * 관리자 화면의 쓰기는 `api.js` 의 `sendJson` 을 쓴다. CSRF 헤더를 붙이고 `{error}` 봉투를 푸는 것을 손으로 조립하던 자리가 이미 열 곳이라, 열한 번째를 만드는 대신 helper 를 뒀다. 기존 열 곳을 옮기는 것은 따로 남아 있다.
+
+== 알려진 한계와, 하지 않기로 한 것
+
+ * '''승인 뒤 프로필 이미지 캐시를 무효화하지 않는다.''' `UserProfileImageUrl` 의 캐시 키가 `클래스:site:nickname` 이라 사이트마다 하나씩이고, 승인 로직이 무효화하려면 사이트 목록과 `AhaWikiCache` 를 승인 트랜잭션 안으로 끌고 들어와야 한다. 실제 피해는 작다 — 옛 이름 키에 남는 값은 아무도 더는 조회하지 않는 이름의 것이고(옛 `[User:이름]` 링크는 그대로 두기로 했다), 새 이름 키는 보통 비어 있어서 처음 조회에 새로 계산된다. 운영 만료가 10분이라 그 사이에 스스로 낫는다. 성능이나 정합 문제가 실제로 보이면 그때 한다 — 지금 하면 승인 경로가 캐시와 사이트 목록에 묶인다. 이 항목이 `ToDo-User-Nickname-Change` 의 마지막 미완이었고, 그 문서를 닫으며 여기로 옮겼다.
+ * 세션·WebSocket 의 낡은 닉네임(위 '''세션''').
+ * `User:` 프로필 페이지 자동 rename·redirect(위 '''위키 내용과 링크''').
+
+== 배포에서 배운 것
+
+2026-09-02 릴리스 `20260902-081352` 로 배포했다. 이 기능이 처음 겪은 것들:
+
+ * '''마이그레이션 전 백업을 배포 뒤에야 확인했다.''' RDS 자동 백업은 켜져 있었고 시점 복구도 가능했으니 돌아갈 길은 내내 있었다. 그러나 그것을 배포 '''전에''' 본 것이 아니라서, 그날 아침의 두 evolution 은 안전망을 확인하지 않은 채 나갔다. 확인 명령은 운영 저장소 `ahawiki/README.md` 에 있다(인스턴스·프로필 이름이라 이 공개 저장소에는 적지 않는다). `conf/evolutions` 가 바뀌는 배포는 이것부터 본다([Dev Deploying]).
+ * '''evolution 68 이 테이블 collation 을 안 적어 DB 기본값(`utf8mb4_unicode_ci`)을 받았다.''' 다른 테이블은 전부 `utf8mb4_bin` 이었다. 동작에는 영향이 없었지만 evolution 69 가 맞췄다. 규약과 가드는 [Dev Database].
+ * '''evolution 69 의 첫 배포는 실패했다.''' 주석 안의 세미콜론 때문이다 — Play 가 주석을 모른 채 `;` 로 문장을 자른다. 사이트는 한 인스턴스가 옛 릴리스로 버텨 내내 200 이었다. 실패한 `play_evolutions` 행은 옛 릴리스도 막으므로, 문장이 하나도 실행되지 않은 것을 확인한 뒤 그 행을 지우고 `current` 를 되돌려 복구했다. 경위는 [Dev Database].
+ * 개발 스키마에 68·69 가 없어 `schemaDump.sh --check` 가 한동안 이 테이블만큼 다르다고 보고했다. 개발 스키마가 운영에서 갱신되며 해소됐다([Dev Testing]).
+
+== 확인하지 못한 것
+
+staging 이 없어서, `ApiUserNicknameSpec`(요청 생성·승인·거절·취소·낡은 세션)과 stub API 에 물린 실제 번들에서의 클릭으로 대신했다. '''운영에서 실제로 신청하고 승인을 눌러 본 사람은 아직 없다.'''
+
+== 관련
+ * [ToDo NewUserFlow] - 가입 직후의 안내
+ * [AccessControl]
+ * [Dev Database]
+ * [Dev Deploying]

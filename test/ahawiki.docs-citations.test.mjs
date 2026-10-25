@@ -106,7 +106,7 @@ test('the outside-the-repository list stays a set of decisions', () => {
 // list above: each needs a reason, so this stays decisions rather than a way to silence a failure.
 const routesQuotedAsHistory = new Map([
     ['POST /account/nickname/request',
-        'ToDo-User-Nickname-Change names the path it planned, in the paragraph explaining why the built one differs'],
+        'UserNicknameChange names the path it planned, in the paragraph explaining why the built one differs'],
 ]);
 
 /** Turn a route into what it matches. A page quotes a value where the route holds a parameter. */
