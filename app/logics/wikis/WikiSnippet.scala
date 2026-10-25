@@ -1,5 +1,7 @@
 package logics.wikis
 
+import com.aha00a.commons.Implicits._
+
 object WikiSnippet {
 
   /**
@@ -17,12 +19,25 @@ object WikiSnippet {
   private def asLiteralText(name: String): String =
     name.replace("[", "(").replace("]", ")").replace("`", "'")
 
-  def notFound(name: String): String = {
+  /**
+   * One line per template the reader may use, each linking to the editor on this page with that
+   * template's text. Each starts with its own newline, so that no template means no blank line to
+   * split the list. The name goes through `PageNameUrl.encode` for the address and is escaped for
+   * the label, and `)` is spelt out because the macro's argument ends at the first one.
+   */
+  private def templateLinks(templates: Seq[String]): String =
+    templates.map { template =>
+      val href = s"?action=edit&amp;template=${PageNameUrl.encode(template)}".replace(")", "%29")
+      val label = PageTemplate.label(template).escapeHtml().replace(")", "&#41;")
+      s"""\n * [[Html(<a href="$href" rel="nofollow">create from template: $label</a>)]]"""
+    }.mkString
+
+  def notFound(name: String, templates: Seq[String] = Seq.empty): String = {
     val safeName = asLiteralText(name)
     s"""= $safeName
        |This page does not exist.
        |== Possible actions
-       | * [[Html(<a href="?action=edit" rel="nofollow">create page</a>)]]
+       | * [[Html(<a href="?action=edit" rel="nofollow">create page</a>)]]${templateLinks(templates)}
        | * Search ["https://google.com/search?q=$safeName" $safeName] on Google
        | * Search ["https://google.com/search?q=$safeName wiki" $safeName wiki] on Google
        | * Search ["https://duckduckgo.com/?q=$safeName" $safeName] on DuckDuckGo

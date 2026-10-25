@@ -13,6 +13,7 @@ import com.github.difflib.DiffUtils
 import com.github.difflib.UnifiedDiffUtils
 import logics._
 import logics.wikis.PageLogic
+import logics.wikis.PageTemplate
 import logics.wikis.WikiPermission
 import logics.wikis.WikiPermissionDetail
 import logics.wikis.WikiSnippet
@@ -196,7 +197,14 @@ controllerComponents: ControllerComponents,
       //noinspection ScalaUnusedSymbol
       (pageSpecificRevision, action, isReadable, isWritable) match {
         case (None, "edit", _, true) =>
-          val content = DefaultPageLogic.getOption(name).getOrElse(s"""= $name\n""")
+          // `?template=Template:Person` starts the page from that template, if the reader may read it.
+          // Anything else asked for under that name falls through to the usual starting text.
+          val fromTemplate: Option[String] = request.getQueryString("template")
+            .filter(PageTemplate.isTemplate)
+            .flatMap(templateName => Page.selectLastRevision(templateName)
+              .filter(template => wikiPermission.isReadable(templateName, Some(PageContent(template.content)))))
+            .map(template => PageTemplate.fill(template.content, name, contextWikiPage.localDateNow))
+          val content = fromTemplate.getOrElse(DefaultPageLogic.getOption(name).getOrElse(s"""= $name\n"""))
           val page = Page(name, 0, LocalDateTime.now(), Some("AhaWiki"), None, "127.0.0.1", "", isMinorEdit = false, content)
           val (initialEditorText, partialRange) = buildEditFormState(page.content, request)
           Ok(views.html.Wiki.edit(
@@ -288,7 +296,8 @@ controllerComponents: ControllerComponents,
       NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
     }
 
-    DefaultPageLogic.getOption(name).map(content => render(content)).getOrElse(render(WikiSnippet.notFound(name)))
+    val templates = wikiContext.setPageNameByPermission.filter(PageTemplate.isTemplate).toSeq.sorted
+    DefaultPageLogic.getOption(name).map(content => render(content)).getOrElse(render(WikiSnippet.notFound(name, templates)))
   }
 
   private def renderReadablePage(page: Page,
