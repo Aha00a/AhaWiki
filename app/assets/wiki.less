@@ -575,6 +575,33 @@
             clear: right;
 		}
 
+		// #!Query: a table or list of pages chosen by their properties. The table is the wiki's
+		// ordinary one; what is its own is the count under it, the group header rows, and the small
+		// property name in the list view.
+		div.InterpreterQuery {
+			margin: 12px 0;
+
+			.queryCount {
+				margin-top: 4px;
+				font-size: 0.85em;
+				color: var(--color-muted);
+			}
+			tr.queryGroup th {
+				text-align: left;
+				background: var(--color-table-header-bg);
+			}
+			h4.queryGroup {
+				margin: 12px 0 2px;
+			}
+			.queryProp {
+				font-size: 0.8em;
+				color: var(--color-muted);
+			}
+			&.empty {
+				color: var(--color-muted);
+			}
+		}
+
 		// [[OnThisDay]]: a card of rows, year | property | page. Not floated like the boxes above — it
 		// is the content of a day page, not a margin note. A date written without a year has an
 		// empty .year, which gets a dash so the column still reads as a column.

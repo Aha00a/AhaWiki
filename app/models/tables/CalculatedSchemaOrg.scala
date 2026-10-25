@@ -126,6 +126,43 @@ object CalculatedSchemaOrg {
       .map(tables.CalculatedSchemaOrg.tupled)
   }
 
+  /** The pages that declare any of these classes. Empty in, empty out: `IN ()` is not valid SQL. */
+  def selectPagesOfClasses(classes: Seq[String])(implicit connection: Connection, site: Site): Set[String] = {
+    if (classes.isEmpty) return Set.empty
+    SQL"SELECT DISTINCT page FROM CalculatedSchemaOrg WHERE site = ${site.seq} AND cls IN ($classes)"
+      .as(str("page") *)
+      .toSet
+  }
+
+  /**
+   * `(page, prop, value)` for these properties, of the pages in these classes — or of every page
+   * when no class is named.
+   *
+   * One row per distinct triple: a page that declares two classes has a row for each, and a query
+   * that counted both would show its values twice. Capped, because a query on a property half the
+   * wiki has should degrade to «the first rows» rather than read the table.
+   */
+  def selectFacts(props: Seq[String], classes: Seq[String], limit: Int = 20000)(implicit connection: Connection, site: Site): Seq[(String, String, String)] = {
+    if (props.isEmpty) return Seq.empty
+    val rows = if (classes.isEmpty) {
+      SQL"""
+          SELECT DISTINCT page, prop, value
+              FROM CalculatedSchemaOrg
+              WHERE site = ${site.seq} AND prop IN ($props) AND value <> ''
+              LIMIT $limit
+        """
+    } else {
+      SQL"""
+          SELECT DISTINCT page, prop, value
+              FROM CalculatedSchemaOrg
+              WHERE site = ${site.seq} AND prop IN ($props) AND value <> '' AND
+                  page IN (SELECT page FROM CalculatedSchemaOrg WHERE site = ${site.seq} AND cls IN ($classes))
+              LIMIT $limit
+        """
+    }
+    rows.as(str("page") ~ str("prop") ~ str("value") *).map(flatten)
+  }
+
   def selectWherePageOrValue(pageOrValue: String)(implicit connection: Connection, site: Site): List[CalculatedSchemaOrg] = {
     SQL"""
         SELECT page, cls, prop, value

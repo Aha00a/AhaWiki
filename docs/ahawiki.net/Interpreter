@@ -71,6 +71,7 @@
  1. [InterpreterMath] - MathJax 수식
  1. [InterpreterMermaid] - Mermaid 다이어그램
  1. [InterpreterPaper] - 인쇄용 A4 용지 문서
+ 1. [InterpreterQuery] - 속성으로 페이지를 골라 표·목록으로 (데이터베이스 뷰)
  1. [InterpreterQuote] - 인용문
  1. [InterpreterSchema] - schema.org 구조화 데이터
  1. [InterpreterSlide] - 발표용 슬라이드 (화면은 덱, 인쇄는 유인물)

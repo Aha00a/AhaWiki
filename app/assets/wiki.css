@@ -794,6 +794,28 @@
 .AhaWiki .commonAhaWiki div.MacroLinkDate.around {
   clear: right;
 }
+.AhaWiki .commonAhaWiki div.InterpreterQuery {
+  margin: 12px 0;
+}
+.AhaWiki .commonAhaWiki div.InterpreterQuery .queryCount {
+  margin-top: 4px;
+  font-size: 0.85em;
+  color: var(--color-muted);
+}
+.AhaWiki .commonAhaWiki div.InterpreterQuery tr.queryGroup th {
+  text-align: left;
+  background: var(--color-table-header-bg);
+}
+.AhaWiki .commonAhaWiki div.InterpreterQuery h4.queryGroup {
+  margin: 12px 0 2px;
+}
+.AhaWiki .commonAhaWiki div.InterpreterQuery .queryProp {
+  font-size: 0.8em;
+  color: var(--color-muted);
+}
+.AhaWiki .commonAhaWiki div.InterpreterQuery.empty {
+  color: var(--color-muted);
+}
 .AhaWiki .commonAhaWiki div.Macro.OnThisDay {
   margin: 12px 0;
 }
@@ -1351,6 +1373,28 @@
 }
 .AhaWiki .wikiContent div.MacroLinkDate.around {
   clear: right;
+}
+.AhaWiki .wikiContent div.InterpreterQuery {
+  margin: 12px 0;
+}
+.AhaWiki .wikiContent div.InterpreterQuery .queryCount {
+  margin-top: 4px;
+  font-size: 0.85em;
+  color: var(--color-muted);
+}
+.AhaWiki .wikiContent div.InterpreterQuery tr.queryGroup th {
+  text-align: left;
+  background: var(--color-table-header-bg);
+}
+.AhaWiki .wikiContent div.InterpreterQuery h4.queryGroup {
+  margin: 12px 0 2px;
+}
+.AhaWiki .wikiContent div.InterpreterQuery .queryProp {
+  font-size: 0.8em;
+  color: var(--color-muted);
+}
+.AhaWiki .wikiContent div.InterpreterQuery.empty {
+  color: var(--color-muted);
 }
 .AhaWiki .wikiContent div.Macro.OnThisDay {
   margin: 12px 0;
@@ -2152,6 +2196,28 @@
 }
 .AhaWiki .paperContent .page .pageContent div.MacroLinkDate.around {
   clear: right;
+}
+.AhaWiki .paperContent .page .pageContent div.InterpreterQuery {
+  margin: 12px 0;
+}
+.AhaWiki .paperContent .page .pageContent div.InterpreterQuery .queryCount {
+  margin-top: 4px;
+  font-size: 0.85em;
+  color: var(--color-muted);
+}
+.AhaWiki .paperContent .page .pageContent div.InterpreterQuery tr.queryGroup th {
+  text-align: left;
+  background: var(--color-table-header-bg);
+}
+.AhaWiki .paperContent .page .pageContent div.InterpreterQuery h4.queryGroup {
+  margin: 12px 0 2px;
+}
+.AhaWiki .paperContent .page .pageContent div.InterpreterQuery .queryProp {
+  font-size: 0.8em;
+  color: var(--color-muted);
+}
+.AhaWiki .paperContent .page .pageContent div.InterpreterQuery.empty {
+  color: var(--color-muted);
 }
 .AhaWiki .paperContent .page .pageContent div.Macro.OnThisDay {
   margin: 12px 0;

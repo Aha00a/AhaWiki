@@ -36,6 +36,7 @@ object Interpreters extends TraitInterpreter with Logging {
     InterpreterGantt,
 
     InterpreterSchema,
+    InterpreterQuery,
   ).map(m => m.name.toLowerCase -> m).toMap + ("AhaTracQuote".toLowerCase -> InterpreterQuote)
 
   def getInterpreter(pageContent: PageContent): Option[TraitInterpreter] = {
