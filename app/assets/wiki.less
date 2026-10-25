@@ -575,6 +575,19 @@
             clear: right;
 		}
 
+		// [[UnlinkedMentions]]: a button, and under it the pages that say this name without linking.
+		div.UnlinkedMentions {
+			margin: 8px 0;
+
+			.unlinkedMentionsResult {
+				margin-top: 6px;
+			}
+			.unlinkedMentionSnippet {
+				font-size: 0.9em;
+				color: var(--color-muted);
+			}
+		}
+
 		// #!Query: a table or list of pages chosen by their properties. The table is the wiki's
 		// ordinary one; what is its own is the count under it, the group header rows, and the small
 		// property name in the list view.

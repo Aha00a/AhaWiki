@@ -17,7 +17,9 @@ import logics.AhaWikiCacheMemoryApiLinks
 import logics.AhaWikiCacheMemoryPermission
 import logics.AhaWikiCacheMemoryApiLinks.Snapshot
 import logics.ApplicationConf
+import logics.SearchSnippet
 import logics.SessionLogic
+import logics.UnlinkedMentions
 import logics.SiteLogic
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
@@ -425,6 +427,44 @@ class Api @Inject()(
     }
   }
 
+
+  /**
+   * Pages that say this page's name without linking to it, for the button under Backlinks.
+   *
+   * It scans the text of every page the way search does, so it answers only when asked — the page
+   * view never calls it. A name too short or too common to be worth a scan (`UnlinkedMentions.searchable`)
+   * is answered with an empty list and the reason, rather than with the noise.
+   */
+  def unlinkedMentions(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
+    val name = PageNameUrl.decode(nameEncoded)
+    database.withConnection { implicit connection =>
+      implicit val site: Site = SiteLogic.get(request.host)
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name).holding(connection)
+      implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
+
+      if (!UnlinkedMentions.searchable(name)) {
+        Ok(Json.obj(
+          "pages" -> Json.fromValues(Seq.empty),
+          "truncated" -> Json.fromBoolean(false),
+          "note" -> Json.fromString("This name is too short, or too common, to look for in other pages' text."),
+        ))
+      } else {
+        val wikiPermission = WikiPermission()
+        val found = Page.pageSearch(name, UnlinkedMentions.ScanLimit)
+        val linkSources = CalculatedLink.selectDst(name).map(_.src).toSet
+        val mentions = UnlinkedMentions.of(name, found, linkSources, r => wikiPermission.isReadable(r.name, Some(PageContent(r.content))))
+
+        Ok(Json.obj(
+          "pages" -> Json.fromValues(mentions.take(UnlinkedMentions.ShowLimit).map(m => Json.obj(
+            "name" -> Json.fromString(m.name),
+            "snippet" -> Json.fromString(m.snippet),
+          ))),
+          // Either the list was cut for display, or the search ran out of rows before it ran out of pages.
+          "truncated" -> Json.fromBoolean(mentions.size > UnlinkedMentions.ShowLimit || found.size >= UnlinkedMentions.ScanLimit),
+        ))
+      }
+    }
+  }
 
   private case class AdjacentLinkPayload(src: String, dst: String, alias: String, imageUrl: String, srcImageUrl: String, dstImageUrl: String)
 

@@ -577,3 +577,58 @@ document.addEventListener('DOMContentLoaded', function () {
     expandFoldedHashTarget();
     window.addEventListener('hashchange', expandFoldedHashTarget);
 });
+
+// The button under Backlinks. Finding the mentions scans every page's text, so it is the click that
+// asks; the result is built with textContent, never innerHTML, because a snippet is other pages' text.
+document.addEventListener('click', function (event) {
+    var button = event.target.closest && event.target.closest('.UnlinkedMentions .unlinkedMentionsButton');
+    if (!button) return;
+    var box = button.closest('.UnlinkedMentions');
+    var result = box.querySelector('.unlinkedMentionsResult');
+    var name = box.getAttribute('data-name');
+    button.disabled = true;
+    result.textContent = 'Looking…';
+    fetch('/api/unlinkedMentions/' + encodeURIComponent(name), { credentials: 'same-origin' })
+        .then(function (response) {
+            if (!response.ok) throw new Error(response.status);
+            return response.json();
+        })
+        .then(function (answer) {
+            result.textContent = '';
+            if (answer.note) {
+                result.textContent = answer.note;
+                return;
+            }
+            if (!answer.pages.length) {
+                result.textContent = 'No page mentions it without linking.';
+                return;
+            }
+            var list = document.createElement('ul');
+            answer.pages.forEach(function (page) {
+                var item = document.createElement('li');
+                var link = document.createElement('a');
+                link.href = '/w/' + encodeURIComponent(page.name);
+                link.textContent = page.name;
+                link.rel = 'nofollow';
+                item.appendChild(link);
+                var snippet = document.createElement('span');
+                snippet.className = 'unlinkedMentionSnippet';
+                snippet.textContent = ' — ' + page.snippet;
+                item.appendChild(snippet);
+                list.appendChild(item);
+            });
+            result.appendChild(list);
+            if (answer.truncated) {
+                var more = document.createElement('div');
+                more.className = 'unlinkedMentionSnippet';
+                more.textContent = 'There may be more than are shown.';
+                result.appendChild(more);
+            }
+        })
+        .catch(function () {
+            result.textContent = 'Could not look. Try again in a moment.';
+        })
+        .then(function () {
+            button.disabled = false;
+        });
+});

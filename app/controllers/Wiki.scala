@@ -396,7 +396,8 @@ controllerComponents: ControllerComponents,
     """=== Backlinks === #Backlinks-Generated.generated
       |<Columns count="3" gap="16" minWidth="220">
       |[[Backlinks]]
-      |</Columns>""".stripMargin
+      |</Columns>
+      |[[UnlinkedMentions]]""".stripMargin
 
   private def generateSimilarPagesMarkup: String =
     "=== Similar Pages === #Similar-Pages-Generated.generated\nSimilar pages by cosine similarity. Words after page name are term frequency.\n[[SimilarPages]]"
