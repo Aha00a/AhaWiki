@@ -44,6 +44,31 @@ class UnlinkedMentionsSpec extends AnyFreeSpec {
       assert(m.head.snippet.contains("GraphGlow"))
     }
 
+    "does not count the name inside a longer name: Macro is not MacroInclude" in {
+      val found = Seq(page("Family", "see MacroInclude and MacroPageMap"), page("Real", "the Macro, as a page"))
+      assert(UnlinkedMentions.of("Macro", found, Set.empty, allowed).map(_.name) === Seq("Real"))
+    }
+
+    "counts the name beside punctuation and brackets" in {
+      for (text <- Seq("(Macro)", "Macro.", "[Macro]", "a Macro b", "\"Macro\"", "Macro/Include", "Macro-ish"))
+        assert(UnlinkedMentions.of("Macro", Seq(page("P", text)), Set.empty, allowed).size === 1, text)
+    }
+
+    "counts a Korean name with a particle stuck to it" in {
+      assert(UnlinkedMentions.of("성운", Seq(page("P", "밤하늘의 성운을 본다")), Set.empty, allowed).size === 1)
+    }
+
+    "does not count a name stuck to digits or an underscore" in {
+      assert(UnlinkedMentions.of("Macro", Seq(page("P", "Macro2 and _Macro")), Set.empty, allowed).isEmpty)
+    }
+
+    "centres the snippet on the real mention, not on an earlier substring" in {
+      val text = "MacroInclude comes first. " + ("filler " * 40) + "and only here is the Macro itself mentioned"
+      val snippet = UnlinkedMentions.of("Macro", Seq(page("P", text)), Set.empty, allowed).head.snippet
+      assert(snippet.contains("the Macro itself"))
+      assert(!snippet.contains("MacroInclude"))
+    }
+
     "drops the page itself" in {
       assert(UnlinkedMentions.of("GraphGlow", Seq(page("GraphGlow", "GraphGlow is this page")), Set.empty, allowed).isEmpty)
     }

@@ -129,6 +129,21 @@ class QueryEngineSpec extends AnyFreeSpec {
     assert(s.props === Seq("score", "birthPlace", "birthDate"))
   }
 
+  "displayValues" - {
+    "drops a year-month that is only the start of a full date of the same property" in {
+      assert(QueryEngine.displayValues(Seq("1972-10", "1972-10-17")) === Seq("1972-10-17"))
+    }
+
+    "keeps both when they are different dates" in {
+      assert(QueryEngine.displayValues(Seq("1972-10", "1980-01-05")) === Seq("1972-10", "1980-01-05"))
+    }
+
+    "keeps a date written with no year, and ordinary values alike" in {
+      assert(QueryEngine.displayValues(Seq("--10-23")) === Seq("--10-23"))
+      assert(QueryEngine.displayValues(Seq("London", "Lon")) === Seq("London", "Lon"))
+    }
+  }
+
   "parse" - {
     "reports a line it does not know instead of ignoring it" in {
       val r = QueryEngine.parse(Seq("Person"), Seq(Seq("shwo", "name")))

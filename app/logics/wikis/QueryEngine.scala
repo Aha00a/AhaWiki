@@ -127,6 +127,17 @@ object QueryEngine {
     }
   }
 
+  /**
+   * The values to show for a property.
+   *
+   * `#!Schema` stores a date as itself and also as its year and month (`1972-10-17`, `1972-10`), so
+   * that pages can be found by month. Showing both reads as two birthdays. A value that is only the
+   * beginning of another value of the same property is dropped from what is shown; it stays in the
+   * data, where the month lookup wants it.
+   */
+  def displayValues(values: Seq[String]): Seq[String] =
+    values.filterNot(v => values.exists(other => other != v && other.startsWith(v + "-")))
+
   /** Numbers compare as numbers, everything else as text — so dates in ISO form sort as dates. */
   private sealed trait Key
   private case class Num(n: BigDecimal) extends Key

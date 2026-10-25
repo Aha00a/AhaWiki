@@ -41,12 +41,26 @@ object UnlinkedMentions {
    * "Foo Bar" is not a mention of "Foo". `canRead` is the reader's permission, asked per page.
    */
   def of(name: String, found: Seq[SearchResult], linkSources: Set[String], canRead: SearchResult => Boolean): Seq[Mention] = {
-    val needle = name.trim.toLowerCase
+    val word = wordMatch(name)
     found
       .filter(r => r.name != name)
       .filterNot(r => linkSources.contains(r.name))
-      .filter(r => r.content.toLowerCase.contains(needle))
       .filter(canRead)
-      .map(r => Mention(r.name, SearchSnippet.of(r.content, name)))
+      .flatMap { r =>
+        val flat = SearchSnippet.flatten(r.content)
+        word.findFirstMatchIn(flat).map(m => Mention(r.name, SearchSnippet.window(flat, m.start, m.end - m.start)))
+      }
   }
+
+  /**
+   * The name where it stands on its own, not inside a longer name.
+   *
+   * `Macro` is a substring of `MacroInclude`, `MacroPageMap` and every other page in the family, and a
+   * list of those is not a list of mentions. So a match with a Latin letter, a digit or an underscore
+   * touching it on either side does not count. Hangul is left out of that rule on purpose: Korean
+   * glues a particle to the noun (`성운을`, `성운이`), and refusing those would miss most mentions
+   * written in it. The cost is the opposite miss — a Korean name inside a longer Korean word is found.
+   */
+  private def wordMatch(name: String): scala.util.matching.Regex =
+    ("(?i)(?<![A-Za-z0-9_])" + java.util.regex.Pattern.quote(name.trim) + "(?![A-Za-z0-9_])").r
 }

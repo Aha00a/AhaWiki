@@ -14,15 +14,23 @@ object SearchSnippet {
    * and an ellipsis marks each side that was cut.
    */
   def of(content: String, q: String, width: Int = 80): String = {
-    val flat = content.replaceAll("""\s+""", " ").trim
+    val flat = flatten(content)
     val needle = q.trim
     val at = if (needle.isEmpty) -1 else flat.toLowerCase.indexOf(needle.toLowerCase)
     if (at < 0) {
       if (flat.length <= width * 2) flat else flat.take(width * 2).trim + "…"
     } else {
-      val from = (at - width).max(0)
-      val to = (at + needle.length + width).min(flat.length)
-      (if (from > 0) "…" else "") + flat.substring(from, to).trim + (if (to < flat.length) "…" else "")
+      window(flat, at, needle.length, width)
     }
+  }
+
+  /** The text with every run of whitespace made one space: what `window` expects its positions in. */
+  def flatten(content: String): String = content.replaceAll("""\s+""", " ").trim
+
+  /** `width` characters each side of the `length` characters at `at` in `flat`, an ellipsis where it was cut. */
+  def window(flat: String, at: Int, length: Int, width: Int = 80): String = {
+    val from = (at - width).max(0)
+    val to = (at + length + width).min(flat.length)
+    (if (from > 0) "…" else "") + flat.substring(from, to).trim + (if (to < flat.length) "…" else "")
   }
 }

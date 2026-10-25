@@ -65,7 +65,7 @@ object InterpreterQuery extends TraitInterpreter {
     AhaMarkLink(name, noFollow = true).toHtmlString(wikiContext.setPageNameByPermission)
 
   private def cell(row: Row, prop: String)(implicit wikiContext: ContextWikiPage): String =
-    row.values.getOrElse(prop, Seq.empty).map(link).mkString(", ")
+    QueryEngine.displayValues(row.values.getOrElse(prop, Seq.empty)).map(link).mkString(", ")
 
   private def renderTable(spec: QueryEngine.Spec, rows: Seq[Row])(implicit wikiContext: ContextWikiPage): String = {
     val head = ("Name" +: spec.show).map(h => s"<th>${h.escapeHtml()}</th>").mkString
