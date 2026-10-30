@@ -38,10 +38,17 @@ const citationShapes = [
 
 const sourceExtensions = /\.(scala|java|jsx?|mjs|html|less|css|conf|sql|json|md|sh|xml|sbt)$/;
 
+// Third-party code the admin build copies out of node_modules (scripts/README.md). It is
+// committed, so git lists it, but nothing a wiki page cites is declared there -- and minified
+// code declares short names like `VM` and `String`, which made the member check below take a
+// recharts chunk for the owner of `VM.native_memory` and report the page stale.
+const thirdPartyDirs = ['public/js/babel/vendor/'];
+
 function trackedSourceFiles() {
     return execFileSync('git', ['ls-files'], {cwd: rootDir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024})
         .split('\n').map(line => line.trim()).filter(Boolean)
         .filter(file => !file.startsWith(`${docsGitPath}/`))
+        .filter(file => !thirdPartyDirs.some(dir => file.startsWith(dir)))
         .filter(file => sourceExtensions.test(file) || file === 'conf/routes');
 }
 
