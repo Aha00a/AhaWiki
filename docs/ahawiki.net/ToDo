@@ -216,6 +216,9 @@ https://www.wikimatrix.org/ 발견. 여기 기준에 좀 맞춰볼까.. --[2020-
  * [[CB(x)]] 두 인스턴스의 릴리스가 다른 동안(한 대만 먼저 올려 대조하는 동안이 가장 길다) 새 HTML 이 부른 `?v=<새 해시>` 가 옛 인스턴스로 가면, 옛 파일이 새 주소로 최대 한 시간 캐시된다. `/public/` 을 Assets 를 감싸는 컨트롤러로 받아 `v` 가 자기 해시와 다를 때 `no-cache` 를 붙이면 막힌다 — 그 코드가 옛 인스턴스에 있어야 하므로 들어간 다음 배포부터 듣는다([Dev Deploying] '''남은 틈'''). --[2026-09-27]
   * `PublicAssets` 로 그렇게 했다(2026-10-02). `PublicAssetCacheSpec` 은 옛 라우트(Assets 직접)로는 no-cache 검사에서 실패한다. 배포했다(2026-10-02, 태그 `v20261002T054014-aha00a`) — canary 에서 맞는 `v` 는 `max-age=3600`, 틀린 `v` 는 `no-cache` 를 확인했다. 다음 배포부터 듣는다.
 
+=== Admin 화면이 esm.sh 의 즉석 빌드에 매달려 있다
+ * [ ] `_baseAdmin.scala.html` 의 import map 이 `@mantine/core`·`recharts`·`react-router-dom`·`mantine-datatable` 을 `esm.sh` 의 `?deps=`·`?external=` 주소로 받는다. 그 주소는 esm.sh 가 요청 때 빌드해 주는 것이라, 그쪽이 아프면 Admin 화면은 «Admin UI 로딩 중…» 에서 멈춘다. 2026-10-31 03:5x 가 그랬다 — 네 주소가 503/500 이고 본문은 `no space left on device`, 맨 주소(`@mantine/core@9.2.1`)와 미리 빌드된 `react`·`react-dom` 은 200. 우리 쪽은 아무것도 안 바뀌었고 그날 배포(`v20261031T034814-aha00a`)의 API 는 Chrome 세션에서 `fetch` 로 200 을 확인했다. 어떻게 할지는 소유자 판단: 넷을 `scripts/admin.mjs` 의 esbuild 번들에 넣으면 CDN 없이 뜨지만 `admin.js` 가 커지고(지금 141KB), import map 을 그대로 두면 esm.sh 가 돌아오기를 기다리는 것뿐이다. --[2026-10-31]
+
 === 배포가 canary 의 500 을 못 본다
  * [[CB(x)]] 2026-10-01 첫 canary 는 모든 페이지에 500 이었는데 `deploy.sh` 는 성공을 보고했다. `/hc` 는 페이지를 그리지 않고, 외부 확인은 프록시를 거쳐 옛 대가 답한다. --[2026-10-02]
   * 5단계가 이제 재시작한 포트에 루프백으로 확인 URL 을 그려 보고, 하나라도 200 이 아니면 그 대를 이전 릴리스로 되돌리고 멈춘다 — [Dev Deploying] '''그려지는지는 띄운 그 대에서 본다'''(그때 이름은 «재시작한 그 대»). 운영 인스턴스에 대고 그 함수만 돌려 정상 URL 은 통과, 403·404 는 잡히는 것을 봤다. 되돌리는 경로는 실제 배포로는 아직 안 돌았다. 2026-10-02 배포에서 처음 썼다: `renders 3 verify URL(s)`.
