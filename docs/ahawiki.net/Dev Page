@@ -24,6 +24,8 @@
  * `description`: 본문에서 뽑은 요약(evolution 66). redirect 페이지는 NULL
  * `size`: 최신 revision의 content length
 
+'''파생 열을 더하면 그 열을 채우는 재계산까지가 한 변경이다.''' 열은 다음 계산이 지나갈 때만 채워지고, 계산은 저장·보기 열 번에 한 번·`PageMeta` 행이 '''없는''' 페이지의 스케줄러 세 길뿐이라, 편집도 조회도 드문 페이지는 영영 빈 채로 남는다. `description` 이 그랬다 — 2026-06-26 에 열을 더하고 채우지 않아, 넉 달 뒤 4,659행 중 764행이 비어 있었고 그 빈 행이 «뽑을 글이 없는 페이지» 로 오해됐다([ToDo] «JVM 의 메모리와 CPU» 의 `toText` 항목). 채우는 길은 관리 화면의 Calculate(`POST /api/Admin/Site/:seq/Calculate?pageName=…`)를 빈 행마다 부르는 것이고, 2026-10-31 에 소유자 관리 사이트 셋(aha00a.com·Oddconcepts·Cellivery)의 빈 448행을 그렇게 다시 계산했다 — 액터가 한 번에 하나씩 처리해 몇 분 걸렸다. aha00a.com 은 글이 있는 126행이 전부 채워졌고, 남은 145행은 리다이렉트 143 과 글이 없는 둘(`.header` 는 블록뿐, `.cssContract` 는 `#!html` 의 `<style>` 뿐)이라 비어 있는 것이 맞다. Oddconcepts 는 136 → 7, Cellivery 는 42 → 13 으로 줄었다. 다른 사이트의 빈 행은 타인 위키라 두었다.
+
 `PageMeta.permRead`도 evolution 51에서 제거했다. 읽기 권한 판정은 `Permission` 기반으로 처리한다.
 
 == Calculation
