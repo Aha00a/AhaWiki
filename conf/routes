@@ -74,6 +74,7 @@ PUT           /api/Admin/Site/:seq                   controllers.ApiAdminSite.ad
 GET           /api/Admin/Users                       controllers.ApiAdminReport.adminUsers
 GET           /api/Admin/UserViews                   controllers.ApiAdminReport.adminUserViews(userSeq: Long, n: Int ?= 200)
 GET           /api/Admin/DailyStats                  controllers.ApiAdminReport.adminDailyStats
+GET           /api/Admin/SiteActivity                controllers.ApiAdminReport.adminSiteActivity
 GET           /api/Admin/TopViewedPages              controllers.ApiAdminReport.adminTopViewedPages
 GET           /api/Admin/RecentChanges               controllers.ApiAdminReport.adminRecentChanges
 GET           /api/Admin/AccessLogs                  controllers.ApiAdminReport.adminAccessLogs

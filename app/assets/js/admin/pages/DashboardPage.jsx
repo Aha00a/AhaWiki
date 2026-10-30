@@ -16,7 +16,7 @@ const recentChangeFlagLegend = [
 export default function DashboardPage() {
     const {me} = useAdminContext();
     const navigate = useNavigate();
-    const {loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, memoryCacheStats, load, loadSitesOnly, loadMemoryCacheStats} = useDashboardData();
+    const {loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, siteActivity, memoryCacheStats, load, loadSitesOnly, loadMemoryCacheStats} = useDashboardData();
 
     useEffect(() => {
         if (me === null) return;
@@ -84,6 +84,19 @@ export default function DashboardPage() {
             <Card withBorder radius="md" padding="lg">
                 <Group justify="space-between" mb="md"><Title order={3}>30일 운영 추이 차트</Title><Badge color="blue" variant="light">Chart</Badge></Group>
                 <MultiTrendChart series={[{name: "New Users", color: "blue", rows: dailyStats.userCreated}, {name: "New Pages", color: "indigo", rows: dailyStats.pageCreated}, {name: "Page Edits", color: "grape", rows: dailyStats.pageEdited}]}/>
+            </Card>
+            <Card withBorder radius="md" padding="lg">
+                <Group justify="space-between" mb="md"><Title order={3}>Sites by Month</Title><Badge color="indigo" variant="light">{siteActivity.months.length}m</Badge></Group>
+                <Text size="sm" c="dimmed" mb="md">A site is active in a month when any page revision was saved there; minor and API edits count, views do not. Oldest month first.</Text>
+                {makeTable(["Month", "New Sites", "Active Sites", "New Pages", "Page Edits"], siteActivity.months.map((row) => [row.ym, row.sitesCreated, row.sitesActive, row.pagesCreated, row.pagesEdited]))}
+            </Card>
+            <Card withBorder radius="md" padding="lg">
+                <Group justify="space-between" mb="md"><Title order={3}>Site Activity (30 days)</Title><Badge color="indigo" variant="light">{siteActivity.sites.length}</Badge></Group>
+                <Text size="sm" c="dimmed" mb="md">Counts are the last 30 days. First and last edited are over the site's whole history: first edited next to created says whether a new site was written to soon after it was opened.</Text>
+                {makeTable(["Site", "Created", "First Edited", "New Pages", "Page Edits", "Editors", "Last Edited"], siteActivity.sites.map((row) => {
+                    const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
+                    return [siteUrl ? <Anchor href={siteUrl} target="_blank">{row.siteName} (#{row.siteSeq})</Anchor> : `${row.siteName} (#${row.siteSeq})`, row.created, row.firstEditedAt ?? "-", row.pagesCreated30d, row.pagesEdited30d, row.editors30d, row.lastEditedAt ?? "-"];
+                }))}
             </Card>
             <Card withBorder radius="md" padding="lg">
                 <Group justify="space-between" mb="md"><Title order={3}>Most Viewed Pages</Title><Badge color="pink" variant="light">{Math.min(topViewedPages.length, 30)}</Badge></Group>

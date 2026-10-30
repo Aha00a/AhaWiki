@@ -11,12 +11,13 @@ export function useDashboardData() {
     const [recentChanges, setRecentChanges] = useState([]);
     const [topViewedPages, setTopViewedPages] = useState([]);
     const [memoryCacheStats, setMemoryCacheStats] = useState([]);
+    const [siteActivity, setSiteActivity] = useState({months: [], sites: []});
 
     const load = useCallback(async () => {
         setLoading(true);
         setError("");
         try {
-            const [siteData, allUserData, dailyStatsData, recentChangesData, topViewedPagesData] = await Promise.all([
+            const [siteData, allUserData, dailyStatsData, recentChangesData, topViewedPagesData, siteActivityData] = await Promise.all([
                 fetchJson("/api/Admin/Sites"),
                 fetchJson("/api/Admin/Users"),
                 fetchJson("/api/Admin/DailyStats"),
@@ -25,12 +26,17 @@ export function useDashboardData() {
                 // were always empty.
                 fetchJson("/api/Admin/RecentChanges?n=30&includeMinorEdit=1&includeViaApi=1"),
                 fetchJson("/api/Admin/TopViewedPages?n=30"),
+                fetchJson("/api/Admin/SiteActivity"),
             ]);
             const allUserRows = Array.isArray(allUserData?.array) ? allUserData.array : (Array.isArray(allUserData) ? allUserData : []);
             setSites(siteData);
             setAllUsers(allUserRows);
             setRecentChanges(recentChangesData);
             setTopViewedPages(topViewedPagesData);
+            setSiteActivity({
+                months: siteActivityData?.months ?? [],
+                sites: siteActivityData?.sites ?? [],
+            });
             setDailyStats({
                 userCreated: dailyStatsData?.userCreated ?? [],
                 pageCreated: dailyStatsData?.pageCreated ?? [],
@@ -53,6 +59,7 @@ export function useDashboardData() {
             setAllUsers([]);
             setRecentChanges([]);
             setTopViewedPages([]);
+            setSiteActivity({months: [], sites: []});
             setDailyStats({userCreated: [], pageCreated: [], pageEdited: []});
         } catch (err) {
             logError("dashboard:sites-only:load:error", err);
@@ -71,5 +78,5 @@ export function useDashboardData() {
         }
     }, []);
 
-    return {loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, memoryCacheStats, load, loadSitesOnly, loadMemoryCacheStats};
+    return {loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, siteActivity, memoryCacheStats, load, loadSitesOnly, loadMemoryCacheStats};
 }

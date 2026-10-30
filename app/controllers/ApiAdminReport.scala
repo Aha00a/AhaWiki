@@ -3,6 +3,7 @@ package controllers
 import anorm.SqlParser.{bool, get, int, long, str}
 import anorm._
 import com.aha00a.commons.Implicits._
+import com.aha00a.play.AnormSqlParser.localDateTime
 import io.circe.generic.auto._
 import io.circe.syntax._
 import models.tables.Site
@@ -10,11 +11,15 @@ import play.api.Logging
 import play.api.db.Database
 import play.api.mvc._
 
+import java.sql.Connection
+import java.time.LocalDateTime
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
 import javax.inject._
 
 /**
- * What the admin screens report on: users, page views, daily counts, recent changes, and
- * the access log.
+ * What the admin screens report on: users, page views, daily counts, recent changes, site
+ * activity, and the access log.
  *
  * These are read-only queries over the whole instance, which is why they are apart from the
  * endpoints that change a site. They are also the endpoints most likely to be slow, and
@@ -26,6 +31,21 @@ class ApiAdminReport @Inject()(
   controllerComponents: ControllerComponents,
   database: Database,
 ) extends BaseController with JsonResults with AdminAuth with Logging {
+
+  /**
+   * Whether the sites are being used: new and active sites per month, and what each site did
+   * in the last 30 days. The numbers behind the measurement section of the wiki's
+   * ToDo-User-Acquisition page, which asks to look at them monthly on one fixed definition.
+   */
+  def adminSiteActivity: Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      AccessDenied
+    } else {
+      database.withConnection { implicit connection =>
+        Ok(ApiAdminReport.siteActivity(LocalDateTime.now()).asJson)
+      }
+    }
+  }
 
   def adminUsers: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
@@ -532,5 +552,146 @@ class ApiAdminReport @Inject()(
         Ok(pagedJson(rows.asJson, page, pageSize, count))
       }
     }
+  }
+}
+
+object ApiAdminReport {
+  /** How many months the monthly series goes back, the current one included. */
+  val monthsReported = 12
+
+  /** The window of the per-site counts, in days back from now. */
+  val activeWindowDays = 30
+
+  case class MonthlySiteActivity(
+    ym: String,
+    sitesCreated: Long,
+    sitesActive: Long,
+    pagesCreated: Long,
+    pagesEdited: Long,
+  )
+
+  case class SiteActivity(
+    siteSeq: Long,
+    siteName: String,
+    siteDomain: Option[String],
+    created: String,
+    pagesCreated30d: Long,
+    pagesEdited30d: Long,
+    editors30d: Long,
+    firstEditedAt: Option[String],
+    lastEditedAt: Option[String],
+  )
+
+  case class SiteActivityReport(months: Seq[MonthlySiteActivity], sites: Seq[SiteActivity])
+
+  private val dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+
+  /**
+   * A site is active in a month when any revision of any of its pages was saved in that month.
+   * Minor edits and edits through the API count: the question is whether anyone is writing
+   * there at all, and an owner whose agent writes for them is still using the site. Views do
+   * not count — a site nobody writes to is not in use, however often it is read.
+   *
+   * The SQL is YEAR() and MONTH() rather than DATE_FORMAT(), which H2 does not have, so that
+   * the spec can run this against the test schema. The other reports in this file predate
+   * that concern and cannot be run there.
+   *
+   * `now` is a parameter so the spec can fix it. Every month in the series is returned, with
+   * zeros where nothing happened — a month missing from a table reads as a gap in the data,
+   * not as a month of no activity.
+   *
+   * Each site also carries its first and last edit ever. The first, read against `created`,
+   * says whether a site was written to soon after it was opened; the last says whether it has
+   * gone quiet. Neither is limited to the window.
+   */
+  def siteActivity(now: LocalDateTime)(implicit connection: Connection): SiteActivityReport = {
+    val currentMonth = YearMonth.from(now)
+    val months = (monthsReported - 1 to 0 by -1).map(currentMonth.minusMonths(_))
+    val firstMonthStart = months.head.atDay(1).atStartOfDay()
+
+    def yearMonth(year: Int, month: Int): YearMonth = YearMonth.of(year, month)
+
+    val sitesCreatedByMonth: Map[YearMonth, Long] = SQL"""
+      SELECT YEAR(S.created) AS y, MONTH(S.created) AS m, COUNT(*) AS cnt
+      FROM Site S
+      WHERE S.created >= $firstMonthStart
+      GROUP BY YEAR(S.created), MONTH(S.created)
+    """.as((int("y") ~ int("m") ~ long("cnt")).map { case y ~ m ~ cnt => yearMonth(y, m) -> cnt }.*).toMap
+
+    val pagesByMonth: Map[YearMonth, (Long, Long, Long)] = SQL"""
+      SELECT
+        YEAR(P.dateTime) AS y,
+        MONTH(P.dateTime) AS m,
+        COUNT(DISTINCT P.site) AS sites_active,
+        SUM(CASE WHEN P.revision = 1 THEN 1 ELSE 0 END) AS pages_created,
+        COUNT(*) AS pages_edited
+      FROM Page P
+      WHERE P.dateTime >= $firstMonthStart
+      GROUP BY YEAR(P.dateTime), MONTH(P.dateTime)
+    """.as((int("y") ~ int("m") ~ long("sites_active") ~ long("pages_created") ~ long("pages_edited")).map {
+      case y ~ m ~ sitesActive ~ pagesCreated ~ pagesEdited => yearMonth(y, m) -> (sitesActive, pagesCreated, pagesEdited)
+    }.*).toMap
+
+    val monthly = months.map { month =>
+      val (sitesActive, pagesCreated, pagesEdited) = pagesByMonth.getOrElse(month, (0L, 0L, 0L))
+      MonthlySiteActivity(
+        ym = month.toString,
+        sitesCreated = sitesCreatedByMonth.getOrElse(month, 0L),
+        sitesActive = sitesActive,
+        pagesCreated = pagesCreated,
+        pagesEdited = pagesEdited,
+      )
+    }
+
+    val windowStart = now.minusDays(activeWindowDays)
+    val sites = SQL"""
+      SELECT
+        S.seq AS site_seq,
+        S.name AS site_name,
+        SD.site_domain,
+        S.created,
+        COALESCE(W.pages_created, 0) AS pages_created,
+        COALESCE(W.pages_edited, 0) AS pages_edited,
+        COALESCE(W.editors, 0) AS editors,
+        L.first_edited_at,
+        L.last_edited_at
+      FROM Site S
+      LEFT JOIN (
+        SELECT site, MIN(domain) AS site_domain
+        FROM SiteDomain
+        GROUP BY site
+      ) SD ON SD.site = S.seq
+      LEFT JOIN (
+        SELECT
+          P.site,
+          SUM(CASE WHEN P.revision = 1 THEN 1 ELSE 0 END) AS pages_created,
+          COUNT(*) AS pages_edited,
+          COUNT(DISTINCT P.user) AS editors
+        FROM Page P
+        WHERE P.dateTime >= $windowStart
+        GROUP BY P.site
+      ) W ON W.site = S.seq
+      LEFT JOIN (
+        SELECT P.site, MIN(P.dateTime) AS first_edited_at, MAX(P.dateTime) AS last_edited_at
+        FROM Page P
+        GROUP BY P.site
+      ) L ON L.site = S.seq
+      ORDER BY pages_edited DESC, L.last_edited_at DESC, S.seq
+    """.as((long("site_seq") ~ str("site_name") ~ str("site_domain").? ~ localDateTime("created") ~ long("pages_created") ~ long("pages_edited") ~ long("editors") ~ localDateTime("first_edited_at").? ~ localDateTime("last_edited_at").?).map {
+      case siteSeq ~ siteName ~ siteDomain ~ created ~ pagesCreated ~ pagesEdited ~ editors ~ firstEditedAt ~ lastEditedAt =>
+        SiteActivity(
+          siteSeq = siteSeq,
+          siteName = siteName,
+          siteDomain = siteDomain,
+          created = created.format(dateTimeFormatter),
+          pagesCreated30d = pagesCreated,
+          pagesEdited30d = pagesEdited,
+          editors30d = editors,
+          firstEditedAt = firstEditedAt.map(_.format(dateTimeFormatter)),
+          lastEditedAt = lastEditedAt.map(_.format(dateTimeFormatter)),
+        )
+    }.*)
+
+    SiteActivityReport(months = monthly, sites = sites)
   }
 }
