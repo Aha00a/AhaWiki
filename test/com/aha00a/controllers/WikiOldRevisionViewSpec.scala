@@ -114,4 +114,24 @@ class WikiOldRevisionViewSpec extends PlaySpec with GuiceOneAppPerSuite with Bef
       }
     }
   }
+
+  private def diff(query: String) =
+    route(app, FakeRequest(GET, s"/w/Recipe?action=diff$query").withHeaders(HOST -> host)).get
+
+  // Scanners send `before=150'GUsvqJ<'">pLZraH` and the like; the production log had six 500s
+  // from it in October 2026, from `.toInt` on the raw string.
+  "the diff of two revisions" should {
+    "show the two revisions it was asked for" in {
+      val result = diff("&before=1&after=2")
+      status(result) mustBe OK
+      val html = contentAsString(result)
+      html must include ("first-revision-marker")
+      html must include ("second-revision-marker")
+    }
+
+    "answer 400, not 500, when before or after is not a number" in {
+      status(diff("&before=1%27GUsvqJ%3C%27%22%3EpLZraH&after=2")) mustBe BAD_REQUEST
+      status(diff("&before=1&after=%27%3E%3Casdf+alt%3D%22%22%3E-f3f3")) mustBe BAD_REQUEST
+    }
+  }
 }

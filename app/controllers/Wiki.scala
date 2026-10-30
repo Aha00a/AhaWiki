@@ -350,9 +350,17 @@ controllerComponents: ControllerComponents,
     }
   }
   private def renderDiffPage(name: String)(implicit request: Request[AnyContent], contextWikiPage: ContextWikiPage, connection: Connection, site: Site): Result = {
-    val after = request.getQueryString("after").getOrElse("0").toInt
-    val before = request.getQueryString("before").getOrElse((after - 1).toString).toInt
+    // Scanners put injection strings into these; until 2026-10-31 `.toInt` on them answered 500
+    // six times in a month. A number that is not one is the caller's mistake, so 400.
+    val afterOption = request.getQueryString("after").fold(Option(0))(_.toIntOption)
+    val beforeOption = afterOption.flatMap(after => request.getQueryString("before").fold(Option(after - 1))(_.toIntOption))
+    (afterOption, beforeOption) match {
+      case (Some(after), Some(before)) => renderDiffPage(name, before, after)
+      case _ => BadRequest("before and after must be revision numbers").withHeaderRobotNoIndexNoFollow
+    }
+  }
 
+  private def renderDiffPage(name: String, before: Int, after: Int)(implicit request: Request[AnyContent], contextWikiPage: ContextWikiPage, connection: Connection, site: Site): Result = {
     val beforePage = Page.selectSpecificRevision(name, before)
     val afterPage = Page.selectSpecificRevision(name, after)
 
