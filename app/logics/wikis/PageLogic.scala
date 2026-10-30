@@ -161,6 +161,12 @@ object PageLogic {
    *
    * A day is how far behind a similar-pages list may now run. It is also how long a change to the
    * calculation itself takes to reach a page that is viewed but not edited.
+   *
+   * What it bought, measured on the production log over 12.9 days before and 6.3 days after it
+   * went live on 2026-10-24: the repeats. Calculations started by views ran 18.6 times per 80
+   * minutes before and 20.2 after -- crawlers spread their views over pages that have not been
+   * calculated in a day -- while a page recalculated within half an hour of the last time went
+   * from 293 cases to 3, about 7% of the runs. The wiki ToDo page has the figures.
    */
   val ViewRecalculationInterval: java.time.Duration = java.time.Duration.ofDays(1)
 
