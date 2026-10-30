@@ -18,7 +18,10 @@
         <meta name="twitter:description" content="@(description)">
 
         <link rel="shortcut icon" type="image/png" href="@logics.AhaWikiConfig.DefaultFaviconPath">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        @* Font Awesome 6, the same copy the wiki pages use (public/vendor/, scripts/vendor.mjs); the
+           icon names here are v5 names, which v6 keeps as aliases. Until 2026-10-31 this was a
+           second copy, v5 from cdnjs. *@
+        <link rel="stylesheet" href="@logics.PublicAsset.url("vendor/font-awesome/css/all.min.css")">
         <link rel="stylesheet" href="@logics.PublicAsset.url("less.css")">
         <link rel="stylesheet" href="@logics.PublicAsset.url("wiki.css")">
         <link rel="stylesheet" href="@logics.PublicAsset.url("search.css")">

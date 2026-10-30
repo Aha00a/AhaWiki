@@ -58,9 +58,10 @@
                 document.documentElement.classList.add("theme-" + theme);
             })();
         </script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-        @* Every CSS and JS file of the wiki's own goes through PublicAsset.url, which puts a digest
-           of the file in its address. Dev Deploying has why. *@
+        <link rel="stylesheet" href="@logics.PublicAsset.url("vendor/font-awesome/css/all.min.css")">
+        @* Every CSS and JS file served from here -- the wiki's own and, since 2026-10-31, the
+           third-party ones under public/vendor/ (scripts/vendor.mjs) -- goes through
+           PublicAsset.url, which puts a digest of the file in its address. Dev Deploying has why. *@
         <link rel="stylesheet" href="@logics.PublicAsset.url("less.css")">
         <link rel="stylesheet" href="@logics.PublicAsset.url("wiki.css")">
         <link rel="stylesheet" href="@logics.PublicAsset.url("search.css")">
@@ -69,15 +70,16 @@
         <link rel="stylesheet" href="@logics.PublicAsset.url("interpreter.css")">
         <link rel="stylesheet" href="@logics.PublicAsset.url("adjacent.css")">
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js" integrity="sha512-jGsMH83oKe9asCpkOVkBnUrDDTp8wl+adkB2D+//JtlxO4SrLoJdhbOysIFQJloQFD+C4Fl1rMsQZF76JjV0eQ==" crossorigin="anonymous"></script>        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.14.0/jquery.validate.min.js" integrity="sha256-Lj47JmDL+qxf6/elCzHQSUFZmJYmqEECssN5LP/ifRM=" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js" integrity="sha256-jkaBMXLp+mraE29Q0r6gtTniSfPhS1N0R7YcQwdt7nQ=" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.devbridge-autocomplete/1.2.24/jquery.autocomplete.min.js" integrity="sha256-PsW8RLr/0Hdq8VSZyHHLFxO6t3ltKo3L3ULL1xByhhc=" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.min.js" integrity="sha512-qzgd5cYSZcosqpzpn7zF2ZId8f/8CHmFKZ8j7mU4OUXTNRd5g+ZHBPsgKEwoqxCtdQvExE5LprwwPAgoicguNg==" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.31.3/js/jquery.tablesorter.widgets.min.js" integrity="sha512-dj/9K5GRIEZu+Igm9tC16XPOTz0RdPk9FGxfZxShWf65JJNU2TjbElGjuOo3EhwAJRPhJxwEJ5b+/Ouo+VqZdQ==" crossorigin="anonymous"></script>
+        <script src="@logics.PublicAsset.url("vendor/jquery/jquery.min.js")"></script>
+        <script src="@logics.PublicAsset.url("vendor/jquery-validation/jquery.validate.min.js")"></script>
+        <script src="@logics.PublicAsset.url("vendor/jquery-form/jquery.form.min.js")"></script>
+        <script src="@logics.PublicAsset.url("vendor/devbridge-autocomplete/jquery.autocomplete.min.js")"></script>
+        <script src="@logics.PublicAsset.url("vendor/tablesorter/jquery.tablesorter.min.js")"></script>
+        <script src="@logics.PublicAsset.url("vendor/tablesorter/jquery.tablesorter.widgets.min.js")"></script>
         @* Vendored because this copy carries a local options signature change. *@
         <script type="text/javascript" src="@logics.PublicAsset.url("js/jquery.hotkeys.js")"></script>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js" integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin="anonymous"></script>
+        <script src="@logics.PublicAsset.url("vendor/mark.js/jquery.mark.min.js")"></script>
 
         <script type="text/x-mathjax-config">
             MathJax.Hub.Config({
@@ -88,11 +90,17 @@
                 }
             });
         </script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js" integrity="sha256-yYfngbEKv4RENfGDvNUqJTqGFcKf31NJEe9OTnnMH3Y=" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/config/TeX-AMS_HTML.js" integrity="sha256-MZuxbOGocfrefUyrW6qNzjtj51TdsXJybGQ5F5fjS7A=" crossorigin="anonymous"></script>
+        <script src="@logics.PublicAsset.url("vendor/mathjax/MathJax.js")"></script>
+        <script src="@logics.PublicAsset.url("vendor/mathjax/config/TeX-AMS_HTML.js")"></script>
+        @* The combined configuration above ends by asking for [Contrib]/a11y/accessibility-menu.js,
+           which MathJax 2 fetches from cdn.mathjax.org -- the one address every page view still
+           went off this host for after 2026-10-31. The extension only adds an Accessibility
+           submenu to MathJax's right-click menu, and what that menu enables loads yet more
+           from there, so it is dropped. Config replaces the array rather than appending. *@
+        <script>MathJax.Hub.Config({extensions: []});</script>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.6/Sortable.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="@logics.PublicAsset.url("vendor/d3/d3.min.js")"></script>
+        <script src="@logics.PublicAsset.url("vendor/sortablejs/Sortable.min.js")"></script>
         @if(contextSite.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()) {
             <script type="text/javascript">
                 var arrayOnGoogleMapLoaded = [];
@@ -109,17 +117,17 @@
             <script data-ad-client="@(contextSite.applicationConf.AhaWiki.google.AdSense.adClient())" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
         }
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.0.0/echarts.min.js" integrity="sha512-ZRdjJAYP8Kij8Lkln9uiGj0jIrMDLAALm1ZB2b3VfV9XJ0nR4zbJmHKB42/A4tgMlZS4DTPnSAmcYRoS0dginA==" crossorigin="anonymous"></script>
+        <script src="@logics.PublicAsset.url("vendor/echarts/echarts.min.js")"></script>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.9.6/dayjs.min.js" integrity="sha512-C2m821NxMpJ4Df47O4P/17VPqt0yiK10UmGl59/e5ynRRYiCSBvy0KHJjhp2XIjUJreuR+y3SIhVyiVilhCmcQ==" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.9.6/plugin/duration.min.js" integrity="sha512-JhCHgybOeA0T2w9AJmeB56XEK83jD4I6+xvHpRJXzMg2q4cfffsycKfK2h272d3kx1vaatWCZ921byc/hEqbaw==" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.9.6/plugin/relativeTime.min.js" integrity="sha512-ZpD5q39qjKdG3a3p8cttXCwl9C7InezFKiIVFaxmethhYdzvYTMxJuqqg3I0WmI5D7G4Qt0HiYfXjagboH8/jQ==" crossorigin="anonymous"></script>
+        <script src="@logics.PublicAsset.url("vendor/dayjs/dayjs.min.js")"></script>
+        <script src="@logics.PublicAsset.url("vendor/dayjs/plugin/duration.js")"></script>
+        <script src="@logics.PublicAsset.url("vendor/dayjs/plugin/relativeTime.js")"></script>
         <script>
             dayjs.extend(dayjs_plugin_duration);
             dayjs.extend(dayjs_plugin_relativeTime);
         </script>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/11.12.0/mermaid.min.js" integrity="sha512-5TKaYvhenABhlGIKSxAWLFJBZCSQw7HTV7aL1dJcBokM/+3PNtfgJFlv8E6Us/B1VMlQ4u8sPzjudL9TEQ06ww==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script src="@logics.PublicAsset.url("vendor/mermaid/mermaid.min.js")"></script>
         <script>
             mermaid.initialize({ startOnLoad: true });
         </script>

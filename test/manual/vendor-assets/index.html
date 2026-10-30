@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vendored page assets harness</title>
+    <!-- The same files, in the same order, as _baseSkeleton.scala.html, edit.scala.html and
+         diff.scala.html name them -- at their bare addresses, since the digest is the server's. -->
+    <link rel="stylesheet" href="/public/vendor/font-awesome/css/all.min.css">
+    <link rel="stylesheet" href="/public/vendor/codemirror/codemirror.css">
+    <link rel="stylesheet" href="/public/vendor/diff2html/diff2html.min.css">
+    <style>
+        body { font: 14px/1.5 sans-serif; margin: 16px; }
+        #harness { position: fixed; right: 12px; bottom: 12px; z-index: 9999; background: #111; color: #eee; font: 13px/1.5 monospace; padding: 10px 14px; border-radius: 6px; max-width: 48em; white-space: pre-wrap; }
+        .pass { color: #6ee7a0; } .fail { color: #ff7b7b; }
+        .box { border: 1px solid #ccc; padding: 8px; margin: 8px 0; }
+        #chart { width: 400px; height: 200px; }
+    </style>
+    <script>
+        const errors = [];
+        window.addEventListener("error", (e) => errors.push(e.message + (e.filename ? " @ " + e.filename.replace(location.origin, "") : "")));
+        window.addEventListener("unhandledrejection", (e) => errors.push(String(e.reason && e.reason.message || e.reason)));
+    </script>
+    <script src="/public/vendor/jquery/jquery.min.js"></script>
+    <script src="/public/vendor/jquery-validation/jquery.validate.min.js"></script>
+    <script src="/public/vendor/jquery-form/jquery.form.min.js"></script>
+    <script src="/public/vendor/devbridge-autocomplete/jquery.autocomplete.min.js"></script>
+    <script src="/public/vendor/tablesorter/jquery.tablesorter.min.js"></script>
+    <script src="/public/vendor/tablesorter/jquery.tablesorter.widgets.min.js"></script>
+    <script src="/public/vendor/mark.js/jquery.mark.min.js"></script>
+    <script type="text/x-mathjax-config">
+        MathJax.Hub.Config({ tex2jax: { inlineMath: [['$___$','$___$']], processClass: "mathjax", ignoreClass: "no-mathjax" } });
+    </script>
+    <script src="/public/vendor/mathjax/MathJax.js"></script>
+    <script src="/public/vendor/mathjax/config/TeX-AMS_HTML.js"></script>
+    <script>MathJax.Hub.Config({extensions: []});</script>
+    <script src="/public/vendor/d3/d3.min.js"></script>
+    <script src="/public/vendor/sortablejs/Sortable.min.js"></script>
+    <script src="/public/vendor/echarts/echarts.min.js"></script>
+    <script src="/public/vendor/dayjs/dayjs.min.js"></script>
+    <script src="/public/vendor/dayjs/plugin/duration.js"></script>
+    <script src="/public/vendor/dayjs/plugin/relativeTime.js"></script>
+    <script>dayjs.extend(dayjs_plugin_duration); dayjs.extend(dayjs_plugin_relativeTime);</script>
+    <script src="/public/vendor/mermaid/mermaid.min.js"></script>
+    <script>mermaid.initialize({ startOnLoad: true });</script>
+    <script src="/public/vendor/codemirror/codemirror.min.js"></script>
+    <script src="/public/vendor/diff2html/diff2html-ui.min.js"></script>
+</head>
+<body>
+    <h1>Vendored page assets</h1>
+    <div class="box"><i class="fas fa-check"></i> <i class="fas fa-sync-alt"></i> <i class="fab fa-github"></i> Font Awesome: three icons should show, the middle one a v5 alias name.</div>
+    <div class="box mathjax" id="math">MathJax: $___$ \sum_{i=1}^{n} i = \frac{n(n+1)}{2} $___$ and $___$ \int_0^1 x^2\,dx $___$</div>
+    <div class="box"><pre class="mermaid">graph LR; A[Page] --> B[Vendor]; B --> C[No CDN];</pre></div>
+    <div class="box"><div id="chart"></div></div>
+    <div class="box"><table id="table"><thead><tr><th>n</th></tr></thead><tbody><tr><td>2</td></tr><tr><td>1</td></tr></tbody></table></div>
+    <div class="box"><textarea id="code">= CodeMirror
+text</textarea></div>
+    <div class="box"><div id="diff"></div></div>
+    <div id="harness">starting…</div>
+    <script>
+        const checks = [];
+        const check = (name, fn) => { try { const r = fn(); checks.push([name, !!r, r === true ? "" : String(r)]); } catch (e) { checks.push([name, false, e.message]); } };
+        check("jQuery 1.12.4", () => $.fn.jquery === "1.12.4" || $.fn.jquery);
+        check("jquery.form ajaxForm", () => typeof $.fn.ajaxForm === "function");
+        check("jquery-validation validate", () => typeof $.fn.validate === "function");
+        check("devbridge autocomplete", () => typeof $.fn.autocomplete === "function" || typeof $.fn.devbridgeAutocomplete === "function");
+        check("tablesorter + widgets", () => typeof $.fn.tablesorter === "function" && !!$.tablesorter.widgets && $.tablesorter.widgets.length > 0);
+        check("mark.js", () => typeof $.fn.mark === "function");
+        check("d3 7", () => d3.version);
+        check("Sortable", () => Sortable.version);
+        check("echarts 5", () => echarts.version);
+        check("dayjs + duration + relativeTime", () => typeof dayjs.duration === "function" && typeof dayjs().fromNow === "function" && dayjs.duration(90, "minutes").humanize() === "2 hours");
+        check("mermaid", () => typeof mermaid.render === "function");
+        check("CodeMirror 5", () => CodeMirror.version);
+        check("Diff2HtmlUI", () => typeof Diff2HtmlUI === "function");
+
+        // Things that have to draw.
+        try { echarts.init(document.getElementById("chart")).setOption({ xAxis: { data: ["a", "b"] }, yAxis: {}, series: [{ type: "bar", data: [1, 2] }] }); } catch (e) { errors.push("echarts: " + e.message); }
+        try { $("#table").tablesorter(); } catch (e) { errors.push("tablesorter: " + e.message); }
+        try { CodeMirror.fromTextArea(document.getElementById("code"), { lineNumbers: true }); } catch (e) { errors.push("codemirror: " + e.message); }
+        try {
+            const ui = new Diff2HtmlUI(document.getElementById("diff"), "--- a\n+++ b\n@@ -1 +1 @@\n-old\n+new\n", { drawFileList: false });
+            ui.draw();
+        } catch (e) { errors.push("diff2html: " + e.message); }
+
+        function report() {
+            const external = performance.getEntriesByType("resource").map((e) => e.name).filter((n) => !n.startsWith(location.origin));
+            const mathDone = document.querySelectorAll("#math .MathJax").length >= 2 && !document.querySelector("#math .MathJax_Preview:not(:empty)");
+            const mathFonts = performance.getEntriesByType("resource").filter((e) => /vendor\/mathjax\/.*\.(woff|js)/.test(e.name)).length;
+            const mermaidDone = !!document.querySelector(".mermaid svg");
+            const chartDone = !!document.querySelector("#chart canvas, #chart svg");
+            const diffDone = !!document.querySelector("#diff .d2h-wrapper");
+            const codeDone = !!document.querySelector(".CodeMirror");
+            const faDone = getComputedStyle(document.querySelector(".fa-check"), "::before").content !== "none";
+            const all = [
+                ...checks,
+                ["no script error", errors.length === 0, errors.join(" | ")],
+                ["nothing fetched off this origin", external.length === 0, external.join(" ")],
+                ["Font Awesome rule applied to .fa-check", faDone, ""],
+                [`MathJax typeset two formulas from the local tree (${mathFonts} files loaded from it)`, mathDone && mathFonts >= 3, ""],
+                ["mermaid drew the diagram", mermaidDone, ""],
+                ["echarts drew the chart", chartDone, ""],
+                ["CodeMirror took the textarea", codeDone, ""],
+                ["diff2html drew the diff", diffDone, ""],
+            ];
+            const ok = all.every((c) => c[1]);
+            document.getElementById("harness").innerHTML = all.map(([n, p, d]) => `<span class="${p ? "pass" : "fail"}">${p ? "PASS" : "FAIL"}</span> ${n}${d && !p ? "\n     " + d : ""}`).join("\n") + `\n<span class="${ok ? "pass" : "fail"}">${ok ? "ALL PASS" : "SOME FAIL"}</span>`;
+            document.title = (ok ? "PASS" : "FAIL") + " - Vendored page assets harness";
+        }
+        window.addEventListener("load", () => { report(); setInterval(report, 1000); });
+    </script>
+</body>
+</html>

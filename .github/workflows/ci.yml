@@ -47,3 +47,7 @@ jobs:
       # would not see.
       - run: npm run admin:vendor
       - run: test -z "$(git status --porcelain public/js/babel/vendor)" || { git status --porcelain public/js/babel/vendor; exit 1; }
+      # The pages' third-party files (public/vendor/, scripts/vendor.mjs) likewise: copied
+      # from node_modules, committed, emptied and rewritten by the script.
+      - run: npm run vendor
+      - run: test -z "$(git status --porcelain public/vendor)" || { git status --porcelain public/vendor; exit 1; }

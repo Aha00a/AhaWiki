@@ -19,7 +19,7 @@ python -m http.server 9998
 
 from the repository root, then open
 <http://localhost:9998/test/manual/editor-keys/>. It runs by itself and ends in `PASS` or
-`FAIL`. Needs the internet — jQuery and CodeMirror come from the same CDNs the edit page uses.
+`FAIL`. jQuery and CodeMirror are the same files the edit page uses, from `public/vendor/` (since 2026-10-31; before that from the CDNs, so it needed the internet).
 
 Nothing else. No Play server, no database, no Redis, and no login — which is the point, because
 the edit page needs one and that is what made this hard to check. `public/js/` is read straight

@@ -16,8 +16,8 @@ Open `index.html` in a browser. It works straight from disk (`file://`): the scr
 is loaded by a relative path, so whatever is in the working tree is what gets tested. Over
 HTTP, serve the repository root — `python -m http.server 9998`, which is also the `static`
 entry in `.claude/launch.json` — and open
-<http://localhost:9998/test/manual/editor-hotkeys/>. jQuery comes from the CDN the edit page
-uses, so it needs the internet. It ends in `PASS` or `FAIL`.
+<http://localhost:9998/test/manual/editor-hotkeys/>. jQuery is the edit page's own copy from
+`public/vendor/` (since 2026-10-31; before that the CDN, so it needed the internet). It ends in `PASS` or `FAIL`.
 
 No Play server, no database, no login — the same reason `../editor-keys/` exists.
 
