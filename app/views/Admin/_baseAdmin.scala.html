@@ -26,25 +26,26 @@
         <link rel="stylesheet" href="@logics.PublicAsset.url("interpreter.css")">
         <link rel="stylesheet" href="@logics.PublicAsset.url("adjacent.css")">
 
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@mantine/core@@9.2.1/styles.css">
-        @* mantine-datatable ships its stylesheet under dist/; the root path 404s and a 404
-           stylesheet is silent, so every admin table rendered unstyled and drew its "no
-           records" overlay across real rows. The layered variant beside it would order
-           against @@layer, which @@mantine/core above does not use. *@
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mantine-datatable@@9.2.2/dist/styles.css">
+        @* The packages the admin bundle imports, and their stylesheets, served from this
+           instance: `npm run admin:vendor` writes public/js/babel/vendor/ from node_modules
+           (scripts/admin.mjs has the list and the reasons). Until 2026-10-31 these were
+           esm.sh addresses that esm.sh built on request; the day it ran out of disk, every
+           admin screen stayed on its loading message. The two stylesheets are the packages'
+           own files copied by the same build — mantine-datatable's lives under dist/, and a
+           link to the root path once 404ed silently for months while every table rendered
+           unstyled. *@
+        <link rel="stylesheet" href="@logics.PublicAsset.url("js/babel/vendor/mantine-core.css")">
+        <link rel="stylesheet" href="@logics.PublicAsset.url("js/babel/vendor/mantine-datatable.css")">
         <script type="importmap">
             {
                 "imports": {
-                    "react": "https://esm.sh/react@@19.2.6",
-                    "react/jsx-runtime": "https://esm.sh/react@@19.2.6/jsx-runtime",
-                    "react/jsx-dev-runtime": "https://esm.sh/react@@19.2.6/jsx-dev-runtime",
-                    "react-dom/client": "https://esm.sh/react-dom@@19.2.6/client",
-                    "@@mantine/core": "https://esm.sh/@@mantine/core@@9.2.1?deps=react@@19.2.6,react-dom@@19.2.6",
-                    "@@mantine/hooks": "https://esm.sh/@@mantine/hooks@@9.2.1?deps=react@@19.2.6",
-                    "mantine-datatable": "https://esm.sh/mantine-datatable@@9.2.2?external=react,react-dom,@@mantine/core,@@mantine/hooks",
-                    "recharts": "https://esm.sh/recharts@@2.15.4?deps=react@@19.2.6,react-dom@@19.2.6",
-                    "react-router-dom": "https://esm.sh/react-router-dom@@6?deps=react@@19.2.6,react-dom@@19.2.6",
-                    "dayjs": "https://cdn.jsdelivr.net/npm/dayjs@@1.11.13/+esm"
+                    "react": "@logics.PublicAsset.url("js/babel/vendor/react.js")",
+                    "react-dom/client": "@logics.PublicAsset.url("js/babel/vendor/react-dom-client.js")",
+                    "@@mantine/core": "@logics.PublicAsset.url("js/babel/vendor/mantine-core.js")",
+                    "mantine-datatable": "@logics.PublicAsset.url("js/babel/vendor/mantine-datatable.js")",
+                    "recharts": "@logics.PublicAsset.url("js/babel/vendor/recharts.js")",
+                    "react-router-dom": "@logics.PublicAsset.url("js/babel/vendor/react-router-dom.js")",
+                    "dayjs": "@logics.PublicAsset.url("js/babel/vendor/dayjs.js")"
                 }
             }
         </script>

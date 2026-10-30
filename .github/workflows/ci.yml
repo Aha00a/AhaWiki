@@ -41,3 +41,9 @@ jobs:
       # rebuilding the other ships a bundle that does not match its source.
       - run: npm run admin:build
       - run: git diff --exit-code public/js/babel/admin.js
+      # The vendor bundle is committed too, built from node_modules at the versions in
+      # package-lock.json. The build empties the directory first and chunk names carry a
+      # hash, so a stale commit shows as untracked and deleted files, which git diff alone
+      # would not see.
+      - run: npm run admin:vendor
+      - run: test -z "$(git status --porcelain public/js/babel/vendor)" || { git status --porcelain public/js/babel/vendor; exit 1; }

@@ -12,7 +12,10 @@ it counted as real. A test caught it. Anything in that file is a claim about
 
 ## Front-end admin build
 
-`app/assets/js/admin.jsx` is bundled to `public/js/babel/admin.js`.
+`app/assets/js/admin.jsx` is bundled to `public/js/babel/admin.js`. The packages it imports —
+React, Mantine, mantine-datatable, recharts, react-router-dom, dayjs — are built separately into
+`public/js/babel/vendor/`, one file per package plus shared chunks, and the admin template's
+import map points each bare import at its file there.
 
 ### One-time build
 
@@ -27,15 +30,32 @@ npm run admin:build
 npm run admin:watch
 ```
 
+### Vendor bundle, after raising a package version
+
+```bash
+npm run admin:vendor
+```
+
 This is a Node.js + esbuild flow (`scripts/admin.mjs`); Bun and TypeScript are not required.
 
-The bundle is committed, so commit it with the `.jsx` change. CI (`.github/workflows/ci.yml`)
-rebuilds it and fails when the result differs from what is committed.
+Both bundles are committed. Commit `admin.js` with the `.jsx` change and `vendor/` with the
+`package.json` change; CI (`.github/workflows/ci.yml`) rebuilds both and fails when either differs
+from what is committed. They are two bundles because of that: `admin.js` changes with every admin
+change and is small, `vendor/` changes only with a version and is ten times larger, and one bundle
+would put the large part into the history every time.
+
+Until 2026-10-31 the import map named esm.sh addresses that esm.sh builds on request. That day
+esm.sh ran out of disk and answered 503, and the admin screen of every site stayed on its loading
+message with nothing of ours changed. `test/manual/admin-vendor/` shows the bundle standing alone.
+The vendor entries spell out each package's exports by name (read by importing the package in
+Node at build time) because React is CommonJS: `export *` would leave its names to run time and
+the browser would stop at the first `import {createContext} from "react"`.
 
 ## External asset check
 
 `check-cdn-assets.mjs` fetches every external stylesheet, script, and importmap entry the
-templates point at, and fails if any does not answer 200.
+templates point at, and fails if any does not answer 200. It skips `public/js/babel/vendor/`,
+which is third-party code served from here, not a reference to a CDN.
 
 ```bash
 npm run check:cdn

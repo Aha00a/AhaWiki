@@ -13,11 +13,15 @@ import path from "node:path";
 import { rootDir } from "./lib/ahawiki.net.mjs";
 
 const searchDirs = ["app/views", "public/js", "app/assets"];
+// Third-party code the admin build copies out of node_modules. It is served from here, not
+// fetched from a CDN, and the strings inside it are the packages' own business —
+// react-router-dom carries a literal `http://localhost` it parses URLs against.
+const skipDirs = ["public/js/babel/vendor"];
 const concurrency = 8;
 
 function filesUnder(dir) {
   const absolute = path.join(rootDir, dir);
-  if (!fs.existsSync(absolute)) return [];
+  if (!fs.existsSync(absolute) || skipDirs.includes(dir)) return [];
   return fs.readdirSync(absolute, { withFileTypes: true }).flatMap((entry) => {
     const relative = `${dir}/${entry.name}`;
     return entry.isDirectory() ? filesUnder(relative) : [relative];

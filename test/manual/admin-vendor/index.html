@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin vendor bundle harness</title>
+    <!-- The same two stylesheets _baseAdmin.scala.html names, at their bare addresses: the
+         digest in the query string is the server's business, not the harness's. -->
+    <link rel="stylesheet" href="/public/js/babel/vendor/mantine-core.css">
+    <link rel="stylesheet" href="/public/js/babel/vendor/mantine-datatable.css">
+    <!-- The import map of _baseAdmin.scala.html, without the digests. A specifier missing here
+         and present there (or the reverse) is exactly what this page exists to catch, so keep
+         the two lists the same. -->
+    <script type="importmap">
+        {
+            "imports": {
+                "react": "/public/js/babel/vendor/react.js",
+                "react-dom/client": "/public/js/babel/vendor/react-dom-client.js",
+                "@mantine/core": "/public/js/babel/vendor/mantine-core.js",
+                "mantine-datatable": "/public/js/babel/vendor/mantine-datatable.js",
+                "recharts": "/public/js/babel/vendor/recharts.js",
+                "react-router-dom": "/public/js/babel/vendor/react-router-dom.js",
+                "dayjs": "/public/js/babel/vendor/dayjs.js"
+            }
+        }
+    </script>
+    <style>
+        #harness { position: fixed; right: 12px; bottom: 12px; z-index: 9999; background: #111; color: #eee; font: 13px/1.5 monospace; padding: 10px 14px; border-radius: 6px; max-width: 44em; white-space: pre-wrap; }
+        #harness .pass { color: #6ee7a0; }
+        #harness .fail { color: #ff7b7b; }
+    </style>
+    <script>
+        // 1. Be /Admin, so the app's router has a route to match. The static server never sees
+        //    this address; the page is already loaded.
+        history.replaceState(null, "", "/Admin");
+
+        // 2. Answer the API from here. There is no server, and what the dashboard draws is
+        //    whatever these say — the site activity fixture mirrors ApiAdminSiteActivitySpec.
+        const months = [];
+        for (let i = 11; i >= 0; i--) {
+            const d = new Date(Date.UTC(2026, 9 - i, 1));
+            months.push({ym: d.toISOString().slice(0, 7), sitesCreated: i === 7 || i === 0 ? 1 : 0, sitesActive: i === 7 || i === 0 ? 1 : 0, pagesCreated: i === 0 ? 1 : 0, pagesEdited: i === 0 ? 3 : (i === 7 ? 1 : 0)});
+        }
+        const canned = {
+            "/api/me": {loggedIn: true, seq: 1, nickname: "harness", loginEmail: "", profileImageUrl: null, isAdmin: true, siteAdminSeqs: [], currentSiteSeq: 1},
+            "/api/Admin/Sites": [{seq: 1, name: "Busy", abbr: "busy", mainDomain: "busy.example.com", domains: ["busy.example.com"]}, {seq: 2, name: "Idle", abbr: "idle", mainDomain: "", domains: []}],
+            "/api/Admin/Users": {array: [], page: 1, pageSize: 20, count: 0},
+            "/api/Admin/DailyStats": {userCreated: [], pageCreated: [{ymd: "2026-10-02", count: 1}], pageEdited: [{ymd: "2026-10-02", count: 1}, {ymd: "2026-10-10", count: 1}, {ymd: "2026-10-30", count: 1}]},
+            "/api/Admin/RecentChanges": [],
+            "/api/Admin/TopViewedPages": [],
+            "/api/Admin/MemoryCacheStats": [],
+            "/api/Admin/SiteActivity": {
+                months,
+                sites: [
+                    {siteSeq: 1, siteName: "Busy", siteDomain: "busy.example.com", created: "2026-03-05 10:00:00", pagesCreated30d: 1, pagesEdited30d: 3, editors30d: 2, firstEditedAt: "2024-01-01 09:00:00", lastEditedAt: "2026-10-30 09:00:00"},
+                    {siteSeq: 2, siteName: "Idle", siteDomain: null, created: "2026-10-20 10:00:00", pagesCreated30d: 0, pagesEdited30d: 0, editors30d: 0, firstEditedAt: null, lastEditedAt: null},
+                ],
+            },
+        };
+        const realFetch = window.fetch.bind(window);
+        window.fetch = (input, init) => {
+            const url = typeof input === "string" ? input : input.url;
+            const pathname = new URL(url, location.origin).pathname;
+            if (pathname in canned) {
+                return Promise.resolve(new Response(JSON.stringify(canned[pathname]), {status: 200, headers: {"Content-Type": "application/json"}}));
+            }
+            if (pathname.startsWith("/api/")) {
+                return Promise.resolve(new Response(JSON.stringify({error: "not canned"}), {status: 404, headers: {"Content-Type": "application/json"}}));
+            }
+            return realFetch(input, init);
+        };
+
+        // 3. Count what the page goes out for. Anything off this origin is a dependency the
+        //    vendor bundle was supposed to remove.
+        const errors = [];
+        window.addEventListener("error", (e) => errors.push(e.message));
+        window.addEventListener("unhandledrejection", (e) => errors.push(String(e.reason && e.reason.message || e.reason)));
+
+        function report() {
+            const external = performance.getEntriesByType("resource").map((e) => e.name).filter((name) => !name.startsWith(location.origin));
+            const text = document.getElementById("main")?.innerText ?? "";
+            // The two dashboard checks only mean something on the dashboard; the navigation
+            // works, and following a link to another page must not read as a failure.
+            const onDashboard = location.pathname === "/Admin";
+            const checks = [
+                ["no script error", errors.length === 0, errors.join(" | ")],
+                ["nothing fetched off this origin", external.length === 0, external.join(" ")],
+                ["admin UI replaced the loading message", !text.includes("Admin UI 로딩 중"), ""],
+                ["dashboard shows Sites by Month", !onDashboard || (text.includes("Sites by Month") && text.includes("2026-10")), onDashboard ? "" : "(not on the dashboard)"],
+                ["dashboard shows Site Activity (30 days)", !onDashboard || (text.includes("Site Activity (30 days)") && text.includes("Idle (#2)")), onDashboard ? "" : "(not on the dashboard)"],
+            ];
+            const box = document.getElementById("harness");
+            box.innerHTML = checks.map(([name, ok, detail]) => `<span class="${ok ? "pass" : "fail"}">${ok ? "PASS" : "FAIL"}</span> ${name}${detail ? "\n     " + detail : ""}`).join("\n")
+                + `\n<span class="${checks.every((c) => c[1]) ? "pass" : "fail"}">${checks.every((c) => c[1]) ? "ALL PASS" : "SOME FAIL"}</span>`;
+            document.title = (checks.every((c) => c[1]) ? "PASS" : "FAIL") + " - Admin vendor bundle harness";
+        }
+        // The app fetches, then renders; a few seconds is plenty on a local static server, and
+        // it keeps re-checking so a slow first load does not read as a failure.
+        window.addEventListener("load", () => { report(); setInterval(report, 1000); });
+    </script>
+    <script type="module" src="/public/js/babel/admin.js"></script>
+</head>
+<body>
+    <div id="main" data-admin-page="dashboard" style="padding: 20px; min-height: 220px; width: 100%; box-sizing: border-box;">
+        <div style="display: flex; align-items: center; justify-content: center; min-height: 180px;">
+            <div style="font-size: 16px; color: #1f2937; font-weight: 600;">Admin UI 로딩 중...</div>
+        </div>
+    </div>
+    <div id="harness">starting…</div>
+</body>
+</html>

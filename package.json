@@ -8,9 +8,18 @@
     "download:ahawiki.net": "node scripts/download.ahawiki.net.mjs",
     "schemaDump": "sh ./schemaDump.sh",
     "sync:ahawiki.net": "node scripts/sync.ahawiki.net.mjs",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "admin:vendor": "node scripts/admin.mjs --vendor"
   },
   "devDependencies": {
-    "esbuild": "^0.28.1"
+    "@mantine/core": "^9.2.1",
+    "@mantine/hooks": "^9.2.1",
+    "dayjs": "^1.11.13",
+    "esbuild": "^0.28.1",
+    "mantine-datatable": "^9.2.2",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "react-router-dom": "^6.30.6",
+    "recharts": "^2.15.4"
   }
 }
