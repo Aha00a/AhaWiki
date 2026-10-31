@@ -39,7 +39,7 @@
                         }
                     }).focus();
                 }
-        ).error(function (jqXHR, textStatue, httpStatus) {
+        ).fail(function (jqXHR, textStatue, httpStatus) {
             alert(jqXHR.responseJSON.message);
         });
         return false;

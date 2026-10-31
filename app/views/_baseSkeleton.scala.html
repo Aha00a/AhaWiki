@@ -64,23 +64,24 @@
 
         <script src="@logics.PublicAsset.url("vendor/mark.js/jquery.mark.min.js")"></script>
 
-        <script type="text/x-mathjax-config">
-            MathJax.Hub.Config({
-                tex2jax: {
-                    inlineMath: [['$___$','$___$']],
-                    processClass: "mathjax",
-                    ignoreClass: "no-mathjax"
-                }
-            });
+        <script>
+            window.MathJax = {
+                loader: { paths: { mathjax: "/public/vendor/mathjax" } },
+                tex: { inlineMath: [['$___$','$___$']] },
+                output: { fontPath: "/public/vendor/mathjax-newcm-font" },
+                options: {
+                    processHtmlClass: "mathjax",
+                    ignoreHtmlClass: "no-mathjax",
+                    @* These would fetch the speech engine from jsdelivr; it is not under public/vendor/. *@
+                    enableEnrichment: false,
+                    enableSpeech: false,
+                    enableBraille: false,
+                    enableExplorer: false,
+                    menuOptions: { settings: { enrich: false, speech: false, braille: false } },
+                },
+            };
         </script>
-        <script src="@logics.PublicAsset.url("vendor/mathjax/MathJax.js")"></script>
-        <script src="@logics.PublicAsset.url("vendor/mathjax/config/TeX-AMS_HTML.js")"></script>
-        @* The combined configuration above ends by asking for [Contrib]/a11y/accessibility-menu.js,
-           which MathJax 2 fetches from cdn.mathjax.org -- the one address every page view still
-           went off this host for after 2026-10-31. The extension only adds an Accessibility
-           submenu to MathJax's right-click menu, and what that menu enables loads yet more
-           from there, so it is dropped. Config replaces the array rather than appending. *@
-        <script>MathJax.Hub.Config({extensions: []});</script>
+        <script src="@logics.PublicAsset.url("vendor/mathjax/tex-chtml.js")"></script>
 
         <script src="@logics.PublicAsset.url("vendor/d3/d3.min.js")"></script>
         <script src="@logics.PublicAsset.url("vendor/sortablejs/Sortable.min.js")"></script>
@@ -110,10 +111,7 @@
             dayjs.extend(dayjs_plugin_relativeTime);
         </script>
 
-        <script src="@logics.PublicAsset.url("vendor/mermaid/mermaid.min.js")"></script>
-        <script>
-            mermaid.initialize({ startOnLoad: true });
-        </script>
+        <script src="@logics.PublicAsset.url("js/AhaWiki.Mermaid.js")" data-library="@logics.PublicAsset.url("vendor/mermaid/mermaid.min.js")"></script>
 
         <script type="text/javascript" src="@logics.PublicAsset.url("js/js.js")"></script>
         <script type="text/javascript" src="@logics.PublicAsset.url("js/AhaWiki.Clipboard.js")"></script>

@@ -68,7 +68,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             }, function (data, textStatus, jqXHR) {
                 var $previewPane = $('.previewPane');
                 $previewPane.html(data);
-                mermaid.init();
+                window.AhaWiki.Mermaid.renderAll();
                 if (window.AhaWiki && window.AhaWiki.Gantt) window.AhaWiki.Gantt.initAll($previewPane[0]);
                 if (window.AhaWiki && window.AhaWiki.Kanban) window.AhaWiki.Kanban.initAll($previewPane[0]);
                 adjustEditorLayoutHeight();

@@ -54,7 +54,7 @@ the browser would stop at the first `import {createContext} from "react"`.
 ## Vendored page assets
 
 `vendor.mjs` copies the third-party files the wiki's pages load — jQuery and its four plugins,
-MathJax 2, d3, Sortable, echarts, dayjs, mermaid, CodeMirror, diff2html, Font Awesome — from
+MathJax, d3, Sortable, echarts, dayjs, mermaid, CodeMirror, diff2html, Font Awesome — from
 `node_modules` into `public/vendor/`, and the templates name them through `PublicAsset.url`.
 
 ```bash
@@ -70,26 +70,26 @@ Google's services (Maps, AdSense, Fonts, reCAPTCHA on the edit page) and profile
 Rules of the copy:
 
  * The manifest in `vendor.mjs` is the one list of what is copied from where. Versions come
-   from `package.json`, pinned exactly to what the templates had on the CDNs, so nothing renders
-   differently. Raise a version there and run the script; the result is committed, the script
+   from `package.json`. Raise a version there and run the script; the result is committed, the script
    empties the directory first, and CI rebuilds it and fails on any difference.
- * It is a copy, not a bundle. These are classic scripts with globals, and MathJax 2 loads its
-   fonts and jax from under `MathJax.js` at run time, so its tree is kept as it ships (the part
-   the TeX-AMS_HTML configuration can reach, with the TeX web fonts; the other six font
-   families and the SVG/NativeMML outputs are not copied). The admin UI's packages are ESM and
+ * It is a copy, not a bundle. These are classic scripts with globals, and MathJax fetches
+   extensions and fonts at run time, so those trees are kept as they ship (the SVG fonts and
+   outputs are not copied). The admin UI's packages are ESM and
    are bundled instead (`admin.mjs --vendor`).
  * `jquery.form` 3.51 is not on npm (3.50.0, then 4.x). The script downloads that one file from
    cdnjs and refuses it unless its SHA-256 matches the digest the template carried as `integrity`
    since SRI was added, so the bytes are the ones the pages always ran.
- * `jquery-validation` 1.14.0 and CodeMirror 5 ship no minified build; the script minifies them
-   with esbuild.
- * The a11y menu MathJax's combined configuration adds from `[Contrib]` (cdn.mathjax.org) is
-   switched off in `_baseSkeleton.scala.html`; it only added an Accessibility submenu to the
-   right-click menu, and what that enabled loaded yet more from there.
+ * CodeMirror 5 ships no minified build; the script minifies it with esbuild.
+ * MathJax's speech engine is not copied, and the settings that would take it from jsdelivr are
+   off in `_baseSkeleton.scala.html`, which also states where MathJax and its fonts live: left
+   to itself it would take the fonts from jsdelivr too.
+ * Mermaid is not on the skeleton's script list. `AhaWiki.Mermaid.js` fetches it when a page has
+   a diagram, because 12.x is twice the size of 11.12 and few pages have one.
  * Font Awesome is one copy now, 6.5.2, for the pages and the admin UI alike. The admin UI's icon
    names are v5 names, which v6 keeps as aliases.
- * These packages are now in `package.json`, so Dependabot will report their advisories — jQuery
-   1.12.4 has known ones. Raising them is a change to the pages, not to this script.
+ * These packages are in `package.json`, so Dependabot reports their advisories. Raising one is
+   a change to the pages, not to this script. jQuery stops at 3.7.1: 4 removes more than this
+   code was checked against, and `jquery.form` 3.51 has no release that claims to work on it.
 
 `test/manual/vendor-assets/` loads the copied files in the skeleton's order with no server and
 reports whether each library is there, whether MathJax typeset from the local tree, and whether

@@ -4,7 +4,7 @@
     }
 
     window.AhaWiki.Loader = {
-        open: () => $("body").append($('<div class="ahaWikiLoader bg"></div><div class="ahaWikiLoader circle"/>')),
+        open: () => $("body").append($('<div class="ahaWikiLoader bg"></div><div class="ahaWikiLoader circle"></div>')),
         close: () => $(".ahaWikiLoader").remove(),
     };
 })();

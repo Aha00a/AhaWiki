@@ -11,16 +11,15 @@
 // same. Now the only addresses off this host are Google's services (Maps, AdSense, Fonts,
 // reCAPTCHA on the edit page) and profile pictures.
 //
-// The manifest below is the one list. The versions are the ones the templates pinned on the
-// CDNs, taken from package.json, so nothing renders differently; a version is raised by
-// changing package.json and running this again. The output directory is emptied first, so a
+// The manifest below is the one list. The versions come from package.json; a version is raised
+// by changing it there and running this again. The output directory is emptied first, so a
 // file that leaves the manifest leaves the tree, and CI rebuilds it and fails on a difference
 // (.github/workflows/ci.yml).
 //
 // This is a copy, not a bundle: these are classic scripts loaded by <script src>, each with
-// its own globals, and MathJax 2 loads its own fonts and jax relative to MathJax.js at run
-// time, which only works when its tree is kept as it ships. The admin UI's packages are ESM
-// and are bundled instead (scripts/admin.mjs --vendor).
+// its own globals, and MathJax loads its extensions and fonts at run time, which only works
+// when those trees are kept as they ship. The admin UI's packages are ESM and are bundled
+// instead (scripts/admin.mjs --vendor).
 import { build } from "esbuild";
 import { createHash } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
@@ -44,8 +43,7 @@ const manifest = [
   // bytes the pages have always run. 4.x is the one with a maintained release; moving to it
   // is a separate change to the three ajaxForm callers.
   { url: "https://cdnjs.cloudflare.com/ajax/libs/jquery.form/3.51/jquery.form.min.js", sha256: "jkaBMXLp+mraE29Q0r6gtTniSfPhS1N0R7YcQwdt7nQ=", to: "jquery-form/jquery.form.min.js" },
-  // 1.14.0 on npm ships no minified build (later versions do); minified here like CodeMirror.
-  { pkg: "jquery-validation", from: "dist/jquery.validate.js", to: "jquery-validation/jquery.validate.min.js", minify: true },
+  { pkg: "jquery-validation", from: "dist/jquery.validate.min.js", to: "jquery-validation/jquery.validate.min.js" },
   { pkg: "devbridge-autocomplete", from: "dist/jquery.autocomplete.min.js", to: "devbridge-autocomplete/jquery.autocomplete.min.js" },
   { pkg: "tablesorter", from: "dist/js/jquery.tablesorter.min.js", to: "tablesorter/jquery.tablesorter.min.js" },
   { pkg: "tablesorter", from: "dist/js/jquery.tablesorter.widgets.min.js", to: "tablesorter/jquery.tablesorter.widgets.min.js" },
@@ -57,24 +55,16 @@ const manifest = [
   { pkg: "dayjs", from: "plugin/duration.js", to: "dayjs/plugin/duration.js" },
   { pkg: "dayjs", from: "plugin/relativeTime.js", to: "dayjs/plugin/relativeTime.js" },
   { pkg: "mermaid", from: "dist/mermaid.min.js", to: "mermaid/mermaid.min.js" },
-  // MathJax 2 is a loader. MathJax.js finds its root from its own <script src> and fetches
-  // the input jax, output jax, extensions and fonts from under it as the page needs them, so
-  // the tree below is copied as it ships. It is the part of the package the TeX-AMS_HTML
-  // combined configuration can reach with the TeX web fonts: not the other six font families,
-  // not the SVG/NativeMML/CommonHTML outputs, not unpacked/ or docs/.
-  { pkg: "mathjax", from: "MathJax.js", to: "mathjax/MathJax.js" },
-  { pkg: "mathjax", from: "config/TeX-AMS_HTML.js", to: "mathjax/config/TeX-AMS_HTML.js" },
-  { pkg: "mathjax", from: "extensions", to: "mathjax/extensions" },
-  { pkg: "mathjax", from: "jax/element", to: "mathjax/jax/element" },
-  { pkg: "mathjax", from: "jax/input/TeX", to: "mathjax/jax/input/TeX" },
-  { pkg: "mathjax", from: "jax/output/HTML-CSS/autoload", to: "mathjax/jax/output/HTML-CSS/autoload" },
-  { pkg: "mathjax", from: "jax/output/HTML-CSS/config.js", to: "mathjax/jax/output/HTML-CSS/config.js" },
-  { pkg: "mathjax", from: "jax/output/HTML-CSS/imageFonts.js", to: "mathjax/jax/output/HTML-CSS/imageFonts.js" },
-  { pkg: "mathjax", from: "jax/output/HTML-CSS/jax.js", to: "mathjax/jax/output/HTML-CSS/jax.js" },
-  { pkg: "mathjax", from: "jax/output/HTML-CSS/fonts/TeX", to: "mathjax/jax/output/HTML-CSS/fonts/TeX" },
-  { pkg: "mathjax", from: "jax/output/PreviewHTML", to: "mathjax/jax/output/PreviewHTML" },
-  { pkg: "mathjax", from: "fonts/HTML-CSS/TeX/woff", to: "mathjax/fonts/HTML-CSS/TeX/woff" },
-  { pkg: "mathjax", from: "localization/en", to: "mathjax/localization/en" },
+  // tex-chtml.js holds the TeX input and the HTML output. What it can fetch at run time is
+  // beside it, and the fonts are their own package. Not copied: sre/, the speech engine, which
+  // it would otherwise take from jsdelivr and which the template switches off, and the SVG
+  // fonts and outputs, which nothing asks for.
+  { pkg: "mathjax", from: "tex-chtml.js", to: "mathjax/tex-chtml.js" },
+  { pkg: "mathjax", from: "input/tex/extensions", to: "mathjax/input/tex/extensions" },
+  { pkg: "mathjax", from: "a11y", to: "mathjax/a11y" },
+  { pkg: "mathjax", from: "ui", to: "mathjax/ui" },
+  { pkg: "@mathjax/mathjax-newcm-font", from: "chtml/woff2", to: "mathjax-newcm-font/chtml/woff2" },
+  { pkg: "@mathjax/mathjax-newcm-font", from: "chtml/dynamic", to: "mathjax-newcm-font/chtml/dynamic" },
   // The edit page.
   { pkg: "codemirror", from: "lib/codemirror.css", to: "codemirror/codemirror.css" },
   { pkg: "codemirror", from: "lib/codemirror.js", to: "codemirror/codemirror.min.js", minify: true },

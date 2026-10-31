@@ -27,12 +27,23 @@
     <script src="/public/vendor/tablesorter/jquery.tablesorter.min.js"></script>
     <script src="/public/vendor/tablesorter/jquery.tablesorter.widgets.min.js"></script>
     <script src="/public/vendor/mark.js/jquery.mark.min.js"></script>
-    <script type="text/x-mathjax-config">
-        MathJax.Hub.Config({ tex2jax: { inlineMath: [['$___$','$___$']], processClass: "mathjax", ignoreClass: "no-mathjax" } });
+    <script>
+        window.MathJax = {
+            loader: { paths: { mathjax: "/public/vendor/mathjax" } },
+            tex: { inlineMath: [['$___$','$___$']] },
+            output: { fontPath: "/public/vendor/mathjax-newcm-font" },
+            options: {
+                processHtmlClass: "mathjax",
+                ignoreHtmlClass: "no-mathjax",
+                enableEnrichment: false,
+                enableSpeech: false,
+                enableBraille: false,
+                enableExplorer: false,
+                menuOptions: { settings: { enrich: false, speech: false, braille: false } },
+            },
+        };
     </script>
-    <script src="/public/vendor/mathjax/MathJax.js"></script>
-    <script src="/public/vendor/mathjax/config/TeX-AMS_HTML.js"></script>
-    <script>MathJax.Hub.Config({extensions: []});</script>
+    <script src="/public/vendor/mathjax/tex-chtml.js?v=digest"></script>
     <script src="/public/vendor/d3/d3.min.js"></script>
     <script src="/public/vendor/sortablejs/Sortable.min.js"></script>
     <script src="/public/vendor/echarts/echarts.min.js"></script>
@@ -40,15 +51,14 @@
     <script src="/public/vendor/dayjs/plugin/duration.js"></script>
     <script src="/public/vendor/dayjs/plugin/relativeTime.js"></script>
     <script>dayjs.extend(dayjs_plugin_duration); dayjs.extend(dayjs_plugin_relativeTime);</script>
-    <script src="/public/vendor/mermaid/mermaid.min.js"></script>
-    <script>mermaid.initialize({ startOnLoad: true });</script>
+    <script src="/public/js/AhaWiki.Mermaid.js" data-library="/public/vendor/mermaid/mermaid.min.js?v=digest"></script>
     <script src="/public/vendor/codemirror/codemirror.min.js"></script>
     <script src="/public/vendor/diff2html/diff2html-ui.min.js"></script>
 </head>
 <body>
     <h1>Vendored page assets</h1>
     <div class="box"><i class="fas fa-check"></i> <i class="fas fa-sync-alt"></i> <i class="fab fa-github"></i> Font Awesome: three icons should show, the middle one a v5 alias name.</div>
-    <div class="box mathjax" id="math">MathJax: $___$ \sum_{i=1}^{n} i = \frac{n(n+1)}{2} $___$ and $___$ \int_0^1 x^2\,dx $___$</div>
+    <div class="box mathjax" id="math">MathJax: $___$ \sum_{i=1}^{n} i = \frac{n(n+1)}{2} $___$ and $___$ \int_0^1 x^2\,dx $___$ and $___$ \mathbb{R} \mathfrak{g} \require{cancel}\cancel{x} $___$</div>
     <div class="box"><pre class="mermaid">graph LR; A[Page] --> B[Vendor]; B --> C[No CDN];</pre></div>
     <div class="box"><div id="chart"></div></div>
     <div class="box"><table id="table"><thead><tr><th>n</th></tr></thead><tbody><tr><td>2</td></tr><tr><td>1</td></tr></tbody></table></div>
@@ -59,7 +69,7 @@ text</textarea></div>
     <script>
         const checks = [];
         const check = (name, fn) => { try { const r = fn(); checks.push([name, !!r, r === true ? "" : String(r)]); } catch (e) { checks.push([name, false, e.message]); } };
-        check("jQuery 1.12.4", () => $.fn.jquery === "1.12.4" || $.fn.jquery);
+        check("jQuery 3.7.1", () => $.fn.jquery === "3.7.1" || $.fn.jquery);
         check("jquery.form ajaxForm", () => typeof $.fn.ajaxForm === "function");
         check("jquery-validation validate", () => typeof $.fn.validate === "function");
         check("devbridge autocomplete", () => typeof $.fn.autocomplete === "function" || typeof $.fn.devbridgeAutocomplete === "function");
@@ -67,9 +77,9 @@ text</textarea></div>
         check("mark.js", () => typeof $.fn.mark === "function");
         check("d3 7", () => d3.version);
         check("Sortable", () => Sortable.version);
-        check("echarts 5", () => echarts.version);
+        check("echarts 6", () => echarts.version);
         check("dayjs + duration + relativeTime", () => typeof dayjs.duration === "function" && typeof dayjs().fromNow === "function" && dayjs.duration(90, "minutes").humanize() === "2 hours");
-        check("mermaid", () => typeof mermaid.render === "function");
+        check("mermaid's loader", () => typeof AhaWiki.Mermaid.renderAll === "function");
         check("CodeMirror 5", () => CodeMirror.version);
         check("Diff2HtmlUI", () => typeof Diff2HtmlUI === "function");
 
@@ -84,8 +94,8 @@ text</textarea></div>
 
         function report() {
             const external = performance.getEntriesByType("resource").map((e) => e.name).filter((n) => !n.startsWith(location.origin));
-            const mathDone = document.querySelectorAll("#math .MathJax").length >= 2 && !document.querySelector("#math .MathJax_Preview:not(:empty)");
-            const mathFonts = performance.getEntriesByType("resource").filter((e) => /vendor\/mathjax\/.*\.(woff|js)/.test(e.name)).length;
+            const mathDone = document.querySelectorAll("#math mjx-container").length >= 3 && !document.querySelector("#math mjx-merror");
+            const mathFonts = performance.getEntriesByType("resource").filter((e) => /vendor\/mathjax[^/]*\/.*\.(woff2|js)/.test(e.name)).length;
             const mermaidDone = !!document.querySelector(".mermaid svg");
             const chartDone = !!document.querySelector("#chart canvas, #chart svg");
             const diffDone = !!document.querySelector("#diff .d2h-wrapper");
@@ -96,7 +106,7 @@ text</textarea></div>
                 ["no script error", errors.length === 0, errors.join(" | ")],
                 ["nothing fetched off this origin", external.length === 0, external.join(" ")],
                 ["Font Awesome rule applied to .fa-check", faDone, ""],
-                [`MathJax typeset two formulas from the local tree (${mathFonts} files loaded from it)`, mathDone && mathFonts >= 3, ""],
+                [`MathJax typeset three formulas from the local tree (${mathFonts} files loaded from it)`, mathDone && mathFonts >= 3, ""],
                 ["mermaid drew the diagram", mermaidDone, ""],
                 ["echarts drew the chart", chartDone, ""],
                 ["CodeMirror took the textarea", codeDone, ""],
