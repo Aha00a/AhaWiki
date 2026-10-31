@@ -95,7 +95,7 @@ WARN 쪽도 같은 기간을 셌고 고칠 것은 없었다. 거의 전부가 �
 
 [[[#!Table tsv 1
 건수	예외	무엇이었나
-142	`SQLTransientConnectionException` (커넥션 풀 고갈)	세 덩어리 전부 DB 쪽 사건이다. 10-03 06:04 의 11건은 그날 풀 고갈 수정을 배포(06:15)하기 전, 30개 동시 요청으로 재현해 보던 바로 그 시각의 것(10-03 절은 그 시험에서 9건이라 적었다 — 같은 분의 다른 요청 둘이 더 걸렸다). 10-04 06시 106건은 데이터베이스가 메모리에 눌려 재시작한 때([Dev Database]). 10-11 15:15~15:17 의 25건은 `Failed to validate connection` 경고 셋으로 시작해 3분 만에 끝났다 — 연결이 모두 한꺼번에 무효가 됐다가 돌아온 것이고, 그 사이 `deleteExpired` 스케줄러도 한 번 실패했다. 앱이 바뀐 것도, 요청이 몰린 것도 아니다 — CloudWatch 로 보면 그날 RDS 가 재시작했다(연결 수 0, 그 뒤 `FreeableMemory` 가 여섯 배). 인스턴스를 바꾼 날이다. 그 25건의 요청은 전부 읽기(`view`·`edit`·`diff`)라 [ToDo] 의 «쓰는 쪽 다섯 진입점» 조건(`Connection is not available` 이 그 경로에서 보이면 고친다)은 이번에도 열리지 않았다
+142	`SQLTransientConnectionException` (커넥션 풀 고갈)	세 덩어리 전부 DB 쪽 사건이다. 10-03 06:04 의 11건은 그날 풀 고갈 수정을 배포(06:15)하기 전, 30개 동시 요청으로 재현해 보던 바로 그 시각의 것(10-03 절은 그 시험에서 9건이라 적었다 — 같은 분의 다른 요청 둘이 더 걸렸다). 10-04 06시 106건은 데이터베이스가 메모리에 눌려 재시작한 때([Dev Database]). 10-11 15:15~15:17 의 25건은 `Failed to validate connection` 경고 셋으로 시작해 3분 만에 끝났다 — 연결이 모두 한꺼번에 무효가 됐다가 돌아온 것이고, 그 사이 `deleteExpired` 스케줄러도 한 번 실패했다. 앱이 바뀐 것도, 요청이 몰린 것도 아니다 — 소유자가 15:13 에 데이터베이스 인스턴스 클래스를 키웠고(CloudTrail, 즉시 적용) 그 재시작이 2분 뒤 닿은 것이다. 연결 수가 0 까지 떨어졌고 그 뒤 `FreeableMemory` 가 여섯 배가 됐다. 그 25건의 요청은 전부 읽기(`view`·`edit`·`diff`)라 [ToDo] 의 «쓰는 쪽 다섯 진입점» 조건(`Connection is not available` 이 그 경로에서 보이면 고친다)은 이번에도 열리지 않았다
 6	`NumberFormatException`	`?action=diff&before=…&after=…` 에 스캐너가 `150'GUsvqJ<'">pLZraH` 같은 값을 넣은 것(10-07 넷, 10-17 둘). `renderDiffPage` 가 둘을 `.toInt` 로 읽었다. 고쳤다 — 숫자가 아니면 400. `WikiOldRevisionViewSpec` 이 그 두 주소로 400 을, 제대로 된 번호로 두 리비전의 diff 를 확인한다
 1	`CommunicationsException`	10-04 08:02, 데이터베이스 재시작의 여파([Dev Database] 의 TCP keepalive)
 ]]]
@@ -106,7 +106,7 @@ WARN 은 155,715건이고 고칠 것은 없었다. 어디에 쓰였나:
 
  * 차단 기록(`IpDeny:Cache`·`IpDeny:DB`·`RateLimit`·`UriAttack`)이 거의 전부. 설계대로다([Dev BotDetection]).
  * `Illegal request-target: Invalid input 'ì'` 류 6,136건(하루 50~320). 퍼센트 인코딩 없이 UTF-8 바이트 그대로 보낸 한글 페이지 주소(`/w/청주` 가 `/w/ì²­ì£¼` 로 보인다)를 Pekko 가 Play 에 닿기 전에 400 으로 거절한 것이다. 브라우저는 늘 인코딩해 보내므로 사람의 요청은 아니고, 접근 로그에도 남지 않아(필터 앞에서 끝난다) 보낸 쪽은 nginx 로그에만 있다. '''고치지 않았다''' — 받아 주려면 nginx 가 다시 인코딩하게 하거나(10-04 에 `proxy_pass` 의 끝 `/` 를 뺀 결정과 부딪힌다, [ToDo] «브라우저로 열어 본 것») Pekko 의 `uri-parsing-mode = relaxed` 가 비ASCII 를 받는지부터 확인해야 한다. 봇을 위해 할 일은 아니라고 봤다.
- * `Skip AccessLog insert: site not found for host=…` 약 4,000건. 이 상자를 가리키는 다른 도메인(aha.kim·wururung.com·aha00a.net·EC2 호스트 이름)과 맨 IP 로 온 요청. 사이트가 없으니 기록할 데가 없다 — 정상.
+ * `Skip AccessLog insert: site not found for host=…` 약 4,000건. 이 상자를 가리키는 다른 도메인과 서버 호스트 이름, 맨 IP 로 온 요청. 사이트가 없으니 기록할 데가 없다 — 정상.
  * `WebSocket communication problem: HTTP idle-timeout` 1,392건(하루 2~27). 열어 둔 채 놔둔 탭의 소켓이 75초 유휴 제한에 끊긴 것. 클라이언트가 다시 연다([Dev WebSocket]).
  * `CrossInstanceBus subscriber dropped, retrying` 33건, 전부 10-26 23시. Redis 가 잠깐 끊겼다 돌아온 것이고 재시도로 붙었다. 같은 시각의 `Async AccessLog write failed` 한 건도 그 여파로 본다. 그날 500 은 없었다.
  * `cookie has invalid signature` 76건 — 9-25 절의 그것, 8-13 에 바꾼 키의 옛 쿠키.
