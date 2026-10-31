@@ -21,7 +21,7 @@
     "dayjs": "^1.11.13",
     "devbridge-autocomplete": "1.2.24",
     "diff2html": "3.4.52",
-    "echarts": "5.0.0",
+    "echarts": "6.1.0",
     "esbuild": "^0.28.1",
     "jquery": "1.12.4",
     "jquery-validation": "1.14.0",
