@@ -27,8 +27,9 @@ lessc --source-map wiki.less wiki.css
 == 파일 구조
 
 === 공용 믹스인 (컴파일 안 함)
- * `app/assets/_mixins.less` - 컴파일되는 `.less` 파일 열 개가 첫 줄에서 import (`_paper`·`_wiki_table` 은 `wiki.less` 안에서 들어오므로 직접 import 하지 않는다)
+ * `app/assets/_mixins.less` - 컴파일되는 `.less` 파일 열 개가 첫 줄에서 import (`_paper`·`_slide`·`_wiki_table` 은 `wiki.less` 안에서 들어오므로 직접 import 하지 않는다)
  * `app/assets/_paper.less` - `wiki.less` 가 import (인쇄용 paperContent)
+ * `app/assets/_slide.less` - `wiki.less` 가 import ([InterpreterSlide])
  * `app/assets/_wiki_table.less` - `wiki.less` 가 import (wikiTableSimple 표)
 
 === 독립 컴파일 파일

@@ -70,6 +70,7 @@
  1. [MacroUnlinkedMentions] - 이름은 적었지만 링크는 안 건 페이지를 찾는 단추
  1. [MacroTwinPages] - Sister Wiki의 동명 페이지
  1. [MacroSimilarPages] - 유사 페이지 (코사인 유사도)
+ 1. [MacroPercentLinkTitle] - 비율 막대가 붙은 링크
  1. [MacroAhaWikiSiteList] - AhaWiki 사이트 목록
 
 == 변수

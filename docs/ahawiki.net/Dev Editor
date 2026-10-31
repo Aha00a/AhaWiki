@@ -146,7 +146,7 @@ Source API:
 클래스가 둘 이상이면 인자도 둘 이상이다. `InterpreterSchema` 는 이제 인자를 전부 읽는다(2026-09-04 이전에는 첫 것만 읽었다) — JSON-LD `@type` 은 배열, RDFa `typeof` 는 공백 구분, 색인에는 양쪽에 오른다.
 
 === 매핑에서 판단이 필요했던 것들
-'''소유는 매핑하지 않는다.''' schema.org에는 「이 장소를 X가 소유한다」에 해당하는 property가 없다. `owns`는 그 반대로, domain이 Person·Organization이고 range가 Product다. 여기 연결하면 맞아 보이면서 뜻이 뒤집히므로 `Owner`·`소유`·`소유주`·`소유기관`은 라벨 그대로 통과시킨다.
+'''소유는 `owns` 가 아니라 `owner` 로 매핑한다.''' `owns` 는 domain 이 Person·Organization 이고 range 가 Product 라, 여기 연결하면 맞아 보이면서 뜻이 뒤집힌다. 그래서 어휘에 `owner` 가 없던 동안은 라벨 그대로 통과시켰고, 30.1 이 `owner` 를 들여온 뒤로 그쪽에 매핑한다([Dev SchemaOrgVocabulary]).
 
 '''`yearBuilt`는 연도만 남는다.''' range가 `Number`라 `1978-04-14`를 담을 수 없다. 어휘 전체에서 range가 Date·DateTime이면서 domain에 Place 계열이 있는 property는 하나도 없다 — 건물의 완공일을 온전히 담을 자리가 schema.org에 없다. 월·일은 위의 `#` 주석에 남는다.
 

@@ -65,7 +65,7 @@ ORDER BY TABLE_NAME, COLUMN_NAME;
   * DB 값을 `LocalDateTime`으로 읽는다.
  * `app/com/aha00a/commons/Implicits.scala`
   * `toIsoLocalDateTimeString`이 offset 없는 문자열을 만든다.
- * `app/assets/js/admin.jsx`
+ * `app/assets/js/admin/utils.js`
   * `dayjs(value)`가 offset 없는 값을 브라우저 로컬 시간으로 파싱할 수 있다.
  * Twirl views
   * history, action, blame, search, RecentChanges 등에서 서버 시각 문자열을 직접 출력한다.

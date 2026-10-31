@@ -1,0 +1,17 @@
+= [Macro]PercentLinkTitle
+비율을 막대와 백분율로 그리고 그 뒤에 링크와 설명을 붙입니다. [MacroSimilarPages] 가 유사 페이지 한 줄을 그릴 때 이 매크로를 씁니다.
+
+== 사용법
+`[[PercentLinkTitle(비율, 링크, "설명")]]`
+
+ * 비율 — 0 에서 1 사이의 수. `0.42` 는 42.00% 입니다.
+ * 링크 — 페이지 이름, 또는 `사이트이름:페이지이름`.
+ * 설명 — 큰따옴표로 감쌉니다. 비워 둘 수는 있어도(`""`) 생략할 수는 없습니다.
+
+[[[#!WikiSyntaxPreview
+[[PercentLinkTitle(0.42, FrontPage, "설명")]]
+]]]
+
+== 함께 보기
+ * [MacroSimilarPages]
+ * [Macro]

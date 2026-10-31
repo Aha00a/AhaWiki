@@ -120,6 +120,7 @@ AhaWiki API 밖에서 받는 `403` 은 둘 중 어느 쪽도 아니라서, key �
  * `POST /api/v1/page/*nameEncoded`
  * `GET /api/v1/pages`
  * `POST /api/v1/pages/metadata`
+ * `GET /api/v1/search`
  * `GET /api/v1/changes`
  * `POST /api/v1/rename`
  * `DELETE /api/v1/page/*nameEncoded`
@@ -207,7 +208,7 @@ Admin 권한과 CSRF token이 필요하다.
  * 고엔트로피 API Key이므로 SHA-256 hash로 비교한다. bcrypt/Argon2 같은 slow hash는 요청마다 불필요한 지연을 만든다.
  * AhaWiki API는 CSRF filter를 우회한다. 어느 경로가 우회하는지는 `app/Filters.scala`가 정하고, 그 밖의 경로에 `Authorization`을 붙이면 어떻게 되는지는 위 «Bearer 인증은 v1 경로에서만 동작한다»에 있다.
  * 브라우저 세션 기반 Account/Admin API는 기존 CSRF 정책을 유지한다.
- * 별도 API Key 단위 rate limit은 1차 구현에 포함하지 않았다. 현재 전역 IP rate limit은 AhaWiki API에도 적용된다.
+ * 별도 API Key 단위 rate limit은 1차 구현에 포함하지 않았다. 전역 IP rate limit도 API 요청을 세지 않는다 — `IpRateLimiter.categorize` 가 `/w/` 밖의 경로를 사람 신호로 분류하므로 API 호출로는 차단되지 않는다.
 
 == Tests
 
@@ -237,4 +238,3 @@ Admin 권한과 CSRF token이 필요하다.
  * `sbt.bat "testOnly com.aha00a.controllers.ApiV1Spec"`
  * `sbt.bat "testOnly com.aha00a.controllers.ApiV1FilterSpec"`
 
-마지막 확인 시 `ApiV1Spec` 18개 테스트가 통과했다.

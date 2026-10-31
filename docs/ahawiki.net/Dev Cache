@@ -111,7 +111,7 @@ TTL 이 지나면 다음 요청이 그 자리에서 다시 계산합니다(호�
  * 저장 값: `Seq[CalculatedLink]`
  * 최대 크기: 2,000 항목 (초과 시 절반 제거)
  * 주기적 초기화: 10분마다 전체 삭제
- * 수동 무효화: 페이지가 다시 계산될 때 그 페이지 항목만 삭제 — 저장·rename·마지막 리비전 삭제, API v1 삭제 뒤 actor 가 `Calculate` 를 처리하고 나서(`ServicePageCalculator`)다. 저장 응답과 동시가 아니다. 웹의 페이지 삭제(`/actions/delete`)는 `Calculate` 를 보내지 않아 그 항목이 다음 `ApiLinksCacheClear` 까지 남는다. 관리 화면의 캐시 삭제(`DELETE /api/cache/:siteSeq`)는 이 인스턴스의 항목을 전부 비운다
+ * 수동 무효화: 페이지가 다시 계산될 때 그 페이지 항목만 삭제 — 저장·rename·마지막 리비전 삭제, API v1 삭제, 그리고 조회가 부른 재계산(`onlyIfStale`, 실제로 계산했을 때만) 뒤 actor 가 `Calculate` 를 처리하고 나서(`ServicePageCalculator`)다. 저장 응답과 동시가 아니다. 웹의 페이지 삭제(`/actions/delete`)는 `Calculate` 를 보내지 않아 그 항목이 다음 `ApiLinksCacheClear` 까지 남는다. 관리 화면의 캐시 삭제(`DELETE /api/cache/:siteSeq`)는 이 인스턴스의 항목을 전부 비운다
 
 == AhaWikiCacheMemoryPermission
 
@@ -201,6 +201,7 @@ AhaWikiCacheMemoryApiLinks	다음 `ApiLinksCacheClear` 까지(최대 10분)
 스케줄명	초기 지연	반복 간격	동작
 SiteDomainCacheRefresh	5초	1시간	도메인-사이트 캐시 전체 갱신
 ApiLinksCacheClear	10분	10분	링크 캐시 전체 삭제
+ahaWikiCacheMemoryApiLinks	0	5분	이 인스턴스의 링크 캐시 현황을 Redis 스냅샷에 기록
 CacheFileCleanup	15초	7일	Vim 파일 캐시 정리
 CrawlerCacheCleanup	10초	12시간	만료된 크롤러 캐시 DB 삭제
 deleteExpired	10~30분 랜덤	10~30분 랜덤	로그 테이블 만료 행 삭제 — 기간은 ["Dev Database"] 참조

@@ -46,7 +46,6 @@ copiable - ``copiable``
 코드 - `코드`
 복사 - ``복사``
 ]]]
-위 표의 왼쪽 칸에서는 백틱을 쓴 줄도 렌더링되어 보입니다 — [Interpreter] 의 '''구간 안의 백틱'''.
 
 == 가로선
 Horizontal line is created by 4 or more dashes.

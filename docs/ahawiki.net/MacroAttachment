@@ -18,7 +18,7 @@ S3에 업로드된 파일을 페이지에 첨부합니다.
 == 경로 규칙
  * `파일명` → `Attachment/{siteSeq}/{페이지명}/{파일명}`
  * `clipboard/파일명` → `Attachment/{siteSeq}/{페이지명}/clipboard/{파일명}`
- * `Attachment/...` 로 시작하면 그대로 사용
+ * `Attachment/...` 로 시작하면 그대로 사용 — 이 사이트의 키만 됩니다. 다른 사이트의 키는 오류 상자가 나옵니다
 
 == 지원 이미지 형식
 png, jpg, jpeg, gif, webp, svg, bmp, avif, tiff, tif, ico
