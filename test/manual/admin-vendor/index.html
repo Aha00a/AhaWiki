@@ -3,8 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <title>Admin vendor bundle harness</title>
-    <!-- The same two stylesheets _baseAdmin.scala.html names, at their bare addresses: the
-         digest in the query string is the server's business, not the harness's. -->
+    <script>
+        // ?theme=dark or ?theme=light stores that theme first, as the wiki's toggle would. The
+        // setting outlives the page; open it once with ?theme=light to go back.
+        const requestedTheme = new URLSearchParams(location.search).get("theme");
+        if (requestedTheme) localStorage.setItem("ahawiki-theme", `ahawiki-${requestedTheme}`);
+        // What _themeClass.scala.html and the line after it in _baseAdmin.scala.html do.
+        const storedTheme = localStorage.getItem("ahawiki-theme");
+        document.documentElement.classList.add(`theme-${storedTheme === "ahawiki-dark" ? "ahawiki-dark" : "ahawiki-light"}`);
+        document.documentElement.setAttribute("data-mantine-color-scheme", document.documentElement.classList.contains("theme-ahawiki-dark") ? "dark" : "light");
+    </script>
+    <!-- The same stylesheets in the same order as _baseAdmin.scala.html, at their bare addresses:
+         the digest in the query string is the server's business, not the harness's. The wiki's
+         own CSS is here because it sets html and body too, and Mantine's rules have to win. -->
+    <link rel="stylesheet" href="/public/vendor/font-awesome/css/all.min.css">
+    <link rel="stylesheet" href="/app/assets/less.css">
+    <link rel="stylesheet" href="/app/assets/wiki.css">
+    <link rel="stylesheet" href="/app/assets/search.css">
+    <link rel="stylesheet" href="/app/assets/kanban.css">
+    <link rel="stylesheet" href="/app/assets/interpreter.css">
+    <link rel="stylesheet" href="/app/assets/adjacent.css">
     <link rel="stylesheet" href="/public/js/babel/vendor/mantine-core.css">
     <link rel="stylesheet" href="/public/js/babel/vendor/mantine-datatable.css">
     <!-- The import map of _baseAdmin.scala.html, without the digests. A specifier missing here
@@ -81,7 +99,14 @@
             // The two dashboard checks only mean something on the dashboard; the navigation
             // works, and following a link to another page must not read as a failure.
             const onDashboard = location.pathname === "/Admin";
+            const expectedScheme = localStorage.getItem("ahawiki-theme") === "ahawiki-dark" ? "dark" : "light";
+            const root = document.documentElement;
+            const scheme = root.getAttribute("data-mantine-color-scheme");
+            const [red, green, blue] = getComputedStyle(document.body).backgroundColor.match(/\d+/g).map(Number);
+            const bodyScheme = (red + green + blue) / 3 < 128 ? "dark" : "light";
             const checks = [
+                ["Mantine scheme and the html class follow ahawiki-theme", scheme === expectedScheme && root.classList.contains(`theme-ahawiki-${expectedScheme}`), `attribute ${scheme}, class ${root.className}, stored ${expectedScheme}`],
+                ["the page background is that scheme", bodyScheme === expectedScheme, `rgb ${red} ${green} ${blue}`],
                 ["no script error", errors.length === 0, errors.join(" | ")],
                 ["nothing fetched off this origin", external.length === 0, external.join(" ")],
                 ["admin UI replaced the loading message", !text.includes("Admin UI 로딩 중"), ""],

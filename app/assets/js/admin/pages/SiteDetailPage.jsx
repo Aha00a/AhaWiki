@@ -36,7 +36,7 @@ export default function SiteDetailPage() {
     return (
         <>
             <Group mb="md" align="flex-end">
-                <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="page name, image" style={{border: "1px solid #ced4da", borderRadius: 6, padding: "6px 10px"}}/>
+                <input type="text" value={searchInput} onChange={(e) => setSearchInput(e.target.value)} placeholder="page name, image" style={{border: "1px solid var(--mantine-color-default-border)", borderRadius: 6, padding: "6px 10px"}}/>
                 <Button variant="filled" onClick={() => { setMetaPage(1); setSearch(searchInput); load({siteSeq, page: 1, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: searchInput, sortBy, sortOrder}); }}>검색</Button>
                 <Badge color="indigo" variant="light">{count} rows</Badge>
             </Group>

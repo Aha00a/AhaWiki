@@ -18,9 +18,16 @@ What it checks, and prints as `PASS`/`FAIL` every second:
  * **The loading message is gone**, and on the dashboard **the two site-activity tables are
    drawn** from the canned `/api/Admin/SiteActivity` (the fixture mirrors
    `ApiAdminSiteActivitySpec`: a busy site and an idle one).
+ * **The colour scheme follows `ahawiki-theme`**: Mantine's attribute, the class on `<html>`, and
+   the page background actually being that dark or light. The stylesheets are the same as
+   `_baseAdmin.scala.html` in the same order, because the wiki's own CSS sets `html` and `body`
+   too. Open it with `?theme=dark` to store the dark theme first, and with `?theme=light` to go
+   back: the setting outlives the page. The toggle beside the page title switches it, and the
+   checks follow.
 
 What you have to look at: that Mantine is styled (cards with borders, a sidebar with the section
-labels), that the chart draws, and that the DataTable on **User** shows its "No records" overlay
+labels), that the chart draws and its axis labels and grid can be read in both schemes, and that
+the DataTable on **User** shows its "No records" overlay
 inside the table rather than across the page — that overlay is what went wrong the last time a
 stylesheet silently failed to arrive. The navigation works; the dashboard checks switch themselves
 off on the other pages.

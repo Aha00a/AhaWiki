@@ -7,7 +7,7 @@ import { MantineProvider } from "@mantine/core";
 // app/assets/js/admin/layout/AdminLayout.jsx
 import React3, { useEffect as useEffect2, useState as useState2 } from "react";
 import { Outlet, useNavigate as useNavigate2 } from "react-router-dom";
-import { AppShell, Badge as Badge2, Group as Group2, Stack as Stack2, Text as Text2, Title } from "@mantine/core";
+import { ActionIcon, AppShell, Badge as Badge2, Group as Group2, Stack as Stack2, Text as Text2, Title, useMantineColorScheme } from "@mantine/core";
 
 // app/assets/js/admin/navigation.jsx
 import React, { useEffect, useMemo, useState } from "react";
@@ -168,6 +168,11 @@ function pageTitleFromPath(pathname) {
   if (/\/ApiKeys/.test(pathname)) return "API Keys";
   return "Dashboard";
 }
+function ThemeToggle() {
+  const { colorScheme, toggleColorScheme } = useMantineColorScheme();
+  const isDark = colorScheme === "dark";
+  return /* @__PURE__ */ React3.createElement(ActionIcon, { variant: "subtle", color: "gray", size: "lg", "aria-label": "Toggle theme", title: "Toggle theme", "aria-pressed": isDark, onClick: toggleColorScheme }, /* @__PURE__ */ React3.createElement("i", { className: `fas ${isDark ? "fa-moon" : "fa-sun"}` }));
+}
 function AdminLayout() {
   const [me, setMe] = useState2(null);
   const navigate = useNavigate2();
@@ -179,7 +184,7 @@ function AdminLayout() {
       setMe({ loggedIn: false });
     });
   }, []);
-  return /* @__PURE__ */ React3.createElement(AdminContext.Provider, { value: { me } }, /* @__PURE__ */ React3.createElement(AppShell, { padding: "md", navbar: { width: 240, breakpoint: "sm" } }, /* @__PURE__ */ React3.createElement(AppShell.Navbar, { p: "md", style: { overflowY: "auto" } }, /* @__PURE__ */ React3.createElement(Stack2, { mb: "md", gap: 4 }, /* @__PURE__ */ React3.createElement(Text2, { fw: 700, size: "lg" }, "AhaWiki Admin")), /* @__PURE__ */ React3.createElement(Navigation, { me, onNavigate: (href) => navigate(href) })), /* @__PURE__ */ React3.createElement(AppShell.Main, null, /* @__PURE__ */ React3.createElement(Stack2, { gap: "md" }, /* @__PURE__ */ React3.createElement(Group2, { justify: "space-between", align: "center" }, /* @__PURE__ */ React3.createElement(Title, { order: 2 }, pageTitle), /* @__PURE__ */ React3.createElement(Badge2, { variant: "light", color: "indigo", size: "lg" }, "Live")), /* @__PURE__ */ React3.createElement(Outlet, null)))));
+  return /* @__PURE__ */ React3.createElement(AdminContext.Provider, { value: { me } }, /* @__PURE__ */ React3.createElement(AppShell, { padding: "md", navbar: { width: 240, breakpoint: "sm" } }, /* @__PURE__ */ React3.createElement(AppShell.Navbar, { p: "md", style: { overflowY: "auto" } }, /* @__PURE__ */ React3.createElement(Stack2, { mb: "md", gap: 4 }, /* @__PURE__ */ React3.createElement(Text2, { fw: 700, size: "lg" }, "AhaWiki Admin")), /* @__PURE__ */ React3.createElement(Navigation, { me, onNavigate: (href) => navigate(href) })), /* @__PURE__ */ React3.createElement(AppShell.Main, null, /* @__PURE__ */ React3.createElement(Stack2, { gap: "md" }, /* @__PURE__ */ React3.createElement(Group2, { justify: "space-between", align: "center" }, /* @__PURE__ */ React3.createElement(Title, { order: 2 }, pageTitle), /* @__PURE__ */ React3.createElement(Group2, { gap: "xs" }, /* @__PURE__ */ React3.createElement(ThemeToggle, null), /* @__PURE__ */ React3.createElement(Badge2, { variant: "light", color: "indigo", size: "lg" }, "Live"))), /* @__PURE__ */ React3.createElement(Outlet, null)))));
 }
 
 // app/assets/js/admin/layout/SiteLayout.jsx
@@ -368,6 +373,11 @@ function makeTable(headers, rows) {
 }
 
 // app/assets/js/admin/mainWidgets.jsx
+var chartTooltipColors = {
+  contentStyle: { backgroundColor: "var(--mantine-color-body)", borderColor: "var(--mantine-color-default-border)" },
+  labelStyle: { color: "var(--mantine-color-text)" }
+};
+var chartAxisTick = { fontSize: 12, fill: "var(--mantine-color-dimmed)" };
 function normalizeDailyRows(rows) {
   return [...rows].map((row) => ({ ymd: row.ymd, count: Number(row.count ?? 0) })).sort((left, right) => left.ymd > right.ymd ? 1 : -1);
 }
@@ -377,7 +387,7 @@ function Sparkline({ rows, color }) {
   const latest = data[data.length - 1]?.count ?? 0;
   const previous = data[data.length - 2]?.count ?? latest;
   const delta = latest - previous;
-  return /* @__PURE__ */ React7.createElement(Stack3, { gap: 4 }, /* @__PURE__ */ React7.createElement("div", { style: { width: "100%", height: 72 }, role: "img", "aria-label": "trend sparkline" }, /* @__PURE__ */ React7.createElement(ResponsiveContainer, { width: "100%", height: "100%" }, /* @__PURE__ */ React7.createElement(AreaChart, { data, margin: { top: 4, right: 0, left: 0, bottom: 0 } }, /* @__PURE__ */ React7.createElement("defs", null, /* @__PURE__ */ React7.createElement("linearGradient", { id: `sparklineGradient-${color}`, x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React7.createElement("stop", { offset: "0%", stopColor: `var(--mantine-color-${color}-4)`, stopOpacity: 0.35 }), /* @__PURE__ */ React7.createElement("stop", { offset: "100%", stopColor: `var(--mantine-color-${color}-1)`, stopOpacity: 0.1 }))), /* @__PURE__ */ React7.createElement(Tooltip2, { cursor: false, labelFormatter: (value) => `Date: ${value}`, formatter: (value) => [value, "Count"] }), /* @__PURE__ */ React7.createElement(Area, { type: "monotone", dataKey: "count", stroke: `var(--mantine-color-${color}-6)`, strokeWidth: 2, fill: `url(#sparklineGradient-${color})`, dot: false, activeDot: { r: 3 }, isAnimationActive: false })))), /* @__PURE__ */ React7.createElement(Group4, { justify: "space-between" }, /* @__PURE__ */ React7.createElement(Text4, { size: "xs", c: "dimmed" }, "\uCD5C\uADFC 30\uC77C"), /* @__PURE__ */ React7.createElement(Badge4, { color: delta >= 0 ? "teal" : "red", variant: "light", size: "xs" }, delta >= 0 ? "+" : "", delta, " vs yesterday")));
+  return /* @__PURE__ */ React7.createElement(Stack3, { gap: 4 }, /* @__PURE__ */ React7.createElement("div", { style: { width: "100%", height: 72 }, role: "img", "aria-label": "trend sparkline" }, /* @__PURE__ */ React7.createElement(ResponsiveContainer, { width: "100%", height: "100%" }, /* @__PURE__ */ React7.createElement(AreaChart, { data, margin: { top: 4, right: 0, left: 0, bottom: 0 } }, /* @__PURE__ */ React7.createElement("defs", null, /* @__PURE__ */ React7.createElement("linearGradient", { id: `sparklineGradient-${color}`, x1: "0", y1: "0", x2: "0", y2: "1" }, /* @__PURE__ */ React7.createElement("stop", { offset: "0%", stopColor: `var(--mantine-color-${color}-4)`, stopOpacity: 0.35 }), /* @__PURE__ */ React7.createElement("stop", { offset: "100%", stopColor: `var(--mantine-color-${color}-1)`, stopOpacity: 0.1 }))), /* @__PURE__ */ React7.createElement(Tooltip2, { ...chartTooltipColors, cursor: false, labelFormatter: (value) => `Date: ${value}`, formatter: (value) => [value, "Count"] }), /* @__PURE__ */ React7.createElement(Area, { type: "monotone", dataKey: "count", stroke: `var(--mantine-color-${color}-6)`, strokeWidth: 2, fill: `url(#sparklineGradient-${color})`, dot: false, activeDot: { r: 3 }, isAnimationActive: false })))), /* @__PURE__ */ React7.createElement(Group4, { justify: "space-between" }, /* @__PURE__ */ React7.createElement(Text4, { size: "xs", c: "dimmed" }, "\uCD5C\uADFC 30\uC77C"), /* @__PURE__ */ React7.createElement(Badge4, { color: delta >= 0 ? "teal" : "red", variant: "light", size: "xs" }, delta >= 0 ? "+" : "", delta, " vs yesterday")));
 }
 function StatTrendCard({ title, total, rows, color }) {
   return /* @__PURE__ */ React7.createElement(Card2, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React7.createElement(Stack3, { gap: 8 }, /* @__PURE__ */ React7.createElement(Group4, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React7.createElement(Text4, { size: "sm", c: "dimmed" }, title), /* @__PURE__ */ React7.createElement(Badge4, { color, variant: "light" }, "30d")), /* @__PURE__ */ React7.createElement(Title3, { order: 3 }, total), /* @__PURE__ */ React7.createElement(Sparkline, { rows, color })));
@@ -397,7 +407,7 @@ function MultiTrendChart({ series }) {
     });
   });
   const chartData = dates.map((date) => chartDataByDate.get(date));
-  return /* @__PURE__ */ React7.createElement(Stack3, { gap: 8 }, /* @__PURE__ */ React7.createElement("div", { style: { width: "100%", height: 280 }, role: "img", "aria-label": "daily trends chart" }, /* @__PURE__ */ React7.createElement(ResponsiveContainer, { width: "100%", height: "100%" }, /* @__PURE__ */ React7.createElement(LineChart, { data: chartData, margin: { top: 8, right: 12, bottom: 8, left: 0 } }, /* @__PURE__ */ React7.createElement(CartesianGrid, { stroke: "var(--mantine-color-gray-2)", strokeDasharray: "3 3" }), /* @__PURE__ */ React7.createElement(XAxis, { dataKey: "date", tickFormatter: (value) => value.slice(5), tick: { fontSize: 12 } }), /* @__PURE__ */ React7.createElement(YAxis, { allowDecimals: false, tick: { fontSize: 12 } }), /* @__PURE__ */ React7.createElement(Tooltip2, { labelFormatter: (value) => `Date: ${value}` }), /* @__PURE__ */ React7.createElement(Legend, { verticalAlign: "top", height: 30 }), series.map((line) => /* @__PURE__ */ React7.createElement(Line, { key: line.name, type: "monotone", dataKey: line.name, stroke: `var(--mantine-color-${colorByName[line.name]}-6)`, strokeWidth: 2.5, dot: false, activeDot: { r: 4 }, isAnimationActive: false }))))), /* @__PURE__ */ React7.createElement(Group4, { gap: 8 }, series.map((line) => /* @__PURE__ */ React7.createElement(Badge4, { key: line.name, color: line.color, variant: "light" }, line.name))));
+  return /* @__PURE__ */ React7.createElement(Stack3, { gap: 8 }, /* @__PURE__ */ React7.createElement("div", { style: { width: "100%", height: 280 }, role: "img", "aria-label": "daily trends chart" }, /* @__PURE__ */ React7.createElement(ResponsiveContainer, { width: "100%", height: "100%" }, /* @__PURE__ */ React7.createElement(LineChart, { data: chartData, margin: { top: 8, right: 12, bottom: 8, left: 0 } }, /* @__PURE__ */ React7.createElement(CartesianGrid, { stroke: "var(--mantine-color-default-border)", strokeOpacity: 0.6, strokeDasharray: "3 3" }), /* @__PURE__ */ React7.createElement(XAxis, { dataKey: "date", tickFormatter: (value) => value.slice(5), tick: chartAxisTick }), /* @__PURE__ */ React7.createElement(YAxis, { allowDecimals: false, tick: chartAxisTick }), /* @__PURE__ */ React7.createElement(Tooltip2, { ...chartTooltipColors, labelFormatter: (value) => `Date: ${value}` }), /* @__PURE__ */ React7.createElement(Legend, { verticalAlign: "top", height: 30 }), series.map((line) => /* @__PURE__ */ React7.createElement(Line, { key: line.name, type: "monotone", dataKey: line.name, stroke: `var(--mantine-color-${colorByName[line.name]}-6)`, strokeWidth: 2.5, dot: false, activeDot: { r: 4 }, isAnimationActive: false }))))), /* @__PURE__ */ React7.createElement(Group4, { gap: 8 }, series.map((line) => /* @__PURE__ */ React7.createElement(Badge4, { key: line.name, color: line.color, variant: "light" }, line.name))));
 }
 
 // app/assets/js/admin/utils.js
@@ -724,7 +734,7 @@ function SiteDetailPage() {
       setCalculating(false);
     }
   };
-  return /* @__PURE__ */ React14.createElement(React14.Fragment, null, /* @__PURE__ */ React14.createElement(Group10, { mb: "md", align: "flex-end" }, /* @__PURE__ */ React14.createElement("input", { type: "text", value: searchInput, onChange: (e) => setSearchInput(e.target.value), placeholder: "page name, image", style: { border: "1px solid #ced4da", borderRadius: 6, padding: "6px 10px" } }), /* @__PURE__ */ React14.createElement(Button5, { variant: "filled", onClick: () => {
+  return /* @__PURE__ */ React14.createElement(React14.Fragment, null, /* @__PURE__ */ React14.createElement(Group10, { mb: "md", align: "flex-end" }, /* @__PURE__ */ React14.createElement("input", { type: "text", value: searchInput, onChange: (e) => setSearchInput(e.target.value), placeholder: "page name, image", style: { border: "1px solid var(--mantine-color-default-border)", borderRadius: 6, padding: "6px 10px" } }), /* @__PURE__ */ React14.createElement(Button5, { variant: "filled", onClick: () => {
     setMetaPage(1);
     setSearch(searchInput);
     load({ siteSeq, page: 1, pageSize: ADMIN_PAGE_META_PAGE_SIZE, search: searchInput, sortBy, sortOrder });
@@ -1875,7 +1885,50 @@ function NicknameRequestsPage() {
   ));
 }
 
+// app/assets/js/admin/theme.js
+var storageKey = "ahawiki-theme";
+var themeOfScheme = { light: "ahawiki-light", dark: "ahawiki-dark" };
+function schemeOfTheme(theme) {
+  return theme === themeOfScheme.dark ? "dark" : "light";
+}
+function createWikiThemeManager({ getStorage = () => window.localStorage, events = window, root = document.documentElement } = {}) {
+  let onStorage = null;
+  return {
+    get(defaultValue) {
+      try {
+        return schemeOfTheme(getStorage().getItem(storageKey));
+      } catch {
+        return defaultValue;
+      }
+    },
+    set(scheme) {
+      const theme = themeOfScheme[scheme] ?? themeOfScheme.light;
+      for (const name of Object.values(themeOfScheme)) root.classList.toggle(`theme-${name}`, name === theme);
+      try {
+        getStorage().setItem(storageKey, theme);
+      } catch {
+      }
+    },
+    subscribe(onUpdate) {
+      onStorage = (event) => {
+        if (event.key === storageKey) onUpdate(schemeOfTheme(event.newValue));
+      };
+      events.addEventListener("storage", onStorage);
+    },
+    unsubscribe() {
+      events.removeEventListener("storage", onStorage);
+    },
+    clear() {
+      try {
+        getStorage().removeItem(storageKey);
+      } catch {
+      }
+    }
+  };
+}
+
 // app/assets/js/admin.jsx
+var wikiThemeManager = createWikiThemeManager();
 var router = createBrowserRouter([
   {
     path: "/Admin",
@@ -1924,6 +1977,6 @@ window.addEventListener("DOMContentLoaded", () => {
     return;
   }
   createRoot(rootElement).render(
-    /* @__PURE__ */ React25.createElement(MantineProvider, { defaultColorScheme: "light", theme: { primaryColor: "indigo", defaultRadius: "md" } }, /* @__PURE__ */ React25.createElement(RouterProvider, { router }))
+    /* @__PURE__ */ React25.createElement(MantineProvider, { colorSchemeManager: wikiThemeManager, defaultColorScheme: "light", theme: { primaryColor: "indigo", defaultRadius: "md" } }, /* @__PURE__ */ React25.createElement(RouterProvider, { router }))
   );
 });

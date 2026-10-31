@@ -40,24 +40,7 @@
                 <link rel="icon" type="image/svg+xml" href="/public/img/favicon.svg">
             }
         }
-        <script>
-            (function () {
-                var allowed = {
-                    "ahawiki-light": true,
-                    "ahawiki-dark": true
-                };
-                var theme = "ahawiki-light";
-                try {
-                    theme = localStorage.getItem("ahawiki-theme") || theme;
-                } catch (e) {
-                    theme = "ahawiki-light";
-                }
-                if (!allowed[theme]) {
-                    theme = "ahawiki-light";
-                }
-                document.documentElement.classList.add("theme-" + theme);
-            })();
-        </script>
+        @views.html._themeClass()
         <link rel="stylesheet" href="@logics.PublicAsset.url("vendor/font-awesome/css/all.min.css")">
         @* Every CSS and JS file served from here -- the wiki's own and, since 2026-10-31, the
            third-party ones under public/vendor/ (scripts/vendor.mjs) -- goes through

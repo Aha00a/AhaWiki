@@ -20,6 +20,9 @@ import S3BrowserPage from "./admin/pages/S3BrowserPage.jsx";
 import CrawlerCachePage from "./admin/pages/CrawlerCachePage.jsx";
 import ApiKeysPage from "./admin/pages/ApiKeysPage.jsx";
 import NicknameRequestsPage from "./admin/pages/NicknameRequestsPage.jsx";
+import {createWikiThemeManager} from "./admin/theme.js";
+
+const wikiThemeManager = createWikiThemeManager();
 
 const router = createBrowserRouter([
     {
@@ -68,7 +71,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const rootElement = document.getElementById("main");
     if (!rootElement) { console.error("[AdminUI] #main not found"); return; }
     createRoot(rootElement).render(
-        <MantineProvider defaultColorScheme="light" theme={{primaryColor: "indigo", defaultRadius: "md"}}>
+        <MantineProvider colorSchemeManager={wikiThemeManager} defaultColorScheme="light" theme={{primaryColor: "indigo", defaultRadius: "md"}}>
             <RouterProvider router={router}/>
         </MantineProvider>
     );

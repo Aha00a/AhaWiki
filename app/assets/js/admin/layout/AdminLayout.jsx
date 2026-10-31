@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Outlet, useNavigate} from "react-router-dom";
-import {AppShell, Badge, Group, Stack, Text, Title} from "@mantine/core";
+import {ActionIcon, AppShell, Badge, Group, Stack, Text, Title, useMantineColorScheme} from "@mantine/core";
 import Navigation from "../navigation.jsx";
 import {AdminContext} from "../context/AdminContext.jsx";
 import {fetchJson, logError} from "../api.js";
@@ -22,6 +22,17 @@ function pageTitleFromPath(pathname) {
     if (/\/CrawlerCache/.test(pathname)) return "Crawler Cache";
     if (/\/ApiKeys/.test(pathname)) return "API Keys";
     return "Dashboard";
+}
+
+/** The wiki's theme toggle, with the same icons: it switches the same setting (theme.js). */
+function ThemeToggle() {
+    const {colorScheme, toggleColorScheme} = useMantineColorScheme();
+    const isDark = colorScheme === "dark";
+    return (
+        <ActionIcon variant="subtle" color="gray" size="lg" aria-label="Toggle theme" title="Toggle theme" aria-pressed={isDark} onClick={toggleColorScheme}>
+            <i className={`fas ${isDark ? "fa-moon" : "fa-sun"}`}/>
+        </ActionIcon>
+    );
 }
 
 export default function AdminLayout() {
@@ -50,7 +61,10 @@ export default function AdminLayout() {
                     <Stack gap="md">
                         <Group justify="space-between" align="center">
                             <Title order={2}>{pageTitle}</Title>
-                            <Badge variant="light" color="indigo" size="lg">Live</Badge>
+                            <Group gap="xs">
+                                <ThemeToggle/>
+                                <Badge variant="light" color="indigo" size="lg">Live</Badge>
+                            </Group>
                         </Group>
                         <Outlet/>
                     </Stack>

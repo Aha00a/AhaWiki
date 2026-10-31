@@ -18,6 +18,10 @@
         <meta name="twitter:description" content="@(description)">
 
         <link rel="shortcut icon" type="image/png" href="@logics.AhaWikiConfig.DefaultFaviconPath">
+        @views.html._themeClass()
+        @* Mantine's colours hang off this attribute. MantineProvider sets it too, but only once the
+           bundle has run, and until then a dark-theme reader would sit on a white loading page. *@
+        <script>document.documentElement.setAttribute("data-mantine-color-scheme", document.documentElement.classList.contains("theme-ahawiki-dark") ? "dark" : "light");</script>
         @* Font Awesome 6, the same copy the wiki pages use (public/vendor/, scripts/vendor.mjs); the
            icon names here are v5 names, which v6 keeps as aliases. Until 2026-10-31 this was a
            second copy, v5 from cdnjs. *@

@@ -1,0 +1,22 @@
+@()
+@* Puts the stored theme on <html> before the first paint: inline, because anything loaded would
+   arrive after it. Both page skeletons take it from here, the wiki's and the admin UI's, so they
+   read the choice the same way. Dev Theme Support has the key, the values and the reasons. *@
+<script>
+    (function () {
+        var allowed = {
+            "ahawiki-light": true,
+            "ahawiki-dark": true
+        };
+        var theme = "ahawiki-light";
+        try {
+            theme = localStorage.getItem("ahawiki-theme") || theme;
+        } catch (e) {
+            theme = "ahawiki-light";
+        }
+        if (!allowed[theme]) {
+            theme = "ahawiki-light";
+        }
+        document.documentElement.classList.add("theme-" + theme);
+    })();
+</script>

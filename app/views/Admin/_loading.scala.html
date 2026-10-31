@@ -1,0 +1,20 @@
+@(page: String, message: String)
+@* What stands in #main until the admin bundle has loaded and replaces it. The two text colours
+   are Mantine's, so a dark-theme reader does not get dark text on the dark page _baseAdmin has
+   already set. *@
+<div id="main" data-admin-page="@page" style="padding: 20px; min-height: 220px; width: 100%; box-sizing: border-box;">
+    <div style="display: flex; align-items: center; justify-content: center; min-height: 180px;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; color: #4c6ef5;">
+            <div style="width: 42px; height: 42px; border-radius: 50%; border: 4px solid rgba(76, 110, 245, 0.2); border-top-color: #4c6ef5; animation: adminSpinner 0.8s linear infinite;"></div>
+            <div style="font-size: 16px; color: var(--mantine-color-text); font-weight: 600;">@message</div>
+            <div style="font-size: 13px; color: var(--mantine-color-dimmed);">잠시만 기다려 주세요.</div>
+        </div>
+    </div>
+</div>
+<style>
+    @@keyframes adminSpinner {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
