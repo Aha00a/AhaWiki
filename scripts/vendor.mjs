@@ -8,8 +8,8 @@
 // combined configuration pulled one more file from cdn.mathjax.org on every view. The admin
 // screen had the same shape with esm.sh and stopped for a day when esm.sh ran out of disk
 // (scripts/README.md, "Front-end admin build"); the pages were one CDN incident away from the
-// same. Now the only addresses off this host are Google's services (Maps, AdSense, Fonts) and
-// the wiki's own sister sites.
+// same. Now the only addresses off this host are Google's services (Maps, AdSense, Fonts,
+// reCAPTCHA on the edit page) and profile pictures.
 //
 // The manifest below is the one list. The versions are the ones the templates pinned on the
 // CDNs, taken from package.json, so nothing renders differently; a version is raised by

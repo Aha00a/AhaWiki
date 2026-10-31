@@ -65,7 +65,7 @@ Until 2026-10-31 every page loaded these from cdnjs, jsdelivr and unpkg, and Mat
 configuration fetched one more file from cdn.mathjax.org on every view. The admin screen had the
 same shape with esm.sh and stopped for a day when esm.sh ran out of disk (above); the pages were
 one incident away from the same. Now the only addresses a page goes off this host for are
-Google's services (Maps, AdSense, Fonts) and links to the sister wikis.
+Google's services (Maps, AdSense, Fonts, reCAPTCHA on the edit page) and profile pictures.
 
 Rules of the copy:
 
