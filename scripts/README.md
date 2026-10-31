@@ -201,7 +201,9 @@ Three outcomes need a person rather than a flag:
 * **diverged** — the wiki holds content that was never committed here, so someone edited the
   page in the browser. Read it, merge it into the local file, commit, then sync. The script
   will not overwrite it.
-* **local only** — a file that is not a page on the wiki yet.
+* **local only** — a file that is not a page on the wiki yet, or a page the owner deleted there.
+  The report cannot tell them apart, so a page is created only when named:
+  `--apply --comment="..." --create="MacroNew"`, repeatable, and refused if the wiki has that name.
 * **wiki only** — a page with no local copy. `npm run download:ahawiki.net` pulls copies down.
 
 ## MCP server

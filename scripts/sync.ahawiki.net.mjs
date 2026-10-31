@@ -7,6 +7,7 @@
 //   node scripts/sync.ahawiki.net.mjs                          report only, changes nothing
 //   node scripts/sync.ahawiki.net.mjs --apply --comment="..."  upload the local-ahead pages
 //   node scripts/sync.ahawiki.net.mjs --apply --comment="..." --only="Dev Testing"
+//   node scripts/sync.ahawiki.net.mjs --apply --comment="..." --create="MacroNew"
 //
 // Needs AHAWIKI_API_KEY. Never write a key into this repository.
 //
@@ -147,6 +148,21 @@ export function classify(remotePages, localPages) {
   return { inSync, localAhead, diverged, localOnly, remoteOnly, unmirrorable };
 }
 
+/**
+ * Which of the requested new pages can be created, and which cannot.
+ *
+ * A page is created only by name. "local only" means no page on the wiki has this name, which is
+ * also what a page the owner deleted in the browser looks like, and uploading every local-only
+ * file would bring those back with a new revision 1.
+ */
+export function selectCreations(localOnly, requested) {
+  const known = new Set(localOnly);
+  return {
+    creatable: requested.filter((name) => known.has(name)),
+    refused: requested.filter((name) => !known.has(name)),
+  };
+}
+
 function argValue(argv, flag) {
   const found = argv.find((arg) => arg.startsWith(`${flag}=`));
   return found ? found.slice(flag.length + 1) : null;
@@ -167,6 +183,7 @@ async function main(argv) {
   // a consequence of it. Until 2026-09-25 this was the other way round: major unless --minor.
   const minorEdit = !argv.includes('--major');
   const only = argValues(argv, '--only');
+  const create = argValues(argv, '--create') ?? [];
   const comment = argValue(argv, '--comment');
 
   if (!apiKey) {
@@ -237,9 +254,17 @@ async function main(argv) {
     return 0;
   }
 
-  const targets = localAhead.filter((entry) => !only || only.includes(entry.name));
+  const { creatable, refused } = selectCreations(localOnly, create);
+  for (const name of refused) {
+    console.log(`\nSKIP ${name}: not local-only (the wiki has it, or no committed file has that name).`);
+  }
+
+  const targets = [
+    ...localAhead.filter((entry) => !only || only.includes(entry.name)),
+    ...creatable.map((name) => ({ name, file: name })),
+  ];
   if (only) {
-    for (const name of only.filter((n) => !targets.some((entry) => entry.name === n))) {
+    for (const name of only.filter((n) => !localAhead.some((entry) => entry.name === n))) {
       console.log(`\nSKIP ${name}: not local-ahead (in sync, diverged, or not a page).`);
     }
   }
@@ -256,17 +281,21 @@ async function main(argv) {
     const path = `/api/v1/page/${encodeURIComponent(target.name)}`;
 
     // Re-read immediately before saving: the revision goes back with the save, so a page
-    // edited between the listing and now is rejected as a 409 rather than overwritten.
-    const current = await api('GET', path);
-    if (!current.ok) {
+    // edited between the listing and now is rejected as a 409 rather than overwritten. A page
+    // being created has no revision yet, so 404 here means revision 0, and a page someone made
+    // since the listing fails the same way.
+    const creating = creatable.includes(target.name);
+    const current = creating ? null : await api('GET', path);
+    if (current && !current.ok) {
       console.log(`FAIL ${target.name}: read ${current.status} ${current.text.slice(0, 200)}`);
       failures += 1;
       continue;
     }
+    const baseRevision = current ? current.json.revision : 0;
 
     const local = localPages.get(target.file);
     const saved = await api('POST', path, {
-      revision: current.json.revision,
+      revision: baseRevision,
       text: local,
       comment,
       minorEdit,
@@ -285,7 +314,7 @@ async function main(argv) {
       continue;
     }
 
-    console.log(`OK   ${target.name} r${current.json.revision} -> r${verified.json.revision}${minorEdit ? ' (minor)' : ''}`);
+    console.log(`OK   ${target.name} r${baseRevision} -> r${verified.json.revision}${minorEdit ? ' (minor)' : ''}`);
   }
 
   if (failures > 0) {

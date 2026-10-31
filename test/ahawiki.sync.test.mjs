@@ -12,6 +12,7 @@ import {
   hashMatches,
   readCommittedPages,
   remoteIsOlderLocalVersion,
+  selectCreations,
 } from '../scripts/sync.ahawiki.net.mjs';
 import { docsGitPath, fileNameCollisions, manifestFileName, rootDir } from '../scripts/lib/ahawiki.net.mjs';
 
@@ -143,4 +144,15 @@ test('of a colliding pair, the one the file holds still syncs and the other is s
   // Neither of the two states that would send someone to the download, which is what loses one.
   assert.equal(diverged.length, 0);
   assert.equal(remoteOnly.length, 0);
+});
+
+test('a new page is created only when it is named, and only if it is local-only', () => {
+  const { creatable, refused } = selectCreations(['MacroNew', 'DeletedInTheBrowser'], ['MacroNew', 'FrontPage']);
+
+  assert.deepEqual(creatable, ['MacroNew']);
+  assert.deepEqual(refused, ['FrontPage']);
+});
+
+test('asking to create nothing creates nothing, however many pages are local-only', () => {
+  assert.deepEqual(selectCreations(['DeletedInTheBrowser'], []).creatable, []);
 });
