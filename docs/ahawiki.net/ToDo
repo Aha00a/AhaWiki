@@ -348,6 +348,7 @@ https://www.wikimatrix.org/ 발견. 여기 기준에 좀 맞춰볼까.. --[2020-
   * 쌍둥이 페이지 확인이 다른 site 수만큼 Redis 왕복과 전체 목록 선형 탐색을 보기마다 두 번 했다 — `PageMeta` 한 쿼리로(evolution 71 의 키). 보기와 매크로에 있던 두 사본을 `MacroTwinPages.twinSites` 하나로 — [Dev SisterWiki] «Twin Pages».
   * `[[[ ]]]` 블록마다 페이지 앞부분을 복사해 줄 번호를 셌다(블록당 두 번, 블록 수 × 페이지 길이) — 추출 루프가 이미 세고 있는 줄 번호를 쓴다(`ExtractConvertInjectInterpreter`). HTML 은 바뀌지 않는다 — `InterpreterBlockUnit` 이 줄 번호 속성을 그대로 확인한다.
   * `schema/schema.sql` 은 덤프 대신 손으로 맞췄다 — 이 세션에 DB 가 없다. evolution 이 개발 DB 에 적용된 뒤 `sh ./schemaDump.sh --check` 로 확인할 것.
+  * 커밋 `ce34f2d` 의 메시지는 Scala 스펙을 못 돌렸다고 적었는데, 그 뒤 같은 세션에서 돌렸다 — 509 통과(H2, 손으로 맞춘 덤프 위에서). node 테스트도 통과.
  * 같은 읽기에서 나왔지만 고치지 않은 것. 각각 한 변경 거리고, 위 셋보다 작다. --[2026-11-01]
   * [ ] 검색 `Page.pageSearch` 가 최신 리비전을 고르느라 site 의 `Page` 전체를 GROUP BY 한다 — `PageMeta` 와 조인하면 임시 테이블이 없어진다. `LIKE '%q%'` 의 전체 스캔은 전문 색인 없이는 남는다.
   * [ ] `Wiki.renderView` 가 첫 리비전을 본문째 읽는다(`Page.selectFirstRevision`) — 화면은 작성자와 날짜만 쓴다.
