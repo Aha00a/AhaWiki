@@ -89,6 +89,12 @@ object CalculatedSchemaOrg {
       .map(tables.CalculatedSchemaOrg.tupled)
   }
 
+  def selectPropertiesWhereCls(cls: String)(implicit connection: Connection, site: Site): List[CalculatedSchemaOrg] = {
+    SQL"SELECT page, cls, prop, value FROM CalculatedSchemaOrg WHERE site = ${site.seq} AND cls = $cls AND prop <> ''"
+      .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)
+      .map(tables.CalculatedSchemaOrg.tupled)
+  }
+
   def selectWhereProp(prop: String)(implicit connection: Connection, site: Site): List[CalculatedSchemaOrg] = {
     SQL"SELECT page, cls, prop, value FROM CalculatedSchemaOrg WHERE site = ${site.seq} AND prop = $prop"
       .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)

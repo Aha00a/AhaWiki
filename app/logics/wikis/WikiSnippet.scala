@@ -16,7 +16,7 @@ object WikiSnippet {
    * escapes it. A name that really holds a bracket is only ever shown this way on its not-found
    * page, so the cost is cosmetic.
    */
-  private def asLiteralText(name: String): String =
+  def asLiteralText(name: String): String =
     name.replace("[", "(").replace("]", ")").replace("`", "'")
 
   /**
