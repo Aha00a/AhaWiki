@@ -153,6 +153,16 @@ class ApiSiteRequestSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAn
     }
   }
 
+  "someone logged in without permission" should {
+    "be told so, and where to go" in {
+      val request = FakeRequest(GET, "/w/FrontPage?action=edit").withHeaders(HOST -> s"secret.$parent")
+        .withSession(SessionLogic.sessionKeySeq -> bobSeq.toString, SessionLogic.sessionKeyNickname -> "bobwiki")
+      val result = route(app, request).get
+      status(result) mustBe FORBIDDEN
+      contentAsString(result) must include("/site/request")
+    }
+  }
+
   "an address under the parent with no site" should {
     "say so, rather than draw an empty wiki" in {
       status(route(app, FakeRequest(GET, "/w/FrontPage").withHeaders(HOST -> s"nosuch.$parent")).get) mustBe NOT_FOUND
