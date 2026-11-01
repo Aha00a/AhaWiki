@@ -142,3 +142,19 @@ schema class와 property는 `schema:` 링크로 연결됩니다.
  * 읽을 권한이 없는 페이지는 목록에도 개수에도 들어가지 않습니다.
  * 클래스나 속성이 어휘에 없으면 없는 페이지입니다. 어휘에 없는 라벨은 클래스 페이지의 속성 목록에서도 빠집니다.
  * `schema:TVSeries:JTBC` 처럼 클래스와 값만 적는 형태는 만들지 않았습니다. 어느 속성의 값인지 알 수 없습니다. 필요하면 `schema:publisher:JTBC` 로 찾습니다.
+ * 생성된 페이지는 저장된 페이지가 없으므로, 다른 `schema:` 페이지와 날짜 페이지처럼 내용이 나와도 HTTP 상태는 404 입니다. 검색엔진 노출이 필요해지면 생성 페이지 전체를 함께 정할 일이라 이 페이지들만 200 으로 만들지 않았습니다.
+
+=== 링크로 쓰기
+
+다른 위키 링크와 같습니다. 값에 공백이 있으면 큰따옴표로 묶습니다.
+
+[[[#!Vim text
+[schema:TVSeries:publisher:JTBC JTBC 드라마]
+["schema:TVSeries:productionCompany:유한회사 문전사" 문전사 작품]
+]]]
+
+주소를 지어 쓰기보다 [schema:Schema] 에서 클래스, 속성, 값 순서로 눌러 들어가면 오타가 없습니다.
+
+=== 구현
+
+`DefaultPageLogic.parseSchemaFacet` 이 이름을 `SchemaFacet` 으로 읽고, `schemaFacetPageContent` 가 내용을 짓습니다. 읽을 행은 `CalculatedSchemaOrg.selectWhereProp` 을 클래스와 권한으로 거른 것이고, 클래스 페이지의 속성 목록은 `selectPropertiesWhereCls` 로 읽습니다. `selectPropCountWhereCls` 는 권한으로 거를 수 없어 쓰지 않았습니다. 검사는 `SchemaFacetPageSpec` 입니다.
