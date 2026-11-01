@@ -168,6 +168,25 @@ object PageMeta {
     """.as(long("count_value").single)
   }
 
+  /**
+   * The other sites that hold a page of this name — the twin pages' sites.
+   *
+   * One query on `PageMeta_name_site_index`, which exists for it: every other key of the table
+   * leads with `site`. Until 2026-11-01 the answer was read from each other site's cached page
+   * list in turn (`SeqPageLatestSummary`): one Redis round trip per site to check the version
+   * and a linear search of that site's whole list, on every page view, and again when the
+   * Twin Pages section rendered. `PageMeta` is what those lists were built from, so the answer
+   * is the same, only fresher — a list could be up to its TTL behind.
+   */
+  def selectSiteSeqsHavingPage(name: String, exceptSiteSeq: Long)(implicit connection: Connection): Seq[Long] = {
+    SQL"""
+      SELECT site
+      FROM PageMeta
+      WHERE name = $name AND site <> $exceptSiteSeq
+      ORDER BY site
+    """.as(long("site").*)
+  }
+
   def select(name: String)(implicit connection: Connection, site: Site): Option[PageMeta] = {
     SQL"""
       SELECT name, revision, dateInserted, dateUpdated, image, description, size

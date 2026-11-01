@@ -299,6 +299,7 @@ CREATE TABLE `Page` (
   KEY `Page_site_isMinorEdit_name_revision_index` (`site`,`isMinorEdit`,`name`,`revision`),
   KEY `Page_site_name_revision_dateTime_user_index` (`site`,`name`,`revision`,`dateTime`,`user`),
   KEY `Page_UserApiKey_seq_fk` (`userApiKey`),
+  KEY `Page_site_dateTime_revision_name_isMinorEdit_viaApi_index` (`site`,`dateTime`,`revision`,`name`,`isMinorEdit`,`viaApi`),
   CONSTRAINT `Page_Site_seq_fk` FOREIGN KEY (`site`) REFERENCES `Site` (`seq`),
   CONSTRAINT `Page_UserApiKey_seq_fk` FOREIGN KEY (`userApiKey`) REFERENCES `UserApiKey` (`seq`) ON DELETE SET NULL,
   CONSTRAINT `Page_User_seq_fk` FOREIGN KEY (`user`) REFERENCES `User` (`seq`)
@@ -324,6 +325,7 @@ CREATE TABLE `PageMeta` (
   PRIMARY KEY (`site`,`name`),
   KEY `PageMeta_Page_site_name_revision_fk` (`site`,`name`,`revision`),
   KEY `PageMeta_site_dateUpdated_name_index` (`site`,`dateUpdated`,`name`),
+  KEY `PageMeta_name_site_index` (`name`,`site`),
   CONSTRAINT `PageMeta_Page_site_name_revision_fk` FOREIGN KEY (`site`, `name`, `revision`) REFERENCES `Page` (`site`, `name`, `revision`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;

@@ -232,6 +232,7 @@ class ApiV1 @Inject()(
 
           case class ChangeSourceRow(name: String, revision: Long, dateTime: LocalDateTime, comment: String, isMinorEdit: Boolean, viaApi: Boolean, userApiKeyName: Option[String])
 
+          // Ordered the same way as Api.change, for the same key -- see the note there.
           def selectRows(offset: Int): List[ChangeSourceRow] =
             SQL"""
               SELECT P.name, P.revision, P.dateTime, P.comment, P.isMinorEdit, P.viaApi, AK.name AS userApiKeyName
@@ -244,7 +245,7 @@ class ApiV1 @Inject()(
                 AND ($afterRevision <= 0 OR P.revision > $afterRevision)
                 AND (${includeMinorEdit == 1} OR P.isMinorEdit = false)
                 AND (${includeViaApi == 1} OR P.viaApi = false)
-              ORDER BY P.dateTime DESC, P.revision DESC, P.name ASC
+              ORDER BY P.dateTime DESC, P.revision DESC, P.name DESC
               LIMIT $batchSize OFFSET $offset
             """.as((str("name") ~ long("revision") ~ localDateTime("dateTime") ~ str("comment") ~ bool("isMinorEdit") ~ bool("viaApi") ~ optionStr("userApiKeyName")).map {
               case name ~ revision ~ dateTime ~ comment ~ isMinorEdit ~ viaApi ~ userApiKeyName =>

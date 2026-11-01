@@ -60,15 +60,22 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
 
         val uniqueKey = getUniqueKey
         val body = s.substring(openIndex + open.length, closeIndex)
+        val bodyLineBreaks = body.count(_ == '\n')
 
+        // appendText has just counted every line break before the block, so currentOriginalLine
+        // is the line the block opens on, and the markers hold no line break, so it closes
+        // bodyLineBreaks further down. Until 2026-11-01 each of the two was read by copying the
+        // text from its start to the block and counting the line breaks in the copy: twice the
+        // length of the page per block, which on a page of many blocks was the render's largest
+        // single cost after the ones fixed on 2026-10-07.
         arrayBuffer += uniqueKey -> body
         chunkMap += uniqueKey -> InterpreterChunk(
-          lineStart = lineNumber(s, openIndex),
-          lineEnd = lineNumber(s, closeIndex + close.length - 1)
+          lineStart = currentOriginalLine,
+          lineEnd = currentOriginalLine + bodyLineBreaks,
         )
 
         appendText(uniqueKey)
-        currentOriginalLine += body.count(_ == '\n')
+        currentOriginalLine += bodyLineBreaks
 
         cursor = closeIndex + close.length
         openIndex = s.indexOf(open, cursor)
@@ -122,13 +129,4 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
   def extractSchemaOrg()(implicit wikiContext: ContextWikiPage): Seq[CalculatedSchemaOrg] = {
     arrayBuffer.map(_._2).flatMap(c => Interpreters.toSeqSchemaOrg(withInterpreter(c))).toSeq
   }
-
-  private def lineNumber(s: String, charIndexInclusive: Int): Int = {
-    if (charIndexInclusive <= 0) {
-      1
-    } else {
-      s.substring(0, charIndexInclusive + 1).count(_ == '\n') + 1
-    }
-  }
-
 }

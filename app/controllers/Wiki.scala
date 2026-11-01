@@ -19,6 +19,7 @@ import logics.wikis.WikiPermissionDetail
 import logics.wikis.WikiSnippet
 import logics.wikis.SignedReadUrlLogic
 import logics.wikis.interpreters.Interpreters
+import logics.wikis.macros.MacroTwinPages
 import models.RequestWrapper
 import models._
 import models.tables.CalculatedCosineSimilarity
@@ -452,16 +453,8 @@ controllerComponents: ControllerComponents,
        |""".stripMargin
   }
 
-  private def hasTwinPages(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection): Boolean = {
-    AhaWikiCacheMemoryDomainSite
-      .getSites()(wikiContext.databaseHeldFirst)
-      .filter(_.seq != wikiContext.site.seq)
-      .exists { targetSite =>
-        implicit val databaseSite: (Database, Site) = (wikiContext.databaseHeldFirst, targetSite)
-        wikiContext.ahaWikiCache.PageMeta.SeqPageLatestSummary.get().exists(_.name == name) &&
-          anonymousCanRead(targetSite.seq, name)
-      }
-  }
+  private def hasTwinPages(name: String)(implicit wikiContext: ContextWikiPage, connection: Connection): Boolean =
+    MacroTwinPages.twinSites(name).nonEmpty
 
   private def anonymousCanRead(siteSeq: Long, pageName: String)(implicit wikiContext: ContextWikiPage, connection: Connection): Boolean =
     PermissionLogic.anonymousCanRead(siteSeq, pageName)(connection, wikiContext.databaseHeldFirst)

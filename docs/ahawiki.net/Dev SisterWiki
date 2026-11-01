@@ -15,10 +15,9 @@ Sister Wiki 기능은 여러 AhaWiki site 사이의 같은 이름 문서와 유�
  * site metadata 수정 후 `AhaWikiCacheMemoryDomainSite` 캐시를 무효화한다.
 
 == Twin Pages
- * 같은 이름 문서는 `MacroTwinPages`가 담당한다.
- * 현재 문서 이름을 기준으로 다른 site에 같은 이름의 문서가 있는지 찾는다.
+ * 같은 이름 문서는 `MacroTwinPages`가 담당한다. 답은 `MacroTwinPages.twinSites` 하나다 — 보기(`Wiki.getAhaMarkAdditionalInfo`)는 그것이 비었는지로 Twin Pages 절을 만들지 정하고, 매크로는 그것으로 목록을 그린다. 2026-11-01 전에는 보기에 같은 질문의 사본이 있었고 그 사본은 `mainDomain` 을 보지 않아, 주소 없는 site 에만 같은 이름 문서가 있으면 절은 생기고 목록은 비었다.
+ * 어느 site 에 같은 이름의 문서가 있는지는 `PageMeta.selectSiteSeqsHavingPage` 한 쿼리로 묻는다(evolution 71 의 `PageMeta_name_site_index` — `PageMeta` 의 다른 키는 전부 `site` 로 시작한다). 2026-11-01 전에는 다른 site 마다 `SeqPageLatestSummary` 캐시를 읽었다 — site 마다 Redis 에 버전을 한 번 묻고 그 site 의 전체 목록을 선형 탐색 — 보기마다 한 번, 절이 그려질 때 또 한 번. 그 목록의 원천이 `PageMeta` 라 답은 같고, 캐시 TTL 만큼 늦던 것만 없어졌다.
  * 현재 site는 후보에서 제외한다.
- * 대상 site에 같은 이름의 최신 문서가 있어야 한다.
  * 대상 문서는 anonymous user가 읽을 수 있는 경우에만 표시한다.
  * `mainDomain` 이 비어 있는 site 는 링크할 주소가 없으므로 건너뛴다 — 2026-09-15 전에는 `https:///w/...` 로 렌더됐다.
  * 후보가 없으면 아무 HTML도 출력하지 않는다.
@@ -71,7 +70,7 @@ Sister Wiki 기능은 여러 AhaWiki site 사이의 같은 이름 문서와 유�
  * 최종 HTML에는 읽을 수 없는 private page 제목이 노출되지 않도록 한다.
 
 == Cache
- * 같은 이름 문서 검색은 `PageMeta.SeqPageLatestSummary` 캐시를 사용한다. 이것은 Play `SyncCacheApi`(`application.conf` 에서 Redis 모듈)이지 프로세스 메모리가 아니다 — [Dev Cache] 참고.
+ * 같은 이름 문서 검색은 캐시를 거치지 않고 `PageMeta` 를 한 쿼리로 묻는다(위 «Twin Pages»). 2026-11-01 전에는 `PageMeta.SeqPageLatestSummary` 캐시였다 — [Dev Cache] 참고.
  * 유사 문서 검색은 precomputed `CalculatedCosineSimilarity` row를 조회한다.
  * cross-site 링크 생성은 `Site.mainDomain`을 사용해 렌더링 경로에서 `SiteDomain` 조회를 피한다.
  * site/domain 매핑과 site 목록은 `AhaWikiCacheMemoryDomainSite`가 관리한다.

@@ -170,6 +170,11 @@ class Api @Inject()(
       val boundedLimit = limit.max(1).min(1000)
       val batchSize = boundedLimit.max(100).min(1000)
 
+      // All three order keys descending, so that Page_site_dateTime_revision_name_isMinorEdit_viaApi_index
+      // (evolution 71) is read backward and the scan stops at the LIMIT. Until 2026-11-01 the name
+      // was ascending, which no key can serve: every revision of the site was read and sorted on
+      // each call, and the RecentChanges macro makes this call on every view of its page. The
+      // name only orders rows saved in the same second with the same revision number.
       def selectRows(offset: Int): List[ChangeSourceRow] = {
         SQL"""
           SELECT
@@ -189,7 +194,7 @@ class Api @Inject()(
           WHERE P.site = ${site.seq}
             AND (${includeMinorEdit == 1} OR P.isMinorEdit = false)
             AND (${includeViaApi == 1} OR P.viaApi = false)
-          ORDER BY P.dateTime DESC, P.revision DESC, P.name ASC
+          ORDER BY P.dateTime DESC, P.revision DESC, P.name DESC
           LIMIT $batchSize OFFSET $offset
         """.as((str("name") ~ long("revision") ~ str("date_time") ~ str("nickname").? ~ str("profileImageUrl").? ~ str("remoteAddress") ~ str("comment") ~ bool("isMinorEdit") ~ bool("viaApi") ~ str("userApiKeyName").?).map {
           case name ~ revision ~ dateTime ~ nickname ~ profileImageUrl ~ remoteAddress ~ comment ~ isMinorEdit ~ viaApi ~ userApiKeyName =>
