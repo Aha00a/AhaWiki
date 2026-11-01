@@ -73,6 +73,9 @@ object DefaultPageLogic {
     Option(getClass.getClassLoader.getResourceAsStream(defaultPageResource(title)))
       .map(is => com.aha00a.commons.utils.Using(scala.io.Source.fromInputStream(is)(scala.io.Codec.UTF8))(_.mkString))
 
+  /** A file under conf/Page/, as opposed to a page made up from the shape of its name. */
+  def isShippedPage(title: String): Boolean = defaultPageExists(title)
+
   def isDefined(title: String): Boolean = {
     import com.aha00a.commons.utils.DateTimeUtil
 

@@ -1,5 +1,7 @@
 = ToDo: Timezone KST to UTC Migration
 
+'''2026-11-01 소유자 결정으로 보류한다.''' 당장 문제가 되는 일이 아니고, DB 백업과 리허설이 필요한 큰 작업이다.
+
 == Goal
 
 현재 서버와 DB가 `Asia/Seoul` 기준으로 동작하고 있고, DB의 `DATETIME` 값도 KST 로컬 시각으로 저장되어 있다.

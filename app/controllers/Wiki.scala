@@ -291,13 +291,18 @@ controllerComponents: ControllerComponents,
                                 (implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): Result = {
     val additionalInfo = getAhaMarkAdditionalInfo(name)
 
-    def render(content: String): Result = {
+    def render(status: Status, content: String): Result = {
       val contentInterpreted = Interpreters.toHtmlString(content + additionalInfo)
-      NotFound(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
+      status(views.html.Wiki.view(name, name, "", contentInterpreted, isWritable, pageFirstRevision, pageLastRevision))
     }
 
+    // A page shipped with the engine is a page. One made up from its name is too, but the names are
+    // without end -- any date, any schema value -- and most hold nothing, so it is kept out of the
+    // index and its links are not followed. The wiki page Dev Page has why.
     val templates = wikiContext.setPageNameByPermission.filter(PageTemplate.isTemplate).toSeq.sorted
-    DefaultPageLogic.getOption(name).map(content => render(content)).getOrElse(render(WikiSnippet.notFound(name, templates)))
+    DefaultPageLogic.getOption(name).map(content => render(Ok, content))
+      .map(result => if (DefaultPageLogic.isShippedPage(name)) result else result.withHeaderRobotNoIndexNoFollow)
+      .getOrElse(render(NotFound, WikiSnippet.notFound(name, templates)))
   }
 
   private def renderReadablePage(page: Page,

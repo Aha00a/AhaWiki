@@ -81,6 +81,17 @@
 
 리비전이 없는 이름을 열면 `Wiki.view` 가 `renderNotFoundPage` 로 간다. `DefaultPageLogic.getOption(name)` 이 날짜·`schema:` 처럼 내용을 지어내는 이름이면 그 템플릿을, 아니면 `WikiSnippet.notFound(name)` 을 렌더한다.
 
+상태 코드는 셋으로 갈린다.
+
+[[[#!Table tsv 1
+이름	상태	색인
+`conf/Page/` 의 기본 페이지(`WikiStatistics` 등)	200	된다
+날짜·`schema:` 처럼 이름으로 지어낸 페이지	200	`noindex, nofollow`
+그 밖의 없는 이름	404	
+]]]
+
+지어낸 페이지는 2026-11-01 까지 내용을 다 그리면서 404 였다. 사람에게는 멀쩡해 보이고 도구에는 깨진 페이지로 보였다. 200 으로 바꾸되 색인에서는 뺐다. 이름이 끝없고(어떤 날짜든, 어떤 `schema:` 값이든) 대부분 내용이 없어서, 색인을 열면 빈 페이지가 검색 결과를 채우고 크롤러가 끝없는 주소를 따라간다. `schema:` 클래스처럼 쓰임이 있는 페이지만 색인하는 안은 쓰임이 있는지 조회해야 해서 지금은 두지 않았다. 필요해지면 `Wiki.renderNotFoundPage` 한 곳만 바꾸면 된다. 대가로 `FilterAccessLog` 는 400 이상만 빠짐없이 남기므로, 이 페이지들의 접근은 이제 표본으로만 남는다.
+
 이 이름은 URL 이 담고 있던 무엇이든이다. `schema:TVSeries:publisher:JTBC` 의 값 자리도 그렇다([InterpreterSchema] '''schema: 페이지 이름'''). 그래서 `schemaFacetPageContent` 도 URL 의 값을 제목에 `asLiteralText` 를 거쳐서만 쓰고, 값 링크는 URL 이 아니라 페이지가 선언한 행으로 짓는다. `WikiSnippet.notFound` 는 그 이름으로 위키 마크업(제목과 검색 링크)을 짓기 때문에, 이름을 글자 그대로로 다룬다 — `asLiteralText` 가 `[` 를 `(` 로 바꿔서 링크·매크로(`[[Html(...)]]`)·블록(`[[[#!Html ...]]]`)이 만들어지지 않게 한다. 제목의 `<` 는 렌더러가 이스케이프하고, 제목에서 나오는 anchor 는 `id`·`class` 속성에 속성값으로 이스케이프해 들어간다([InterpreterWiki]). 2026-09-15 전에는 이름이 마크업으로 렌더돼서, `[[Html(<b>x</b>)]]` 나 `</script><b>x</b>` 를 URL 에 넣으면 없는 페이지 화면에서 살아 있는 HTML 이 됐다 — 링크 하나로 아무나 터뜨리는 반사형 XSS 였다.
 
 == 옛 리비전 화면

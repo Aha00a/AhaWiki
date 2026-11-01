@@ -182,6 +182,8 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
         "/w/Pool?action=rename" -> OK,
         "/w/Pool?action=delete" -> OK,
         "/w/NoSuchPage" -> NOT_FOUND,
+        "/w/2026-01-01" -> OK,
+        "/w/WikiStatistics" -> OK,
         "/w/NoSuchPage?action=edit" -> OK,
       )
       for ((path, expected) <- screens; loggedIn <- Seq(false, true)) withClue(s"$path loggedIn=$loggedIn: ") {
@@ -189,6 +191,14 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
         status(result) mustBe expected
         mustNotHaveStarved(contentAsString(result))
       }
+    }
+  }
+
+  "a page with no revision" should {
+    "be indexed if it ships with the engine, and kept out if its name made it up" in {
+      header("X-Robots-Tag", get("/w/WikiStatistics", loggedIn = false)) mustBe None
+      header("X-Robots-Tag", get("/w/2026-01-01", loggedIn = false)) mustBe Some("noindex, nofollow")
+      header("X-Robots-Tag", get("/w/schema:Movie", loggedIn = false)) mustBe Some("noindex, nofollow")
     }
   }
 
