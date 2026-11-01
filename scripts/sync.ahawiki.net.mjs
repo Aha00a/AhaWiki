@@ -54,9 +54,10 @@ export function hashMatches(localContent, remoteContentHash) {
  * on a page nobody touched. It also keeps an unreviewed local edit from being uploaded.
  */
 export function readCommittedPages() {
-  const files = git(['ls-tree', '-r', 'HEAD', '--name-only', docsGitPath])
-    .split('\n')
-    .map((line) => line.trim())
+  // -z because git otherwise quotes a Korean filename in octal, unless core.quotePath is off. It
+  // is off on the machine that wrote the first such page and on by default in CI.
+  const files = git(['ls-tree', '-r', '-z', 'HEAD', '--name-only', docsGitPath])
+    .split('\0')
     .filter(Boolean)
     .filter((file) => file !== `${docsGitPath}/${manifestFileName}`);
 
