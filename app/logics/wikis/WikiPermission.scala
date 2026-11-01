@@ -73,7 +73,8 @@ object WikiPermissionDetail {
 
 class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: () => Seq[String]) {
 
-  private def actors: Seq[String] = actorProvider()
+  // Once: the page list filter asks isReadable for every page of the site.
+  private lazy val actors: Seq[String] = actorProvider()
   private def actorLabel: String = actors.mkString(", ")
 
   def isReadable(target: String, pageContent: Option[PageContent]): Boolean = {
@@ -87,6 +88,13 @@ class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: ()
   def isReadable(target: String): Boolean = {
     permissionLogic.permitted(target, actors, Permission.Action.Read.id)
   }
+
+  /**
+   * The one answer that holds for every page, when the rules give one: Some(answer) if no rule
+   * looks at the page name, None if any does and pages have to be asked about one by one.
+   */
+  def isReadableRegardlessOfTarget: Option[Boolean] =
+    if (permissionLogic.isTargetIndependent) Some(isReadable("")) else None
 
   def isReadableByAnonymous(target: String, pageContent: Option[PageContent]): Boolean = {
     isReadableByAnonymous(target)

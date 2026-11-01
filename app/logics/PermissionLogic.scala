@@ -34,6 +34,13 @@ class PermissionLogic(seqPermission: Seq[Permission]) {
     -permission.actor.length,
   ))
 
+  /**
+   * True when no rule looks at the page name, so every page gets the same answer for a given
+   * actor. A site with no page-level rule is the common case, and its page list can then be
+   * filtered with one match instead of one per page.
+   */
+  val isTargetIndependent: Boolean = seq.forall(_.targetType == Permission.TargetType.All)
+
   def permitted(target: String, actor: String, action: Int): Boolean = {
     permittedOption(target, actor, action).getOrElse(false)
   }

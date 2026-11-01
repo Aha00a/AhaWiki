@@ -351,11 +351,11 @@ https://www.wikimatrix.org/ 발견. 여기 기준에 좀 맞춰볼까.. --[2020-
   * 커밋 `ce34f2d` 의 메시지는 Scala 스펙을 못 돌렸다고 적었는데, 그 뒤 같은 세션에서 돌렸다 — 509 통과(H2, 손으로 맞춘 덤프 위에서). node 테스트도 통과.
  * 같은 읽기에서 나왔지만 고치지 않은 것. 각각 한 변경 거리고, 위 셋보다 작다. --[2026-11-01]
   * [ ] 검색 `Page.pageSearch` 가 최신 리비전을 고르느라 site 의 `Page` 전체를 GROUP BY 한다 — `PageMeta` 와 조인하면 임시 테이블이 없어진다. `LIKE '%q%'` 의 전체 스캔은 전문 색인 없이는 남는다.
-  * [ ] `Wiki.renderView` 가 첫 리비전을 본문째 읽는다(`Page.selectFirstRevision`) — 화면은 작성자와 날짜만 쓴다.
-  * [ ] favicon 설정을 보기마다 두 번 읽는다(`_baseSkeleton.scala.html` 과 `Wiki/view.scala.html` 이 각각 `AhaWikiConfig().site.favicon()`) — `ContextSite.defaultHue` 처럼 lazy val 로.
-  * [ ] `PageLogic.getListPageByPermission` 이 (페이지 × 규칙)마다 actors 를 다시 filter 한다(`Permission.actorMatches`) — 한 번만 정규화하고, 규칙이 «모두 읽기» 하나인 흔한 경우를 빠르게.
-  * [ ] 렌더러가 줄마다 자리표시자 목록을 끝까지 본다(`ExtractConvertInject.contains`, `ExtractConvertInjectMacro.isBlockToken`) — 줄 수 × 코드 스팬 수. Set 하나면 된다.
-  * [ ] `MacroInclude` 가 include 마다 본문을 두 번 읽고(`split` 의 존재 확인도 본문째) `WikiPermission()` 으로 UserEmail 을 다시 묻는다 — 존재는 `setPageName`, 권한 객체는 요청에 하나.
+  * [[CB(x)]] `Wiki.renderView` 가 첫 리비전을 본문째 읽었다 — 화면은 작성자와 날짜만 쓴다. `Page.selectFirstRevision` 이 `PageWithoutContent` 를 돌려준다(history 와 같은 꼴). --[2026-11-01]
+  * [[CB(x)]] favicon 설정을 보기마다 두 번 읽었다(`_baseSkeleton.scala.html` 과 `Wiki/view.scala.html` 이 각각 Config 조회와 S3 presign) — `ContextSite.siteFavicon` lazy val 하나로. 값을 구하는 코드는 그대로 `AhaWikiConfig` 에 있다. --[2026-11-01]
+  * [[CB(x)]] 페이지 목록의 권한 필터가 (페이지 × 규칙)마다 actors 를 filter 해 리스트를 만들었다 — `Permission.actorMatches` 가 빈 actor 를 가지마다 건너뛰고(결과 같음, `PermissionLogicUnit` 에 빈 actor 케이스), `WikiPermission` 은 actors 를 한 번만 구한다. 규칙이 전부 `All` target 이면 — 페이지 단위 규칙이 없는 보통 사이트 — 한 번의 답을 목록 전체에 쓴다(`WikiPermission.isReadableRegardlessOfTarget`, `PermissionLogic.isTargetIndependent`). 페이지 단위 규칙이 하나라도 있으면 전처럼 페이지마다 묻는다. --[2026-11-01]
+  * [[CB(x)]] 렌더러가 줄마다 자리표시자 목록을 끝까지 봤다(줄 수 × 코드 스팬 수) — `ExtractConvertInject.extracted` 가 추가분만 읽어 채우는 HashMap 으로 답한다. `isBlockToken` 도 같은 것을 쓴다. --[2026-11-01]
+  * [[CB(x)]] `MacroInclude` 가 `#` 이 든 인자의 존재 확인을 본문째 읽었고, include 마다 `WikiPermission()` 을 새로 만들어 UserEmail 을 다시 물었다 — 존재는 `Page.selectLastRevisionNumber` 한 숫자로(캐시의 이름 집합은 저장 뒤 5분까지 낡을 수 있어 쓰지 않았다), 권한 객체는 `ContextSite.wikiPermission` 으로 요청에 하나. 보기와 페이지 목록 필터도 그것을 쓴다. 커넥션을 인자로 받는 이유는 그 주석에. --[2026-11-01]
   * [ ] `User:` 링크마다 프로필 이미지 캐시가 Redis 왕복을 한다(`AhaMarkLink` 가 `UserPageLogic.profileImageUrlByNickname` 을 부른다).
   * [ ] 같은 본문을 `PageContent` 로 서너 번 쪼갠다(`Interpreters`, `InterpreterWiki`, `Wiki.renderView`, `PageLogic.extractDescription`) — 만든 것을 넘겨 준다.
   * [ ] 유사도 재계산(`CalculatedCosineSimilarity.recalc`)의 후보가 site 전체에 가깝다 — 불용어가 영어 11개뿐이라 한국어 조사와 흔한 단어가 모든 페이지를 끌어온다. 문서 빈도 상위 term 을 TF 저장 전에 걸러내는 것이 가장 싼 완화책이고, 위 «최대 3.8초» 가 이것이다.

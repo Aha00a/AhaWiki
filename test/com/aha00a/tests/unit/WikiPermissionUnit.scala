@@ -34,5 +34,16 @@ object WikiPermissionUnit {
 
     assertEquals(multiEmailRows.isReadable("Public", PageContent("body")), true)
     assertEquals(multiEmailRows.isWritable("NewPage", None), true)
+
+    // One answer for every page when no rule names one; none when a rule does.
+    assertEquals(tableRows.isReadableRegardlessOfTarget, Some(true))
+    assertEquals(noRows.isReadableRegardlessOfTarget, Some(false))
+    val pageRule = WikiPermission.fromRows(Seq(
+      Permission("Secret", TargetType.Exact, "", ActorType.All, Permission.Action.None.id),
+      Permission("", TargetType.All, "", ActorType.All, Permission.Action.Read.id),
+    ))
+    assertEquals(pageRule.isReadableRegardlessOfTarget, None)
+    assertEquals(pageRule.isReadable("Secret"), false)
+    assertEquals(pageRule.isReadable("Public"), true)
   }
 }

@@ -74,5 +74,21 @@ object PermissionLogicUnit {
     ))
     assertEquals(actorLength.matched("AnyPage", "a@team.example.com").map(_.action), Some(Permission.Action.Edit.id))
     assertEquals(actorLength.matched("AnyPage", "a@example.com").map(_.action), Some(Permission.Action.Read.id))
+
+    // The page list filter asks one question for the whole site when no rule reads the page name.
+    assertEquals(public.isTargetIndependent, true)
+    assertEquals(noRows.isTargetIndependent, true)
+    assertEquals(precedence.isTargetIndependent, false)
+
+    // An empty actor among several is nobody: it reaches neither Login nor an Exact rule whose
+    // actor is empty. The list used to be filtered of empties first; now each branch skips them.
+    val emptyActorAmongSeveral = new PermissionLogic(Seq(
+      Permission("", Permission.TargetType.All, "", Permission.ActorType.Exact, Permission.Action.Admin.id),
+      Permission("", Permission.TargetType.All, "", Permission.ActorType.Login, Permission.Action.Edit.id),
+      Permission("", Permission.TargetType.All, "", Permission.ActorType.All, Permission.Action.Read.id),
+    ))
+    assertEquals(emptyActorAmongSeveral.matched("AnyPage", Seq("")).map(_.action), Some(Permission.Action.Read.id))
+    assertEquals(emptyActorAmongSeveral.matched("AnyPage", Seq("", actorAha00a)).map(_.action), Some(Permission.Action.Edit.id))
+    assertEquals(actorLength.matched("AnyPage", Seq("", "a@team.example.com")).map(_.action), Some(Permission.Action.Edit.id))
   }
 }

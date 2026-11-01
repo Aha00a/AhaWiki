@@ -54,4 +54,15 @@ class ExtractConvertInjectSpec extends AnyFreeSpec {
   "text with no blocks comes back as it was" in {
     assert(new Upper().inject("plain") === "plain")
   }
+
+  "knows its keys, including ones extracted after it was first asked" in {
+    val e = new Upper("K1", "K2")
+    e.extract("[[[x]]]")
+    assert(e.contains("K1"))
+    assert(!e.contains("K2"))
+    e.extract("[[[y]]]")
+    assert(e.extracted("K2") === Some("y"))
+    assert(e.extracted("K1") === Some("x"))
+    assert(!e.contains("plain"))
+  }
 }

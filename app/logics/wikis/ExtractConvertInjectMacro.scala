@@ -150,11 +150,9 @@ class ExtractConvertInjectMacro extends ExtractConvertInject {
     }
 
   def isBlockToken(token: String): Boolean = {
-    arrayBuffer.find(_._1 == token).exists { case (_, raw) =>
-      raw match {
-        case regex(name, _) => ExtractConvertInjectMacro.mapMacros.get(name).exists(_.isBlock)
-        case _ => false
-      }
+    extracted(token).exists {
+      case regex(name, _) => ExtractConvertInjectMacro.mapMacros.get(name).exists(_.isBlock)
+      case _ => false
     }
   }
 

@@ -1,11 +1,9 @@
 package logics.wikis.macros
 
 import logics.wikis.PageSection
-import logics.wikis.WikiPermission
 import logics.wikis.interpreters.Interpreters
 import models.ContextWikiPage
 import models.PageContent
-import models.RequestWrapper
 import models.tables.CalculatedLink
 import models.tables.Site
 
@@ -31,14 +29,15 @@ object MacroInclude extends TraitMacro {
    * which is ambiguous rather than nearest-wins.
    */
   def doApply(argument: String, preprocessor:String => String)(implicit wikiContext: ContextWikiPage, connection: Connection): String = {
-    implicit val provider: RequestWrapper = wikiContext.requestWrapper
     implicit val site: Site = wikiContext.site
     val (pageName, heading) = split(argument)
     if (wikiContext.seqName.contains(pageName)) {
       MacroError.toHtmlString(s"Circular Include - ${macroCall(argument)}")
     } else {
       val pageLastRevision = models.tables.Page.selectLastRevision(pageName)
-      if (WikiPermission().isReadable(pageName, pageLastRevision.map(s => PageContent(s.content)))) {
+      // The request's one WikiPermission: building one per include read the reader's e-mail
+      // addresses again for each -- see ContextSite.wikiPermission.
+      if (wikiContext.wikiPermission.isReadable(pageName, pageLastRevision.map(s => PageContent(s.content)))) {
         val included: ContextWikiPage = wikiContext.push(pageName)
         pageLastRevision.map(w => heading match {
           case None => Interpreters.toHtmlString(preprocessor(w.content))(included)
@@ -59,11 +58,14 @@ object MacroInclude extends TraitMacro {
    * `C` with an empty heading would send the include to a page that does not exist. Only when
    * nothing has the whole name is the last `#` taken as the divider, so a heading that itself
    * contains `#` still has to be asked for with the page name that precedes the last one.
+   *
+   * Whether the whole name exists is one number on the primary key. Until 2026-11-01 it was
+   * the page's latest revision, text and all, read only to be thrown away.
    */
   def split(argument: String)(implicit wikiContext: ContextWikiPage, connection: Connection): (String, Option[String]) = {
     implicit val site: Site = wikiContext.site
     val at = argument.lastIndexOf('#')
-    if (at <= 0 || at == argument.length - 1 || models.tables.Page.selectLastRevision(argument).isDefined) {
+    if (at <= 0 || at == argument.length - 1 || models.tables.Page.selectLastRevisionNumber(argument).isDefined) {
       (argument, None)
     } else {
       (argument.substring(0, at), Some(argument.substring(at + 1)))

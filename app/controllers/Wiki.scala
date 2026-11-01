@@ -26,6 +26,7 @@ import models.tables.CalculatedCosineSimilarity
 import models.tables.CalculatedLink
 import models.tables.Config
 import models.tables.Page
+import models.tables.PageWithoutContent
 import models.tables.Permission
 import models.tables.Site
 import models.tables.User
@@ -186,7 +187,7 @@ controllerComponents: ControllerComponents,
       val pageSpecificRevision = if (revision == 0) pageLastRevision else Page.select(name, revision)
 
       val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
-      val wikiPermission = WikiPermission()
+      val wikiPermission = contextWikiPage.wikiPermission
       val hasReadPermissionRestriction = !wikiPermission.isReadableByAnonymous(name, pageLastRevisionContent)
       val permissionDetail = Some(wikiPermission.detail(name, pageLastRevisionContent))
       val isReadableByPermission = wikiPermission.isReadable(name, pageLastRevisionContent)
@@ -297,7 +298,7 @@ controllerComponents: ControllerComponents,
     (initialEditorText, partialRangeInBounds)
   }
 
-  private def renderNotFoundPage(name: String, isWritable: Boolean, pageFirstRevision: Option[Page], pageLastRevision: Option[Page])
+  private def renderNotFoundPage(name: String, isWritable: Boolean, pageFirstRevision: Option[PageWithoutContent], pageLastRevision: Option[Page])
                                 (implicit wikiContext: ContextWikiPage, connection: Connection, site: Site): Result = {
     val additionalInfo = getAhaMarkAdditionalInfo(name)
 
@@ -320,7 +321,7 @@ controllerComponents: ControllerComponents,
                                  isWritable: Boolean,
                                  hasReadPermissionRestriction: Boolean,
                                  permissionDetail: Option[WikiPermissionDetail],
-                                 pageFirstRevision: Option[Page],
+                                 pageFirstRevision: Option[PageWithoutContent],
                                  pageLastRevision: Option[Page])
                                 (implicit request: Request[AnyContent], wikiContext: ContextWikiPage, connection: Connection, site: Site): Result = {
     try {

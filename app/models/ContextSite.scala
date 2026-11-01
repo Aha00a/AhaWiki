@@ -1,9 +1,11 @@
 package models
 
 import logics.AhaWikiCache
+import logics.AhaWikiConfig
 import logics.ApplicationConf
 import logics.SiteThemeLogic
 import logics.wikis.PageLogic
+import logics.wikis.WikiPermission
 import logics.wikis.RenderingMode.RenderingMode
 import models.tables.Config
 import models.tables.Site
@@ -135,6 +137,36 @@ class ContextSite(parent: Option[ContextSite] = None)(
   lazy val defaultHue: Option[Int] =
     parent.map(_.defaultHue).getOrElse(withConnection { implicit connection =>
       Config.select(SiteThemeLogic.DefaultHueKey).flatMap(c => SiteThemeLogic.parseHue(c.v))
+    })
+
+  /**
+   * The site's favicon address, once per request. The page skeleton and the page view's JSON-LD
+   * both want it, and until 2026-11-01 each read the Config row and signed the S3 URL for itself.
+   */
+  lazy val siteFavicon: String =
+    parent.map(_.siteFavicon).getOrElse(AhaWikiConfig()(this).site.favicon())
+
+  private var wikiPermissionMemo: Option[WikiPermission] = None
+
+  /**
+   * The reader's permissions, built once per request.
+   *
+   * Building one reads the reader's e-mail addresses (`UserEmail`), and the view, the page list
+   * filter and every `[[Include]]` on the page each built their own until 2026-11-01: a page of
+   * ten includes asked for the same addresses twelve times. The permission rows themselves come
+   * from a process cache, so this holds nothing a request could see change.
+   *
+   * It takes the connection rather than opening one with [[withConnection]]: a context that is
+   * not holding a connection would otherwise open a second one inside the caller's, which is the
+   * pool deadlock [[holding]] describes. Memoised by hand because a lazy val cannot take one.
+   */
+  def wikiPermission(implicit connection: Connection): WikiPermission =
+    parent.map(_.wikiPermission).getOrElse(synchronized {
+      wikiPermissionMemo.getOrElse {
+        val built = WikiPermission()(requestWrapper, connection, this)
+        wikiPermissionMemo = Some(built)
+        built
+      }
     })
 
   def pageCanSee(name: String): Boolean = !setPageName.contains(name) || setPageNameByPermission.contains(name)

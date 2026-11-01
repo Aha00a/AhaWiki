@@ -67,6 +67,10 @@
 
 이 둘은 Redis 에 있지만 읽을 때마다 받아 해독하지는 않는다 — 버전 키로 해독한 값을 다시 쓴다. [Dev Cache] 의 «해독한 값을 프로세스에 둔다».
 
+=== 보기 한 번이 묻는 것
+
+`Wiki.renderView` 는 최신 리비전을 본문째 한 번 읽고(그려야 하니), 첫 리비전은 `Page.selectFirstRevision` 으로 본문 없이 읽는다 — 화면은 만든 사람과 날짜만 쓴다. 2026-11-01 까지는 첫 리비전도 본문째였다. 요청 하나에 한 번이면 되는 값은 `ContextSite` 가 들고 있다: 독자의 권한(`ContextSite.wikiPermission`, 만들 때 `UserEmail` 을 읽으므로 include 마다 새로 만들면 그만큼 다시 읽는다), favicon 주소(`ContextSite.siteFavicon`), 기본 색조(`ContextSite.defaultHue`), 그리고 아래의 페이지 목록들.
+
 === 시간순 읽기 — 최근 변경
 
 `Api.change`(RecentChanges 매크로가 그 페이지를 열 때마다 부른다)와 `ApiV1.changes` 는 한 site 의 리비전을 시간순으로 읽어 앞의 몇 줄을 돌려준다. 2026-11-01 까지 `Page` 에는 `(site, dateTime, …)` 로 시작하는 키가 없어 `ORDER BY dateTime` 을 받쳐 주는 것이 없었고, 부를 때마다 그 site 의 모든 리비전을 읽어 정렬했다 — 본문 열이 든 행을 다 읽는 것이다. evolution 71 의 `Page_site_dateTime_revision_name_isMinorEdit_viaApi_index` 가 그 일을 한다.

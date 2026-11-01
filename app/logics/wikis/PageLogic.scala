@@ -139,12 +139,16 @@ object PageLogic {
     implicit val site: Site = contextSite.site
     implicit val tupleDatabaseSite: (Database, Site) = contextSite.tupleDatabaseSite
 
-    val wikiPermission = WikiPermission()
+    val wikiPermission = contextSite.wikiPermission
 
     val list: Seq[PageLatestSummary] = ahaWikiCache.PageMeta.SeqPageLatestSummary.get()
-    val listFiltered = list.filter(p => wikiPermission.isReadable(p.name))
-
-    listFiltered
+    // Every rule of most sites targets every page, and then one answer serves the whole list
+    // instead of one match per page -- see WikiPermission.isReadableRegardlessOfTarget.
+    wikiPermission.isReadableRegardlessOfTarget match {
+      case Some(true) => list
+      case Some(false) => Seq.empty
+      case None => list.filter(p => wikiPermission.isReadable(p.name))
+    }
   }
 
   /**

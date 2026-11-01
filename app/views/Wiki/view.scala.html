@@ -1,4 +1,4 @@
-@(title:String, description: String, interpreter:String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.tables.Page], wikiLast:Option[models.tables.Page], hasReadPermissionRestriction:Boolean = false, permissionDetail:Option[logics.wikis.WikiPermissionDetail] = None, wikiShown:Option[models.tables.Page] = None, socialImageUrl:Option[String] = None)(implicit wikiContext:ContextWikiPage)
+@(title:String, description: String, interpreter:String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.tables.PageWithoutContent], wikiLast:Option[models.tables.Page], hasReadPermissionRestriction:Boolean = false, permissionDetail:Option[logics.wikis.WikiPermissionDetail] = None, wikiShown:Option[models.tables.Page] = None, socialImageUrl:Option[String] = None)(implicit wikiContext:ContextWikiPage)
 @encodedTitle = @{ logics.wikis.PageNameUrl.encode(title) }
 @* The revision on screen and the latest, when they differ -- a page opened at ?revision=N.
    Everything else here (revisionInfo, the menus) describes the latest, so this is the only
@@ -16,7 +16,7 @@
     val breadcrumbId = s"$canonicalUrl#breadcrumb"
     val organizationId = s"https://${wikiContext.requestWrapper.host}/#organization"
 
-    val faviconPath = logics.AhaWikiConfig().site.favicon().stripPrefix("/")
+    val faviconPath = wikiContext.siteFavicon.stripPrefix("/")
 
     val webPageBase = play.api.libs.json.Json.obj(
         "@type" -> "WebPage",

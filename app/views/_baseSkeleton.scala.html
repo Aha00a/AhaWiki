@@ -35,7 +35,7 @@
         }
 
         <link rel="icon" type="image/png" href="@logics.AhaWikiConfig.DefaultFaviconPath">
-        @defining(logics.AhaWikiConfig().site.favicon()) { adminFavicon =>
+        @defining(contextSite.siteFavicon) { adminFavicon =>
             @if(adminFavicon != logics.AhaWikiConfig.DefaultFaviconPath) {
                 <link rel="icon" href="@adminFavicon">
             } else {

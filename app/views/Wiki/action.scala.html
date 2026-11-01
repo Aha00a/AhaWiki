@@ -1,4 +1,4 @@
-@(isWritable:Boolean, wikiFirst:models.tables.Page, wikiLast:models.tables.Page, hasReadPermissionRestriction:Boolean = false)(implicit wikiContext:ContextWikiPage)
+@(isWritable:Boolean, wikiFirst:models.tables.PageWithoutContent, wikiLast:models.tables.Page, hasReadPermissionRestriction:Boolean = false)(implicit wikiContext:ContextWikiPage)
 @isAdmin = @{ logics.AdminLogic.isAdmin(wikiContext.requestWrapper) }
 @currentAction = @{ wikiContext.requestWrapper.getQueryString("action").getOrElse("") }
 @currentRevision = @{

@@ -124,18 +124,24 @@ SELECT P.name, P.revision, dateTime, U.nickname AS nickname, P.`user` AS `user`,
       .map(Page.tupled)
   }
 
-  def selectFirstRevision(name: String)(implicit connection: Connection, site: Site): Option[Page] = {
+  /**
+   * Who created the page and when. Without the content: the one caller is the page view, which
+   * shows the author and the date, and until 2026-11-01 read the first revision's whole text
+   * for them on every view -- on a long page, the page over the wire a second time.
+   */
+  def selectFirstRevision(name: String)(implicit connection: Connection, site: Site): Option[PageWithoutContent] = {
     //language=sql
     SQL"""
-SELECT name, revision, dateTime, U.nickname nickname, P.`user` AS `user`, remoteAddress, comment, isMinorEdit, content, viaApi, P.userApiKey
+SELECT P.name, revision, dateTime, U.nickname nickname, P.`user` AS `user`, remoteAddress, comment, isMinorEdit, viaApi, P.userApiKey, AK.name AS userApiKeyName
     FROM Page P
     LEFT JOIN User U ON U.seq = P.user
-    WHERE site = ${site.seq} AND name = $name
+    LEFT JOIN UserApiKey AK ON AK.seq = P.userApiKey
+    WHERE site = ${site.seq} AND P.name = $name
     ORDER BY revision ASC
     LIMIT 1
     """
-      .as(rowParserPage singleOpt).map(flatten)
-      .map(Page.tupled)
+      .as(rowParserPageWithoutContent singleOpt).map(flatten)
+      .map(PageWithoutContent.tupled)
   }
 
   def selectSpecificRevision(name: String, revision: Int)(implicit connection: Connection, site: Site): Option[Page] = {

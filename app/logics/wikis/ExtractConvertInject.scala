@@ -77,5 +77,26 @@ trait ExtractConvertInject {
     }
   }
 
-  def contains(s:String): Boolean = arrayBuffer.exists(_._1 == s)
+  /**
+   * The text behind a key, or None when `s` is not a key of this extractor.
+   *
+   * The renderer asks this for every line of the page that is not markup it knows, against
+   * each of three extractors, and the back-quote extractor holds a key per code span. It was a
+   * linear search of `arrayBuffer` each time -- lines times keys -- until 2026-11-01. The buffer
+   * is appended to and never reordered, so the map is brought up to date by reading what was
+   * appended since it was last asked. A key listed twice keeps its first text, as `inject` does.
+   */
+  def extracted(s: String): Option[String] = {
+    while (indexedUpTo < arrayBuffer.length) {
+      val (key, value) = arrayBuffer(indexedUpTo)
+      if (!keyToValue.contains(key)) keyToValue(key) = value
+      indexedUpTo += 1
+    }
+    keyToValue.get(s)
+  }
+
+  def contains(s: String): Boolean = extracted(s).isDefined
+
+  private val keyToValue = mutable.HashMap[String, String]()
+  private var indexedUpTo = 0
 }

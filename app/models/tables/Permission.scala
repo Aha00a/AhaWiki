@@ -39,15 +39,16 @@ case class Permission(target: String, targetType: Permission.TargetType.Value, a
       case Permission.ActorType.Domain => actor.endsWith(this.actor)
     }
 
-  private def actorMatches(actors: Seq[String]): Boolean = {
-    val normalizedActors = actors.filter(_.isNotNullOrEmpty)
+  // An empty actor is nobody, in every branch, as with the single-actor form above. It used to
+  // be filtered out of `actors` first, which allocated a list per rule per page: the page list
+  // filter asks this for every page of the site against every rule.
+  private def actorMatches(actors: Seq[String]): Boolean =
     actorType match {
       case Permission.ActorType.All => true
-      case Permission.ActorType.Login => normalizedActors.nonEmpty
-      case Permission.ActorType.Exact => normalizedActors.contains(this.actor)
-      case Permission.ActorType.Domain => normalizedActors.exists(_.endsWith(this.actor))
+      case Permission.ActorType.Login => actors.exists(_.isNotNullOrEmpty)
+      case Permission.ActorType.Exact => this.actor.isNotNullOrEmpty && actors.contains(this.actor)
+      case Permission.ActorType.Domain => actors.exists(a => a.isNotNullOrEmpty && a.endsWith(this.actor))
     }
-  }
 
   def targetMatches(target: String): Boolean =
     targetType match {
