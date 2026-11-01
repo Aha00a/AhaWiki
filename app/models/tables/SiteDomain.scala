@@ -23,6 +23,16 @@ object SiteDomain {
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
+  def selectByDomain(domain: String)(implicit connection: Connection): Option[SiteDomain] = {
+    SQL"""SELECT * FROM SiteDomain WHERE domain = $domain"""
+      .as(localDateTime("created") ~ long("site") ~ str("domain") singleOpt).map(flatten)
+      .map(SiteDomain.tupled)
+  }
+
+  def insert(site: Long, domain: String)(implicit connection: Connection): Int = {
+    SQL"""INSERT INTO SiteDomain (site, domain) VALUES ($site, $domain)""".executeUpdate()
+  }
+
   def select()(implicit connection: Connection): Seq[SiteDomain] = {
     SQL"""SELECT * FROM SiteDomain ORDER BY site"""
       .as(localDateTime("created") ~ long("site") ~ str("domain") *).map(flatten)

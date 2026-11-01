@@ -75,6 +75,9 @@ class TelegramLogic @Inject()(
 
   // ── 이벤트별 알림 ──────────────────────────────────────────
 
+  def notifySiteRequested(host: String, siteName: String, domain: String, nickname: String, purpose: String): Unit =
+    send(s"🏠 ${b(siteName)} ($domain) requested by ${h(nickname)}\n${h(purpose)}\nhttps://$host/Admin/SiteRequests", None)
+
   def notifyPageCreated(host: String, pageName: String, nickname: String, comment: String, siteChatId: Option[String] = None): Unit =
     send(s"🆕 ${b(pageName)} created by ${h(nickname)}${commentLine(comment)}\n${pageUrl(host, pageName)}", siteChatId)
 

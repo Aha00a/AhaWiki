@@ -37,12 +37,6 @@ class ApiUserNickname @Inject()(
     "dateReviewed" -> row.dateReviewed.map(v => Json.fromString(v.toString)).getOrElse(Json.Null),
   )
 
-  /** The admin screen posts JSON and the account page posts a form, so both are accepted. */
-  private def field(name: String)(implicit request: Request[AnyContent]): Option[String] =
-    request.body.asJson.flatMap(json => (json \ name).asOpt[String])
-      .orElse(request.body.asFormUrlEncoded.flatMap(_.get(name).flatMap(_.headOption)))
-      .map(_.trim)
-
   def accountNicknameRequests: Action[AnyContent] = Action { implicit request =>
     withLoginUser { sessionUser =>
       database.withConnection { implicit connection =>
@@ -61,7 +55,7 @@ class ApiUserNickname @Inject()(
   def accountRequestNickname: Action[AnyContent] = Action { implicit request =>
     withLoginUser { sessionUser =>
       database.withTransaction { implicit connection =>
-        UserNicknameChangeLogic.request(sessionUser.seq, field("nickname").getOrElse("")) match {
+        UserNicknameChangeLogic.request(sessionUser.seq, bodyField("nickname").getOrElse("")) match {
           case Left(error) => JsonError(BadRequest, error.message)
           case Right(row) => Ok(requestJson(row))
         }
@@ -116,7 +110,7 @@ class ApiUserNickname @Inject()(
     if (!isAdmin) {
       AccessDenied
     } else {
-      val reason = field("rejectReason").map(_.take(rejectReasonMaxLength))
+      val reason = bodyField("rejectReason").map(_.take(rejectReasonMaxLength))
       SessionLogic.getUser(request) match {
         case None => JsonError(Unauthorized, "Login required.")
         case Some(admin) =>

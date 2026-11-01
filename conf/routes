@@ -34,6 +34,7 @@ GET           /logout                                controllers.Auth.logout
 GET           /account                               controllers.Account.settings()
 GET           /account/email/merge                   controllers.Account.mergeEmail(email:String)
 POST          /account/email/merge                   controllers.Account.confirmMergeEmail()
+GET           /google/oauth/handoff                  controllers.GoogleOAuth.handoff(token: String)
 GET           /google/oauth/login                    controllers.GoogleOAuth.login
 GET           /google/oauth/callback                 controllers.GoogleOAuth.callback(code:String)
 GET           /google/oauth/connect                  controllers.GoogleOAuth.connect
@@ -66,6 +67,12 @@ GET           /api/pageRevision/:pageName            controllers.Api.pageRevisio
 POST          /api/renderAhaMark/:pageName           controllers.Api.renderAhaMark(pageName: String)
 GET           /api/Admin/ApiKeys                     controllers.ApiApiKey.adminApiKeys
 DELETE        /api/Admin/ApiKeys/:seq                controllers.ApiApiKey.adminRevokeApiKey(seq: Long)
+GET           /site/request                          controllers.ApiSiteRequest.page
+POST          /site/request                          controllers.ApiSiteRequest.submit
+POST          /site/request/:seq/cancel              controllers.ApiSiteRequest.cancel(seq: Long)
+GET           /api/Admin/SiteRequests                controllers.ApiSiteRequest.adminSiteRequests(status: String ?= "Pending")
+POST          /api/Admin/SiteRequests/:seq/approve   controllers.ApiSiteRequest.adminApprove(seq: Long)
+POST          /api/Admin/SiteRequests/:seq/reject    controllers.ApiSiteRequest.adminReject(seq: Long)
 GET           /api/Admin/NicknameRequests            controllers.ApiUserNickname.adminNicknameRequests(status: String ?= "Pending")
 POST          /api/Admin/NicknameRequests/:seq/approve  controllers.ApiUserNickname.adminApproveNicknameRequest(seq: Long)
 POST          /api/Admin/NicknameRequests/:seq/reject   controllers.ApiUserNickname.adminRejectNicknameRequest(seq: Long)

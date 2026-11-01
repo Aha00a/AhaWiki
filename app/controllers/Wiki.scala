@@ -161,7 +161,16 @@ controllerComponents: ControllerComponents,
     }
   }
 
+  // Every name under the parent domain reaches this server through the wildcard, and a host with
+  // no site otherwise draws an empty wiki titled notFound.
   def view(nameEncoded: String, revision: Int, action: String): Action[AnyContent] = Action { implicit request =>
+    if (SiteLogic.get(request.host).isNotFound && OAuthHandoff.isUnderParent(request.host, applicationConf.AhaWiki.siteRequest.parentDomain()))
+      NotFound("There is no wiki at this address.").withHeaderRobotNoIndexNoFollow
+    else
+      renderView(nameEncoded, revision, action)
+  }
+
+  private def renderView(nameEncoded: String, revision: Int, action: String)(implicit request: Request[AnyContent]): Result = {
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
 

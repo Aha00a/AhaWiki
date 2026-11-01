@@ -371,6 +371,38 @@ CREATE TABLE `Site` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `SiteRequest`
+--
+
+DROP TABLE IF EXISTS `SiteRequest`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `SiteRequest` (
+  `seq` bigint(20) NOT NULL AUTO_INCREMENT,
+  `user` int(11) NOT NULL,
+  `name` varchar(200) NOT NULL,
+  `subdomain` varchar(63) NOT NULL,
+  `isPublic` tinyint(1) NOT NULL,
+  `purpose` varchar(1000) NOT NULL,
+  `status` varchar(20) NOT NULL,
+  `reviewedBy` int(11) DEFAULT NULL,
+  `rejectReason` varchar(1000) DEFAULT NULL,
+  `site` int(11) DEFAULT NULL,
+  `dateInserted` datetime NOT NULL DEFAULT current_timestamp(),
+  `dateReviewed` datetime DEFAULT NULL,
+  PRIMARY KEY (`seq`),
+  KEY `SiteRequest_ReviewedBy_User_seq_fk` (`reviewedBy`),
+  KEY `SiteRequest_Site_seq_fk` (`site`),
+  KEY `SiteRequest_status_dateInserted_index` (`status`,`dateInserted`),
+  KEY `SiteRequest_user_status_index` (`user`,`status`),
+  KEY `SiteRequest_subdomain_status_index` (`subdomain`,`status`),
+  CONSTRAINT `SiteRequest_ReviewedBy_User_seq_fk` FOREIGN KEY (`reviewedBy`) REFERENCES `User` (`seq`),
+  CONSTRAINT `SiteRequest_Site_seq_fk` FOREIGN KEY (`site`) REFERENCES `Site` (`seq`),
+  CONSTRAINT `SiteRequest_User_seq_fk` FOREIGN KEY (`user`) REFERENCES `User` (`seq`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `SiteAdmin`
 --
 

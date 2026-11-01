@@ -20,6 +20,12 @@ trait JsonResults extends BaseController {
   def JsonError(status: Status, message: String): Result =
     JsonResult(status, Json.obj("error" -> Json.fromString(message)))
 
+  /** A field of a JSON or form body: the admin screens post JSON and the account page a form. */
+  def bodyField(name: String)(implicit request: Request[AnyContent]): Option[String] =
+    request.body.asJson.flatMap(json => (json \ name).asOpt[String])
+      .orElse(request.body.asFormUrlEncoded.flatMap(_.get(name).flatMap(_.headOption)))
+      .map(_.trim)
+
   /**
    * Run the block as the logged-in user, or answer 401 with the JSON error envelope.
    *

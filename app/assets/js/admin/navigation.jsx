@@ -54,6 +54,7 @@ export default function Navigation({me, onNavigate}) {
         {href: "/Admin/S3", label: "S3 Browser", key: "s3-browser", iconClassName: "fas fa-folder-open"},
         {href: "/Admin/ApiKeys", label: "API Keys", key: "api-keys", iconClassName: "fas fa-key"},
         {href: "/Admin/NicknameRequests", label: "Nickname Requests", key: "nickname-requests", iconClassName: "fas fa-id-card"},
+        {href: "/Admin/SiteRequests", label: "Site Requests", key: "site-requests", iconClassName: "fas fa-plus-square"},
     ], []);
 
     if (!me) {

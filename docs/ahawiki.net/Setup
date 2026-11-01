@@ -2,9 +2,37 @@
 새 위키 사이트 개설 체크리스트.
 AhaWiki는 같은 앱과 DB가 여러 도메인을 함께 서비스하므로, 앱·DB·conf 파일은 그대로 두고 아래 항목만 추가한다.
 
+== `*.ahawiki.net` 은 승인이면 끝난다
+`something.ahawiki.net` 은 사람이 [https://ahawiki.net/site/request 개설 신청] 하고 관리자가 `/Admin/SiteRequests` 에서 승인하면 열린다. `SiteRequestLogic.approve` 가 `Site`, `SiteDomain`, `SiteAdmin` 과 `Permission` 을 한 번에 만들고 도메인 캐시를 버린다. 신청이 들어오면 텔레그램으로 알린다. 이 아래 체크리스트는 필요 없다.
+
+그렇게 되는 것은 사이트마다 하던 일을 와일드카드로 한 번에 끝냈기 때문이다.
+
+[[[#!Table tsv 1
+단계	와일드카드에서
+DNS	`*.ahawiki.net` CNAME 하나
+nginx	`server_name *.ahawiki.net` 블록 하나. 정확히 일치하는 블록이 있는 기존 사이트는 그쪽이 우선이다
+인증서	DNS-01 로 받은 와일드카드 인증서 하나. HTTP-01 로는 와일드카드를 받을 수 없다
+Google 로그인	아래 '''로그인'''
+지도 API 키	referrer `*.ahawiki.net/*` 한 줄
+reCAPTCHA	`ahawiki.net` 하나가 하위 도메인을 포함한다(Google 문서 기준)
+]]]
+
+설치는 운영 저장소의 `ahawiki/wildcard-setup.sh` 이고 되돌리는 법도 거기 있다. 앱은 설정 `AhaWiki.siteRequest.parentDomain` 이 있을 때만 신청을 받고 로그인을 위임한다. 비어 있으면 둘 다 꺼진다.
+
+'''로그인.''' Google 은 redirect URI 에 와일드카드를 받지 않고 세션 쿠키는 호스트마다 따로다. 그래서 하위 도메인의 사이트는 Google 콜백을 상위 도메인으로 받고, 상위 도메인이 프로필을 서명해 사이트로 넘긴다(`OAuthHandoff`). 넘긴 값은 시작한 브라우저의 flash 쿠키와 일회값이 맞아야 열리므로, 주소만 훔치거나 링크로 심어서는 쓸 수 없다. 받을 수 있는 호스트는 `SiteDomain` 에 있는 곳뿐이고, 돌아가는 곳은 그 호스트 안의 경로뿐이다.
+
+'''왜 사이트마다 등록하는 쪽을 자동화하지 않았나.''' OAuth 클라이언트의 redirect URI 를 고치는 공개 API 가 없고, 앱이 `certbot` 과 nginx 를 부르려면 앱에 root 를 줘야 한다. 인증서 하나가 모든 하위 도메인을 대표하는 것이 대가다. 인증서 키가 새면 `*.ahawiki.net` 전체를 다시 발급해야 한다.
+
+와일드카드 때문에 아무 하위 도메인이나 이 서버에 닿으므로, 사이트가 없는 이름은 404 다(`Wiki.view`).
+
+신청의 주소 규칙은 `SiteRequestLogic.validateSubdomain` 이고 예약어도 거기 있다. DNS 에 따로 있는 이름은 위키가 아니어도 예약어에 없을 수 있으므로, 승인할 때 눈으로 본다.
+
+== 자기 도메인을 쓰는 사이트
+와일드카드에 들지 않는 이름이다. 아래 체크리스트를 손으로 한다.
+
 == 신청 접수
  * 사이트 이름
- * 서브도메인 (`something.ahawiki.net`)
+ * 도메인
  * 관리자 Gmail 주소
  * 공개/비공개 여부
 

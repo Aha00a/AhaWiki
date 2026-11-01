@@ -20,6 +20,7 @@ import S3BrowserPage from "./admin/pages/S3BrowserPage.jsx";
 import CrawlerCachePage from "./admin/pages/CrawlerCachePage.jsx";
 import ApiKeysPage from "./admin/pages/ApiKeysPage.jsx";
 import NicknameRequestsPage from "./admin/pages/NicknameRequestsPage.jsx";
+import SiteRequestsPage from "./admin/pages/SiteRequestsPage.jsx";
 import {createWikiThemeManager} from "./admin/theme.js";
 
 const wikiThemeManager = createWikiThemeManager();
@@ -60,6 +61,7 @@ const router = createBrowserRouter([
             {path: "CrawlerCaches", element: <CrawlerCachePage/>},
             {path: "ApiKeys", element: <ApiKeysPage/>},
             {path: "NicknameRequests", element: <NicknameRequestsPage/>},
+            {path: "SiteRequests", element: <SiteRequestsPage/>},
         ],
     },
 ]);

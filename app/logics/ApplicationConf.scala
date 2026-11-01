@@ -70,6 +70,12 @@ class ApplicationConf @Inject()(configuration: Configuration) {
       }
     }
 
+    object siteRequest {
+      // The domain requested wikis live under. Empty turns requests off, and with them the login
+      // through this host (OAuthHandoff). AhaWiki.siteRequest.parentDomain in the site conf.
+      def parentDomain(): String = configuration.getOptional[String](fqn).getOrElse("")
+    }
+
     object telegram {
       def botToken(): String = configuration.getOptional[String](fqn).getOrElse("")
       def chatId(): String = configuration.getOptional[String](fqn).getOrElse("")

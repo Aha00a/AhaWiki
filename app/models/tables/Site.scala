@@ -2,6 +2,7 @@ package models.tables
 
 import anorm.SqlParser.get
 import anorm.SqlParser.long
+import anorm.SqlParser.scalar
 import anorm.SqlParser.str
 import anorm._
 import zio.json._
@@ -41,6 +42,16 @@ object Site {
         AND S.mainDomain != ''
       ORDER BY S.publicListedOrder DESC, S.seq ASC
     """.as(parser.*)
+  }
+
+  def selectByAbbr(abbr: String)(implicit connection: Connection): Option[Site] = {
+    SQL"""SELECT S.seq, S.name, S.abbr, S.mainDomain, S.publicListedOrder FROM Site S WHERE S.abbr = $abbr"""
+      .as(parser.singleOpt)
+  }
+
+  def insert(name: String, abbr: String, mainDomain: String)(implicit connection: Connection): Long = {
+    SQL"""INSERT INTO Site (name, abbr, mainDomain) VALUES ($name, $abbr, $mainDomain)"""
+      .executeInsert(scalar[Long].single)
   }
 
   def updateAbbrAndMainDomain(

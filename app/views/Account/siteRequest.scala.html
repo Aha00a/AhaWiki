@@ -1,0 +1,58 @@
+@(isLoggedIn: Boolean, parentDomain: String, rows: Seq[models.tables.SiteRequest])(implicit contextSite: models.ContextSite, request: play.api.mvc.RequestHeader)
+@_base("Request a wiki", "Ask for a wiki of your own")(Html("")) {
+    <div class="wikiContent">
+        <h1>Request a wiki</h1>
+        @if(parentDomain.isEmpty) {
+            <p>This server does not take site requests.</p>
+        } else {
+            @if(!isLoggedIn) {
+                <p>Log in with a Google account to ask for your own wiki at <code>something.@parentDomain</code>. That account becomes the wiki's administrator.</p>
+                <p><a href="@routes.Auth.login" rel="nofollow">Login</a></p>
+            } else {
+                @rows.find(_.isPending) match {
+                    case Some(row) => {
+                        <p>We have your request for <b>@row.name</b> (<code>@row.subdomain.@parentDomain</code>). It is waiting for review, and the answer will appear on this page.</p>
+                        <form method="post" action="@routes.ApiSiteRequest.cancel(row.seq)">
+                            @helper.CSRF.formField
+                            <button type="submit">Withdraw</button>
+                        </form>
+                    }
+                    case None => {
+                        <form method="post" action="@routes.ApiSiteRequest.submit">
+                            @helper.CSRF.formField
+                            <p><label>Site name<br><input type="text" name="name" required maxlength="@logics.SiteRequestLogic.NameMaxLength"></label></p>
+                            <p><label>Address<br><input type="text" name="subdomain" required pattern="[a-z0-9][a-z0-9\-]*[a-z0-9]" title="Lowercase letters, digits and hyphens"> .@parentDomain</label></p>
+                            <p>
+                                <label><input type="radio" name="isPublic" value="true" checked> Public: anyone can read</label><br>
+                                <label><input type="radio" name="isPublic" value="false"> Private: only people you allow can read</label>
+                            </p>
+                            <p><label>What is it for?<br><textarea name="purpose" required rows="4" cols="60" maxlength="@logics.SiteRequestLogic.PurposeMaxLength"></textarea></label></p>
+                            <p><button type="submit">Request</button></p>
+                        </form>
+                    }
+                }
+                @if(rows.nonEmpty) {
+                    <h2>Your requests</h2>
+                    <table class="wikiTableSimple">
+                        <thead><tr><th>Site</th><th>Address</th><th>Status</th></tr></thead>
+                        <tbody>
+                        @for(row <- rows) {
+                            <tr>
+                                <td>@row.name</td>
+                                <td>
+                                    @if(row.site.isDefined) {
+                                        <a href="https://@row.subdomain.@parentDomain/">@row.subdomain.@parentDomain</a>
+                                    } else {
+                                        @row.subdomain.@parentDomain
+                                    }
+                                </td>
+                                <td>@row.status@row.rejectReason.map(reason => s" — $reason")</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                }
+            }
+        }
+    </div>
+}
