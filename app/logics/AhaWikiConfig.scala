@@ -23,6 +23,10 @@ object AhaWikiConfig {
   /** What a site shows until it has a favicon of its own. */
   val DefaultFaviconPath: String = "/public/favicon.png"
 
+  /** The language pages are written in, for `<html lang>` and the JSON-LD `inLanguage`. The admin
+    * screens are in English and say so themselves. */
+  val ContentLanguage: String = "ko"
+
   /** Where the favicon configured as `v` is served from: a path or a URL as it is, an S3 object key
     * as a presigned URL, nothing configured as the default. None when a key cannot be signed. */
   def resolveFavicon(v: String, applicationConf: ApplicationConf): Option[String] =

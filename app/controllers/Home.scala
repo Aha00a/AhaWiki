@@ -31,7 +31,9 @@ class Home @Inject() (
                        wsClient: WSClient,
                        executionContext: ExecutionContext
                       ) extends BaseController {
-  private val SitemapMaxUrls = 1000
+  // The sitemap protocol's limit for one file. This was 1000 until 2026-11-02, which on a wiki of
+  // 3,800 pages dropped whatever had been edited least, since the list below is cut by revision.
+  private val SitemapMaxUrls = 50000
   private val SitemapMinPageSize = 300
   private val DatePageNameRegex = """^\d{4}(?:[-/]\d{2}(?:[-/]\d{2})?)?$""".r
   private val SitemapExcludedPageNameRegex = """(?i)^(?:TODO|ToDo|Dev)(?:$|[-\s/].*)""".r

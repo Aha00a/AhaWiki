@@ -23,7 +23,7 @@
         "url" -> canonicalUrl,
         "name" -> title,
         "description" -> description,
-        "inLanguage" -> "ko",
+        "inLanguage" -> logics.AhaWikiConfig.ContentLanguage,
         "isPartOf" -> play.api.libs.json.Json.obj(
             "@id" -> websiteId
         ),
@@ -61,7 +61,7 @@
         "publisher" -> play.api.libs.json.Json.obj(
             "@id" -> organizationId
         ),
-        "inLanguage" -> "ko"
+        "inLanguage" -> logics.AhaWikiConfig.ContentLanguage
     )
     val articleWithDates = articleBase ++
       publishedDateTime.map(v => play.api.libs.json.Json.obj("datePublished" -> v)).getOrElse(play.api.libs.json.Json.obj()) ++
@@ -85,7 +85,7 @@
                 "@id" -> websiteId,
                 "url" -> s"https://${wikiContext.requestWrapper.host}/",
                 "name" -> wikiContext.requestWrapper.host,
-                "inLanguage" -> "ko",
+                "inLanguage" -> logics.AhaWikiConfig.ContentLanguage,
                 "publisher" -> play.api.libs.json.Json.obj(
                     "@id" -> organizationId
                 ),
