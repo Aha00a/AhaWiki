@@ -811,3 +811,8 @@ window.AhaWikiAdjacentPagesGraph = {
         });
     }
 };
+
+window.AhaWikiAdjacentPagesGraph.create(
+    document.currentScript.getAttribute('data-graph-id'),
+    document.currentScript.getAttribute('data-enable-wiki-link') === 'true'
+);
