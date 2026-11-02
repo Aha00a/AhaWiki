@@ -8,7 +8,7 @@ Trello처럼 다른 탭/사용자의 변경이 페이지 새로고침 없이 칸
 
 [[[#!Table tsv 1
 파일	변경 내용
-app/views/Wiki/view.scala.html	page.updated 수신 시 wiki:page.updated DOM CustomEvent 발행
+public/js/AhaWiki.PageView.js	page.updated 수신 시 wiki:page.updated DOM CustomEvent 발행
 public/js/AhaWiki.Kanban.js	유틸리티 함수들 + initKanban 내부 실시간 동기화 로직 전체
 app/assets/kanban.less	conflict 배지·모달 배너 스타일
 ]]]
@@ -19,7 +19,7 @@ app/assets/kanban.less	conflict 배지·모달 배너 스타일
 Tab B 저장 성공
   └→ PageCursorHub.broadcastPageUpdated()  ← 기존 서버 로직 그대로
        └→ WebSocket → Tab A onmessage: "page.updated"
-            └→ view.scala.html: document.dispatchEvent("wiki:page.updated")
+            └→ AhaWiki.PageView.js: document.dispatchEvent("wiki:page.updated")
                  └→ AhaWiki.Kanban.js 리스너 (500ms debounce)
                       ├→ pendingMutationCount > 0? → pendingRemoteRevision 저장, 뮤테이션 후 재실행
                       └→ GET /w/page?action=raw
@@ -153,7 +153,7 @@ kanban:card.remoteupdated 수신 시:
 === "Would you like to refresh?" 토스트 억제
 
 Kanban 페이지는 `applyRemoteKanbanUpdate` 성공 후 `wiki:kanban.synced` CustomEvent를 발행한다.
-`view.scala.html`은 `page.updated` 수신 시 `.InterpreterKanban`이 존재하면 토스트를 즉시 표시하지 않고 기다린다. 대기 시간은 그 파일의 `setTimeout` 인자(현재 2초)다.
+`AhaWiki.PageView.js`은 `page.updated` 수신 시 `.InterpreterKanban`이 존재하면 토스트를 즉시 표시하지 않고 기다린다. 대기 시간은 그 파일의 `setTimeout` 인자(현재 2초)다.
 2초 내에 `kanbanSyncedRevisions[revision]`이 set되면 토스트를 억제한다.
 sync 실패나 timeout 이면 기존 토스트를 표시한다. 여러 `page.updated` 가 한 번의 동기화로 합쳐질 때도 그렇다 — 500ms debounce 안에 연달아 오거나 뮤테이션 대기 중에 온 것은 마지막 revision 만 `wiki:kanban.synced` 로 알리므로, 앞선 revision 의 토스트가 뜬다.
 

@@ -1,4 +1,4 @@
-// The page's WebSocket reconnect decision, read out of the view template itself so what is
+// The page's WebSocket reconnect decision, read out of the page script itself so what is
 // tested is what ships. A socket that never opened was refused at the handshake (the server's
 // 403 for a page this visitor may not read reaches the browser only as a close), and until
 // 2026-09-26 that was retried every 1.5s for as long as the tab lived -- 44,249 attempts from
@@ -9,13 +9,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-const template = fs.readFileSync(new URL('../app/views/Wiki/view.scala.html', import.meta.url), 'utf8');
+const pageScript = fs.readFileSync(new URL('../public/js/AhaWiki.PageView.js', import.meta.url), 'utf8');
 
 function loadReconnectPolicy() {
-    const start = template.indexOf('var reconnectDelayMs = 1500;');
-    const end = template.indexOf('var socket;', start);
+    const start = pageScript.indexOf('var reconnectDelayMs = 1500;');
+    const end = pageScript.indexOf('var socket;', start);
     assert.ok(start > 0 && end > start, 'the reconnect policy is where the test expects it');
-    const source = template.slice(start, end);
+    const source = pageScript.slice(start, end);
     const context = {};
     vm.createContext(context);
     vm.runInContext(source + '\nthis.reconnectDelayAfterClose = reconnectDelayAfterClose; this.reset = function () { failedHandshakes = 0; };', context);
@@ -36,8 +36,8 @@ test('a socket that had been open reconnects at the base delay, and does not cou
     assert.equal(policy.reconnectDelayAfterClose(false), 1500);
 });
 
-test('the template resets the count when a socket opens', () => {
+test('the page script resets the count when a socket opens', () => {
     // onopen sets failedHandshakes back to 0, so a page that was refused a few times and then
     // let in starts over on the next drop.
-    assert.match(template, /socket\.onopen = function \(\) \{\s*wasOpen = true;\s*failedHandshakes = 0;/);
+    assert.match(pageScript, /socket\.onopen = function \(\) \{\s*wasOpen = true;\s*failedHandshakes = 0;/);
 });

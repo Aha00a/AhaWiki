@@ -99,7 +99,7 @@ class WikiOldRevisionViewSpec extends PlaySpec with GuiceOneAppPerSuite with Bef
 
     // Connected, the next save by anyone redrew a Kanban board as the latest one.
     "not open the page's WebSocket" in {
-      view("?revision=1") must include ("if (true) return;")
+      view("?revision=1") must include ("data-old-revision=\"true\"")
     }
   }
 
@@ -110,7 +110,7 @@ class WikiOldRevisionViewSpec extends PlaySpec with GuiceOneAppPerSuite with Bef
         html must include ("second-revision-marker")
         html must not include "oldRevisionNotice"
         html must include ("""data-wiki-writable="true"""")
-        html must include ("if (false) return;")
+        html must include ("data-old-revision=\"false\"")
       }
     }
   }

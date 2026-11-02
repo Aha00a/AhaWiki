@@ -21,7 +21,7 @@ import play.api.test.Helpers._
   * element and the rest ran as markup. A view of a page that does not exist takes its name from
   * the URL, which made that a link anyone could send. The JavaScript strings had the opposite
   * fault: they were HTML-escaped, so a name with `&` reached the script as `&amp;` and matched
-  * nothing.
+  * nothing. Since 2026-11-02 the page script is a file and takes the name from an attribute.
   *
   * The site has a seq and host of its own, because the memory caches are shared by every spec in
   * the JVM and keyed by site.
@@ -64,8 +64,9 @@ class WikiViewScriptSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAn
       view("%3C%2Fscript%3E%3Cb%3Einjected%3C%2Fb%3E") must not include "</script><b>injected</b>"
     }
 
-    "hand its scripts the page name itself, not its HTML escape" in {
-      view("Tom%20%26%20Jerry") must include ("pageName: \"Tom \\u0026 Jerry\"")
+    // An attribute, where the escape is what the browser undoes: getAttribute gives the name itself.
+    "hand its scripts the page name in an escaped attribute" in {
+      view("Tom%20%26%20Jerry") must include ("data-page-name=\"Tom &amp; Jerry\"")
     }
 
     "show a missing page's name as text, not run it as markup" in {

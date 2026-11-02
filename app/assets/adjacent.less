@@ -108,6 +108,10 @@
 	}
 
 	.adjacentPagesHud {
+		[data-hud-label]::before {
+			content: attr(data-hud-label);
+		}
+
 		position: absolute;
 		top: 0;
 		left: 0;

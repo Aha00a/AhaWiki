@@ -110,7 +110,7 @@
 
 '''rename 은 발행하지 않습니다.''' 원래 이름 자리에 남는 것은 `#!redirect` 한 줄짜리 리비전 1 이라, 「누가 이 페이지를 고쳤습니다, 새로고침할까요」 토스트를 띄우면 새로고침이 리다이렉트로 떨어집니다. 이동은 갱신과 다른 사건이고, 알리려면 제 타입이 있어야 합니다.
 
-== 클라이언트 측 동작 (`view.scala.html`)
+== 클라이언트 측 동작 (`AhaWiki.PageView.js`)
 
 문서 보기 페이지 JS가 WebSocket을 담당합니다.
 
@@ -118,9 +118,9 @@
 
  * `connect()`에서 `new WebSocket(wsUrl)` 생성
  * `onopen` 시 `saveSenderId`를 생성 후 `cursor.hello` 전송 (`브라우저 쿠키 ID` + `탭별 sessionStorage ID` 조합)
- * `saveSenderId`는 `브라우저 공통 ID(쿠키)` + `탭 고유 ID(sessionStorage)`를 결합해, 같은 브라우저의 다른 탭은 서로 다른 값이 되도록 합니다. 쿠키 수명은 `view.scala.html` 의 `senderIdCookieMaxAgeSeconds`(현재 1년)입니다. 같은 쿠키를 `edit.page.js`(`cookieMaxAgeSeconds`)와 `AhaWiki.Kanban.js`(`SENDER_ID_COOKIE_MAX_AGE_SECONDS`)도 같은 값으로 다시 씁니다 — 한 곳만 바꾸면 다른 곳이 되돌립니다.
+ * `saveSenderId`는 `브라우저 공통 ID(쿠키)` + `탭 고유 ID(sessionStorage)`를 결합해, 같은 브라우저의 다른 탭은 서로 다른 값이 되도록 합니다. 쿠키 수명은 `AhaWiki.PageView.js` 의 `senderIdCookieMaxAgeSeconds`(현재 1년)입니다. 같은 쿠키를 `edit.page.js`(`cookieMaxAgeSeconds`)와 `AhaWiki.Kanban.js`(`SENDER_ID_COOKIE_MAX_AGE_SECONDS`)도 같은 값으로 다시 씁니다 — 한 곳만 바꾸면 다른 곳이 되돌립니다.
  * `onopen` 은 `wiki:ws.connected` DOM CustomEvent(`detail.pageName`)도 발행합니다. Kanban 이 이것을 받아 끊긴 사이 놓친 저장을 따라잡습니다 — [Dev Kanban Realtime] 참고.
- * `onopen` 뒤 30초마다 `cursor.ping` 을 보냅니다(간격은 `view.scala.html` 의 `setInterval` 인자). `onclose` 에서 그 타이머를 지웁니다.
+ * `onopen` 뒤 30초마다 `cursor.ping` 을 보냅니다(간격은 `AhaWiki.PageView.js` 의 `setInterval` 인자). `onclose` 에서 그 타이머를 지웁니다.
  * `onclose` 시 재연결한다 — 어떻게는 열렸던 소켓인지에 달렸다. '''열렸다가 끊긴''' 소켓(idle timeout, 배포)은 `reconnectDelayMs`(1.5초) 뒤에 다시 연다. '''한 번도 안 열린''' 소켓은 핸드셰이크에서 거절된 것이다 — 서버가 읽을 수 없는 페이지에 403 을 답하면 브라우저에는 close 로만 보인다 — 이때는 지연을 두 배씩 늘리며(1.5·3·6·12초) 다섯 번째 거절에서 그만둔다(`handshakeGiveUpAfter`). 열리면 그 횟수는 0 으로 돌아간다. 2026-09-26 전에는 구분 없이 1.5초마다 무한히 다시 열었고, 8월에 한 주소가 44,249번 두드렸다([Dev Logs]). 판정 함수는 `test/wiki-view.reconnect.test.mjs` 가 템플릿에서 그대로 읽어 검사한다.
  * `onerror`/`onclose`는 console warn 로그 출력
 
@@ -242,7 +242,7 @@
  1. 사용자 A와 B가 같은 Kanban 페이지를 열어둡니다.
  2. A가 카드를 추가·이동·수정합니다.
  3. 서버가 `page.updated` 이벤트를 전송합니다.
- 4. B의 `view.scala.html`이 `wiki:page.updated` DOM CustomEvent를 발행합니다.
+ 4. B의 `AhaWiki.PageView.js`이 `wiki:page.updated` DOM CustomEvent를 발행합니다.
  5. B의 `AhaWiki.Kanban.js`가 이벤트를 수신 → 원문 fetch → 병합 → 보드 자동 갱신.
  6. B는 새로고침 없이 A의 변경이 보드에 반영됨을 확인합니다.
 

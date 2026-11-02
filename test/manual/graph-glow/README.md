@@ -1,7 +1,7 @@
 # Graph glow harness
 
 Draws a force-directed graph with the real `public/js/AhaWiki.GraphGlow.js` and the same call
-order as the two graph templates (`graph.scala.html`, `adjacentPagesD3Canvas.scala.html`):
+order as the two graphs (`graph.scala.html`, `AhaWiki.AdjacentPagesGraph.js`):
 background, glow, links, nodes with a ring. No server, no login, no database — which matters,
 because the templates need all three and a local server does not start without the cache.
 

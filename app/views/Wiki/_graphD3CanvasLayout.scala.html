@@ -13,70 +13,72 @@
     <div class="ratio_16_9"></div>
     <div class="aspectRatioContent">
         <canvas id="graphD3Canvas-@id" class="graph graphD3Canvas @(id)" style="@canvasStyle"></canvas>
+        @* The words are in data-hud-label, drawn by adjacent.less: they are the same on every page, and in
+           the text they outweighed the article on a short one. *@
         <div class="adjacentPagesHud @id">
             <div class="hudPanel topLeft @id">
-                <div class="title">Control</div>
+                <div class="title" data-hud-label="Control"></div>
                 <div class="row">
-                    <label>Focus depth <input type="range" min="1" max="32" step="1" value="32" class="focusDepthD3Canvas @id"/></label>
+                    <label><span data-hud-label="Focus depth"></span> <input type="range" min="1" max="32" step="1" value="32" class="focusDepthD3Canvas @id"/></label>
                     <span class="focusDepthValueD3Canvas @id">≤ 32</span>
                 </div>
                 <div class="row">
-                    <label>Min degree <input type="range" min="0" max="12" step="1" value="0" class="degreeFilterD3Canvas @id"/></label>
+                    <label><span data-hud-label="Min degree"></span> <input type="range" min="0" max="12" step="1" value="0" class="degreeFilterD3Canvas @id"/></label>
                     <span class="degreeFilterValueD3Canvas @id">all</span>
                 </div>
                 <div class="row">
-                    <label>Label scale <input type="range" min="0.6" max="2" step="0.1" value="1" class="labelScaleD3Canvas @id"/></label>
+                    <label><span data-hud-label="Label scale"></span> <input type="range" min="0.6" max="2" step="0.1" value="1" class="labelScaleD3Canvas @id"/></label>
                     <span class="labelScaleValueD3Canvas @id">1.0x</span>
                 </div>
                 <div class="row">
-                    <label>Node scale <input type="range" min="0.7" max="1.8" step="0.1" value="1" class="nodeScaleD3Canvas @id"/></label>
+                    <label><span data-hud-label="Node scale"></span> <input type="range" min="0.7" max="1.8" step="0.1" value="1" class="nodeScaleD3Canvas @id"/></label>
                     <span class="nodeScaleValueD3Canvas @id">1.0x</span>
                 </div>
                 <div class="row">
-                    <label>Link distance <input type="range" min="40" max="180" step="10" value="80" class="linkDistanceD3Canvas @id"/></label>
+                    <label><span data-hud-label="Link distance"></span> <input type="range" min="40" max="180" step="10" value="80" class="linkDistanceD3Canvas @id"/></label>
                     <span class="linkDistanceValueD3Canvas @id">80</span>
                 </div>
                 <div class="row">
-                    <label>Charge <input type="range" min="-300" max="-40" step="10" value="-120" class="chargeStrengthD3Canvas @id"/></label>
+                    <label><span data-hud-label="Charge"></span> <input type="range" min="-300" max="-40" step="10" value="-120" class="chargeStrengthD3Canvas @id"/></label>
                     <span class="chargeStrengthValueD3Canvas @id">-120</span>
                 </div>
                 <div class="row">
-                    <label><input type="checkbox" class="thumbnailToggleD3Canvas @id" checked="checked"/> Thumbnail</label>
+                    <label><input type="checkbox" class="thumbnailToggleD3Canvas @id" checked="checked"/> <span data-hud-label="Thumbnail"></span></label>
                     <span class="thumbnailToggleValueD3Canvas @id">ON</span>
                 </div>
             </div>
             <div class="hudPanel bottomLeft @id">
                 <div class="row compact hudActions">
-                    <a href="#" class="controlStartD3Canvas @(id) @if(startActive){active}"><i class="fas fa-play"></i> Start</a>
-                    <a href="#" class="controlStopD3Canvas @(id)"><i class="fas fa-stop"></i> Stop</a>
+                    <a href="#" class="controlStartD3Canvas @(id) @if(startActive){active}"><i class="fas fa-play"></i> <span data-hud-label="Start"></span></a>
+                    <a href="#" class="controlStopD3Canvas @(id)"><i class="fas fa-stop"></i> <span data-hud-label="Stop"></span></a>
                     @if(showMoreButton) {
-                    <a href="#" class="moreD3Canvas @(id)"><i class="fas fa-plus"></i> More</a>
+                    <a href="#" class="moreD3Canvas @(id)"><i class="fas fa-plus"></i> <span data-hud-label="More"></span></a>
                     }
                     @if(showFullscreenButton) {
-                    <a href="#" class="toggleFullscreenD3Canvas @(id)"><i class="fas fa-expand"></i> Fullscreen</a>
+                    <a href="#" class="toggleFullscreenD3Canvas @(id)"><i class="fas fa-expand"></i> <span data-hud-label="Fullscreen"></span></a>
                     }
                     @if(showResetButton) {
-                    <a href="#" class="controlResetViewD3Canvas @(id)"><i class="fas fa-minimize"></i> Reset</a>
+                    <a href="#" class="controlResetViewD3Canvas @(id)"><i class="fas fa-minimize"></i> <span data-hud-label="Reset"></span></a>
                     }
                 </div>
             </div>
             <div class="hudPanel topRight @id">
-                <div class="title">Metrics</div>
-                <div class="row metric"><span>Nodes(visible/total)</span><span class="nodeCountSummaryD3Canvas @id">0/0</span></div>
-                <div class="row metric"><span>Links(visible/total)</span><span class="linkCountSummaryD3Canvas @id">0/0</span></div>
-                <div class="row metric"><span>Avg degree</span><span class="avgDegreeD3Canvas @id">0.00</span></div>
-                <div class="row metric"><span>@depthMetricLabel</span><span class="depthCoverageD3Canvas @id">@depthMetricDefaultValue</span></div>
+                <div class="title" data-hud-label="Metrics"></div>
+                <div class="row metric"><span data-hud-label="Nodes(visible/total)"></span><span class="nodeCountSummaryD3Canvas @id">0/0</span></div>
+                <div class="row metric"><span data-hud-label="Links(visible/total)"></span><span class="linkCountSummaryD3Canvas @id">0/0</span></div>
+                <div class="row metric"><span data-hud-label="Avg degree"></span><span class="avgDegreeD3Canvas @id">0.00</span></div>
+                <div class="row metric"><span data-hud-label="@depthMetricLabel"></span><span class="depthCoverageD3Canvas @id">@depthMetricDefaultValue</span></div>
                 @if(showQueueMetric) {
-                <div class="row metric"><span>Queue(fetch/graph)</span><span class="queueStatusD3Canvas @id">0 / 0</span></div>
+                <div class="row metric"><span data-hud-label="Queue(fetch/graph)"></span><span class="queueStatusD3Canvas @id">0 / 0</span></div>
                 }
-                <div class="row metric"><span>Zoom(scale)</span><span class="zoomScaleD3Canvas @id">1.00x</span></div>
-                <div class="row compact">Ctrl/⌘ + Scroll: Zoom</div>
+                <div class="row metric"><span data-hud-label="Zoom(scale)"></span><span class="zoomScaleD3Canvas @id">1.00x</span></div>
+                <div class="row compact" data-hud-label="Ctrl/⌘ + Scroll: Zoom"></div>
             </div>
             <div class="hudPanel bottomRight @id">
                 <div class="row legend">
-                    <span class="dot root"></span>Root
-                    <span class="dot hop1"></span>@legendHop1
-                    <span class="dot hop2"></span>@legendHop2
+                    <span class="dot root"></span><span data-hud-label="Root"></span>
+                    <span class="dot hop1"></span><span data-hud-label="@legendHop1"></span>
+                    <span class="dot hop2"></span><span data-hud-label="@legendHop2"></span>
                 </div>
             </div>
         </div>

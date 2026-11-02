@@ -29,7 +29,10 @@
     </div>
 
     @if(wikiContext.renderingMode == logics.wikis.RenderingMode.Normal) {
-        @views.html.Wiki.adjacentPagesD3Canvas(id, enableWikiLink)
+        <script src="@logics.PublicAsset.url("js/AhaWiki.AdjacentPagesGraph.js")"></script>
+        <script type="text/javascript">
+            window.AhaWikiAdjacentPagesGraph.create('@id', @enableWikiLink);
+        </script>
 
         <script type="text/javascript">
             // The graph sits at the foot of the page, and its layout took 30 seconds of a phone's main
