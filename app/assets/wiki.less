@@ -1156,6 +1156,14 @@
 					opacity: 0.6;
 				}
 			}
+
+			// A phone starts collapsed. Left to the script, the page was drawn open and then jumped.
+			@media (max-width: 768px) {
+				&:not(.tocReady) .tocBody {
+					max-height: 26px;
+					opacity: 0.6;
+				}
+			}
 		}
 	}
 

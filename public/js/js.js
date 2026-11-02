@@ -223,6 +223,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 foldToggle = document.createElement('button');
                 foldToggle.type = 'button';
                 foldToggle.className = 'InterpreterRenderFoldToggle';
+                foldToggle.setAttribute('aria-label', 'Fold this section');
                 foldToggle.style.position = 'static';
                 foldToggle.style.display = 'inline-flex';
                 foldToggle.style.alignItems = 'center';

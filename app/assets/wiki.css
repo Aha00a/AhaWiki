@@ -3077,6 +3077,12 @@
   max-height: 26px;
   opacity: 0.6;
 }
+@media (max-width: 768px) {
+  .AhaWiki .wikiContent div.toc:not(.tocReady) .tocBody {
+    max-height: 26px;
+    opacity: 0.6;
+  }
+}
 .AhaWiki .Macro.BlockMacro {
   margin-left: var(--wiki-indent-body, 30px);
 }

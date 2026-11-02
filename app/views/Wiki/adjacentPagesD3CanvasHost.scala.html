@@ -32,10 +32,23 @@
         @views.html.Wiki.adjacentPagesD3Canvas(id, enableWikiLink)
 
         <script type="text/javascript">
+            // The graph sits at the foot of the page, and its layout took 30 seconds of a phone's main
+            // thread on a page nobody had scrolled through. It starts when it is about to be seen.
             $(function () {
-                setTimeout(function () {
+                var render = function () {
                     $(document).trigger('adjacent-pages-d3canvas:rerender-@(id)');
-                }, 100);
+                };
+                var wrapper = document.querySelector('.adjacentPagesGraphWrapper.@(id)');
+                if (typeof IntersectionObserver !== 'function' || !wrapper) {
+                    setTimeout(render, 100);
+                    return;
+                }
+                var observer = new IntersectionObserver(function (entries) {
+                    if (!entries[entries.length - 1].isIntersecting) return;
+                    observer.disconnect();
+                    render();
+                }, { rootMargin: '300px' });
+                observer.observe(wrapper);
             });
         </script>
     }

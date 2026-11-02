@@ -242,7 +242,7 @@ object InterpreterWiki extends TraitInterpreterOfPageContent {
       // broke out of the class attribute of a page that does not exist -- a reflected XSS.
       val idNotEmptyAttr = escapeHtmlAttr(idNotEmpty)
       arrayBufferHeading += s"${" " * (headingLength - 1)}${listStyle(headingLength - 1)} [#$idNotEmpty $titleForToc]"
-      arrayBuffer += s"""</div><div class="${escapeHtmlAttr(wrapperClass)}"><div class="InterpreterRenderMetaWrapper" style="position: relative;"$editDataAttrs><div class="InterpreterRenderContent"><h$headingLength id="$idNotEmptyAttr" class="${escapeHtmlAttr(headingClassAttribute)}"><a href="#$idNotEmptyAttr" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${inlineToHtmlString(title)}</h$headingLength></div></div>"""
+      arrayBuffer += s"""</div><div class="${escapeHtmlAttr(wrapperClass)}"><div class="InterpreterRenderMetaWrapper" style="position: relative;"$editDataAttrs><div class="InterpreterRenderContent"><h$headingLength id="$idNotEmptyAttr" class="${escapeHtmlAttr(headingClassAttribute)}"><a href="#$idNotEmptyAttr" aria-label="Link to this heading" class="headingNumber">${headingNumber.incrGet(headingLength - 1)}</a> ${inlineToHtmlString(title)}</h$headingLength></div></div>"""
     }
 
     override def list(indentString: String, style: String, content: String, lineNumber: Int): Unit = {
@@ -302,7 +302,7 @@ object InterpreterWiki extends TraitInterpreterOfPageContent {
       val suppressTocFinal = suppressToc || extractConvertInjectVariable.variables.get("toc").exists(_.toLowerCase == "false")
       if (!suppressTocFinal && arrayBufferHeading.length > 6)
         arrayBuffer.insert(0,
-          """<div class="toc" data-default-collapsed-mobile="true"><button type="button" class="tocToggle" aria-expanded="true"><i class="fas fa-chevron-down fa-fw"></i></button><div class="tocBody">""" +
+          """<div class="toc" data-default-collapsed-mobile="true"><button type="button" class="tocToggle" aria-label="Toggle table of contents" aria-expanded="true"><i class="fas fa-chevron-down fa-fw"></i></button><div class="tocBody">""" +
             InterpreterWiki.toHtmlString(arrayBufferHeading.mkString("\n")) +
             """</div></div>""")
 

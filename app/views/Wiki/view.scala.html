@@ -634,7 +634,7 @@
                     $toc.prepend($toggleButton);
                 }
                 var isMobile = window.matchMedia('(max-width: 768px)').matches;
-                $toc.toggleClass('collapsed', isMobile);
+                $toc.toggleClass('collapsed', isMobile).addClass('tocReady');
                 updateTocToggleLabel($toc, isMobile);
 
                 var toggleToc = function () {
@@ -724,7 +724,7 @@
         </div>
     }
     <div class="@(interpreter)">
-        <div class="wikiContent Page@title" data-wiki-writable="@(isWritable && oldRevision.isEmpty)">
+        <div role="main" class="wikiContent Page@title" data-wiki-writable="@(isWritable && oldRevision.isEmpty)">
             <div class="limitWidth">
                 @for((shown, last) <- oldRevision) {
                     <div class="oldRevisionNotice" role="note">
