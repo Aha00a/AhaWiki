@@ -44,7 +44,7 @@
 
  1. `nameEncoded`를 decode해 페이지명 복원
  2. 현재 host 기준 사이트(`Site`) 조회
- 3. 페이지 최신 리비전 컨텐츠를 기준으로 읽기 권한(`WikiPermission.isReadable`) 검사
+ 3. 페이지 이름으로 읽기 권한(`WikiPermission.isReadable`) 검사 — 2026-11-02 전에는 이 검사를 위해 최신 리비전 본문을 읽었는데, 판정은 본문을 보지 않는다. 지금은 리비전 번호만 읽는다(`Page.selectLastRevisionNumber`).
  4. 권한 없으면 `Forbidden("Permission denied.")` 반환
  5. 권한 있으면 WebSocket Flow를 생성
 

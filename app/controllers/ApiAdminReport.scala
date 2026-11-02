@@ -363,6 +363,8 @@ class ApiAdminReport @Inject()(
           .flatMap(raw => scala.util.Try(raw.toInt).toOption)
           .contains(1)
 
+        // Every site at once, so the per-site key of evolution 71 cannot serve the order; this
+        // reads Page_dateTime_isMinorEdit_viaApi_index (evolution 72) backward and stops at the LIMIT.
         val rows = SQL"""
           SELECT
             P.site AS site_seq,

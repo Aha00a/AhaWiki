@@ -300,6 +300,7 @@ CREATE TABLE `Page` (
   KEY `Page_site_name_revision_dateTime_user_index` (`site`,`name`,`revision`,`dateTime`,`user`),
   KEY `Page_UserApiKey_seq_fk` (`userApiKey`),
   KEY `Page_site_dateTime_revision_name_isMinorEdit_viaApi_index` (`site`,`dateTime`,`revision`,`name`,`isMinorEdit`,`viaApi`),
+  KEY `Page_dateTime_isMinorEdit_viaApi_index` (`dateTime`,`isMinorEdit`,`viaApi`),
   CONSTRAINT `Page_Site_seq_fk` FOREIGN KEY (`site`) REFERENCES `Site` (`seq`),
   CONSTRAINT `Page_UserApiKey_seq_fk` FOREIGN KEY (`userApiKey`) REFERENCES `UserApiKey` (`seq`) ON DELETE SET NULL,
   CONSTRAINT `Page_User_seq_fk` FOREIGN KEY (`user`) REFERENCES `User` (`seq`)

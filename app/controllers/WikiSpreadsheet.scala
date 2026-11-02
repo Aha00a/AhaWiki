@@ -62,7 +62,7 @@ class WikiSpreadsheet @Inject()(
           implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
           implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
           val pageContent = PageContent(page.content)
-          if (WikiPermission().isWritable(pageName, pageContent)) {
+          if (WikiPermission().isWritable(pageName, pageExists = true)) {
             def fetchTsv(id: String): String = {
               val googleSheetsApiKey = applicationConf.AhaWiki.google.credentials.api.GoogleSheetsAPI.key()
               val spreadsheet = Await.result(GoogleSpreadsheetApi.readSpreadSheet(googleSheetsApiKey, id, sheetName), 5 seconds)

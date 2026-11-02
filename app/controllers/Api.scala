@@ -271,7 +271,7 @@ class Api @Inject()(
       // skipped the check, and the number told anyone which private pages exist and how
       // often they change.
       val revision = Page.selectLastRevision(pageName)
-        .filter(page => WikiPermission().isReadable(pageName, Some(PageContent(page.content))))
+        .filter(_ => WikiPermission().isReadable(pageName))
         .map(_.revision).getOrElse(0L)
       // The only consumer (AhaWiki.Kanban.js fetchLatestRevision) reads `.revision` and
       // nothing else; the "status"/"pageName" fields and the Play-JSON detour were the
@@ -402,7 +402,7 @@ class Api @Inject()(
 
         case Some(page) =>
           val pageContent = PageContent(page.content)
-          if (!WikiPermission().isReadable(name, Some(pageContent))) {
+          if (!WikiPermission().isReadable(name)) {
             Forbidden(Json.obj(
               "success" -> Json.fromBoolean(false),
               "message" -> Json.fromString("Permission denied"),
@@ -451,7 +451,7 @@ class Api @Inject()(
         val wikiPermission = WikiPermission()
         val found = Page.pageSearch(name, UnlinkedMentions.ScanLimit)
         val linkSources = CalculatedLink.selectDst(name).map(_.src).toSet
-        val mentions = UnlinkedMentions.of(name, found, linkSources, r => wikiPermission.isReadable(r.name, Some(PageContent(r.content))))
+        val mentions = UnlinkedMentions.of(name, found, linkSources, r => wikiPermission.isReadable(r.name))
 
         Ok(Json.obj(
           "pages" -> Json.fromValues(mentions.take(UnlinkedMentions.ShowLimit).map(m => Json.obj(

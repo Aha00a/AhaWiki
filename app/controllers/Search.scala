@@ -7,7 +7,6 @@ import logics.ApplicationConf
 import logics.SiteLogic
 import logics.wikis.WikiPermission
 import models.ContextWikiPage
-import models.PageContent
 import models.WikiActors
 import play.api.Environment
 import play.api.Logging
@@ -47,10 +46,7 @@ controllerComponents: ControllerComponents,
     val seq: Seq[SearchResultSummary] = q.toOption.map(q =>
       found
         .take(SearchResult.MaxPages)
-        .filter(sr => {
-          val pageContent = PageContent(sr.content)
-          wikiPermission.isReadable(sr.name, pageContent)
-        })
+        .filter(sr => wikiPermission.isReadable(sr.name))
         .sortBy(_.dateTime)(Ordering[LocalDateTime].reverse)
         .partition(_.name == q)
         .concat()

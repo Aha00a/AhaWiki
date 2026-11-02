@@ -79,7 +79,7 @@
 
  * 정렬 키 셋(`dateTime`, `revision`, `name`)을 모두 내림차순으로 두어 키를 거꾸로 읽고 LIMIT 에서 멈춘다. `name` 만 오름차순이던 것을 바꿨다 — 한 키가 오름과 내림을 섞은 정렬을 받칠 수는 없다. `name` 은 같은 초에 같은 리비전 번호로 저장된 행 사이의 순서만 정하므로 화면에서 보이는 차이는 없다.
  * `isMinorEdit`·`viaApi` 를 뒤에 붙여 그 둘을 거르는 조건도 키 안에서 답한다.
- * 관리 화면의 전 site 최근 변경(`ApiAdminReport.adminRecentChanges`)은 site 조건이 없어 이 키를 쓰지 못하고 전체를 정렬한다. 관리자만 부르는 화면이라 두었다.
+ * 관리 화면의 전 site 최근 변경(`ApiAdminReport.adminRecentChanges`)은 site 조건이 없어 이 키를 쓰지 못한다. 처음에는 관리자만 부르는 화면이라 두었다가, 같은 날 evolution 72 의 `Page_dateTime_isMinorEdit_viaApi_index` 를 더했다(2026-11-02) — 이 화면은 정렬 키가 `dateTime` 하나라 그 키를 거꾸로 읽으면 된다.
  * 스펙은 H2 라 키가 플랜을 바꾸는지는 보여 주지 못한다. 운영 DB 에서 `EXPLAIN` 으로 볼 일이다.
 
 === 본문을 많이 읽는 두 경로 — blame 과 검색

@@ -127,7 +127,7 @@ class ApiV1 @Inject()(
         val wikiPermission = WikiPermission()
 
         val readablePages = selectLatestPages(prefix, limit)
-          .filter(page => wikiPermission.isReadable(page.name, Some(PageContent(page.content))))
+          .filter(page => wikiPermission.isReadable(page.name))
         val keyNames = UserApiKey.selectNamesBySeqs(readablePages.flatMap(_.userApiKey))
         val pages = readablePages.map(page => pageMetadataJson(page, page.userApiKey.flatMap(keyNames.get)))
 
@@ -159,7 +159,7 @@ class ApiV1 @Inject()(
           val found = Page.pageSearch(q.trim, bounded + 1)
           val readable = found
             .take(bounded)
-            .filter(r => wikiPermission.isReadable(r.name, Some(PageContent(r.content))))
+            .filter(r => wikiPermission.isReadable(r.name))
             .sortBy(_.dateTime)(Ordering[java.time.LocalDateTime].reverse)
 
           Ok(Json.obj(
@@ -191,7 +191,7 @@ class ApiV1 @Inject()(
             val pages = if (names.isEmpty) Seq.empty else Page.selectLastRevision(names)
             val pageByName = pages.map(page => page.name -> page).toMap
             val readablePages = names.flatMap(name => pageByName.get(name))
-              .filter(page => wikiPermission.isReadable(page.name, Some(PageContent(page.content))))
+              .filter(page => wikiPermission.isReadable(page.name))
             val readableNames = readablePages.map(_.name).toSet
             val existingNames = pages.map(_.name).toSet
             val forbiddenNames = names.filter(name => existingNames.contains(name) && !readableNames.contains(name))
@@ -293,7 +293,7 @@ class ApiV1 @Inject()(
         Page.selectLastRevision(name) match {
           case None =>
             JsonError(NotFound, "Page not found.")
-          case Some(page) if !WikiPermission().isReadable(name, Some(PageContent(page.content))) =>
+          case Some(_) if !WikiPermission().isReadable(name) =>
             JsonError(Forbidden, "Permission denied.")
           case Some(page) =>
             val userApiKeyName = page.userApiKey.flatMap(seq => UserApiKey.selectNamesBySeqs(Seq(seq)).get(seq))
@@ -337,7 +337,7 @@ class ApiV1 @Inject()(
 
                 val latestPage = Page.selectLastRevision(name)
                 val (latestText, latestRevision) = latestPage.map(page => (page.content, page.revision)).getOrElse(("", 0L))
-                if (!WikiPermission().isWritable(name, latestPage.map(page => PageContent(page.content)))) {
+                if (!WikiPermission().isWritable(name, pageExists = latestPage.isDefined)) {
                   JsonError(Forbidden, "Permission denied.")
                 } else if (revision != latestRevision) {
                   revisionConflict(latestRevision)

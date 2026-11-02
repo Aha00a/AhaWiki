@@ -3,7 +3,6 @@ package logics.wikis.macros
 import logics.wikis.PageSection
 import logics.wikis.interpreters.Interpreters
 import models.ContextWikiPage
-import models.PageContent
 import models.tables.CalculatedLink
 import models.tables.Site
 
@@ -37,7 +36,7 @@ object MacroInclude extends TraitMacro {
       val pageLastRevision = models.tables.Page.selectLastRevision(pageName)
       // The request's one WikiPermission: building one per include read the reader's e-mail
       // addresses again for each -- see ContextSite.wikiPermission.
-      if (wikiContext.wikiPermission.isReadable(pageName, pageLastRevision.map(s => PageContent(s.content)))) {
+      if (wikiContext.wikiPermission.isReadable(pageName)) {
         val included: ContextWikiPage = wikiContext.push(pageName)
         pageLastRevision.map(w => heading match {
           case None => Interpreters.toHtmlString(preprocessor(w.content))(included)

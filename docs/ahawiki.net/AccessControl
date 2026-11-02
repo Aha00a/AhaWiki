@@ -415,7 +415,7 @@ signed read URL은 `Permission` 테이블 밖의 예외 경로입니다. 아래 
 
 === 쓰기 권한 적용 지점
 
-쓰기(편집·생성)는 `WikiPermission.isWritable`로 판정합니다. 기존 페이지는 `Edit`, 없는 페이지는 `Create`가 필요합니다.
+쓰기(편집·생성)는 `WikiPermission.isWritable`로 판정합니다. 기존 페이지는 `Edit`, 없는 페이지는 `Create`가 필요합니다. 그래서 이 메서드가 페이지에 대해 받는 것은 '''있는지 없는지''' 하나다(`pageExists`). 2026-11-02 전에는 본문을 `Option[PageContent]` 로 받아 그 Some/None 만 보았고, 읽기 판정도 쓰지 않는 본문을 받았다 — 그래서 검색 결과 100개, unlinked mentions 500개를 거를 때마다 본문을 줄로 쪼개는 일이 권한 때문에 일어났다. 본문의 `#!read`·`#!write` 가 판정에 들지 않는다는 것은 위 «Legacy» 와 같다.
 
  * 없는 페이지의 `edit`
  * 기존 페이지의 `edit`

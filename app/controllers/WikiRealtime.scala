@@ -50,23 +50,21 @@ class WikiRealtime @Inject()(
       val name = PageNameUrl.decode(nameEncoded)
       implicit val provider: RequestWrapper = RequestWrapper()(request)
 
-      def latestRevisionAndContent(): (Long, Option[PageContent]) = {
+      def latestRevisionNumber(): Long = {
         database.withConnection { implicit connection =>
           implicit val site: Site = SiteLogic.get(request.host)
-          val latest = Page.selectLastRevision(name)
-          (latest.map(_.revision).getOrElse(0L), latest.map(v => PageContent(v.content)))
+          Page.selectLastRevisionNumber(name).getOrElse(0L)
         }
       }
 
       val siteForWs = database.withConnection { implicit connection =>
         SiteLogic.get(request.host)
       }
-      val (_, pageLastRevisionContent) = latestRevisionAndContent()
       val isReadable = database.withConnection { implicit connection =>
         implicit val site: Site = siteForWs
         val ctxSite = ContextSite.empty()(database, wikiActors, applicationConf, ahaWikiCache, site)
         val permission = WikiPermission()(provider, connection, ctxSite)
-        permission.isReadable(name, pageLastRevisionContent)
+        permission.isReadable(name)
       }
       if (!isReadable) {
         logger.warn(s"WebSocket watch denied: host=${request.host}, name=$name, uri=${request.uri}, remote=${request.remoteAddress}")

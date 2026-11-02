@@ -186,14 +186,13 @@ controllerComponents: ControllerComponents,
       // Revision 0 is the latest, which was just read. Page.select would read it a second time.
       val pageSpecificRevision = if (revision == 0) pageLastRevision else Page.select(name, revision)
 
-      val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
-      // The revision shown is usually the latest, which was split just above; renderReadablePage
-      // used to split it a second time.
-      val pageSpecificRevisionContent = if (revision == 0) pageLastRevisionContent else pageSpecificRevision.map(s => PageContent(s.content))
+      // The one split of the revision shown; renderReadablePage takes it rather than making its own.
+      val pageSpecificRevisionContent = pageSpecificRevision.map(s => PageContent(s.content))
+      val pageExists = pageLastRevision.isDefined
       val wikiPermission = contextWikiPage.wikiPermission
-      val hasReadPermissionRestriction = !wikiPermission.isReadableByAnonymous(name, pageLastRevisionContent)
-      val permissionDetail = Some(wikiPermission.detail(name, pageLastRevisionContent))
-      val isReadableByPermission = wikiPermission.isReadable(name, pageLastRevisionContent)
+      val hasReadPermissionRestriction = !wikiPermission.isReadableByAnonymous(name)
+      val permissionDetail = Some(wikiPermission.detail(name, pageExists))
+      val isReadableByPermission = wikiPermission.isReadable(name)
       val isReadableBySignedUrl = SignedReadUrlLogic.verifyReadRequest(
         host = request.host,
         name = name,
@@ -204,7 +203,7 @@ controllerComponents: ControllerComponents,
         secret = signedReadUrlSecret,
       )
       val isReadable = isReadableByPermission || isReadableBySignedUrl
-      val isWritable = wikiPermission.isWritable(name, pageLastRevisionContent)
+      val isWritable = wikiPermission.isWritable(name, pageExists)
       val isRenamable = wikiPermission.isRenamable(name)
       val isDeletable = wikiPermission.isDeletable(name)
 
@@ -216,7 +215,7 @@ controllerComponents: ControllerComponents,
           val fromTemplate: Option[String] = request.getQueryString("template")
             .filter(PageTemplate.isTemplate)
             .flatMap(templateName => Page.selectLastRevision(templateName)
-              .filter(template => wikiPermission.isReadable(templateName, Some(PageContent(template.content)))))
+              .filter(template => wikiPermission.isReadable(templateName)))
             .map(template => PageTemplate.fill(template.content, name, contextWikiPage.localDateNow))
           val content = fromTemplate.getOrElse(DefaultPageLogic.getOption(name).getOrElse(s"""= $name\n"""))
           val page = Page(name, 0, LocalDateTime.now(), Some("AhaWiki"), None, "127.0.0.1", "", isMinorEdit = false, content)
@@ -524,7 +523,7 @@ controllerComponents: ControllerComponents,
         }
         val willChangePagePermission = pagePermissionMode != pagePermissionModeKeep
 
-        if (!WikiPermission().isWritable(name, latestPage.map(page => PageContent(page.content)))) {
+        if (!WikiPermission().isWritable(name, pageExists = latestPage.isDefined)) {
           Forbidden("Permission denied.")
         } else if (revision != latestRevision) {
           Conflict("revision != latestRevision")

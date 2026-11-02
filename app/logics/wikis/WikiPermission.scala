@@ -3,7 +3,6 @@ package logics.wikis
 import logics.AhaWikiCacheMemoryPermission
 import logics.PermissionLogic
 import models.ContextSite
-import models.PageContent
 import models.RequestWrapper
 import models.tables.Permission
 import models.tables.UserEmail
@@ -77,14 +76,6 @@ class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: ()
   private lazy val actors: Seq[String] = actorProvider()
   private def actorLabel: String = actors.mkString(", ")
 
-  def isReadable(target: String, pageContent: Option[PageContent]): Boolean = {
-    isReadable(target)
-  }
-
-  def isReadable(target: String, pageContent: PageContent): Boolean = {
-    isReadable(target)
-  }
-
   def isReadable(target: String): Boolean = {
     permissionLogic.permitted(target, actors, Permission.Action.Read.id)
   }
@@ -96,21 +87,20 @@ class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: ()
   def isReadableRegardlessOfTarget: Option[Boolean] =
     if (permissionLogic.isTargetIndependent) Some(isReadable("")) else None
 
-  def isReadableByAnonymous(target: String, pageContent: Option[PageContent]): Boolean = {
-    isReadableByAnonymous(target)
-  }
-
   def isReadableByAnonymous(target: String): Boolean = {
     permissionLogic.permitted(target, "", Permission.Action.Read.id)
   }
 
-  def isWritable(target: String, pageContent: Option[PageContent]): Boolean = {
-    val action = pageContent.map(_ => Permission.Action.Edit.id).getOrElse(Permission.Action.Create.id)
+  /**
+   * Writing an existing page is Edit; writing one that does not exist is Create. Only whether the
+   * page exists matters. Until 2026-11-02 this took the page's content as an Option for that one
+   * bit, and every caller that had only the page read split its whole text into a PageContent
+   * to say so -- the search filtered a hundred results that way, unlinked mentions five hundred.
+   * The `#!read` and `#!write` directives in the text decide nothing (AccessControl).
+   */
+  def isWritable(target: String, pageExists: Boolean): Boolean = {
+    val action = if (pageExists) Permission.Action.Edit.id else Permission.Action.Create.id
     permissionLogic.permitted(target, actors, action)
-  }
-
-  def isWritable(target: String, pageContent: PageContent): Boolean = {
-    isWritable(target, Some(pageContent))
   }
 
   def isUploadable(target: String): Boolean = {
@@ -125,9 +115,9 @@ class WikiPermission private(permissionLogic: PermissionLogic, actorProvider: ()
     permissionLogic.permitted(target, actors, Permission.Action.Delete.id)
   }
 
-  def detail(target: String, pageContent: Option[PageContent]): WikiPermissionDetail = {
+  def detail(target: String, pageExists: Boolean): WikiPermissionDetail = {
     val currentActors = actors
-    val writeAction = pageContent.map(_ => Permission.Action.Edit.id).getOrElse(Permission.Action.Create.id)
+    val writeAction = if (pageExists) Permission.Action.Edit.id else Permission.Action.Create.id
 
     val anonymousReadPermission = permissionLogic.matched(target, "")
     val currentReadPermission = permissionLogic.matched(target, currentActors)

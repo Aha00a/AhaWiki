@@ -11,7 +11,6 @@ import logics.TelegramLogic
 import logics.wikis.PageLogic
 import logics.wikis.WikiPermission
 import models.ContextWikiPage
-import models.PageContent
 import models.WikiActors
 import play.api.data.Form
 import play.api.data.Forms._
@@ -49,9 +48,9 @@ class Diary @Inject()(implicit val
       val (latestText: String, latestRevision: Long) = latestPage.map(w => (w.content, w.revision)).getOrElse(("", 0L))
       val permission: WikiPermission = WikiPermission()
       // A missing page is a creation and needs Create, as it does everywhere else. Until
-      // 2026-09-12 the empty text was passed wrapped in Some, which reads as an existing page,
+      // 2026-09-12 the empty text was passed wrapped in Some, which read as an existing page,
       // so Edit alone created today's page.
-      if (permission.isWritable(name, latestPage.map(page => PageContent(page.content)))) {
+      if (permission.isWritable(name, pageExists = latestPage.isDefined)) {
         val body =
           if (latestText == "")
             s"[[DayHeader]]\n * $q"
