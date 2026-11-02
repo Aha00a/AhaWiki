@@ -51,6 +51,48 @@
 .wikiTableSimple {
 	.wikiTableSimple();
 }
+
+// #!Table marks a column whose body cells are all numbers (InterpreterTable.isNumericColumn) so the
+// digits line up on the right, as they did in the spreadsheet the table was pasted from. A column
+// named by `bar=` also carries, on each cell, where its bar starts and ends as two percentages of
+// the cell's width; the bar itself is painted here, so its colour follows the theme and the hue
+// like everything else on the page.
+//
+// It is a pseudo-element over the cell, not the cell's background: `tr:nth-child(even) td` above
+// writes the shorthand `background`, which would wipe a background-image on every other row, and a
+// background on the inner div would stop at the padding. The number stays text and the bar is
+// decoration -- it takes no pointer events, and the content is positioned so it paints above it.
+.InterpreterTable {
+	--bar-color: ~"hsla(var(--hue), 90%, 55%, 0.28)";
+	--bar-color-negative: hsla(0, 80%, 55%, 0.28);
+	html.theme-ahawiki-dark & {
+		--bar-color: ~"hsla(var(--hue), 90%, 65%, 0.35)";
+		--bar-color-negative: hsla(0, 80%, 65%, 0.35);
+	}
+	td.numeric {
+		text-align: right;
+		font-variant-numeric: tabular-nums;
+	}
+	td.dataBar {
+		position: relative;
+		&.negative {
+			--bar-color: var(--bar-color-negative);
+		}
+		&::before {
+			content: "";
+			position: absolute;
+			inset: 3px;
+			border-radius: 2px;
+			pointer-events: none;
+			background: ~"linear-gradient(to right, transparent 0 var(--bar-start), var(--bar-color) var(--bar-start) var(--bar-end), transparent var(--bar-end) 100%)";
+			-webkit-print-color-adjust: exact;
+			print-color-adjust: exact;
+		}
+		> div {
+			position: relative;
+		}
+	}
+}
 .revisionFlagColumn {
 	width: 34px;
 	min-width: 34px;

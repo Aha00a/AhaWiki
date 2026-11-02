@@ -46,6 +46,74 @@ object InterpreterBlockUnit {
       assertEquals(Interpreters.toHtmlString("#!table tsv 1 some \"bad\" classes\na\tb"), <table class="InterpreterTable wikiTableSimple tablesorter some classes"><thead><tr><th><div><p>a</p></div></th><th><div><p>b</p></div></th></tr></thead><tbody></tbody></table>.toString())
       assertEquals(Interpreters.toHtmlString("#!table tsv 1 \"bad\"\na\tb"), <table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>a</p></div></th><th><div><p>b</p></div></th></tr></thead><tbody></tbody></table>.toString())
       assertEquals(Interpreters.toHtmlString("#!table csv\n\"a,b\",c"), <table class="InterpreterTable wikiTableSimple tablesorter"><tbody><tr><td><div><p>a,b</p></div></td><td><div><p>c</p></div></td></tr></tbody></table>.toString())
+
+      // What a cell has to look like to be a number: a spreadsheet's spelling, thousands separators
+      // and all. The comma is a thousands separator, never a decimal mark.
+      import logics.wikis.interpreters.InterpreterTable.parseNumber
+      assertEquals(parseNumber("65,438,723"), Some(65438723.0))
+      assertEquals(parseNumber("-7%"), Some(-7.0))
+      assertEquals(parseNumber("+3"), Some(3.0))
+      assertEquals(parseNumber("−3"), Some(-3.0))
+      assertEquals(parseNumber("₩1,200.50"), Some(1200.5))
+      assertEquals(parseNumber(" 42 "), Some(42.0))
+      assertEquals(parseNumber("1,23"), None)
+      assertEquals(parseNumber("12 000"), None)
+      assertEquals(parseNumber("2025-01"), None)
+      assertEquals(parseNumber("-"), None)
+      assertEquals(parseNumber(""), None)
+      assertEquals(parseNumber(null), None)
+
+      // A column whose body cells are all numbers is numeric, and says so on each cell; a header
+      // row takes no part. Nothing else about the table changes -- same classes, same inner HTML.
+      assertEquals(
+        Interpreters.toHtmlString("#!table tsv 1\nName\tScore\nA\t10\nB\t2"),
+        """<table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Name</p></div></th><th><div><p>Score</p></div></th></tr></thead><tbody><tr><td><div><p>A</p></div></td><td class="numeric"><div><p>10</p></div></td></tr>""" + "\n" +
+          """<tr><td><div><p>B</p></div></td><td class="numeric"><div><p>2</p></div></td></tr></tbody></table>"""
+      )
+      // One word among the numbers and the column is text.
+      assertEquals(
+        Interpreters.toHtmlString("#!table tsv 1\nName\tScore\nA\t10\nB\tten"),
+        """<table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Name</p></div></th><th><div><p>Score</p></div></th></tr></thead><tbody><tr><td><div><p>A</p></div></td><td><div><p>10</p></div></td></tr>""" + "\n" +
+          """<tr><td><div><p>B</p></div></td><td><div><p>ten</p></div></td></tr></tbody></table>"""
+      )
+      // An empty cell, "-" and "n/a" are a spreadsheet's "no value": the column stays numeric and
+      // they are right-aligned with it, but they get no bar.
+      assertEquals(
+        Interpreters.toHtmlString("#!table tsv 1 bar=2\nName\tScore\nA\t10\nB\t-\nC\tn/a\nD\t"),
+        """<table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Name</p></div></th><th><div><p>Score</p></div></th></tr></thead><tbody><tr><td><div><p>A</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>10</p></div></td></tr>""" + "\n" +
+          """<tr><td><div><p>B</p></div></td><td class="numeric"><div><p>-</p></div></td></tr>""" + "\n" +
+          """<tr><td><div><p>C</p></div></td><td class="numeric"><div><p>n/a</p></div></td></tr>""" + "\n" +
+          """<tr><td><div><p>D</p></div></td><td class="numeric"><div></div></td></tr></tbody></table>"""
+      )
+      // A header column is a header whatever it holds; the body cell beside it is still judged.
+      assertEquals(
+        Interpreters.toHtmlString("#!table tsv 0 1\n1\t2"),
+        """<table class="InterpreterTable wikiTableSimple tablesorter"><tbody><tr><th><div><p>1</p></div></th><td class="numeric"><div><p>2</p></div></td></tr></tbody></table>"""
+      )
+
+      // bar= draws Excel's default data bar: from zero, in proportion, with the zero axis shared
+      // by the column when it has a negative value -- -5 against 10 puts the axis at a third.
+      val barred = """<table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Name</p></div></th><th><div><p>Score</p></div></th></tr></thead><tbody><tr><td><div><p>A</p></div></td><td class="numeric dataBar" style="--bar-start:33.3%;--bar-end:100.0%"><div><p>10</p></div></td></tr>""" + "\n" +
+        """<tr><td><div><p>B</p></div></td><td class="numeric dataBar negative" style="--bar-start:0.0%;--bar-end:33.3%"><div><p>-5</p></div></td></tr></tbody></table>"""
+      assertEquals(Interpreters.toHtmlString("#!table tsv 1 bar=2\nName\tScore\nA\t10\nB\t-5"), barred)
+      // By header text too, case aside -- and bar= is an option, not a class, while the words
+      // around it still are.
+      assertEquals(Interpreters.toHtmlString("#!table tsv 1 bar=score\nName\tScore\nA\t10\nB\t-5"), barred)
+      assertEquals(Interpreters.toHtmlString("#!table tsv 1 compact bar=2\nName\tScore\nA\t10\nB\t-5"), barred.replace("tablesorter\"", "tablesorter compact\""))
+      // Naming a text column, or a column that is not there, draws nothing and breaks nothing.
+      assertEquals(
+        Interpreters.toHtmlString("#!table tsv 1 bar=1,9\nName\tScore\nA\t10"),
+        """<table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Name</p></div></th><th><div><p>Score</p></div></th></tr></thead><tbody><tr><td><div><p>A</p></div></td><td class="numeric"><div><p>10</p></div></td></tr></tbody></table>"""
+      )
+      // bar=all: every numeric column, each on its own scale. Thousands separators and percent
+      // signs are read as the sheet meant them. A repeated value still runs from zero, so it fills
+      // its bar; a column of zeros has no range and gets none.
+      assertEquals(
+        Interpreters.toHtmlString("#!table tsv 1 bar=all\nMonth\tRevenue\tChange\tFlat\tZero\nJan\t65,438,723\t8%\t5\t0\nFeb\t119,526,353\t-8%\t5\t0"),
+        """<table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Month</p></div></th><th><div><p>Revenue</p></div></th><th><div><p>Change</p></div></th><th><div><p>Flat</p></div></th><th><div><p>Zero</p></div></th></tr></thead><tbody>""" +
+          """<tr><td><div><p>Jan</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:54.7%"><div><p>65,438,723</p></div></td><td class="numeric dataBar" style="--bar-start:50.0%;--bar-end:100.0%"><div><p>8%</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>5</p></div></td><td class="numeric"><div><p>0</p></div></td></tr>""" + "\n" +
+          """<tr><td><div><p>Feb</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>119,526,353</p></div></td><td class="numeric dataBar negative" style="--bar-start:0.0%;--bar-end:50.0%"><div><p>-8%</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>5</p></div></td><td class="numeric"><div><p>0</p></div></td></tr></tbody></table>"""
+      )
     }; testInterpreterTable()
 
     def testInterpreterWiki(): Unit = {
