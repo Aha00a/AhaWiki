@@ -130,7 +130,15 @@
         @body
 
         @if(contextSite.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key()) {
-            <script async defer src="https://maps.googleapis.com/maps/api/js?loading=async&libraries=marker&key=@(contextSite.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key())&callback=onGoogleMapLoaded"></script>
+            <script type="text/javascript">
+                // Only a #!Map pushes a callback, and the API is over 200KB that every other page would fetch.
+                if (arrayOnGoogleMapLoaded.length) {
+                    var mapsApiScript = document.createElement('script');
+                    mapsApiScript.async = true;
+                    mapsApiScript.src = 'https://maps.googleapis.com/maps/api/js?loading=async&libraries=marker&key=@(contextSite.applicationConf.AhaWiki.google.credentials.api.MapsJavaScriptAPI.key())&callback=onGoogleMapLoaded';
+                    document.body.appendChild(mapsApiScript);
+                }
+            </script>
         }
     </body>
 </html>
