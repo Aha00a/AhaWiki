@@ -1,4 +1,4 @@
-@(title: String, description: String, canonicalUrl: String = "", ogType: String = "website")(head: Html)(body: Html)(implicit contextSite: models.ContextSite)
+@(title: String, description: String, canonicalUrl: String = "", ogType: String = "website", socialImageUrl: Option[String] = None)(head: Html)(body: Html)(implicit contextSite: models.ContextSite)
 @hotKeyDescription(key: String) = @{
     key.toUpperCase match {
         case "S" => "Open search"
@@ -42,7 +42,7 @@
 } }
 @currentUserOpt = @{ contextSite.requestWrapper.getUser }
 @currentUserProfileImageUrl = @{ contextSite.requestWrapper.getUserProfileImageUrl }
-@_baseSkeleton(title, description, canonicalUrl, ogType){
+@_baseSkeleton(title, description, canonicalUrl, ogType, socialImageUrl){
     @views.html.Wiki.hotkey(enablePageActions = wikiContextOpt.isDefined)
     @head
 } {

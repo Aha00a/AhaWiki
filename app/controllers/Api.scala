@@ -371,17 +371,11 @@ class Api @Inject()(
     val trimmed = Option(raw).map(_.trim).getOrElse("")
     if (trimmed.isEmpty) {
       ""
-    } else if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-      trimmed
-    } else if (trimmed.startsWith("//")) {
-      s"${request.scheme}:$trimmed"
     } else if (trimmed.startsWith("attachment:")) {
       val objectKey = s"Attachment/${site.seq}/${trimmed.stripPrefix("attachment:")}"
       S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, objectKey).toOption.getOrElse("")
-    } else if (trimmed.startsWith("/")) {
-      s"${request.scheme}://${request.host}$trimmed"
     } else {
-      s"${request.scheme}://${request.host}/$trimmed"
+      logics.wikis.PageImageUrl.absolute(trimmed, request.scheme, request.host)
     }
   }
 

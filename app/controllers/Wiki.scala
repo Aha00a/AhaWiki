@@ -350,7 +350,8 @@ controllerComponents: ControllerComponents,
           }
           // `page` is the revision asked for, which is not always the latest: the view tells an old
           // revision apart by comparing it with pageLastRevision.
-          Ok(views.html.Wiki.view(name, description, interpreter, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction, permissionDetail, Some(page)))
+          val socialImageUrl = models.tables.PageMeta.select(name).flatMap(_.image).flatMap(logics.wikis.PageImageUrl.forSocialPreview(_, request.host))
+          Ok(views.html.Wiki.view(name, description, interpreter, contentInterpreted, isWritable, pageFirstRevision, pageLastRevision, hasReadPermissionRestriction, permissionDetail, Some(page), socialImageUrl))
       }
     }
     finally {

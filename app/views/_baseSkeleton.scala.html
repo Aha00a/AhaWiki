@@ -1,5 +1,5 @@
 @import models.ContextSite
-@(title: String, description: String, canonicalUrl: String = "", ogType: String = "website")(head: Html)(body: Html)(implicit contextSite: ContextSite)
+@(title: String, description: String, canonicalUrl: String = "", ogType: String = "website", socialImageUrl: Option[String] = None)(head: Html)(body: Html)(implicit contextSite: ContextSite)
 <!DOCTYPE html>
 
 <html lang="@logics.AhaWikiConfig.ContentLanguage">
@@ -8,7 +8,7 @@
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
         @* FrontPage is a name no reader searches for, and it is what a site's first result would say. *@
-        <title>@if(title != "FrontPage") {@title - }@contextSite.site.name - AhaWiki</title>
+        <title>@if(title == "FrontPage") {@contextSite.site.name - AhaWiki} else {@title - @contextSite.site.name}</title>
         <meta name="viewport" content="width=device-width,initial-scale=1">
         @if(contextSite.applicationConf.AhaWiki.google.reCAPTCHA.enabled()) {
             @* Read by AhaWiki.ReCaptcha.js, which asks for a token on each save. Present only when a save needs one. *@
@@ -20,6 +20,10 @@
         <meta name="twitter:title" content="@(title)">
         <meta property="og:type" content="@(ogType)" />
         <meta name="twitter:card" content="summary">
+        @for(imageUrl <- socialImageUrl) {
+            <meta property="og:image" content="@(imageUrl)" />
+            <meta name="twitter:image" content="@(imageUrl)">
+        }
 
         <meta name="description" content="@(description)" />
         <meta itemprop="description" content="@(description)">

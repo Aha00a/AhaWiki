@@ -51,7 +51,7 @@
 
 3·4 의 매크로는 페이지가 실제로 실행하는 것만 센다 — 코드 표기(백틱) 안의 것, 그리고 렌더러가 본문을 손대지 않는 블록 안의 것은 건너뛴다. 본문을 그대로 보여 주는 `#!Vim`·`#!Text`·`#!WikiSyntaxPreview` 와, 원문을 그대로 넘기는 `#!Kanban`·`#!Gantt`·`#!Mermaid`·`#!Math`·`#!Html` 이다(`PageLogic.markupOnly`, 렌더러가 백틱을 그대로 두는 블록과 같은 목록). 칸반 카드에 올린 첨부는 2 의 업로드된 `Attachment` 로 잡힌다. 2026-10-03 까지는 원문 전체에서 찾아서, 위 목록을 백틱으로 적은 이 페이지의 이미지가 `...` 이었고 이 페이지를 보여 주는 그래프마다 `/...` 을 요청해 404 를 받았다. [InterpreterKanban] 은 예시 카드의 `[[Attachment(path/to/file.png)]]` 가 이미지가 되어 역시 404 였다.
 
-이미지가 없으면 `NULL`로 저장한다. API(`pagePreview`, `links`)는 빈 문자열을 돌려주고, 화면 쪽 스크립트가 `attachmentFallback.svg` 를 대신 쓴다. `og:image`·`twitter:image` 는 내보내지 않는다(`_baseSkeleton.scala.html`). 2026-11-02 까지는 언제나 `attachmentFallback.svg` 였는데, 소셜 미리보기 대부분이 SVG 를 쓰지 않아 없는 것과 같았다. `PageMeta.image` 는 뷰로 넘어가지 않아, 대표 이미지가 있어도 소셜 미리보기에는 쓰이지 않는다 — 이것을 넘기는 것이 다음 할 일이다.
+이미지가 없으면 `NULL`로 저장한다. API(`pagePreview`, `links`)는 빈 문자열을 돌려주고, 화면 쪽 스크립트가 `attachmentFallback.svg` 를 대신 쓴다. `og:image`·`twitter:image` 는 대표 이미지가 있을 때만 내보낸다(`PageImageUrl.forSocialPreview`). 2026-11-02 까지는 언제나 `attachmentFallback.svg` 였는데, 소셜 미리보기 대부분이 SVG 를 쓰지 않아 없는 것과 같았다. `attachment:` 이미지도 내보내지 않는다 — 주소가 presigned 라 만료되고, 페이지 HTML 에 서명이 남는다.
 
 == Read Paths
 
