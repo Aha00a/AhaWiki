@@ -38,7 +38,8 @@
                 var render = function () {
                     $(document).trigger('adjacent-pages-d3canvas:rerender-@(id)');
                 };
-                var wrapper = document.querySelector('.adjacentPagesGraphWrapper.@(id)');
+                // Not querySelector: the id is a UUID, and one that starts with a digit is not a valid selector.
+                var wrapper = document.getElementsByClassName('adjacentPagesGraphWrapper @(id)')[0];
                 if (typeof IntersectionObserver !== 'function' || !wrapper) {
                     setTimeout(render, 100);
                     return;
