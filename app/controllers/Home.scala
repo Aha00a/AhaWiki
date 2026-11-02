@@ -44,7 +44,7 @@ class Home @Inject() (
       SitemapExcludedPageNameRegex.findFirstIn(name).isEmpty
 
   def index: Action[AnyContent] = Action { implicit request =>
-    Redirect(routes.Wiki.view("FrontPage", 0, "")).flashing(request.flash)
+    Redirect(routes.Wiki.view("FrontPage", 0, ""), MOVED_PERMANENTLY).flashing(request.flash)
   }
 
   def random: Action[AnyContent] = Action { implicit request =>

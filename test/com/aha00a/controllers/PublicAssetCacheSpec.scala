@@ -40,8 +40,8 @@ class PublicAssetCacheSpec extends PlaySpec with GuiceOneAppPerSuite {
       cacheControl("/public/wiki.css") must (not be empty and not be Some("no-cache"))
     }
 
-    "cache it the same way when v is the digest of the file served" in {
-      cacheControl(s"/public/wiki.css?v=${PublicAsset.versionOf("wiki.css").get}") mustBe cacheControl("/public/wiki.css")
+    "cache it for a year when v is the digest of the file served, since that address cannot change" in {
+      cacheControl(s"/public/wiki.css?v=${PublicAsset.versionOf("wiki.css").get}") mustBe Some("public, max-age=31536000, immutable")
     }
 
     "say no-cache when v is the digest of some other content" in {

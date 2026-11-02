@@ -27,6 +27,10 @@ class PublicAssets @Inject()(assets: Assets, cc: ControllerComponents)(implicit 
     assets.at("/public", file)(request).map { result =>
       request.getQueryString("v") match {
         case Some(v) if !PublicAsset.versionOf(file).contains(v) => result.withHeaders(CACHE_CONTROL -> "no-cache")
+        // The digest was checked just above, so this address can only ever mean this content. Only
+        // over a max-age: dev mode answers no-cache, and there a file can change under its digest.
+        case Some(_) if result.header.headers.get(CACHE_CONTROL).exists(_.contains("max-age")) =>
+          result.withHeaders(CACHE_CONTROL -> "public, max-age=31536000, immutable")
         case _ => result
       }
     }

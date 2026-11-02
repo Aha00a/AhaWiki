@@ -7,7 +7,8 @@
         <meta charset="UTF-8"/>
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-        <title>@title - @contextSite.site.name - AhaWiki</title>
+        @* FrontPage is a name no reader searches for, and it is what a site's first result would say. *@
+        <title>@if(title != "FrontPage") {@title - }@contextSite.site.name - AhaWiki</title>
         <meta name="viewport" content="width=device-width,initial-scale=1">
         @if(contextSite.applicationConf.AhaWiki.google.reCAPTCHA.enabled()) {
             @* Read by AhaWiki.ReCaptcha.js, which asks for a token on each save. Present only when a save needs one. *@
@@ -18,18 +19,15 @@
         <meta property="og:title" content="@(title)" />
         <meta name="twitter:title" content="@(title)">
         <meta property="og:type" content="@(ogType)" />
-        @defining(s"https://${contextSite.requestWrapper.host}/public/img/attachmentFallback.svg") { fallbackSocialImageUrl =>
-            <meta property="og:image" content="@(fallbackSocialImageUrl)" />
-            <meta name="twitter:image" content="@(fallbackSocialImageUrl)">
-        }
+        <meta name="twitter:card" content="summary">
 
         <meta name="description" content="@(description)" />
         <meta itemprop="description" content="@(description)">
         <meta property="og:description" content="@(description)" />
         <meta name="twitter:description" content="@(description)">
-        @defining(if(canonicalUrl.nonEmpty) canonicalUrl else s"https://${contextSite.requestWrapper.host}/") { resolvedCanonicalUrl =>
-            <link rel="canonical" href="@(resolvedCanonicalUrl)" />
-            <meta property="og:url" content="@(resolvedCanonicalUrl)" />
+        @if(canonicalUrl.nonEmpty) {
+            <link rel="canonical" href="@(canonicalUrl)" />
+            <meta property="og:url" content="@(canonicalUrl)" />
         }
 
         <link rel="icon" type="image/png" href="@logics.AhaWikiConfig.DefaultFaviconPath">
@@ -81,7 +79,7 @@
                 },
             };
         </script>
-        <script src="@logics.PublicAsset.url("vendor/mathjax/tex-chtml.js")"></script>
+        <script src="@logics.PublicAsset.url("js/AhaWiki.Math.js")" data-library="@logics.PublicAsset.url("vendor/mathjax/tex-chtml.js")"></script>
 
         <script src="@logics.PublicAsset.url("vendor/d3/d3.min.js")"></script>
         <script src="@logics.PublicAsset.url("vendor/sortablejs/Sortable.min.js")"></script>
@@ -100,8 +98,6 @@
         @if(contextSite.applicationConf.AhaWiki.google.AdSense.adClient()) {
             <script data-ad-client="@(contextSite.applicationConf.AhaWiki.google.AdSense.adClient())" async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
         }
-
-        <script src="@logics.PublicAsset.url("vendor/echarts/echarts.min.js")"></script>
 
         <script src="@logics.PublicAsset.url("vendor/dayjs/dayjs.min.js")"></script>
         <script src="@logics.PublicAsset.url("vendor/dayjs/plugin/duration.js")"></script>

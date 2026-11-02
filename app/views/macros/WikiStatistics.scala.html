@@ -1,4 +1,6 @@
 @for(id <- Seq(com.aha00a.commons.utils.UuidUtil.newString)) {
+    @* Here rather than in the page skeleton: this macro is the only wiki screen that draws with it. *@
+    <script src="@logics.PublicAsset.url("vendor/echarts/echarts.min.js")"></script>
     <div class="">
         <div id="@(id)3">
             <div class="statsGrid">

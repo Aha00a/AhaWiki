@@ -12,7 +12,8 @@ import play.api.libs.Codecs
  * the hour before a deploy therefore drew the new HTML with the old CSS and JS for up to an hour.
  * With the digest in the address, a file whose content changed is an address no browser has
  * cached, and a file that did not change keeps its address and its cache. The Assets controller
- * ignores the query string, so serving is unchanged. The wiki page Dev Deploying has what else
+ * ignores the query string, so serving is unchanged, and such an address is cached for a year
+ * (controllers.PublicAssets). The wiki page Dev Deploying has what else
  * was considered, why it lost, and what this still leaves open.
  *
  * Each file is read once per JVM. A release is a new directory and a restart, so a file cannot
