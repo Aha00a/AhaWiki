@@ -121,7 +121,7 @@
 }
 @_base(title, description, canonicalUrl, "article", socialImageUrl) {
     <script type="application/ld+json">@Html(logics.HtmlJson.stringify(jsonLdWebPage))</script>
-    <script src="@logics.PublicAsset.url("js/AhaWiki.PageView.js")" data-page-name="@title" data-old-revision="@oldRevision.isDefined"></script>
+    <script defer src="@logics.PublicAsset.url("js/AhaWiki.PageView.js")" data-page-name="@title" data-old-revision="@oldRevision.isDefined"></script>
 } {
     @if(showPermissionFlash) {
         <div class="flash" onclick="$(this).slideUp(function () {$(this).remove()})">
