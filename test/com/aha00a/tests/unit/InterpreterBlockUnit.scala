@@ -62,6 +62,8 @@ object InterpreterBlockUnit {
       assertEquals(parseNumber("-"), None)
       assertEquals(parseNumber(""), None)
       assertEquals(parseNumber(null), None)
+      // Digits past what a Double holds read as infinity, which would make NaN bars; not a number.
+      assertEquals(parseNumber("1" + "0" * 400), None)
 
       // A column whose body cells are all numbers is numeric, and says so on each cell; a header
       // row takes no part. Nothing else about the table changes -- same classes, same inner HTML.
@@ -100,9 +102,10 @@ object InterpreterBlockUnit {
       // around it still are.
       assertEquals(Interpreters.toHtmlString("#!table tsv 1 bar=score\nName\tScore\nA\t10\nB\t-5"), barred)
       assertEquals(Interpreters.toHtmlString("#!table tsv 1 compact bar=2\nName\tScore\nA\t10\nB\t-5"), barred.replace("tablesorter\"", "tablesorter compact\""))
-      // Naming a text column, or a column that is not there, draws nothing and breaks nothing.
+      // Naming a text column, a column that is not there, or a number no Int holds draws nothing
+      // and breaks nothing.
       assertEquals(
-        Interpreters.toHtmlString("#!table tsv 1 bar=1,9\nName\tScore\nA\t10"),
+        Interpreters.toHtmlString("#!table tsv 1 bar=1,9,99999999999\nName\tScore\nA\t10"),
         """<table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Name</p></div></th><th><div><p>Score</p></div></th></tr></thead><tbody><tr><td><div><p>A</p></div></td><td class="numeric"><div><p>10</p></div></td></tr></tbody></table>"""
       )
       // bar=all: every numeric column, each on its own scale. Thousands separators and percent

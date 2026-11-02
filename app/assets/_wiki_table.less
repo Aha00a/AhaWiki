@@ -65,9 +65,13 @@
 .InterpreterTable {
 	--bar-color: ~"hsla(var(--hue), 90%, 55%, 0.28)";
 	--bar-color-negative: hsla(0, 80%, 55%, 0.28);
-	html.theme-ahawiki-dark & {
-		--bar-color: ~"hsla(var(--hue), 90%, 65%, 0.35)";
-		--bar-color-negative: hsla(0, 80%, 65%, 0.35);
+	// Under `@media screen` for the same reason less.less keeps every dark token there: a page
+	// printed from the dark theme prints light, and the bar has to come out light with it.
+	@media screen {
+		html.theme-ahawiki-dark & {
+			--bar-color: ~"hsla(var(--hue), 90%, 65%, 0.35)";
+			--bar-color-negative: hsla(0, 80%, 65%, 0.35);
+		}
 	}
 	td.numeric {
 		text-align: right;

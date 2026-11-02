@@ -83,10 +83,16 @@ object InterpreterTable extends TraitInterpreter {
 
   private def normalizeCell(value: String): String = Option(value).getOrElse(defaultCellValue)
 
-  /** The number a cell holds, if it holds one. "1,234" is 1234 and "-7%" is -7. */
+  /**
+   * The number a cell holds, if it holds one. "1,234" is 1234 and "-7%" is -7. A string of digits
+   * too long for a Double reads as infinity, which the bar arithmetic would turn into NaN
+   * percentages; it is not a number here.
+   */
   def parseNumber(cell: String): Option[Double] = normalizeCell(cell).trim match {
     case regexNumber(sign, digits) =>
-      Try(digits.replace(",", "").toDouble).toOption.map(v => if (sign == "-" || sign == "−") -v else v)
+      Try(digits.replace(",", "").toDouble).toOption
+        .filter(v => !v.isInfinite)
+        .map(v => if (sign == "-" || sign == "−") -v else v)
     case _ => None
   }
 
@@ -123,9 +129,10 @@ object InterpreterTable extends TraitInterpreter {
     }
   }
 
-  // One decimal, a dot whatever the locale, "100.0%" at the far end. Only numbers reach style="".
+  // One decimal, a dot whatever the locale, "100.0%" at the far end and never past it: floating
+  // point can put the far end at 100.00000000000001. Only numbers reach style="".
   private def percent(ratio: Double): String =
-    JBigDecimal.valueOf(ratio).setScale(1, RoundingMode.HALF_UP).toPlainString + "%"
+    JBigDecimal.valueOf(math.max(0, math.min(100, ratio))).setScale(1, RoundingMode.HALF_UP).toPlainString + "%"
 
   /**
    * What the table knows about its columns before it draws a cell: which columns are numeric, and
@@ -156,7 +163,7 @@ object InterpreterTable extends TraitInterpreter {
       val header: Seq[String] = if (shebang.thRow > 0) rows.headOption.getOrElse(Seq.empty).map(cell => normalizeCell(cell).trim) else Seq.empty
       val named: Set[Int] = shebang.bars.flatMap {
         case "all" => numeric
-        case ref if ref.forall(_.isDigit) => Seq(ref.toInt - 1)
+        case ref if ref.forall(_.isDigit) => ref.toIntOption.map(_ - 1).toSeq // a number too long for an Int names no column
         case ref => header.indices.filter(columnIndex => header(columnIndex).equalsIgnoreCase(ref))
       }.toSet
       val barScales = numeric.filter(named.contains).flatMap(columnIndex =>
