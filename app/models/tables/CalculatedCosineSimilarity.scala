@@ -24,8 +24,16 @@ object CalculatedCosineSimilarity {
 
   // One transaction, so a reader of SimilarPages sees the page's similarities before or after,
   // never with them deleted and not yet inserted -- see CalculatedTermFrequency.replace.
-  def recalc(name: String)(implicit connection: Connection, site: Site): Int = LocalTransaction.retryingDeadlock {
+  //
+  // `excludedTerms` are left out of the dot product: the terms too common to say which pages are
+  // alike (PageLogic.MaxDocumentFrequencyRatio). They stay in the stored vectors, so the count
+  // that names them is read from vectors the cut has not touched. Leaving them out on TF2's side
+  // is enough -- TF1 joins on TF2's terms. The page's own norm leaves them out too
+  // (CalculatedTermFrequency.replaceNorm); a candidate's norm leaves out what was common when it
+  // was calculated. An empty list excludes nothing: no term has seq -1.
+  def recalc(name: String, excludedTerms: Seq[Long] = Seq.empty)(implicit connection: Connection, site: Site): Int = LocalTransaction.retryingDeadlock {
     delete(name)
+    val excluded = if (excludedTerms.isEmpty) Seq(-1L) else excludedTerms
     SQL"""
 INSERT INTO CalculatedCosineSimilarity (site1, name1, site2, name2, similarity)
 SELECT
@@ -45,6 +53,7 @@ FROM (
     WHERE
         TF2.site = ${site.seq}
         AND TF2.name = $name
+        AND TF2.term NOT IN ($excluded)
         AND NOT (TF1.site = ${site.seq} AND TF1.name = $name)
     GROUP BY TF1.site, TF1.name
 ) CandidateDot

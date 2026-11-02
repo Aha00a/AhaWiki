@@ -13,7 +13,7 @@ import scala.util.matching.Regex
 
 
 
-object InterpreterWiki extends TraitInterpreter {
+object InterpreterWiki extends TraitInterpreterOfPageContent {
 
   /**
    * A heading line: the `=`s, an optional collapse marker, the title, and an optional closing run
@@ -506,9 +506,6 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
 
-  override def toHtmlString(content: String)(implicit wikiContext:ContextWikiPage):String =
-    toHtmlString(PageContent(content))
-
   override def toHtmlString(pageContent: PageContent)(implicit wikiContext: ContextWikiPage): String = {
     val handler = new HandlerToHtmlString(pageContent)
     handler.process()
@@ -530,8 +527,7 @@ object InterpreterWiki extends TraitInterpreter {
     handler.process()
   }
 
-  override def toSeqLink(content:String)(implicit wikiContext: ContextWikiPage):Seq[CalculatedLink] = {
-    val pageContent: PageContent = PageContent(content)
+  override def toSeqLink(pageContent: PageContent)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
     pageContent.redirect match {
       case Some(v) => Seq(CalculatedLink(wikiContext.name, v, "redirect"))
       case None =>
@@ -540,8 +536,7 @@ object InterpreterWiki extends TraitInterpreter {
     }
   }
 
-  override def toSeqSchemaOrg(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedSchemaOrg] = {
-    val pageContent: PageContent = PageContent(content)
+  override def toSeqSchemaOrg(pageContent: PageContent)(implicit wikiContext: ContextWikiPage): Seq[CalculatedSchemaOrg] = {
     pageContent.redirect match {
       case Some(_) => Seq()
       case None =>

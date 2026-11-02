@@ -17,4 +17,12 @@ class PageLogicTermCutoffSpec extends AnyFreeSpec {
       assert(PageLogic.documentFrequencyCutoff(100) === PageLogic.MinDocumentFrequencyCutoff)
     }
   }
+
+  "commonTermsOf" - {
+    "counts the page itself on top of the others, and keeps a term at the cutoff" in {
+      val others = Map(1L -> 20, 2L -> 19, 3L -> 25)
+      // 1: 20 others + itself = 21 > 20, common. 2: 19 + 1 = 20, not. 3: common. 4: nobody else, not.
+      assert(PageLogic.commonTermsOf(Seq(1L, 2L, 3L, 4L), others, cutoff = 20) === Seq(1L, 3L))
+    }
+  }
 }

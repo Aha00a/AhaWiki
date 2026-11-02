@@ -69,7 +69,9 @@
 
 === 보기 한 번이 묻는 것
 
-`Wiki.renderView` 는 최신 리비전을 본문째 한 번 읽고(그려야 하니), 첫 리비전은 `Page.selectFirstRevision` 으로 본문 없이 읽는다 — 화면은 만든 사람과 날짜만 쓴다. 2026-11-01 까지는 첫 리비전도 본문째였다. 요청 하나에 한 번이면 되는 값은 `ContextSite` 가 들고 있다: 독자의 권한(`ContextSite.wikiPermission`, 만들 때 `UserEmail` 을 읽으므로 include 마다 새로 만들면 그만큼 다시 읽는다), favicon 주소(`ContextSite.siteFavicon`), 기본 색조(`ContextSite.defaultHue`), 그리고 아래의 페이지 목록들.
+`Wiki.renderView` 는 최신 리비전을 본문째 한 번 읽고(그려야 하니), 첫 리비전은 `Page.selectFirstRevision` 으로 본문 없이 읽는다 — 화면은 만든 사람과 날짜만 쓴다. 2026-11-01 까지는 첫 리비전도 본문째였다. 요청 하나에 한 번이면 되는 값은 `ContextSite` 가 들고 있다: 독자의 권한(`ContextSite.wikiPermission`, 만들 때 `UserEmail` 을 읽으므로 include 마다 새로 만들면 그만큼 다시 읽는다), favicon 주소(`ContextSite.siteFavicon`), 기본 색조(`ContextSite.defaultHue`), 닉네임별 프로필 이미지 주소(`ContextSite.profileImageUrlByNickname`, [Dev Cache] «UserProfileImageUrl»), 그리고 아래의 페이지 목록들.
+
+본문을 줄로 쪼개는 `PageContent` 도 한 번이다. 보기는 보여 줄 리비전을 한 번 쪼개 `renderReadablePage` 에 넘기고, `Interpreters` 는 인터프리터를 고르느라 쪼갠 것을 그 인터프리터에 그대로 준다(`TraitInterpreterOfPageContent` — `InterpreterWiki` 와 `Interpreters` 가 그것이다. 다른 인터프리터는 문자열을 받아 전처럼 스스로 쪼갠다). 계산(`PageLogic.calculate`)도 한 번 쪼개 글·링크·schema.org 를 읽는다. 2026-11-01 까지는 보기에서 둘, 계산에서 다섯이었다. 설명을 뽑는 `PageLogic.extractDescription` 은 schema 블록을 뗀 다른 문자열을 그리므로 따로 쪼갠다.
 
 === 시간순 읽기 — 최근 변경
 

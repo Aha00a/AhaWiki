@@ -348,10 +348,10 @@ controllerComponents: ControllerComponents,
               ("Wiki", Interpreters.toHtmlString(page.content + additionalInfo))
             case Some("Paper") =>
               // additionalInfo (See Also and the rest) is rendered outside the paper, on the page's own surface color.
-              ("Paper", Interpreters.toHtmlString(page.content) +
+              ("Paper", Interpreters.toHtmlString(pageContent) +
                 s"""<div class="paperAdditionalSection">${Interpreters.toHtmlString(additionalInfo)}</div>""")
             case Some(other) =>
-              (other, s"""<h1>$name</h1>""" + Interpreters.toHtmlString(page.content) + Interpreters.toHtmlString(additionalInfo))
+              (other, s"""<h1>$name</h1>""" + Interpreters.toHtmlString(pageContent) + Interpreters.toHtmlString(additionalInfo))
           }
           // `page` is the revision asked for, which is not always the latest: the view tells an old
           // revision apart by comparing it with pageLastRevision.

@@ -63,8 +63,8 @@ class CalculatedTermFrequencySpec extends AnyFreeSpec {
     """.as((anorm.SqlParser.long("term") ~ anorm.SqlParser.int("frequency")).*)
       .map(anorm.SqlParser.flatten).toMap
 
-  "selectDocumentFrequency" - {
-    "counts the pages holding each term, over every site, and leaves out terms nobody holds" in {
+  "selectDocumentFrequencyOfOthers" - {
+    "counts the other pages holding each term, over every site, and leaves out terms nobody else holds" in {
       withConnection { implicit connection =>
         implicit val site: Site = Site(1, "SiteA", "SiteA", "site1.example")
         CalculatedTermFrequency.replace("Foo", Seq((1L, 10), (2L, 1)))
@@ -75,12 +75,29 @@ class CalculatedTermFrequencySpec extends AnyFreeSpec {
         ).foreach(sql => SQL(sql).execute())
         CalculatedTermFrequency.replace("Baz", Seq((1L, 3)))(connection, Site(2, "SiteB", "SiteB", "site2.example"))
 
-        assert(CalculatedTermFrequency.selectDocumentFrequency(Seq(1L, 2L, 999L)) === Map(1L -> 2, 2L -> 1))
-        assert(CalculatedTermFrequency.selectDocumentFrequency(Seq.empty) === Map.empty)
+        // Foo holds 1 and 2, Baz holds 1: seen from Foo, one other page holds 1 and none holds 2.
+        assert(CalculatedTermFrequency.selectDocumentFrequencyOfOthers(Seq(1L, 2L, 999L), "Foo") === Map(1L -> 1))
+        assert(CalculatedTermFrequency.selectDocumentFrequencyOfOthers(Seq.empty, "Foo") === Map.empty)
         assert(CalculatedTermFrequency.countCalculatedPages() === 2L)
       }
     }
   }
+
+  "replaceNorm" - {
+    "leaves the excluded terms out of the norm while the frequencies keep them" in {
+      withConnection { implicit connection =>
+        implicit val site: Site = Site(1, "SiteA", "SiteA", "site1.example")
+        CalculatedTermFrequency.replace("Foo", Seq((1L, 3), (2L, 4)), excludedFromNorm = Seq(1L))
+        assert(frequencies("Foo") === Map(1L -> 3, 2L -> 4))
+        assert(norm("Foo") === 4.0)
+        CalculatedTermFrequency.replace("Foo", Seq((1L, 3), (2L, 4)))
+        assert(norm("Foo") === 5.0)
+      }
+    }
+  }
+
+  private def norm(name: String)(implicit connection: Connection): Double =
+    SQL"SELECT norm FROM CalculatedTermFrequencyNorm WHERE site = 1 AND name = $name".as(anorm.SqlParser.double("norm").single)
 
   "CalculatedTerm.insert" - {
     "inserting a term that lost the select-then-insert race keeps the winner's seq" in {

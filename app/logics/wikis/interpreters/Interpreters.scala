@@ -7,7 +7,7 @@ import play.api.Logging
 
 import scala.util.control.NonFatal
 
-object Interpreters extends TraitInterpreter with Logging {
+object Interpreters extends TraitInterpreterOfPageContent with Logging {
 
   import models.tables.CalculatedLink
   import models.tables.CalculatedSchemaOrg
@@ -65,9 +65,6 @@ object Interpreters extends TraitInterpreter with Logging {
     }
   }
 
-  override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String =
-    toHtmlString(PageContent(content))
-
   override def toHtmlString(pageContent: PageContent)(implicit wikiContext: ContextWikiPage): String = {
     getInterpreter(pageContent)
       .map(render(_, pageContent))
@@ -92,17 +89,15 @@ object Interpreters extends TraitInterpreter with Logging {
         MacroError.toHtmlString(s"#!${interpreter.name} failed - ${e.toString.escapeHtml()}")
     }
 
-  override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
-    val pageContent: PageContent = PageContent(content)
+  override def toSeqLink(pageContent: PageContent)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] = {
     getInterpreter(pageContent)
-      .map(_.toSeqLink(content))
+      .map(_.toSeqLink(pageContent))
       .getOrElse(Seq())
   }
 
-  override def toSeqSchemaOrg(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedSchemaOrg] = {
-    val pageContent: PageContent = PageContent(content)
+  override def toSeqSchemaOrg(pageContent: PageContent)(implicit wikiContext: ContextWikiPage): Seq[CalculatedSchemaOrg] = {
     getInterpreter(pageContent)
-      .map(_.toSeqSchemaOrg(content))
+      .map(_.toSeqSchemaOrg(pageContent))
       .getOrElse(Seq())
   }
 }

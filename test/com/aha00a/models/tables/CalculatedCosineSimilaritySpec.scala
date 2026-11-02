@@ -40,6 +40,29 @@ class CalculatedCosineSimilaritySpec extends AnyFreeSpec {
         connection.close()
       }
     }
+
+    "leaves an excluded term out of the dot product, so pages that share only it are not alike" in {
+      Class.forName("org.h2.Driver")
+      val connection = DriverManager.getConnection("jdbc:h2:mem:ccs_excluded;MODE=MySQL;DB_CLOSE_DELAY=-1")
+      try {
+        setupSchema(connection)
+        insertFixture(connection)
+
+        implicit val implicitConnection: Connection = connection
+        implicit val site: Site = Site(1, "SiteOne", "S1", "site1.example")
+
+        // Term 1 is the only term Bar and Baz share with Foo; term 2 is Foo's alone.
+        CalculatedCosineSimilarity.recalc("Foo", excludedTerms = Seq(1L))
+        assert(CalculatedCosineSimilarity.selectSameSite("Foo") === Nil)
+        assert(CalculatedCosineSimilarity.selectCrossSite("Foo") === Nil)
+
+        // The stored vectors are untouched: the next calculation without the exclusion finds them again.
+        CalculatedCosineSimilarity.recalc("Foo")
+        assert(CalculatedCosineSimilarity.selectSameSite("Foo").map(_.name2) === Seq("Bar"))
+      } finally {
+        connection.close()
+      }
+    }
   }
 
   private def setupSchema(connection: Connection): Unit = {

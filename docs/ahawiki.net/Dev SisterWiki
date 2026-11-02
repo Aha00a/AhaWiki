@@ -55,7 +55,7 @@ Sister Wiki 기능은 여러 AhaWiki site 사이의 같은 이름 문서와 유�
  * `site1 != site2` row는 sister wiki 유사도로 취급한다.
  * FK는 최신 문서 단위인 `PageMeta(site, name)`을 참조한다.
  * 계산 원천은 `CalculatedTermFrequency`의 term vector이다.
- * term vector 에는 전체 계산된 페이지의 1/5 넘게 가진 term 을 넣지 않는다(2026-11-01, `PageLogic.MaxDocumentFrequencyRatio`, 페이지 수가 적을 때의 바닥은 `MinDocumentFrequencyCutoff`). 유사도는 그 페이지의 term 마다 그 term 을 가진 모든 페이지와 조인하므로 거의 모든 페이지가 가진 조사·«페이지»·«위키» 같은 term 이 일의 대부분이고 어느 페이지가 닮았는지는 말해 주지 않는다. 불용어 목록(영어 11개)은 그 앞에 그대로 있다. 걸러낼 term 은 계산할 때 `CalculatedTermFrequency.selectDocumentFrequency` 로 세므로, 두 페이지 사이에서 그 term 이 빠지는 것은 둘이 모두 다시 계산된 뒤다.
+ * 전체 계산된 페이지의 1/5 넘게 가진 term 은 유사도에서 뺀다 — 내적(`recalc` 의 `excludedTerms`)과 그 페이지의 norm(`CalculatedTermFrequency.replaceNorm`)에서(2026-11-01, `PageLogic.MaxDocumentFrequencyRatio`, 페이지 수가 적을 때의 바닥은 `MinDocumentFrequencyCutoff`). 유사도는 그 페이지의 term 마다 그 term 을 가진 모든 페이지와 조인하므로 거의 모든 페이지가 가진 조사·«페이지»·«위키» 같은 term 이 일의 대부분이고 어느 페이지가 닮았는지는 말해 주지 않는다. `seqStopWord` 의 영어 불용어는 그 앞에 그대로 있다. 저장하는 벡터에는 그 term 도 그대로 둔다 — 공통 여부는 `CalculatedTermFrequency.selectDocumentFrequencyOfOthers` 로 그 벡터들을 세어 정하므로, 벡터에서 뺐다면 셀 때마다 수가 줄어 cutoff 에서 진동했을 것이다(ToDo 2026-11-02). 상대 페이지의 norm 은 그 페이지가 계산될 때 흔했던 term 을 뺀 것이다. `selectHighScoredTerm` 이 보여 주는 공통 단어에는 흔한 term 도 들어간다 — 전에도 그랬다.
  * similarity threshold는 `similarity > 0.3`이다.
  * 자기 자신 row는 저장하지 않는다.
  * 계산 시 현재 문서가 `site1/name1` 또는 `site2/name2`에 포함된 기존 row를 삭제한 뒤 다시 계산한다.

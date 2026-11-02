@@ -175,21 +175,29 @@ object PageLogic {
   val ViewRecalculationInterval: java.time.Duration = java.time.Duration.ofDays(1)
 
   /**
-   * A term held by more than this share of all calculated pages is left out of a page's term
-   * vector, and so out of its similarity.
+   * A term held by more than this share of all calculated pages is left out of a page's
+   * similarity: out of the dot product and out of the page's norm.
    *
    * The similarity of a page is a join of its terms against every page that shares one, so a
    * term's cost is the number of pages holding it, and a handful of terms that nearly every page
    * holds -- particles, "page", "wiki" -- are most of the work and say nothing about which pages
-   * are alike. Eleven English stop words were the whole list until 2026-11-01; the wiki is mostly
-   * Korean. Measured on the 130 wiki pages in this repository (tokenised the same way): 64 of
-   * 12,299 terms stood in more than a fifth of the pages and made 38% of the join work, the
-   * squared frequencies summed. A fifth keeps a term that a strong theme of the wiki shares.
+   * are alike. The English stop words in `seqStopWord` were the whole defence until 2026-11-01;
+   * the wiki is mostly Korean. Measured on the 130 wiki pages in this repository (tokenised the
+   * same way): 64 of 12,299 terms stood in more than a fifth of the pages and made 38% of the
+   * join work, the squared frequencies summed. A fifth keeps a term that a strong theme of the
+   * wiki shares.
    *
-   * The cut applies when a page is calculated, so two pages agree on a term only once both have
-   * been calculated under it; until then the term still counts between them. The similarity
-   * sections therefore change gradually, and a deploy's page-by-page comparison will show them
-   * differing. Setting the ratio above 1 restores the old vectors at the next calculation.
+   * The common terms stay in the stored vectors. The first version dropped them from the vector
+   * itself, and the count that decides which terms are common was read from those same vectors:
+   * each page calculated under the cut lowered the count by one, until it fell to the cutoff and
+   * the next page kept the term again -- every common term would have settled at the cutoff with
+   * a holder set that changed on every recalculation, which the daily recalculation from views
+   * would never let rest. Read from vectors the cut does not touch, the count is a fact about the
+   * text, and the decision is the same on every calculation.
+   *
+   * The cut applies when a page is calculated, so a pair of pages agrees on a term once the one
+   * being compared has been calculated under it. Setting the ratio above 1 restores the old
+   * similarity at the next calculation of each page.
    */
   val MaxDocumentFrequencyRatio: Double = 0.2
 
@@ -199,9 +207,17 @@ object PageLogic {
    */
   val MinDocumentFrequencyCutoff: Long = 20
 
-  /** The document frequency above which a term is dropped, for a corpus of this many pages. */
+  /** The document frequency above which a term is left out, for a corpus of this many pages. */
   def documentFrequencyCutoff(calculatedPages: Long): Long =
     math.max(MinDocumentFrequencyCutoff, math.ceil(calculatedPages * MaxDocumentFrequencyRatio).toLong)
+
+  /**
+   * The terms of a page that are too common to count, given how many other pages hold each
+   * (`documentFrequencyOfOthers`, absent for a term no other page holds). The page holds every one
+   * of its own terms, so its own count is the others' plus one.
+   */
+  def commonTermsOf(terms: Seq[Long], documentFrequencyOfOthers: Map[Long, Int], cutoff: Long): Seq[Long] =
+    terms.filter(term => documentFrequencyOfOthers.getOrElse(term, 0) + 1 > cutoff)
 
   /** True when the page was calculated at its latest revision less than ViewRecalculationInterval
     * ago. No row, no update time or a revision behind the latest all mean it was not. */
@@ -238,7 +254,9 @@ object PageLogic {
         // revision that is gone; the request that removed it queues its own calculation.
         logger.info(s"\t\tCalculate: ${site.name}(${site.seq})\t$name\trevision ${page.revision} is gone, skipped")
       } else {
-        val text = Interpreters.toText(page.content)
+        // Split once; the text, the links and the schema.org rows are all read from this.
+        val pageContent = PageContent(page.content)
+        val text = Interpreters.toText(pageContent)
         if (!text.isNullOrEmpty) {
           val seqWord = decodePercentEncodedText(text)
             .replaceAll("""([a-z])([A-Z])""", "$1 $2")
@@ -256,29 +274,30 @@ object PageLogic {
           val seqWordCountSorted = wordCount.toSeq.sortBy(-_._2)
 
           val termByWord = CalculatedTerm.ensureSeqByTerm(seqWordCountSorted.map(_._1))
-          val cutoff = documentFrequencyCutoff(CalculatedTermFrequency.countCalculatedPages())
-          val documentFrequency = CalculatedTermFrequency.selectDocumentFrequency(termByWord.values.toSeq)
-          val seqTermFrequency = seqWordCountSorted.flatMap { case (term, frequency) =>
-            termByWord.get(term)
-              .filterNot(seq => documentFrequency.getOrElse(seq, 0) > cutoff)
-              .map(_ -> frequency)
-          }
-          CalculatedTermFrequency.replace(name, seqTermFrequency)
+          val seqTermFrequency = seqWordCountSorted.flatMap { case (term, frequency) => termByWord.get(term).map(_ -> frequency) }
+          // Every term is stored; the common ones are left out of the norm and the dot product.
+          // Counted among the other pages, plus this one, which holds each of its own terms.
+          val commonTerms = commonTermsOf(
+            termByWord.values.toSeq,
+            CalculatedTermFrequency.selectDocumentFrequencyOfOthers(termByWord.values.toSeq, name),
+            documentFrequencyCutoff(CalculatedTermFrequency.countCalculatedPages()),
+          )
+          CalculatedTermFrequency.replace(name, seqTermFrequency, excludedFromNorm = commonTerms)
 
           if(verbose)
             logger.info(seqWordCountSorted.take(10).mkString(" "))
 
-          CalculatedCosineSimilarity.recalc(name)
+          CalculatedCosineSimilarity.recalc(name, excludedTerms = commonTerms)
         } else {
           CalculatedTermFrequency.delete(name)
           CalculatedCosineSimilarity.delete(name)
         }
 
-        val seqLink = Interpreters.toSeqLink(page.content).filterNot(_.isDstExternal) ++ Seq(CalculatedLink(page.name, "", ""))
+        val seqLink = Interpreters.toSeqLink(pageContent).filterNot(_.isDstExternal) ++ Seq(CalculatedLink(page.name, "", ""))
         CalculatedLink.delete(name)
         CalculatedLink.insert(seqLink)
 
-        val seqSchemaOrg: Seq[CalculatedSchemaOrg] = Interpreters.toSeqSchemaOrg(page.content)
+        val seqSchemaOrg: Seq[CalculatedSchemaOrg] = Interpreters.toSeqSchemaOrg(pageContent)
         CalculatedSchemaOrg.delete(name)
         CalculatedSchemaOrg.insert(seqSchemaOrg)
       }

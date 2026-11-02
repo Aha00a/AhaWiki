@@ -48,11 +48,12 @@ object CalculatedTermFrequency {
   }
 
   /**
-   * How many calculated pages, over every site, hold each of these terms. Terms nobody holds are
-   * absent. One query on the index that leads with `term`, which is the same index the
-   * similarity join walks -- this asks for the width of what that join would walk.
+   * How many other calculated pages, over every site, hold each of these terms -- this page's own
+   * rows left out, so the answer is the same whether the page held the term before or not.
+   * Terms nobody else holds are absent. One query on the index that leads with `term`, which is
+   * the index the similarity join walks: this asks for the width of what that join would walk.
    */
-  def selectDocumentFrequency(terms: Seq[Long])(implicit connection: Connection): Map[Long, Int] = {
+  def selectDocumentFrequencyOfOthers(terms: Seq[Long], name: String)(implicit connection: Connection, site: Site): Map[Long, Int] = {
     val distinctTerms = terms.distinct
     // `IN ()` is a syntax error, not an empty match -- see GeocodeCache.select.
     if (distinctTerms.isEmpty) {
@@ -61,7 +62,7 @@ object CalculatedTermFrequency {
       SQL"""
         SELECT term, COUNT(*) AS documentFrequency
         FROM CalculatedTermFrequency
-        WHERE term IN ($distinctTerms)
+        WHERE term IN ($distinctTerms) AND NOT (site = ${site.seq} AND name = $name)
         GROUP BY term
       """.as((SqlParser.long("term") ~ SqlParser.int("documentFrequency")).map { case term ~ df => term -> df }.*).toMap
     }
@@ -71,12 +72,23 @@ object CalculatedTermFrequency {
   def countCalculatedPages()(implicit connection: Connection): Long =
     SQL"SELECT COUNT(*) AS cnt FROM CalculatedTermFrequencyNorm".as(SqlParser.long("cnt").single)
 
-  def replaceNorm(name: String)(implicit connection: Connection, site: Site): Int = {
+  /**
+   * `terms` for an `IN`, or a seq no term has when there are none. `IN ()` is a syntax error,
+   * and a `NOT IN` that excludes nothing is what an empty list means.
+   */
+  private def orNone(terms: Seq[Long]): Seq[Long] = if (terms.isEmpty) Seq(-1L) else terms
+
+  /**
+   * The page's norm over its terms, less `excludedTerms` -- the ones the similarity leaves out
+   * (PageLogic.MaxDocumentFrequencyRatio), so that the norm measures the same vector the dot
+   * product does.
+   */
+  def replaceNorm(name: String, excludedTerms: Seq[Long] = Seq.empty)(implicit connection: Connection, site: Site): Int = {
     SQL"""
       REPLACE INTO CalculatedTermFrequencyNorm (site, name, norm)
       SELECT site, name, SQRT(SUM(frequency * frequency)) AS norm
       FROM CalculatedTermFrequency
-      WHERE site = ${site.seq} AND name = $name
+      WHERE site = ${site.seq} AND name = $name AND term NOT IN (${orNone(excludedTerms)})
       GROUP BY site, name
     """.executeUpdate()
   }
@@ -84,12 +96,12 @@ object CalculatedTermFrequency {
   /** The page's frequencies and norm, swapped for `termFrequencies` in one transaction. A page view
     * recalculates the page one time in ten, so readers of SimilarPages are always nearby; with the
     * delete and the insert committed separately they read the page with some or all of its terms
-    * missing. */
-  def replace(name: String, termFrequencies: Seq[(Long, Int)])(implicit connection: Connection, site: Site): Unit =
+    * missing. `excludedFromNorm` is what replaceNorm leaves out; the frequencies keep every term. */
+  def replace(name: String, termFrequencies: Seq[(Long, Int)], excludedFromNorm: Seq[Long] = Seq.empty)(implicit connection: Connection, site: Site): Unit =
     LocalTransaction.retryingDeadlock {
       delete(name)
       insert(name, termFrequencies)
-      replaceNorm(name)
+      replaceNorm(name, excludedFromNorm)
     }
 
   def delete(name: String)(implicit connection:Connection, site: Site): Int = {
