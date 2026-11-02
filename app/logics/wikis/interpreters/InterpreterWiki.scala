@@ -506,8 +506,10 @@ object InterpreterWiki extends TraitInterpreter {
   }
 
 
-  override def toHtmlString(content: String)(implicit wikiContext:ContextWikiPage):String = {
-    val pageContent: PageContent = PageContent(content)
+  override def toHtmlString(content: String)(implicit wikiContext:ContextWikiPage):String =
+    toHtmlString(PageContent(content))
+
+  override def toHtmlString(pageContent: PageContent)(implicit wikiContext: ContextWikiPage): String = {
     val handler = new HandlerToHtmlString(pageContent)
     handler.process()
   }
@@ -533,7 +535,6 @@ object InterpreterWiki extends TraitInterpreter {
     pageContent.redirect match {
       case Some(v) => Seq(CalculatedLink(wikiContext.name, v, "redirect"))
       case None =>
-        val pageContent: PageContent = PageContent(content)
         val handler = new HandlerToSeqLink(pageContent)
         handler.process()
     }
@@ -544,7 +545,6 @@ object InterpreterWiki extends TraitInterpreter {
     pageContent.redirect match {
       case Some(_) => Seq()
       case None =>
-        val pageContent: PageContent = PageContent(content)
         val handler = new HandlerToSeqSchemaOrg(pageContent)
         handler.process()
     }

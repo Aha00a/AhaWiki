@@ -267,20 +267,22 @@ SELECT
    * for one more than you will show to learn whether there were more. Read permission is checked
    * by the caller afterwards, so a reader may see fewer than `limit` while more readable pages
    * exist further down.
+   *
+   * The latest revision of each page comes from `PageMeta`, which holds it per page. Until
+   * 2026-11-01 it came from a `GROUP BY name` over every revision of the site, built into a
+   * temporary table on every search. The difference is the calculation that fills `PageMeta`:
+   * it runs right after a save but not in it, so for that moment a search reads the revision
+   * before the save, and a page never calculated is not searched at all -- the page list has
+   * the same gap, for the same reason (Dev Page).
    */
   def pageSearch(q:String, limit: Int)(implicit connection: Connection, site: Site): immutable.Seq[SearchResult] = {
     //language=sql
     SQL"""
 SELECT P.name, P.dateTime, P.content
-     FROM Page P
-     INNER JOIN (
-        SELECT site, name, MAX(revision) AS revision
-        FROM Page
-        WHERE site = ${site.seq}
-        GROUP BY site, name
-     ) SPNR ON P.site = SPNR.site AND P.name = SPNR.name AND P.revision = SPNR.revision
+     FROM PageMeta PM
+     INNER JOIN Page P ON P.site = PM.site AND P.name = PM.name AND P.revision = PM.revision
      WHERE
-         P.site = ${site.seq} AND (
+         PM.site = ${site.seq} AND (
              P.name LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci OR
              P.content LIKE CONCAT('%', $q, '%') COLLATE utf8mb4_general_ci
          )

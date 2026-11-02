@@ -350,15 +350,15 @@ https://www.wikimatrix.org/ 발견. 여기 기준에 좀 맞춰볼까.. --[2020-
   * `schema/schema.sql` 은 덤프 대신 손으로 맞췄다 — 이 세션에 DB 가 없다. evolution 이 개발 DB 에 적용된 뒤 `sh ./schemaDump.sh --check` 로 확인할 것.
   * 커밋 `ce34f2d` 의 메시지는 Scala 스펙을 못 돌렸다고 적었는데, 그 뒤 같은 세션에서 돌렸다 — 509 통과(H2, 손으로 맞춘 덤프 위에서). node 테스트도 통과.
  * 같은 읽기에서 나왔지만 고치지 않은 것. 각각 한 변경 거리고, 위 셋보다 작다. --[2026-11-01]
-  * [ ] 검색 `Page.pageSearch` 가 최신 리비전을 고르느라 site 의 `Page` 전체를 GROUP BY 한다 — `PageMeta` 와 조인하면 임시 테이블이 없어진다. `LIKE '%q%'` 의 전체 스캔은 전문 색인 없이는 남는다.
+  * [[CB(x)]] 검색 `Page.pageSearch` 가 최신 리비전을 고르느라 site 의 `Page` 전체를 GROUP BY 했다 — `PageMeta` 와 조인한다. 대가는 `PageMeta` 를 채우는 계산이 저장 직후 비동기라는 것: 그 순간의 검색은 저장 전 리비전을 읽고, 계산이 닿지 않은 페이지는 검색되지 않는다 — 페이지 목록과 같은 틈이다. 스펙으로 못박지는 못했다 — 이 쿼리의 `COLLATE utf8mb4_general_ci` 를 H2 가 거부해 검색은 H2 에서 돌지 않는다(`AccessControlFilteringSpec` 의 주석이 그 이유다). 운영 DB 에서 `EXPLAIN` 과 검색 결과를 눈으로 볼 일이다. `LIKE '%q%'` 의 전체 스캔은 전문 색인 없이는 남는다. [Dev Page] «본문을 많이 읽는 두 경로». --[2026-11-01]
   * [[CB(x)]] `Wiki.renderView` 가 첫 리비전을 본문째 읽었다 — 화면은 작성자와 날짜만 쓴다. `Page.selectFirstRevision` 이 `PageWithoutContent` 를 돌려준다(history 와 같은 꼴). --[2026-11-01]
   * [[CB(x)]] favicon 설정을 보기마다 두 번 읽었다(`_baseSkeleton.scala.html` 과 `Wiki/view.scala.html` 이 각각 Config 조회와 S3 presign) — `ContextSite.siteFavicon` lazy val 하나로. 값을 구하는 코드는 그대로 `AhaWikiConfig` 에 있다. --[2026-11-01]
   * [[CB(x)]] 페이지 목록의 권한 필터가 (페이지 × 규칙)마다 actors 를 filter 해 리스트를 만들었다 — `Permission.actorMatches` 가 빈 actor 를 가지마다 건너뛰고(결과 같음, `PermissionLogicUnit` 에 빈 actor 케이스), `WikiPermission` 은 actors 를 한 번만 구한다. 규칙이 전부 `All` target 이면 — 페이지 단위 규칙이 없는 보통 사이트 — 한 번의 답을 목록 전체에 쓴다(`WikiPermission.isReadableRegardlessOfTarget`, `PermissionLogic.isTargetIndependent`). 페이지 단위 규칙이 하나라도 있으면 전처럼 페이지마다 묻는다. --[2026-11-01]
   * [[CB(x)]] 렌더러가 줄마다 자리표시자 목록을 끝까지 봤다(줄 수 × 코드 스팬 수) — `ExtractConvertInject.extracted` 가 추가분만 읽어 채우는 HashMap 으로 답한다. `isBlockToken` 도 같은 것을 쓴다. --[2026-11-01]
   * [[CB(x)]] `MacroInclude` 가 `#` 이 든 인자의 존재 확인을 본문째 읽었고, include 마다 `WikiPermission()` 을 새로 만들어 UserEmail 을 다시 물었다 — 존재는 `Page.selectLastRevisionNumber` 한 숫자로(캐시의 이름 집합은 저장 뒤 5분까지 낡을 수 있어 쓰지 않았다), 권한 객체는 `ContextSite.wikiPermission` 으로 요청에 하나. 보기와 페이지 목록 필터도 그것을 쓴다. 커넥션을 인자로 받는 이유는 그 주석에. --[2026-11-01]
-  * [ ] `User:` 링크마다 프로필 이미지 캐시가 Redis 왕복을 한다(`AhaMarkLink` 가 `UserPageLogic.profileImageUrlByNickname` 을 부른다).
-  * [ ] 같은 본문을 `PageContent` 로 서너 번 쪼갠다(`Interpreters`, `InterpreterWiki`, `Wiki.renderView`, `PageLogic.extractDescription`) — 만든 것을 넘겨 준다.
-  * [ ] 유사도 재계산(`CalculatedCosineSimilarity.recalc`)의 후보가 site 전체에 가깝다 — 불용어가 영어 11개뿐이라 한국어 조사와 흔한 단어가 모든 페이지를 끌어온다. 문서 빈도 상위 term 을 TF 저장 전에 걸러내는 것이 가장 싼 완화책이고, 위 «최대 3.8초» 가 이것이다.
+  * [[CB(x)]] `User:` 링크마다 프로필 이미지 캐시가 Redis 왕복을 했다 — `ContextSite.profileImageUrlByNickname` 이 요청 안에서 닉네임마다 한 번만 묻는다. `UserPageLogic.profileImageUrlByNickname` 은 그것을 부른다. --[2026-11-01]
+  * [[CB(x)]] 같은 본문을 `PageContent` 로 서너 번 쪼갰다 — `TraitInterpreter.toHtmlString` 에 `PageContent` 를 받는 꼴을 더해 `Interpreters` 가 고른 것을 `InterpreterWiki` 가 그대로 쓰고, 보기는 최신 리비전을 한 번 쪼개 `renderReadablePage` 에 넘긴다. `extractDescription` 은 schema 블록을 뗀 다른 문자열을 그리므로 그대로다. --[2026-11-01]
+  * [[CB(x)]] 유사도 재계산(`CalculatedCosineSimilarity.recalc`)의 후보가 site 전체에 가까웠다 — 불용어가 영어 11개뿐이라 한국어 조사와 흔한 단어가 모든 페이지를 끌어왔다. 계산할 때 전체 계산된 페이지의 1/5 넘게 가진 term 을 벡터에서 뺀다(`PageLogic.MaxDocumentFrequencyRatio`, 바닥 `MinDocumentFrequencyCutoff` 20). 이 저장소의 위키 페이지 130쪽을 같은 규칙으로 토큰화해 재니 12,299 term 중 64개가 1/5 를 넘고 그것이 조인 일(빈도 제곱 합)의 38% 였다 — 운영 말뭉치로 잰 것은 아니다. '''결과가 바뀐다''': 두 페이지가 모두 다시 계산된 뒤에야 그 term 이 둘 사이에서 빠지므로 유사 페이지 목록은 점점 바뀌고, 배포의 페이지별 대조에 SimilarPages 절이 다르게 보일 것이다. 되돌리기는 비율을 1 위로. [Dev SisterWiki] «Similarity Calculation». --[2026-11-01]
 
 === 기타
  * 마크업 규칙 추가

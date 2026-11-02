@@ -65,11 +65,13 @@ object Interpreters extends TraitInterpreter with Logging {
     }
   }
 
-  override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
-    val pageContent: PageContent = PageContent(content)
+  override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String =
+    toHtmlString(PageContent(content))
+
+  override def toHtmlString(pageContent: PageContent)(implicit wikiContext: ContextWikiPage): String = {
     getInterpreter(pageContent)
-      .map(render(_, content))
-      .getOrElse(MacroError.toHtmlString(s"Interpreter not found.<br/><pre>[[[$content]]]</pre>"))
+      .map(render(_, pageContent))
+      .getOrElse(MacroError.toHtmlString(s"Interpreter not found.<br/><pre>[[[${pageContent.raw}]]]</pre>"))
   }
 
   /**
@@ -80,7 +82,10 @@ object Interpreters extends TraitInterpreter with Logging {
    * the page around it lives. The exception is logged in full; the box names it.
    */
   def render(interpreter: TraitInterpreter, content: String)(implicit wikiContext: ContextWikiPage): String =
-    try interpreter.toHtmlString(content)
+    render(interpreter, PageContent(content))
+
+  def render(interpreter: TraitInterpreter, pageContent: PageContent)(implicit wikiContext: ContextWikiPage): String =
+    try interpreter.toHtmlString(pageContent)
     catch {
       case NonFatal(e) =>
         logger.error(s"#!${interpreter.name} failed on page '${wikiContext.name}'", e)

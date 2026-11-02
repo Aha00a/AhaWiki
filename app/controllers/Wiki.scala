@@ -187,6 +187,9 @@ controllerComponents: ControllerComponents,
       val pageSpecificRevision = if (revision == 0) pageLastRevision else Page.select(name, revision)
 
       val pageLastRevisionContent = pageLastRevision.map(s => PageContent(s.content))
+      // The revision shown is usually the latest, which was split just above; renderReadablePage
+      // used to split it a second time.
+      val pageSpecificRevisionContent = if (revision == 0) pageLastRevisionContent else pageSpecificRevision.map(s => PageContent(s.content))
       val wikiPermission = contextWikiPage.wikiPermission
       val hasReadPermissionRestriction = !wikiPermission.isReadableByAnonymous(name, pageLastRevisionContent)
       val permissionDetail = Some(wikiPermission.detail(name, pageLastRevisionContent))
@@ -239,7 +242,7 @@ controllerComponents: ControllerComponents,
           renderNotFoundPage(name, isWritable, pageFirstRevision, pageLastRevision)
 
         case (Some(page), "" | "view", true, _) =>
-          renderReadablePage(page, name, isWritable, hasReadPermissionRestriction, permissionDetail, pageFirstRevision, pageLastRevision)
+          renderReadablePage(page, pageSpecificRevisionContent.getOrElse(PageContent(page.content)), name, isWritable, hasReadPermissionRestriction, permissionDetail, pageFirstRevision, pageLastRevision)
         case (Some(page), "diff", true, _) =>
           renderDiffPage(name)
 
@@ -317,6 +320,7 @@ controllerComponents: ControllerComponents,
   }
 
   private def renderReadablePage(page: Page,
+                                 pageContent: PageContent,
                                  name: String,
                                  isWritable: Boolean,
                                  hasReadPermissionRestriction: Boolean,
@@ -325,7 +329,6 @@ controllerComponents: ControllerComponents,
                                  pageLastRevision: Option[Page])
                                 (implicit request: Request[AnyContent], wikiContext: ContextWikiPage, connection: Connection, site: Site): Result = {
     try {
-      val pageContent: PageContent = PageContent(page.content)
       val additionalInfo = getAhaMarkAdditionalInfo(name)
       pageContent.redirect match {
         case Some(directive) =>

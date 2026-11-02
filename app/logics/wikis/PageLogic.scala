@@ -174,6 +174,35 @@ object PageLogic {
    */
   val ViewRecalculationInterval: java.time.Duration = java.time.Duration.ofDays(1)
 
+  /**
+   * A term held by more than this share of all calculated pages is left out of a page's term
+   * vector, and so out of its similarity.
+   *
+   * The similarity of a page is a join of its terms against every page that shares one, so a
+   * term's cost is the number of pages holding it, and a handful of terms that nearly every page
+   * holds -- particles, "page", "wiki" -- are most of the work and say nothing about which pages
+   * are alike. Eleven English stop words were the whole list until 2026-11-01; the wiki is mostly
+   * Korean. Measured on the 130 wiki pages in this repository (tokenised the same way): 64 of
+   * 12,299 terms stood in more than a fifth of the pages and made 38% of the join work, the
+   * squared frequencies summed. A fifth keeps a term that a strong theme of the wiki shares.
+   *
+   * The cut applies when a page is calculated, so two pages agree on a term only once both have
+   * been calculated under it; until then the term still counts between them. The similarity
+   * sections therefore change gradually, and a deploy's page-by-page comparison will show them
+   * differing. Setting the ratio above 1 restores the old vectors at the next calculation.
+   */
+  val MaxDocumentFrequencyRatio: Double = 0.2
+
+  /**
+   * Below this many pages the cut does nothing: on a wiki of thirty pages, a fifth is six, and a
+   * term six pages share is a subject, not noise. Also what keeps the specs' small fixtures whole.
+   */
+  val MinDocumentFrequencyCutoff: Long = 20
+
+  /** The document frequency above which a term is dropped, for a corpus of this many pages. */
+  def documentFrequencyCutoff(calculatedPages: Long): Long =
+    math.max(MinDocumentFrequencyCutoff, math.ceil(calculatedPages * MaxDocumentFrequencyRatio).toLong)
+
   /** True when the page was calculated at its latest revision less than ViewRecalculationInterval
     * ago. No row, no update time or a revision behind the latest all mean it was not. */
   def isCalculatedRecently(meta: Option[PageMeta], lastRevision: Option[Long], now: LocalDateTime): Boolean =
@@ -227,7 +256,13 @@ object PageLogic {
           val seqWordCountSorted = wordCount.toSeq.sortBy(-_._2)
 
           val termByWord = CalculatedTerm.ensureSeqByTerm(seqWordCountSorted.map(_._1))
-          val seqTermFrequency = seqWordCountSorted.flatMap { case (term, frequency) => termByWord.get(term).map(_ -> frequency) }
+          val cutoff = documentFrequencyCutoff(CalculatedTermFrequency.countCalculatedPages())
+          val documentFrequency = CalculatedTermFrequency.selectDocumentFrequency(termByWord.values.toSeq)
+          val seqTermFrequency = seqWordCountSorted.flatMap { case (term, frequency) =>
+            termByWord.get(term)
+              .filterNot(seq => documentFrequency.getOrElse(seq, 0) > cutoff)
+              .map(_ -> frequency)
+          }
           CalculatedTermFrequency.replace(name, seqTermFrequency)
 
           if(verbose)

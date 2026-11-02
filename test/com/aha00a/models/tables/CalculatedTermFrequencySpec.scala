@@ -63,6 +63,25 @@ class CalculatedTermFrequencySpec extends AnyFreeSpec {
     """.as((anorm.SqlParser.long("term") ~ anorm.SqlParser.int("frequency")).*)
       .map(anorm.SqlParser.flatten).toMap
 
+  "selectDocumentFrequency" - {
+    "counts the pages holding each term, over every site, and leaves out terms nobody holds" in {
+      withConnection { implicit connection =>
+        implicit val site: Site = Site(1, "SiteA", "SiteA", "site1.example")
+        CalculatedTermFrequency.replace("Foo", Seq((1L, 10), (2L, 1)))
+        Seq(
+          "INSERT INTO Site (seq, name, abbr) VALUES (2, 'SiteB', 'SiteB')",
+          "INSERT INTO Page (site, name, revision, dateTime, `user`, remoteAddress, comment, content) VALUES (2, 'Baz', 1, NOW(), 1, '127.0.0.1', '', 'alpha')",
+          "INSERT INTO PageMeta (site, name, revision) VALUES (2, 'Baz', 1)",
+        ).foreach(sql => SQL(sql).execute())
+        CalculatedTermFrequency.replace("Baz", Seq((1L, 3)))(connection, Site(2, "SiteB", "SiteB", "site2.example"))
+
+        assert(CalculatedTermFrequency.selectDocumentFrequency(Seq(1L, 2L, 999L)) === Map(1L -> 2, 2L -> 1))
+        assert(CalculatedTermFrequency.selectDocumentFrequency(Seq.empty) === Map.empty)
+        assert(CalculatedTermFrequency.countCalculatedPages() === 2L)
+      }
+    }
+  }
+
   "CalculatedTerm.insert" - {
     "inserting a term that lost the select-then-insert race keeps the winner's seq" in {
       withConnection { implicit connection =>

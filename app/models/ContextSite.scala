@@ -146,6 +146,22 @@ class ContextSite(parent: Option[ContextSite] = None)(
   lazy val siteFavicon: String =
     parent.map(_.siteFavicon).getOrElse(AhaWikiConfig()(this).site.favicon())
 
+  private val profileImageUrlMemo = scala.collection.mutable.HashMap[String, Option[String]]()
+
+  /**
+   * A user's profile image address, asked of the cache once per request per nickname. Every
+   * `User:` link on a page asks, and each ask is a Redis round trip for the cache's version key
+   * (Dev Cache); a page listing forty people made forty of them until 2026-11-01.
+   */
+  def profileImageUrlByNickname(nickname: String): Option[String] =
+    parent.map(_.profileImageUrlByNickname(nickname)).getOrElse(synchronized {
+      profileImageUrlMemo.getOrElseUpdate(nickname, {
+        // databaseHeldFirst: this runs inside a render, which already holds a connection.
+        implicit val key: (Database, Site, String) = (databaseHeldFirst, site, nickname)
+        ahaWikiCache.UserProfileImageUrl.get()
+      })
+    })
+
   private var wikiPermissionMemo: Option[WikiPermission] = None
 
   /**

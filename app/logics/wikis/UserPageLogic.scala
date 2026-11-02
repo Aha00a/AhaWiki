@@ -13,11 +13,9 @@ object UserPageLogic {
   def href(nickname: String): String =
     "/w/" + PageNameUrl.encode(pageName(nickname))
 
-  def profileImageUrlByNickname(nickname: String)(implicit wikiContext: models.ContextWikiPage): Option[String] = {
-    // databaseHeldFirst: this runs inside a render, which already holds a connection.
-    implicit val userProfileImageCacheKey: (play.api.db.Database, models.tables.Site, String) = (wikiContext.databaseHeldFirst, wikiContext.site, nickname)
-    wikiContext.ahaWikiCache.UserProfileImageUrl.get()
-  }
+  /** Once per request per nickname -- the request's context remembers it, see ContextSite. */
+  def profileImageUrlByNickname(nickname: String)(implicit wikiContext: models.ContextWikiPage): Option[String] =
+    wikiContext.profileImageUrlByNickname(nickname)
 
   def toHtmlString(nickname: String)(implicit wikiContext: models.ContextWikiPage): String =
     profileImageUrlByNickname(nickname)

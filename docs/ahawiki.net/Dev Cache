@@ -65,6 +65,7 @@ TTL 이 지나면 다음 요청이 그 자리에서 다시 계산합니다(호�
  * 캐시 키: `logics.AhaWikiCache$UserProfileImageUrl$:Site(...):{nickname}`
  * 저장 값: 사용자 프로필 이미지 URL
  * TTL: 개발 모드 1분, 프로덕션 10분
+ * 한 요청 안에서는 닉네임마다 한 번만 묻는다(`ContextSite.profileImageUrlByNickname`, 2026-11-01). `User:` 링크마다 버전 키를 Redis 에 묻던 것을 그 요청의 컨텍스트가 기억한다.
 
 ==== PageMeta.SeqPageLatestSummary
 
