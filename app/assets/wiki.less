@@ -1185,6 +1185,11 @@
 	.WikiColumns {
 		padding-top: 15px;
 		padding-bottom: 5px;
+		// The block's own style says column-count (the most columns) and --column-min-width; with
+		// a column-width as well, the browser drops columns until each is at least that wide. The
+		// variable was written from 2026-05-06 but nothing read it until 2026-11-04, so a phone
+		// drew three columns of a few letters each.
+		column-width: var(--column-min-width, 220px);
 		> :first-child {
 			margin-top: 0;
 			> :first-child {
