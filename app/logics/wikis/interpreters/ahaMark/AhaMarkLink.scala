@@ -49,7 +49,9 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
       } else {
         None
       }
-      val href: String = if (external || isStartsWithHash || isStartsWithQuestionMark) uriNormalized else s"/w/$uriNormalized"
+      val (pageName, suffix) = splitSuffix(uriNormalized)
+      // A `?` left in the name is escaped, or the browser would read the rest as a query.
+      val href: String = if (external || isStartsWithHash || isStartsWithQuestionMark) uriNormalized else s"/w/${pageName.replace("?", "%3F")}$suffix"
       val attrTarget: String = if (external) """ target="_blank" rel="noopener"""" else ""
       // The page set is asked first: most links name a page that exists. `Regex.matches` is the
       // whole-string match `String.matches` was, without compiling the pattern again per link.
@@ -58,7 +60,7 @@ case class AhaMarkLink(uri: String, alias: String = "", noFollow: Boolean = fals
         external ||
         isStartsWithHash ||
         isStartsWithQuestionMark ||
-        set.contains(regexAnchorOrQuery.replaceAllIn(uriNormalized, "")) ||
+        set.contains(pageName) ||
         // DateTimeUtil.regexIsoLocalDate.matches(uriNormalized) ||
         DateTimeUtil.regexYearDashMonth.matches(uriNormalized) ||
         DateTimeUtil.regexDashDashDashDay.matches(uriNormalized) ||
@@ -115,5 +117,17 @@ object AhaMarkLink {
   // time (2026-10-07).
   private val iso3166Alpha2CodeSet: Set[String] = java.util.Locale.getISOCountries.toSet
   private val regexAlpha2 = """[A-Z]{2}""".r
-  private val regexAnchorOrQuery = """[#?].+$""".r
+  /**
+   * A page link split into the page name and what follows it: an anchor (`#x`) or a query
+   * (`?revision=3`).
+   *
+   * A `?` starts a query only when what follows it has an `=`; otherwise it is part of the name, as
+   * in `What If...?: Season One`. Until 2026-11-04 every `?` started a query, so that page drew as
+   * a missing link whose address stopped at the `?`.
+   */
+  def splitSuffix(uri: String): (String, String) = regexAnchorOrQuery.findFirstMatchIn(uri) match {
+    case Some(m) => (uri.substring(0, m.start), m.matched)
+    case None => (uri, "")
+  }
+  private val regexAnchorOrQuery = """#.+$|\?(?=[^#]*=).*$""".r
 }
