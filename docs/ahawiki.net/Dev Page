@@ -159,6 +159,8 @@ Kanban 페이지는 실제로 최신으로 돌아갔다. 보드는 `page.updated
 
 2026-11-02 까지 페이지 골격이 MathJax(1 MB)와 echarts(1.1 MB)를 모든 화면에 실었다. 이제 MathJax 는 `AhaWiki.Math.js` 가 화면에 `.mathjax` 요소가 있을 때만 불러온다 — `<body>` 가 `no-mathjax` 라 그 요소 말고는 조판할 것이 없다. echarts 는 위키 화면에서 쓰는 곳이 `WikiStatistics` 매크로뿐이라 그 매크로가 부르고, 관리 화면은 `_baseAdmin.scala.html` 이 따로 부른다.
 
+Google Maps API(200 KB 남짓)도 2026-11-02 부터 `#!Map` 이 있는 화면에서만 부른다. 그 전에는 키가 설정된 사이트의 모든 화면이 받았다. reCAPTCHA 는 이전부터 저장할 때만 받는다(`AhaWiki.ReCaptcha.js`).
+
 d3 는 그대로 골격에 둔다. 모든 페이지의 인접 문서 그래프가 쓴다. 대신 그래프는 화면 가까이 왔을 때 시작한다(`adjacentPagesD3CanvasHost.scala.html`) — 2026-11-02 PageSpeed 모바일에서 레이아웃 계산이 메인 스레드를 30 초쯤 썼다.
 
 모바일 목차는 처음부터 CSS 로 접혀 있고, 스크립트가 `tocReady` 를 붙인 뒤로는 `collapsed` 가 정한다. 스크립트가 뒤늦게 접으면 본문이 381px 위로 뛰어 CLS 0.26 이 났다. 처음에는 광고를 의심했는데, 광고를 막아도 같았다.
