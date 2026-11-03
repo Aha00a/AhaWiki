@@ -82,7 +82,7 @@ object InterpreterBlockUnit {
       // A column whose body cells are all numbers is numeric: each cell says so, and its header
       // names tablesorter's digit parser, so the column sorts by value whatever its first cell
       // holds. Nothing else about the table changes -- same classes, same inner HTML.
-      val headNameScore = """<thead><tr><th><div><p>Name</p></div></th><th class="sorter-digit"><div><p>Score</p></div></th></tr></thead>"""
+      val headNameScore = """<thead><tr><th><div><p>Name</p></div></th><th class="numeric sorter-digit"><div><p>Score</p></div></th></tr></thead>"""
       assertEquals(
         Interpreters.toHtmlString("#!table tsv 1\nName\tScore\nA\t10\nB\t2"),
         """<table class="InterpreterTable wikiTableSimple tablesorter">""" + headNameScore + """<tbody><tr><td><div><p>A</p></div></td><td class="numeric"><div><p>10</p></div></td></tr>""" + "\n" +
@@ -120,15 +120,15 @@ object InterpreterBlockUnit {
       // bottom header row -- and a header column's cells, in body rows, stay plain.
       assertEquals(
         Interpreters.toHtmlString("#!table tsv 2 1\nYear\tScore\n-\tpoints\n2024\t10\n2025\t2"),
-        """<table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Year</p></div></th><th class="sorter-digit"><div><p>Score</p></div></th></tr>""" + "\n" +
-          """<tr><th><div><p>-</p></div></th><th class="sorter-digit"><div><p>points</p></div></th></tr></thead><tbody><tr><th><div><p>2024</p></div></th><td class="numeric"><div><p>10</p></div></td></tr>""" + "\n" +
+        """<table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Year</p></div></th><th class="numeric sorter-digit"><div><p>Score</p></div></th></tr>""" + "\n" +
+          """<tr><th><div><p>-</p></div></th><th class="numeric sorter-digit"><div><p>points</p></div></th></tr></thead><tbody><tr><th><div><p>2024</p></div></th><td class="numeric"><div><p>10</p></div></td></tr>""" + "\n" +
           """<tr><th><div><p>2025</p></div></th><td class="numeric"><div><p>2</p></div></td></tr></tbody></table>"""
       )
 
       // bar= draws Excel's default data bar: from zero, in proportion, with the zero axis shared
       // by the column when it has a negative value -- -5 against 10 puts the axis at a third.
-      val barred = """<table class="InterpreterTable wikiTableSimple tablesorter">""" + headNameScore + """<tbody><tr><td><div><p>A</p></div></td><td class="numeric dataBar" style="--bar-start:33.3%;--bar-end:100.0%"><div><p>10</p></div></td></tr>""" + "\n" +
-        """<tr><td><div><p>B</p></div></td><td class="numeric dataBar negative" style="--bar-start:0.0%;--bar-end:33.3%"><div><p>-5</p></div></td></tr></tbody></table>"""
+      val barred = """<table class="InterpreterTable wikiTableSimple tablesorter">""" + headNameScore + """<tbody><tr><td><div><p>A</p></div></td><td class="numeric dataBar axis" style="--bar-start:33.3%;--bar-end:100.0%"><div><p>10</p></div></td></tr>""" + "\n" +
+        """<tr><td><div><p>B</p></div></td><td class="numeric dataBar negative axis" style="--bar-start:0.0%;--bar-end:33.3%"><div><p>-5</p></div></td></tr></tbody></table>"""
       assertEquals(Interpreters.toHtmlString("#!table tsv 1 bar=2\nName\tScore\nA\t10\nB\t-5"), barred)
       // By header text too, and the key case aside -- and bar= is an option, not a class, while
       // the words around it still are.
@@ -143,7 +143,7 @@ object InterpreterBlockUnit {
       // Only the first header row names a column; the second row's text names nothing.
       assertEquals(
         Interpreters.toHtmlString("#!table tsv 2 bar=points\nName\tScore\n-\tpoints\nA\t10"),
-        """<table class="InterpreterTable wikiTableSimple tablesorter">""" + headNameScore.replace("</tr></thead>", "</tr>\n<tr><th><div><p>-</p></div></th><th class=\"sorter-digit\"><div><p>points</p></div></th></tr></thead>") +
+        """<table class="InterpreterTable wikiTableSimple tablesorter">""" + headNameScore.replace("</tr></thead>", "</tr>\n<tr><th><div><p>-</p></div></th><th class=\"numeric sorter-digit\"><div><p>points</p></div></th></tr></thead>") +
           """<tbody><tr><td><div><p>A</p></div></td><td class="numeric"><div><p>10</p></div></td></tr></tbody></table>"""
       )
       // Naming a text column, a column that is not there, or a number no Int holds draws nothing
@@ -155,7 +155,7 @@ object InterpreterBlockUnit {
       // A unit on the number is the habit of Korean tables; the bar reads the number under it.
       assertEquals(
         Interpreters.toHtmlString("#!table tsv 1 bar=2\n품목\t가격\n가\t1,200원\n나\t300원"),
-        """<table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>품목</p></div></th><th class="sorter-digit"><div><p>가격</p></div></th></tr></thead><tbody><tr><td><div><p>가</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>1,200원</p></div></td></tr>""" + "\n" +
+        """<table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>품목</p></div></th><th class="numeric sorter-digit"><div><p>가격</p></div></th></tr></thead><tbody><tr><td><div><p>가</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>1,200원</p></div></td></tr>""" + "\n" +
           """<tr><td><div><p>나</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:25.0%"><div><p>300원</p></div></td></tr></tbody></table>"""
       )
       // bar=all: every numeric column, each on its own scale. Thousands separators and percent
@@ -163,9 +163,31 @@ object InterpreterBlockUnit {
       // its bar; a column of zeros has no range and gets none.
       assertEquals(
         Interpreters.toHtmlString("#!table tsv 1 bar=all\nMonth\tRevenue\tChange\tFlat\tZero\nJan\t65,438,723\t8%\t5\t0\nFeb\t119,526,353\t-8%\t5\t0"),
-        """<table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Month</p></div></th><th class="sorter-digit"><div><p>Revenue</p></div></th><th class="sorter-digit"><div><p>Change</p></div></th><th class="sorter-digit"><div><p>Flat</p></div></th><th class="sorter-digit"><div><p>Zero</p></div></th></tr></thead><tbody>""" +
-          """<tr><td><div><p>Jan</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:54.7%"><div><p>65,438,723</p></div></td><td class="numeric dataBar" style="--bar-start:50.0%;--bar-end:100.0%"><div><p>8%</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>5</p></div></td><td class="numeric"><div><p>0</p></div></td></tr>""" + "\n" +
-          """<tr><td><div><p>Feb</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>119,526,353</p></div></td><td class="numeric dataBar negative" style="--bar-start:0.0%;--bar-end:50.0%"><div><p>-8%</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>5</p></div></td><td class="numeric"><div><p>0</p></div></td></tr></tbody></table>"""
+        """<table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Month</p></div></th><th class="numeric sorter-digit"><div><p>Revenue</p></div></th><th class="numeric sorter-digit"><div><p>Change</p></div></th><th class="numeric sorter-digit"><div><p>Flat</p></div></th><th class="numeric sorter-digit"><div><p>Zero</p></div></th></tr></thead><tbody>""" +
+          """<tr><td><div><p>Jan</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:54.7%"><div><p>65,438,723</p></div></td><td class="numeric dataBar axis" style="--bar-start:50.0%;--bar-end:100.0%"><div><p>8%</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>5</p></div></td><td class="numeric"><div><p>0</p></div></td></tr>""" + "\n" +
+          """<tr><td><div><p>Feb</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>119,526,353</p></div></td><td class="numeric dataBar negative axis" style="--bar-start:0.0%;--bar-end:50.0%"><div><p>-8%</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>5</p></div></td><td class="numeric"><div><p>0</p></div></td></tr></tbody></table>"""
+      )
+      // bar=all means every numeric column, and a unit makes "1월" a number, so a month column
+      // is one of them and gets bars scaled 1..n. The page's own example therefore makes the
+      // month column a header column (tsv 1 1). A rule that skips 1..n columns was considered
+      // and refused: the first semantic guess in a syntactic design, and one that flips when a
+      // row is deleted.
+      assertEquals(
+        Interpreters.toHtmlString("#!table tsv 1 bar=all\n월\t매출\n1월\t100\n2월\t50"),
+        """<table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th class="numeric sorter-digit"><div><p>월</p></div></th><th class="numeric sorter-digit"><div><p>매출</p></div></th></tr></thead><tbody><tr><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:50.0%"><div><p>1월</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>100</p></div></td></tr>""" + "\n" +
+          """<tr><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>2월</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:50.0%"><div><p>50</p></div></td></tr></tbody></table>"""
+      )
+      assertEquals(
+        Interpreters.toHtmlString("#!table tsv 1 1 bar=all\n월\t매출\n1월\t100\n2월\t50"),
+        """<table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>월</p></div></th><th class="numeric sorter-digit"><div><p>매출</p></div></th></tr></thead><tbody><tr><th><div><p>1월</p></div></th><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>100</p></div></td></tr>""" + "\n" +
+          """<tr><th><div><p>2월</p></div></th><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:50.0%"><div><p>50</p></div></td></tr></tbody></table>"""
+      )
+      // The axis class is for a column that holds both signs: an all-positive column (Revenue
+      // above) and an all-negative one carry none -- the line would sit on the cell's edge.
+      assertEquals(
+        Interpreters.toHtmlString("#!table tsv 1 bar=2\nName\tScore\nA\t-10\nB\t-5"),
+        """<table class="InterpreterTable wikiTableSimple tablesorter">""" + headNameScore + """<tbody><tr><td><div><p>A</p></div></td><td class="numeric dataBar negative" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>-10</p></div></td></tr>""" + "\n" +
+          """<tr><td><div><p>B</p></div></td><td class="numeric dataBar negative" style="--bar-start:50.0%;--bar-end:100.0%"><div><p>-5</p></div></td></tr></tbody></table>"""
       )
     }; testInterpreterTable()
 

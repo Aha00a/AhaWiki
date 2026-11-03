@@ -99,7 +99,7 @@ Source API:
 편집 화면을 열 때 본문이 `#!gantt` 블록이면 Gantt 편집기를, partial edit 이거나 본문 전체가 `#!table` 블록이면 Table Editor 를 자동으로 연다. partial edit 의 `Switch to …` 링크로 raw editor 와 오간다.
  * option input 에는 자동완성이 없다. `tsv`, `csv`, `tsv 1`, `tsv 1 1`, `tsv 1 bar=all`, `tsv 1 1 tablesorter` 를 제안하는 것은 raw editor 의 `[[[#!table ` 뒤다(아래 자동완성 참고). `bar=all` 은 [InterpreterTable] 의 데이터 바다 — 2026-11-02 에 더했다.
   * '''마지막 항목의 `tablesorter` 는 아무 일도 하지 않는다.''' `InterpreterTable.Shebang.getClasses` 가 모든 표에 `tablesorter` 클래스를 붙이고 `.distinct` 로 중복을 지우므로, 적어도 안 적어도 결과가 같다. 정렬을 켜는 스위치처럼 보이지만 아니다 — 목록에서 뺄지는 정하지 않았다. --[2026-08-31]
- * option input으로 table shebang option 변경. 옵션 문자열은 친 대로 둔다 — 2026-11-03 전에는 통째로 소문자로 바꿔 써서, 여기서 칸 하나만 고쳐도 `bar=Revenue` 가 `bar=revenue` 로 바뀌었다(머리글 이름은 대소문자를 가리지 않아 그려지기는 같았다). 구분자를 고를 때만 소문자로 비교한다.
+ * option input으로 table shebang option 변경. 옵션 문자열은 친 대로 둔다 — 2026-11-03 전에는 통째로 소문자로 바꿔 써서, 여기서 칸 하나만 고쳐도 `bar=Revenue` 가 `bar=revenue` 로 바뀌었다(머리글 이름은 대소문자를 가리지 않아 그려지기는 같았다). 구분자를 고를 때만 소문자로 비교한다. 입력 칸은 든 글자만큼 넓어지고(40자까지), 좁은 화면에서는 옆의 버튼들이 아래로 내려간다 — `tsv 1 1` 에 맞춘 120px 고정폭이던 것을 2026-11-03 에 바꿨다.
  * row/column add/delete
  * cell focus highlight
  * arrow key로 cell 이동

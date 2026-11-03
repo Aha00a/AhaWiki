@@ -10,6 +10,12 @@
 	font-family: 'Ubuntu Mono', 'Consolas', monospace;
 }
 
+// Figures that line up: right-aligned, equal-width digits. Nothing about weight or colour.
+.tabularFigures() {
+	text-align: right;
+	font-variant-numeric: tabular-nums;
+}
+
 .boxShadow(@s : 0 0 1em var(--color-shadow-soft)) {
 	-webkit-box-shadow: @s;
 	box-shadow: @s;

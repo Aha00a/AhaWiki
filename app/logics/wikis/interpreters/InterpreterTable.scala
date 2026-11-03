@@ -118,6 +118,10 @@ object InterpreterTable extends TraitInterpreter {
     private val span: Double = hi - lo
     private val axis: Double = (0 - lo) / span * 100
 
+    // Both signs in the column: zero is somewhere inside the cell, and Excel marks it with an
+    // axis line in every cell of the column.
+    def diverging: Boolean = lo < 0 && hi > 0
+
     def style(value: Double): String = {
       val length = value / span * 100
       val (start, end) = if (value >= 0) (axis, axis + length) else (axis + length, axis)
@@ -148,14 +152,15 @@ object InterpreterTable extends TraitInterpreter {
    * take no part; a header column of years stays a header.
    */
   private case class Columns(numeric: Set[Int], barScales: Map[Int, BarScale]) {
-    // The header of a numeric column names tablesorter's parser. Left to guess, tablesorter reads
-    // the first body cell whose text is not empty and sorts the column as text when that cell is
-    // "-", "₩1,200" or "35명" -- 9 before 10, however many numbers follow. The digit parser it is
-    // told to use strips everything but digits, sign, parentheses and separators, so it reads
-    // every spelling parseNumber accepts. Header-column cells in body rows are never numeric
-    // (numeric starts at thColumn), so one helper serves both kinds of <th>.
+    // The header of a numeric column is right-aligned over its digits (`numeric`) and names
+    // tablesorter's parser (`sorter-digit`). Left to guess, tablesorter reads the first body cell
+    // whose text is not empty and sorts the column as text when that cell is "-", "₩1,200" or
+    // "35명" -- 9 before 10, however many numbers follow. The digit parser it is told to use
+    // strips everything but digits, sign, parentheses and separators, so it reads every spelling
+    // parseNumber accepts. Header-column cells in body rows are never numeric (numeric starts at
+    // thColumn), so one helper serves both kinds of <th>.
     def thOpen(columnIndex: Int): String =
-      if (numeric.contains(columnIndex)) """<th class="sorter-digit">""" else "<th>"
+      if (numeric.contains(columnIndex)) """<th class="numeric sorter-digit">""" else "<th>"
 
     def tdOpen(columnIndex: Int, cell: String): String = {
       if (!numeric.contains(columnIndex)) return "<td>"
@@ -169,7 +174,8 @@ object InterpreterTable extends TraitInterpreter {
         case Some(value) => barScales.get(columnIndex) match {
           case Some(scale) =>
             val negative = if (value < 0) " negative" else ""
-            s"""<td class="numeric dataBar$negative" style="${scale.style(value)}">"""
+            val axis = if (scale.diverging) " axis" else ""
+            s"""<td class="numeric dataBar$negative$axis" style="${scale.style(value)}">"""
           case None => """<td class="numeric">"""
         }
       }
