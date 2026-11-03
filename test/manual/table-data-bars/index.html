@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<title>#!Table data bar harness</title>
+<script>
+// ?theme=dark draws the page in the dark theme, as _themeClass.scala.html would with that choice
+// stored. Nothing is stored: the wiki's own setting in this origin is left as it was.
+document.documentElement.classList.add(new URLSearchParams(location.search).get('theme') === 'dark' ? 'theme-ahawiki-dark' : 'theme-ahawiki-light');
+</script>
+<!-- The stylesheets and scripts _baseSkeleton.scala.html loads for a table, in its order. less.css
+     carries Google Fonts' @font-face, so the fonts come from off the origin; nothing here counts
+     requests. -->
+<link rel="stylesheet" href="../../../public/vendor/font-awesome/css/all.min.css">
+<link rel="stylesheet" href="../../../app/assets/less.css">
+<link rel="stylesheet" href="../../../app/assets/wiki.css">
+<link rel="stylesheet" href="../../../app/assets/interpreter.css">
+<script src="../../../public/vendor/jquery/jquery.min.js"></script>
+<script src="../../../public/vendor/tablesorter/jquery.tablesorter.min.js"></script>
+<script src="../../../public/vendor/tablesorter/jquery.tablesorter.widgets.min.js"></script>
+<style>
+    #result { font: 13px/1.5 ui-monospace, monospace; white-space: pre-wrap; }
+</style>
+</head>
+<body class="AhaWiki no-mathjax">
+<!-- What InterpreterTable writes, in the wrappers view.scala.html puts around a page. The cells are
+     the markup InterpreterBlockUnit asserts -- `numeric` on a number, `numeric` and data-text=""
+     on a placeholder, `numeric sorter-digit` on every header row of a numeric column -- with more
+     rows than it uses, so that a sort has something to get wrong. The bar=all table is its
+     string as it stands. Change InterpreterTable's output and these are to be changed with it. -->
+<div role="main" class="wikiContent">
+<div class="limitWidth">
+<div>
+
+<h2>Two header rows, a spelled first cell</h2>
+<p>tablesorter guesses a parser from the first body cell that is not empty; "₩1,200" would make it text. Both header rows name the digit parser.</p>
+<table id="twoHeaders" class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Year</p></div></th><th class="numeric sorter-digit"><div><p>Score</p></div></th></tr>
+<tr><th><div><p>-</p></div></th><th class="numeric sorter-digit"><div><p>points</p></div></th></tr></thead><tbody><tr><th><div><p>2021</p></div></th><td class="numeric"><div><p>₩1,200</p></div></td></tr>
+<tr><th><div><p>2022</p></div></th><td class="numeric"><div><p>9</p></div></td></tr>
+<tr><th><div><p>2023</p></div></th><td class="numeric"><div><p>-7%</p></div></td></tr>
+<tr><th><div><p>2024</p></div></th><td class="numeric"><div><p>10</p></div></td></tr></tbody></table>
+
+<h2>Placeholders and spellings</h2>
+<p>Placeholders sort last both ways. Units, parentheses and currency sort by value. The filter finds "65,4"; it does not find "n/a".</p>
+<table id="spellings" class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Name</p></div></th><th class="numeric sorter-digit"><div><p>Spelled</p></div></th><th class="numeric sorter-digit"><div><p>Plain</p></div></th></tr></thead><tbody><tr><td><div><p>A</p></div></td><td class="numeric"><div><p>1,200원</p></div></td><td class="numeric"><div><p>65,438,723</p></div></td></tr>
+<tr><td><div><p>B</p></div></td><td class="numeric"><div><p>35명</p></div></td><td class="numeric" data-text=""><div><p>-</p></div></td></tr>
+<tr><td><div><p>C</p></div></td><td class="numeric"><div><p>(1,234)</p></div></td><td class="numeric"><div><p>2</p></div></td></tr>
+<tr><td><div><p>D</p></div></td><td class="numeric"><div><p>₩90</p></div></td><td class="numeric" data-text=""><div><p>n/a</p></div></td></tr>
+<tr><td><div><p>E</p></div></td><td class="numeric"><div><p>12.5kg</p></div></td><td class="numeric" data-text=""><div></div></td></tr>
+<tr><td><div><p>F</p></div></td><td class="numeric"><div><p>-7%</p></div></td><td class="numeric"><div><p>119,526,353</p></div></td></tr>
+<tr><td><div><p>G</p></div></td><td class="numeric"><div><p>(5)%</p></div></td><td class="numeric" data-text=""><div><p>#N/A</p></div></td></tr></tbody></table>
+
+<h2>bar=all</h2>
+<p>Look at this one: right-aligned headers over the digits, a hairline axis at zero in Change, red bars left of it, no bars in Zero.</p>
+<table id="barAll" class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Month</p></div></th><th class="numeric sorter-digit"><div><p>Revenue</p></div></th><th class="numeric sorter-digit"><div><p>Change</p></div></th><th class="numeric sorter-digit"><div><p>Flat</p></div></th><th class="numeric sorter-digit"><div><p>Zero</p></div></th></tr></thead><tbody><tr><td><div><p>Jan</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:54.7%"><div><p>65,438,723</p></div></td><td class="numeric dataBar axis" style="--bar-start:50.0%;--bar-end:100.0%"><div><p>8%</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>5</p></div></td><td class="numeric"><div><p>0</p></div></td></tr>
+<tr><td><div><p>Feb</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>119,526,353</p></div></td><td class="numeric dataBar negative axis" style="--bar-start:0.0%;--bar-end:50.0%"><div><p>-8%</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>5</p></div></td><td class="numeric"><div><p>0</p></div></td></tr></tbody></table>
+
+</div>
+</div>
+</div>
+<pre id="result">running…</pre>
+<script>
+const text = td => td.textContent.trim();
+// The filter widget hides a row with a class, not an inline style.
+const column = (table, index) => [...table.tBodies[0].rows].filter(tr => getComputedStyle(tr).display !== 'none').map(tr => text(tr.cells[index]));
+
+// The sort and the filter both finish later than the call that asks for them.
+const sort = (table, index, direction) => new Promise(resolve => {
+    $(table).one('sortEnd', () => resolve());
+    $(table).trigger('sorton', [[[index, direction]]]);
+});
+const filter = (table, filters) => new Promise(resolve => {
+    $(table).one('filterEnd', () => resolve());
+    $(table).trigger('search', [filters]);
+});
+
+async function check() {
+    const out = [];
+    const expect = (name, actual, expected) => {
+        const pass = JSON.stringify(actual) === JSON.stringify(expected);
+        out.push(`${pass ? 'PASS' : 'FAIL'} ${name}: ${JSON.stringify(actual)}${pass ? '' : ` (expected ${JSON.stringify(expected)})`}`);
+    };
+    // ?strip takes off what InterpreterTable adds for tablesorter -- the parser on the header and
+    // the empty data-text on a placeholder -- to see the checks that depend on them fail.
+    if (new URLSearchParams(location.search).has('strip')) {
+        $('th.sorter-digit').removeClass('sorter-digit');
+        $('td[data-text]').removeAttr('data-text');
+    }
+    // What AhaWiki.PageView.js does on every page. The filter widget finishes setting up after the
+    // call returns, and a sort asked for before then is applied without a sortEnd to wait on.
+    const ready = $('.tablesorter').get().map(table => new Promise(resolve => $(table).one('filterInit', resolve)));
+    $('.tablesorter').tablesorter({ widgets: ['filter'] });
+    await Promise.all(ready);
+
+    const twoHeaders = document.getElementById('twoHeaders');
+    expect('two header rows: the parser', twoHeaders.config.parsers[1].id, 'digit');
+    await sort(twoHeaders, 1, 0);
+    expect('two header rows: ascending', column(twoHeaders, 1), ['-7%', '9', '10', '₩1,200']);
+
+    const spellings = document.getElementById('spellings');
+    await sort(spellings, 1, 0);
+    expect('spellings sort by value, ascending', column(spellings, 1), ['(1,234)', '-7%', '(5)%', '12.5kg', '35명', '₩90', '1,200원']);
+    await sort(spellings, 1, 1);
+    expect('spellings sort by value, descending', column(spellings, 1), ['1,200원', '₩90', '35명', '12.5kg', '(5)%', '-7%', '(1,234)']);
+    // The four placeholders keep their order among themselves; only that they are last matters.
+    await sort(spellings, 2, 0);
+    expect('placeholders last, ascending', column(spellings, 2).slice(0, 3), ['2', '65,438,723', '119,526,353']);
+    expect('placeholders last, ascending (the rest)', column(spellings, 2).slice(3).sort(), ['', '#N/A', '-', 'n/a']);
+    await sort(spellings, 2, 1);
+    expect('placeholders last, descending', column(spellings, 2).slice(0, 3), ['119,526,353', '65,438,723', '2']);
+    expect('placeholders last, descending (the rest)', column(spellings, 2).slice(3).sort(), ['', '#N/A', '-', 'n/a']);
+
+    await filter(spellings, ['', '', '65,4']);
+    expect('the filter finds the digits a cell shows', column(spellings, 2), ['65,438,723']);
+    await filter(spellings, ['', '', 'n/a']);
+    expect('the filter does not find a placeholder', column(spellings, 2), []);
+    await filter(spellings, ['', '', '']);
+
+    // What can be measured of the look; the rest is for the eye.
+    const barAll = document.getElementById('barAll');
+    const headers = [...barAll.tHead.rows[0].cells].slice(1);
+    expect('numeric headers right-aligned', headers.map(th => getComputedStyle(th).textAlign), ['right', 'right', 'right', 'right']);
+    const cells = [...barAll.tBodies[0].rows[0].cells];
+    expect('numeric cells right-aligned', cells.slice(1).map(td => getComputedStyle(td).textAlign), ['right', 'right', 'right', 'right']);
+    const axisWidth = td => parseFloat(getComputedStyle(td, '::after').width) || 0;
+    expect('an axis line only in the column with both signs', cells.map(td => axisWidth(td) > 0), [false, false, true, false, false]);
+    const bar = td => getComputedStyle(td, '::before').backgroundImage !== 'none';
+    expect('bars in every barred cell, none in Zero', cells.map(bar), [false, true, true, true, false]);
+
+    document.getElementById('result').textContent = out.join('\n');
+    console.log(out.join('\n'));
+}
+$(() => { check(); });
+</script>
+</body>
+</html>
