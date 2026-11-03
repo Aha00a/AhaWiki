@@ -2,11 +2,14 @@ package com.aha00a.logics
 
 import com.aha00a.tests.TestApplication.TestSyncCacheApi
 import logics.AhaWikiCache
+import models.tables.Site
 import org.scalatest.freespec.AnyFreeSpec
 import play.api.Environment
 import play.api.Mode
+import play.api.db.Database
 
 import scala.collection.mutable
+import scala.concurrent.duration.Duration
 import scala.reflect.ClassTag
 
 /** `AhaWikiCache` keeps each value decoded in the process and asks Redis only for a version key.
@@ -94,5 +97,21 @@ class AhaWikiCacheSpec extends AnyFreeSpec {
     val redis = new CountingCache
     redis.failing = true
     assertThrows[RuntimeException](entity(instance(redis), new Origin(Seq("x"))).get())
+  }
+
+  // The page calculation calls this once it has written the PageMeta row; see the method for why.
+  // Only the keys are touched, so no database is needed.
+  "invalidateLists empties both page lists of that site, and only that site" in {
+    val redis = new CountingCache
+    val cache = instance(redis)
+    val here: (Database, Site) = (null, Site(1, "Here", "Here", "here.test"))
+    val there: (Database, Site) = (null, Site(2, "There", "There", "there.test"))
+    def keys(t: (Database, Site)) = Seq(cache.PageMeta.SeqPageLatestSummary.key()(t), cache.PageMeta.SeqPageName.key()(t))
+    for (k <- keys(here) ++ keys(there); suffix <- Seq("", ":version")) redis.set(k + suffix, "v", Duration.Inf)
+
+    cache.PageMeta.invalidateLists()(here)
+
+    for (k <- keys(here); suffix <- Seq("", ":version")) assert(redis.get[String](k + suffix).isEmpty, k + suffix)
+    for (k <- keys(there); suffix <- Seq("", ":version")) assert(redis.get[String](k + suffix).contains("v"), k + suffix)
   }
 }

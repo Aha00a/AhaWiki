@@ -254,6 +254,9 @@ object PageLogic {
         // revision that is gone; the request that removed it queues its own calculation.
         logger.info(s"\t\tCalculate: ${site.name}(${site.seq})\t$name\trevision ${page.revision} is gone, skipped")
       } else {
+        // The row is committed now (the connection autocommits), so the page lists may be read
+        // again -- see AhaWikiCache.PageMeta.invalidateLists for what happened without this.
+        ahaWikiCache.PageMeta.invalidateLists()((database, site))
         // Split once; the text, the links and the schema.org rows are all read from this.
         val pageContent = PageContent(page.content)
         val text = Interpreters.toText(pageContent)

@@ -73,22 +73,21 @@ TTL 이 지나면 다음 요청이 그 자리에서 다시 계산합니다(호�
  * 저장 값: 페이지 메타 정보 목록 (최신 요약)
  * TTL: 개발 모드 1~2분(랜덤), 프로덕션 5~30분(랜덤)
  * 랜덤 TTL은 다수 사이트의 캐시가 동시에 만료되는 것을 방지합니다.
- * 무효화: `invalidateSiteCaches()` 호출 시
+ * 무효화: 저장·삭제·rename 요청, 계산이 `PageMeta` row 를 쓴 직후(`PageMeta.invalidateLists`), `invalidateSiteCaches()`. 계산 쪽이 왜 필요한지는 [Dev Page] «Read Paths»
 
 ==== PageMeta.SeqPageName
 
  * 캐시 키: `logics.AhaWikiCache$PageMeta$SeqPageName$:Site(...)`
  * 저장 값: 모든 페이지명 목록
  * TTL: 개발 모드 1분, 프로덕션 5분 (`CacheEntity` 기본값)
- * 무효화: `invalidateSiteCaches()` 호출 시. 페이지 저장·삭제·rename 은 이것을 무효화하지 않는다 — [Dev Page] 참고
+ * 무효화: 계산이 `PageMeta` row 를 쓴 직후(`PageMeta.invalidateLists`), `invalidateSiteCaches()`. 저장·삭제·rename 요청 자체는 이것을 무효화하지 않는다 — [Dev Page] «Read Paths»
 
 === invalidateSiteCaches
 
 다음 항목을 한번에 무효화합니다.
 
  * `AhaWikiCacheMemoryDomainSite`
- * `PageMeta.SeqPageLatestSummary`
- * `PageMeta.SeqPageName`
+ * `PageMeta.SeqPageLatestSummary`·`PageMeta.SeqPageName` — `PageMeta.invalidateLists` 로 둘을 함께
  * `Footer`
  * `Config`
 

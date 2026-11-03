@@ -63,7 +63,7 @@
  * `ContextSite.seqPageByPermission`
  * 재계산 대상 선택(`adminSiteCalculate`). Admin Page 목록은 캐시 없이 `PageMeta` 테이블을 페이징해 직접 읽는다
 
-페이지 생성, 수정, 삭제, rename 시 관련 `PageMeta` row 를 갱신하거나 지우고 `SeqPageLatestSummary` 를 무효화한다. `SeqPageName` 은 그때 무효화하지 않는다 — 관리자의 캐시 삭제(`invalidateSiteCaches`)가 아니면 TTL(개발 1분, 운영 5분)로 만료된다.
+저장·삭제·rename 요청은 `SeqPageLatestSummary` 를 무효화하고, 삭제와 rename 은 그 자리에서 `PageMeta` row 를 지운다. 새 페이지와 새 리비전의 row 는 '''요청이 아니라 그 뒤의 계산'''(`PageLogic.calculate`)이 쓴다. 그래서 계산이 row 를 쓴 직후 두 목록을 다시 무효화한다(`AhaWikiCache.PageMeta.invalidateLists`). 2026-11-04 전에는 이것이 없어서, 저장과 계산 사이에 들어온 요청이 새 페이지가 빠진 목록을 캐시에 채우면 만료(운영 5~30분)까지 남았다. API 로 만든 페이지가 그 페이지를 나열한 목록에서 빈 링크로 보였고, 처음 본 날은 11분 걸려 풀렸다. `SeqPageName` 은 그 전에는 관리자의 캐시 삭제(`invalidateSiteCaches`)나 TTL(개발 1분, 운영 5분)로만 비워졌다.
 
 이 둘은 Redis 에 있지만 읽을 때마다 받아 해독하지는 않는다 — 버전 키로 해독한 값을 다시 쓴다. [Dev Cache] 의 «해독한 값을 프로세스에 둔다».
 

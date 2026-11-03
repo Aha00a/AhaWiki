@@ -183,8 +183,7 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
   def invalidateSiteCaches()(implicit database: Database, site: Site, contextSite: ContextSite): Unit = {
     AhaWikiCacheMemoryDomainSite.invalidate()
     implicit val ds = (database, site)
-    PageMeta.SeqPageLatestSummary.invalidate()
-    PageMeta.SeqPageName.invalidate()
+    PageMeta.invalidateLists()
     Footer.invalidate()
     Config.invalidate()
   }
@@ -228,6 +227,19 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
   }
 
   object PageMeta {
+    /**
+     * Both lists below are read off the PageMeta table, and the page calculation is what writes a
+     * row there -- after the save that queued it has returned. The save invalidates the list too,
+     * but a request landing between the save and the calculation fills it again without the new
+     * page, and until 2026-11-04 nothing emptied it until it expired (5 to 30 minutes): a page
+     * created through the API showed as a missing link on a page that listed it, for 11 minutes
+     * the time it was noticed. So the calculation calls this once the row is written.
+     */
+    def invalidateLists()(implicit t2: (Database, Site)): Unit = {
+      SeqPageLatestSummary.invalidate()
+      SeqPageName.invalidate()
+    }
+
     object SeqPageLatestSummary extends CacheEntity[Seq[PageLatestSummary], (Database, Site)] {
       override def durationExpire: FiniteDuration = {
         if (environment.mode == Dev)
