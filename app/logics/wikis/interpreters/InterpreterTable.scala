@@ -26,12 +26,18 @@ object InterpreterTable extends TraitInterpreter {
   private val regexBlockHtmlLine: Regex = """^\s*</?(Columns|div|span)(?:\s+[^>]*)?>\s*$""".r
   private val defaultCellValue = ""
 
-  // A cell that holds a number, as a spreadsheet writes one: an optional sign (the Unicode minus
-  // too), an optional currency mark, digits with or without thousands separators, an optional
-  // fraction, an optional percent sign. "65,438,723", "-7%", "₩1,200.50" and "+3" are numbers;
-  // "1,23", "12 000" and "1.234,5" are not -- the comma is a thousands separator here, as it is in
-  // the sheets this wiki's tables are pasted from, and in tablesorter, which sorts these columns.
-  private val regexNumber: Regex = """^([+\-−])?[$€£¥₩]?((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)\s*%?$""".r
+  // A cell that holds a number, as a spreadsheet writes one: an optional sign, an optional
+  // currency mark, digits with or without thousands separators, an optional fraction, and an
+  // optional unit on the end -- a percent sign, 원, 명, kg, up to eight letters or marks, with
+  // or without a space. Accounting's "(1,234)" is a negative. "65,438,723", "-7%", "₩1,200.50",
+  // "+3", "35명" and "12.5kg" are numbers; "1,23", "12 000", ".5", "1e5" and "2024년 3월" are not.
+  // The comma is a thousands separator, as it is in the sheets these tables are pasted from.
+  //
+  // What counts here has to sort the same way in the browser: the header of a numeric column
+  // names tablesorter's digit parser (thOpen below), which strips everything but digits, the
+  // ASCII sign, parentheses and the separators before it reads the value. That is why the
+  // Unicode minus (U+2212) is not a sign here -- tablesorter would drop it and sort −3 as 3.
+  private val regexNumber: Regex = """^([+\-])?(\()?[$€£¥₩]?((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(\))?(?:\s*[\p{L}%‰℃°]{1,8})?$""".r
 
   // What a numeric column may hold besides numbers and stay numeric: nothing, or the mark a
   // spreadsheet leaves for "no value". Any other text makes the column text.
@@ -59,20 +65,17 @@ object InterpreterTable extends TraitInterpreter {
     case _ => token
   }
 
-  private def sanitizeClasses(classes: String): Option[String] = Option(classes)
-    .map(_.trim)
-    .filter(_.nonEmpty)
-    .map(_.split("""\s+""").toSeq
-      .filter(token => regexCssClassToken.matches(token))
-      .map(normalizeClassToken)
-      .distinct
-      .mkString(" ")
-    )
-    .filter(_.nonEmpty)
+  private def sanitizeClasses(tokens: Seq[String]): Option[String] = Some(tokens
+    .filter(token => regexCssClassToken.matches(token))
+    .map(normalizeClassToken)
+    .distinct
+    .mkString(" ")
+  ).filter(_.nonEmpty)
 
-  private def parseBars(classes: String): Seq[String] = Option(classes).toSeq
-    .flatMap(_.split("""\s+"""))
-    .collect { case s"bar=$columns" => columns.split(",").toSeq.map(_.trim).filter(_.nonEmpty) }
+  // The key is matched case aside, like the interpreter's own name: `Bar=all` was neither an
+  // option nor a class, and vanished without a word.
+  private def parseBars(tokens: Seq[String]): Seq[String] = tokens
+    .collect { case s"$key=$columns" if key.equalsIgnoreCase("bar") => columns.split(",").toSeq.map(_.trim).filter(_.nonEmpty) }
     .flatten
 
   private def csvPreferenceFrom(format: String): Option[CsvPreference] = format match {
@@ -84,15 +87,15 @@ object InterpreterTable extends TraitInterpreter {
   private def normalizeCell(value: String): String = Option(value).getOrElse(defaultCellValue)
 
   /**
-   * The number a cell holds, if it holds one. "1,234" is 1234 and "-7%" is -7. A string of digits
-   * too long for a Double reads as infinity, which the bar arithmetic would turn into NaN
-   * percentages; it is not a number here.
+   * The number a cell holds, if it holds one. "1,234" is 1234, "-7%" is -7, "(1,234)" is -1234.
+   * A string of digits too long for a Double reads as infinity, which the bar arithmetic would
+   * turn into NaN percentages; it is not a number here.
    */
   def parseNumber(cell: String): Option[Double] = normalizeCell(cell).trim match {
-    case regexNumber(sign, digits) =>
+    case regexNumber(sign, open, digits, close) if (open == null) == (close == null) =>
       Try(digits.replace(",", "").toDouble).toOption
         .filter(v => !v.isInfinite)
-        .map(v => if (sign == "-" || sign == "−") -v else v)
+        .map(v => if (sign == "-" || open != null) -v else v)
     case _ => None
   }
 
@@ -125,7 +128,10 @@ object InterpreterTable extends TraitInterpreter {
       if (values.isEmpty) return None
       val lo = math.min(values.min, 0)
       val hi = math.max(values.max, 0)
-      if (hi - lo > 0) Some(BarScale(lo, hi)) else None
+      // Two finite values near the ends of a Double are infinitely far apart, and every bar on
+      // that scale would be nothing.
+      val span = hi - lo
+      if (span > 0 && span < Double.PositiveInfinity) Some(BarScale(lo, hi)) else None
     }
   }
 
@@ -140,16 +146,23 @@ object InterpreterTable extends TraitInterpreter {
    * take no part; a header column of years stays a header.
    */
   private case class Columns(numeric: Set[Int], barScales: Map[Int, BarScale]) {
+    // The header of a numeric column names tablesorter's parser. Left to guess, tablesorter reads
+    // the first body cell whose text is not empty and sorts the column as text when that cell is
+    // "-", "₩1,200" or "35명" -- 9 before 10, however many numbers follow. The digit parser it is
+    // told to use strips everything but digits, sign, parentheses and separators, so it reads
+    // every spelling parseNumber accepts. Header-column cells in body rows are never numeric
+    // (numeric starts at thColumn), so one helper serves both kinds of <th>.
+    def thOpen(columnIndex: Int): String =
+      if (numeric.contains(columnIndex)) """<th class="sorter-digit">""" else "<th>"
+
     def tdOpen(columnIndex: Int, cell: String): String = {
       if (!numeric.contains(columnIndex)) return "<td>"
       parseNumber(cell) match {
-        // A placeholder in a numeric column. tablesorter picks a column's parser from the first
-        // cell whose text is not empty -- so a column that opens with "n/a" sorted as text, and
-        // the numbers under it in the order of their first character. It reads data-text before
-        // the cell's text, an empty one included, so the empty attribute makes it skip the cell,
-        // and sorts the cell last with the other empties. Number cells carry no data-text: the
-        // filter widget matches typed text against the same attribute, and "65,438" has to find
-        // the cell that shows it.
+        // A placeholder in a numeric column. tablesorter reads data-text before the cell's text,
+        // an empty one included, so the empty attribute makes it skip the cell when it looks for
+        // a parser and sort the cell last with the other empties, ascending or descending. Number
+        // cells carry no data-text: the filter widget matches typed text against the same
+        // attribute, and "65,438" has to find the cell that shows it.
         case None => """<td class="numeric" data-text="">"""
         case Some(value) => barScales.get(columnIndex) match {
           case Some(scale) =>
@@ -169,12 +182,16 @@ object InterpreterTable extends TraitInterpreter {
       val numeric = (shebang.thColumn until width).filter(columnIndex => isNumericColumn(bodyCells(columnIndex)))
 
       // `bar=` names a column by number or by the text of its header -- the first row, when there
-      // is a header row. A name that is no column, or a column that is not numeric, draws nothing.
+      // is a header row, as written. A number names the column in that position; one that names
+      // no position is tried as header text, so a column headed "2024" can still be named. A name
+      // that is no column, or a column that is not numeric, draws nothing.
       val header: Seq[String] = if (shebang.thRow > 0) rows.headOption.getOrElse(Seq.empty).map(cell => normalizeCell(cell).trim) else Seq.empty
+      def byHeader(ref: String): Seq[Int] = header.indices.filter(columnIndex => header(columnIndex).equalsIgnoreCase(ref))
       val named: Set[Int] = shebang.bars.flatMap {
         case "all" => numeric
-        case ref if ref.forall(_.isDigit) => ref.toIntOption.map(_ - 1).toSeq // a number too long for an Int names no column
-        case ref => header.indices.filter(columnIndex => header(columnIndex).equalsIgnoreCase(ref))
+        case ref if ref.forall(_.isDigit) =>
+          ref.toIntOption.map(_ - 1).filter(columnIndex => columnIndex >= 0 && columnIndex < width).map(Seq(_)).getOrElse(byHeader(ref))
+        case ref => byHeader(ref)
       }.toSet
       val barScales = numeric.filter(named.contains).flatMap(columnIndex =>
         BarScale.of(bodyCells(columnIndex).flatMap(parseNumber)).map(columnIndex -> _)
@@ -218,9 +235,11 @@ object InterpreterTable extends TraitInterpreter {
   }
 
   def parseShebang(argument:Seq[String]): Option[Shebang] = argument.mkString(" ") match {
-    case regexShebang(format, thRow, thColumn, classes) =>
+    case regexShebang(format, thRow, thColumn, trailing) =>
+      // Split once; the classes and the options are read from the same words.
+      val tokens: Seq[String] = Option(trailing).toSeq.flatMap(_.trim.split("""\s+""")).filter(_.nonEmpty)
       csvPreferenceFrom(format).map(csvPreference =>
-        Shebang(csvPreference, thRow.toIntOrZero, thColumn.toIntOrZero, sanitizeClasses(classes), parseBars(classes))
+        Shebang(csvPreference, thRow.toIntOrZero, thColumn.toIntOrZero, sanitizeClasses(tokens), parseBars(tokens))
       )
     case _ => None
   }
@@ -248,7 +267,7 @@ object InterpreterTable extends TraitInterpreter {
         val rowBuilder = new StringBuilder
         row.zipWithIndex.foreach { case (cell, columnIndex) =>
           if (rowIndex < shebang.thRow || columnIndex < shebang.thColumn) {
-            rowBuilder.append("<th>").append(cachedCellToHtml(cell)).append("</th>")
+            rowBuilder.append(columns.thOpen(columnIndex)).append(cachedCellToHtml(cell)).append("</th>")
           } else {
             rowBuilder.append(columns.tdOpen(columnIndex, cell)).append(cachedCellToHtml(cell)).append("</td>")
           }
