@@ -110,6 +110,9 @@ https://mottie.github.io/tablesorter/docs/example-widget-filter.html --[2019-12-
 
 '''표에도 켰다.''' `Wiki/view.scala.html` 의 초기화에 `widgets: ["filter"]` 를 줬다 — 예상대로 그 한 줄이다. Map 표는 제 초기화가 열마다 다른 필터를 거니 `.not('[id^="mapTable"]')` 로 뺐다. 무엇을 어떻게 하는지는 [InterpreterTable] '''정렬과 필터'''. --[2026-09-15]
 
+=== InterpreterTable 발전 방향
+숫자 열 인식과 엑셀식 데이터 바(`bar=`)는 2026-11-02 에 들어갔다. 그 뒤에 무엇을 어떤 순서로 할지, 무엇을 왜 버렸는지는 [ToDo InterpreterTable]. --[2026-11-03]
+
 === Comparison of wiki software
 위키엔진 비교표
 
