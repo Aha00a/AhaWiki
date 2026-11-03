@@ -49,6 +49,45 @@ if [ "$CANARY" = "1" ] && [ "$RESTART_ONLY" = "1" ]; then
   echo "AHAWIKI_CANARY and AHAWIKI_RESTART_ONLY are two halves of one deploy; run them one after the other." >&2
   exit 2
 fi
+
+SRC="$(cd "$(dirname "$0")" && pwd)"
+# Names the tag and the lock's holder.
+DEPLOYER="$(git -C "$SRC" config user.name 2>/dev/null || true)"
+[ -n "$DEPLOYER" ] || DEPLOYER="$(git -C "$SRC" config user.email 2>/dev/null || whoami)"
+DEPLOYER="$(printf '%s' "${DEPLOYER%%@*}" | tr -c 'A-Za-z0-9._-' '-')"
+[ -n "$DEPLOYER" ] || DEPLOYER="deploy"
+
+# One deploy at a time, held on the server so it covers every checkout and machine. On 2026-11-04
+# a deploy from another checkout handed over while a canary waited to be compared, and replaced the
+# canary's release with its own; nothing said so until the comparison read the wrong release.
+# mkdir is the test-and-set: it fails when the directory is there. The holder file says who.
+#
+# A canary keeps the lock when it stops, marked "canary", because its deploy is not over until the
+# hand-over; only AHAWIKI_RESTART_ONLY takes that one over. Moving the holder file aside is what
+# makes the take-over one run's: the second mv finds nothing to move.
+LOCK="$ROOT/deploy.lock"
+KEEP_LOCK=0
+lock_holder() { ssh "$HOST" "cat '$LOCK/holder' 2>/dev/null || echo '(no holder file)'"; }
+lock_write() {
+  ssh "$HOST" "printf '%s\n' '$1 $DEPLOYER@$(hostname) $(git -C "$SRC" rev-parse --short HEAD) $(date -u +%Y-%m-%dT%H:%M:%SZ)' | sudo -n -u $SERVICE_USER tee '$LOCK/holder' >/dev/null"
+}
+lock_release() {
+  [ "$KEEP_LOCK" = "1" ] && return 0
+  ssh "$HOST" "sudo -n rm -rf '$LOCK'" || echo "  !! could not remove $LOCK on $HOST; remove it by hand" >&2
+}
+if ssh "$HOST" "sudo -n -u $SERVICE_USER mkdir '$LOCK' 2>/dev/null"; then
+  trap lock_release EXIT
+  lock_write deploying
+elif [ "$RESTART_ONLY" = "1" ] && ssh "$HOST" "grep -q '^canary ' '$LOCK/holder' 2>/dev/null && sudo -n -u $SERVICE_USER mv '$LOCK/holder' '$LOCK/holder.canary'"; then
+  trap lock_release EXIT
+  echo "  finishing the canary: $(ssh "$HOST" "cat '$LOCK/holder.canary'")"
+  lock_write deploying
+else
+  echo "Another deploy holds $LOCK on $HOST:" >&2
+  echo "  $(lock_holder)" >&2
+  echo "Wait for it. A canary is finished with AHAWIKI_RESTART_ONLY=1. If the holder is gone, remove the lock: ssh <host> sudo -n rm -rf $LOCK" >&2
+  exit 2
+fi
 # A deploy that stopped half way can leave $STANDBY serving with $PRIMARY down (step 5 says when).
 # Restarting $STANDBY first, as step 5 otherwise does, would then leave nothing answering, so in
 # that state the hand-over starts from $STANDBY as it is. A canary would need that restart, so it
@@ -60,7 +99,6 @@ if [ "$STANDBY_SERVING" = "1" ] && [ "$CANARY" = "1" ]; then
   exit 2
 fi
 
-SRC="$(cd "$(dirname "$0")" && pwd)"
 REL="$(date +%Y%m%d-%H%M%S)"
 
 say() { printf '\n\033[1m== %s\033[0m\n' "$*"; }
@@ -204,10 +242,13 @@ else
 fi
 
 if [ "$CANARY" = "1" ]; then
+  lock_write canary
+  KEEP_LOCK=1
   echo "  canary: $STANDBY runs $REL; $PRIMARY still runs the release before it and takes the readers."
   echo "    compare: AHAWIKI_DEPLOY_HOST=<ssh host> bash scripts/compare-instances.sh $PRIMARY $STANDBY"
   echo "    finish:  the same environment with AHAWIKI_RESTART_ONLY=1"
   echo "    abandon: point current back at ${PREV:-the previous release}, then stop ahawiki@$STANDBY"
+  echo "             and remove the lock it keeps until then: ssh <host> sudo -n rm -rf $LOCK"
 else
   # $STANDBY is about to be the only instance answering. If the proxy wrote it off at some earlier
   # failure, it would still be holding it out.
@@ -295,10 +336,6 @@ say "7/7 Tag"
 if [ "${SKIP_TAG:-0}" = "1" ]; then
   echo "  SKIP_TAG=1 — not tagging"
 else
-  DEPLOYER="$(git config user.name 2>/dev/null || true)"
-  [ -n "$DEPLOYER" ] || DEPLOYER="$(git config user.email 2>/dev/null || whoami)"
-  DEPLOYER="$(printf '%s' "${DEPLOYER%%@*}" | tr -c 'A-Za-z0-9._-' '-')"
-  [ -n "$DEPLOYER" ] || DEPLOYER="deploy"
   TAG="v$(date +%Y%m%dT%H%M%S)-${DEPLOYER}"
   if git tag "$TAG" "$SHA" 2>/dev/null; then
     echo "  tagged $TAG -> $SHORT (release $REL)"
