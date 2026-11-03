@@ -1,0 +1,36 @@
+// What a #!Table cell has to look like to be a number, and the value it is; "none" means it is
+// not a number. Read by InterpreterBlockUnit (the server's parseNumber, every row) and by
+// test/table.number-contract.test.mjs (tablesorter's digit parser, the rows that are numbers).
+// Lines starting with "//" are comments; the rest is the spelling, a tab, the value.
+//
+// A spreadsheet's spelling: thousands separators, a sign, a currency mark, a unit on the end.
+// The comma is a thousands separator, never a decimal mark.
+65,438,723	65438723
+-7%	-7
++3	3
+₩1,200.50	1200.5
+$5	5
+€1,000	1000
+(1,234)	-1234
+(5)%	-5
+1,200원	1200
+35명	35
+12.5kg	12.5
+1,234 kg	1234
+3 items	3
+5%p	5
+0	0
+-0.5	-0.5
+1,23	none
+12 000	none
+2025-01	none
+2024년 3월	none
+1e5	none
+.5	none
+(1	none
+// A sign and parentheses together is text to tablesorter's digit parser, so it is text here.
+-(1,234)	none
++(5)	none
+-	none
+// The Unicode minus is not a sign: tablesorter's digit parser drops it and would sort −3 as 3.
+−3	none

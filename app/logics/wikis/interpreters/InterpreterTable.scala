@@ -38,6 +38,7 @@ object InterpreterTable extends TraitInterpreter {
   // ASCII sign, parentheses and the separators before it reads the value. That is why the
   // Unicode minus (U+2212) is not a sign here -- tablesorter would drop it and sort −3 as 3 --
   // and why a sign and parentheses cannot both appear: "-(1,234)" is text to that parser.
+  // test/table.number-contract.test.mjs runs that parser over test/table-number-spellings.tsv.
   private val regexNumber: Regex = """^(?:([+\-])|(\())?[$€£¥₩]?((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(\))?(?:\s*[\p{L}%‰℃°]{1,8})?$""".r
 
   // What a numeric column may hold besides numbers and stay numeric: nothing, or the mark a

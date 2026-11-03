@@ -47,35 +47,19 @@ object InterpreterBlockUnit {
       assertEquals(Interpreters.toHtmlString("#!table tsv 1 \"bad\"\na\tb"), <table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>a</p></div></th><th><div><p>b</p></div></th></tr></thead><tbody></tbody></table>.toString())
       assertEquals(Interpreters.toHtmlString("#!table csv\n\"a,b\",c"), <table class="InterpreterTable wikiTableSimple tablesorter"><tbody><tr><td><div><p>a,b</p></div></td><td><div><p>c</p></div></td></tr></tbody></table>.toString())
 
-      // What a cell has to look like to be a number: a spreadsheet's spelling, thousands separators
-      // and all, a unit on the end allowed. The comma is a thousands separator, never a decimal mark.
+      // What a cell has to look like to be a number. The spellings are in a fixture that
+      // test/table.number-contract.test.mjs also reads, to check that tablesorter's digit parser
+      // -- which the header of a numeric column names -- reads each number the same way.
       import logics.wikis.interpreters.InterpreterTable.parseNumber
-      assertEquals(parseNumber("65,438,723"), Some(65438723.0))
-      assertEquals(parseNumber("-7%"), Some(-7.0))
-      assertEquals(parseNumber("+3"), Some(3.0))
-      assertEquals(parseNumber("₩1,200.50"), Some(1200.5))
+      val spellings = java.nio.file.Files.readString(java.nio.file.Paths.get("test/table-number-spellings.tsv")).split("\r?\n").toSeq
+        .filterNot(line => line.isEmpty || line.startsWith("//"))
+        .map(_.split("\t") match { case Array(spelling, value) => spelling -> (if (value == "none") None else Some(value.toDouble)) })
+      assertEquals(spellings.exists(_._2.isDefined) && spellings.exists(_._2.isEmpty), true)
+      spellings.foreach { case (spelling, value) => assertEquals(spelling -> parseNumber(spelling), spelling -> value) }
+      // What a TSV line cannot carry, or carries badly: blanks around the number, nothing at all.
       assertEquals(parseNumber(" 42 "), Some(42.0))
-      assertEquals(parseNumber("(1,234)"), Some(-1234.0))
-      assertEquals(parseNumber("1,200원"), Some(1200.0))
-      assertEquals(parseNumber("35명"), Some(35.0))
-      assertEquals(parseNumber("12.5kg"), Some(12.5))
-      assertEquals(parseNumber("3 items"), Some(3.0))
-      assertEquals(parseNumber("5%p"), Some(5.0))
-      assertEquals(parseNumber("1,23"), None)
-      assertEquals(parseNumber("12 000"), None)
-      assertEquals(parseNumber("2025-01"), None)
-      assertEquals(parseNumber("2024년 3월"), None)
-      assertEquals(parseNumber("1e5"), None)
-      assertEquals(parseNumber(".5"), None)
-      assertEquals(parseNumber("(1"), None)
-      // A sign and parentheses together is text to tablesorter's digit parser, so it is text here.
-      assertEquals(parseNumber("-(1,234)"), None)
-      assertEquals(parseNumber("+(5)"), None)
-      assertEquals(parseNumber("-"), None)
       assertEquals(parseNumber(""), None)
       assertEquals(parseNumber(null), None)
-      // The Unicode minus is not a sign: tablesorter's digit parser drops it and would sort −3 as 3.
-      assertEquals(parseNumber("−3"), None)
       // Digits past what a Double holds read as infinity, which would make NaN bars; not a number.
       assertEquals(parseNumber("1" + "0" * 400), None)
 
