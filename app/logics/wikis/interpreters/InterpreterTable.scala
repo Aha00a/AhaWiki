@@ -142,11 +142,21 @@ object InterpreterTable extends TraitInterpreter {
   private case class Columns(numeric: Set[Int], barScales: Map[Int, BarScale]) {
     def tdOpen(columnIndex: Int, cell: String): String = {
       if (!numeric.contains(columnIndex)) return "<td>"
-      barScales.get(columnIndex).zip(parseNumber(cell)) match {
-        case Some((scale, value)) =>
-          val negative = if (value < 0) " negative" else ""
-          s"""<td class="numeric dataBar$negative" style="${scale.style(value)}">"""
-        case None => """<td class="numeric">"""
+      parseNumber(cell) match {
+        // A placeholder in a numeric column. tablesorter picks a column's parser from the first
+        // cell whose text is not empty -- so a column that opens with "n/a" sorted as text, and
+        // the numbers under it in the order of their first character. It reads data-text before
+        // the cell's text, an empty one included, so the empty attribute makes it skip the cell,
+        // and sorts the cell last with the other empties. Number cells carry no data-text: the
+        // filter widget matches typed text against the same attribute, and "65,438" has to find
+        // the cell that shows it.
+        case None => """<td class="numeric" data-text="">"""
+        case Some(value) => barScales.get(columnIndex) match {
+          case Some(scale) =>
+            val negative = if (value < 0) " negative" else ""
+            s"""<td class="numeric dataBar$negative" style="${scale.style(value)}">"""
+          case None => """<td class="numeric">"""
+        }
       }
     }
   }

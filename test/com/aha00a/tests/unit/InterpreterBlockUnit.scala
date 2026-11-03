@@ -79,13 +79,15 @@ object InterpreterBlockUnit {
           """<tr><td><div><p>B</p></div></td><td><div><p>ten</p></div></td></tr></tbody></table>"""
       )
       // An empty cell, "-" and "n/a" are a spreadsheet's "no value": the column stays numeric and
-      // they are right-aligned with it, but they get no bar.
+      // they are right-aligned with it, but they get no bar -- and an empty data-text, so that
+      // tablesorter skips them when choosing the column's parser and sorts them last. A column
+      // that opened with "n/a" used to sort as text.
       assertEquals(
         Interpreters.toHtmlString("#!table tsv 1 bar=2\nName\tScore\nA\t10\nB\t-\nC\tn/a\nD\t"),
         """<table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Name</p></div></th><th><div><p>Score</p></div></th></tr></thead><tbody><tr><td><div><p>A</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>10</p></div></td></tr>""" + "\n" +
-          """<tr><td><div><p>B</p></div></td><td class="numeric"><div><p>-</p></div></td></tr>""" + "\n" +
-          """<tr><td><div><p>C</p></div></td><td class="numeric"><div><p>n/a</p></div></td></tr>""" + "\n" +
-          """<tr><td><div><p>D</p></div></td><td class="numeric"><div></div></td></tr></tbody></table>"""
+          """<tr><td><div><p>B</p></div></td><td class="numeric" data-text=""><div><p>-</p></div></td></tr>""" + "\n" +
+          """<tr><td><div><p>C</p></div></td><td class="numeric" data-text=""><div><p>n/a</p></div></td></tr>""" + "\n" +
+          """<tr><td><div><p>D</p></div></td><td class="numeric" data-text=""><div></div></td></tr></tbody></table>"""
       )
       // A header column is a header whatever it holds; the body cell beside it is still judged.
       assertEquals(
