@@ -95,6 +95,24 @@ Rules of the copy:
 reports whether each library is there, whether MathJax typeset from the local tree, and whether
 anything was fetched off the origin.
 
+## Compiled stylesheets
+
+`less.mjs` recompiles the stylesheets under `app/assets/` that the repository commits beside
+their Less sources, with the `less` version `package.json` pins and the one command whose output
+matches the committed files byte for byte (`lessc --source-map X.less X.css`, from `app/assets`;
+the wiki page Dev Less has why no other option will do).
+
+```bash
+npm run less
+```
+
+`less.less` is left out: it holds remote `@import url()` lines for Google Fonts, and lessc bakes
+the response of the day into the output. The script names the exclusion and the reason, and
+`test/less.compiled.test.mjs` fails when a stylesheet is neither listed nor excused, or when a
+committed `.css`/`.css.map` differs from what its `.less` compiles to. That check exists because
+the only guard before it was a measurement written on the wiki, and by the time it was written
+down as a test two stylesheets had already drifted by hand.
+
 ## External asset check
 
 `check-cdn-assets.mjs` fetches every external stylesheet, script, and importmap entry the
