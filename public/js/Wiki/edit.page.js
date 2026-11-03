@@ -188,8 +188,11 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 const firstLine = (lines[0] || '').trim();
                 const inlineWrappedMatch = firstLine.match(/^\[\[\[#!table(?:\s+(.+))?$/i);
                 if (inlineWrappedMatch) {
-                    const optionInline = (inlineWrappedMatch[1] || 'tsv').trim().toLowerCase();
-                    const delimiterInline = optionInline.startsWith('csv') ? ',' : '\t';
+                    // The option string is kept as typed; only the delimiter decision ignores case.
+                    // Until 2026-11-03 the whole string was lowercased and written back, so one
+                    // cell edited here turned `bar=Revenue` into `bar=revenue`.
+                    const optionInline = (inlineWrappedMatch[1] || 'tsv').trim();
+                    const delimiterInline = optionInline.toLowerCase().startsWith('csv') ? ',' : '\t';
                     const hasClosingWrapperInline = (lines[lines.length - 1] || '').trim() === ']]]';
                     return {
                         delimiter: delimiterInline,
@@ -204,8 +207,8 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 const match = shebang.match(/^#!table(?:\s+(.+))?$/i);
                 if (!match)
                     return null;
-                const option = (match[1] || 'tsv').trim().toLowerCase();
-                const delimiter = option.startsWith('csv') ? ',' : '\t';
+                const option = (match[1] || 'tsv').trim();
+                const delimiter = option.toLowerCase().startsWith('csv') ? ',' : '\t';
                 const hasClosingWrapper = hasBlockWrapper && (lines[lines.length - 1] || '').trim() === ']]]';
                 return {
                     delimiter,
@@ -929,8 +932,8 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     alert('Partial text가 #!table 블록이 아닙니다.');
                     return;
                 }
-                const option = ($tableInlineOption.val() || table.option || 'tsv').toString().trim().toLowerCase();
-                const delimiter = option.startsWith('csv') ? ',' : '\t';
+                const option = ($tableInlineOption.val() || table.option || 'tsv').toString().trim();
+                const delimiter = option.toLowerCase().startsWith('csv') ? ',' : '\t';
                 const lines = src.split('\n');
                 const rows = [];
                 $tableInlineEditorGrid.find('tr').each(function () {
@@ -1250,7 +1253,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             const schemaPropertyNamesByClass = new Map();
             const schemaPropertyLoadingByClass = new Set();
             let pageNames = [];
-            const tableOptionNames = ['tsv', 'csv', 'tsv 1', 'tsv 1 1', 'tsv 1 1 tablesorter'];
+            const tableOptionNames = ['tsv', 'csv', 'tsv 1', 'tsv 1 1', 'tsv 1 bar=all', 'tsv 1 1 tablesorter'];
             let macroSuggestions = [];
             let activeMacroSuggestionIndex = 0;
             let macroAutocompleteContext = null;

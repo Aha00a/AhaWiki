@@ -51,6 +51,98 @@
 .wikiTableSimple {
 	.wikiTableSimple();
 }
+
+// #!Table marks a column whose body cells are all numbers (InterpreterTable.isNumericColumn) so the
+// digits line up on the right, as they did in the spreadsheet the table was pasted from. A column
+// named by `bar=` also carries, on each cell, where its bar starts and ends as two percentages of
+// the cell's width; the bar itself is painted here, so its colour follows the theme and the hue
+// like everything else on the page.
+//
+// It is a pseudo-element over the cell, not the cell's background: `tr:nth-child(even) td` above
+// writes the shorthand `background`, which would wipe a background-image on every other row, and a
+// background on the inner div would stop at the padding. The number stays text and the bar is
+// decoration -- it takes no pointer events, and the content is positioned so it paints above it.
+.InterpreterTable {
+	--bar-color: ~"hsla(var(--hue), 90%, 55%, 0.28)";
+	--bar-color-negative: hsla(0, 80%, 55%, 0.28);
+	--bar-axis-color: ~"hsla(var(--hue), 25%, 30%, 0.6)";
+	// Under `@media screen` for the same reason less.less keeps every dark token there: a page
+	// printed from the dark theme prints light, and the bar has to come out light with it.
+	@media screen {
+		html.theme-ahawiki-dark & {
+			--bar-color: ~"hsla(var(--hue), 90%, 65%, 0.35)";
+			--bar-color-negative: hsla(0, 80%, 65%, 0.35);
+			--bar-axis-color: ~"hsla(var(--hue), 25%, 85%, 0.6)";
+		}
+	}
+	// The header of a numeric column sits over its digits, right-aligned like them (GOV.UK and
+	// Material tables do the same): a centred label over right-aligned figures reads as two
+	// columns. The sort arrow keeps its place at the right of every header, so the label ends
+	// where the arrow's room begins, a little short of the digits, rather than the arrow
+	// changing sides from column to column (Material's arrowPosition="before" is that other
+	// choice). The contract paper layout in wiki.less keeps its headers centred on purpose.
+	th.numeric, td.numeric {
+		.tabularFigures();
+	}
+	td.numeric {
+		// A number with a space before its unit ("12 kg") could wrap in a narrow cell, and its
+		// bar with it.
+		white-space: nowrap;
+	}
+	td.dataBar {
+		position: relative;
+		// The bar and the axis are pseudo-elements with a negative z-index; the stacking context
+		// keeps them above the cell's own background and under the cell's content.
+		isolation: isolate;
+		&.negative {
+			--bar-color: var(--bar-color-negative);
+		}
+		// Edge to edge across the cell, as Excel draws it, and inset only top and bottom: the
+		// axis below is placed by the same percentage, and both have to measure the same width.
+		&::before {
+			content: "";
+			position: absolute;
+			inset: 3px 0;
+			z-index: -1;
+			pointer-events: none;
+			background: ~"linear-gradient(to right, transparent 0 var(--bar-start), var(--bar-color) var(--bar-start) var(--bar-end), transparent var(--bar-end) 100%)";
+			-webkit-print-color-adjust: exact;
+			print-color-adjust: exact;
+		}
+		// Excel's zero axis: in a column that holds both signs, a hairline at zero in every cell
+		// of the column, the zero cells included. The server says where zero is with the two
+		// percentages it already writes -- a bar starts there for a non-negative value and ends
+		// there for a negative one -- so no third number reaches the page. It is a positioned
+		// box rather than a gradient stop because a box edge snaps to the pixel grid and a stop
+		// is smeared over two.
+		&.axis {
+			--bar-axis: var(--bar-start);
+			&.negative {
+				--bar-axis: var(--bar-end);
+			}
+			&::after {
+				content: "";
+				position: absolute;
+				top: 3px;
+				bottom: 3px;
+				left: var(--bar-axis);
+				width: 1px;
+				z-index: -1;
+				pointer-events: none;
+				background: var(--bar-axis-color);
+				-webkit-print-color-adjust: exact;
+				print-color-adjust: exact;
+			}
+		}
+		// Room for the bar: a column of "8%" is a few characters wide, and the bar's resolution
+		// is the cell's width. 3em of content plus the cell's padding is about Excel's default
+		// column of 64px. On the inner block, because CSS leaves min-width on a table cell
+		// undefined and engines differ.
+		> div {
+			min-width: 3em;
+		}
+	}
+}
 .revisionFlagColumn {
 	width: 34px;
 	min-width: 34px;

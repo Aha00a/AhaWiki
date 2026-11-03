@@ -2842,6 +2842,65 @@
 .AhaWiki .wikiTableSimple tr:hover td {
   background: var(--color-table-row-hover-bg);
 }
+.AhaWiki .InterpreterTable {
+  --bar-color: hsla(var(--hue), 90%, 55%, 0.28);
+  --bar-color-negative: hsla(0, 80%, 55%, 0.28);
+  --bar-axis-color: hsla(var(--hue), 25%, 30%, 0.6);
+}
+@media screen {
+  html.theme-ahawiki-dark .AhaWiki .InterpreterTable {
+    --bar-color: hsla(var(--hue), 90%, 65%, 0.35);
+    --bar-color-negative: hsla(0, 80%, 65%, 0.35);
+    --bar-axis-color: hsla(var(--hue), 25%, 85%, 0.6);
+  }
+}
+.AhaWiki .InterpreterTable th.numeric,
+.AhaWiki .InterpreterTable td.numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.AhaWiki .InterpreterTable td.numeric {
+  white-space: nowrap;
+}
+.AhaWiki .InterpreterTable td.dataBar {
+  position: relative;
+  isolation: isolate;
+}
+.AhaWiki .InterpreterTable td.dataBar.negative {
+  --bar-color: var(--bar-color-negative);
+}
+.AhaWiki .InterpreterTable td.dataBar::before {
+  content: "";
+  position: absolute;
+  inset: 3px 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent 0 var(--bar-start), var(--bar-color) var(--bar-start) var(--bar-end), transparent var(--bar-end) 100%);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.AhaWiki .InterpreterTable td.dataBar.axis {
+  --bar-axis: var(--bar-start);
+}
+.AhaWiki .InterpreterTable td.dataBar.axis.negative {
+  --bar-axis: var(--bar-end);
+}
+.AhaWiki .InterpreterTable td.dataBar.axis::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: var(--bar-axis);
+  width: 1px;
+  z-index: -1;
+  pointer-events: none;
+  background: var(--bar-axis-color);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.AhaWiki .InterpreterTable td.dataBar > div {
+  min-width: 3em;
+}
 .AhaWiki .revisionFlagColumn {
   width: 34px;
   min-width: 34px;

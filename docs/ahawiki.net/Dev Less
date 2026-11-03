@@ -13,7 +13,7 @@ IntelliJ 없이 손으로 컴파일할 때는 `app/assets` 에서:
 lessc --source-map wiki.less wiki.css
 ]]]
 
-커밋돼 있는 `.css`·`.css.map` 과 바이트 단위로 같은 결과가 나온다(2026-08-19 `wiki.less` 로 실측). 다른 옵션을 쓰면 소스맵이 달라져 고치지 않은 파일이 diff 에 나타난다.
+커밋돼 있는 `.css`·`.css.map` 과 바이트 단위로 같은 결과가 나온다. 2026-11-03 부터는 `test/less.compiled.test.mjs` 가 `npm test` 마다 `less.less` 를 뺀 아홉 파일을 그 명령으로 임시 디렉터리에 다시 컴파일해 커밋된 것과 비교한다 — `lessc` 는 `package.json` 이 고정한 버전이고, `npm run less` 가 같은 명령으로 전부 제자리에 다시 만든다(`scripts/less.mjs`). 그 전에는 2026-08-19 의 실측 한 번이 유일한 보증이었고, 그 사이 `kanban.css` 는 소스맵 주석을, `adjacent.css` 는 규칙 하나의 자리를 lessc 와 다르게 가진 채 커밋돼 있었다 — 둘 다 손으로 고친 것이고, 효과는 맞았지만 다음 컴파일 때 diff 로 나올 것들이었다. 다른 옵션을 쓰면 소스맵이 달라져 고치지 않은 파일이 diff 에 나타난다. `less.less` 를 빼는 까닭은 바로 아래 절이다 — 그것만은 IntelliJ 가 컴파일한다.
 
 === 원격 `@import url()` 은 컴파일하던 날의 응답이 박힌다
 `lessc` 는 `@import url(https://…)` 를 만나면 그 주소를 받아 응답을 `.css` 에 그대로 붙인다. 브라우저가 받는 것은 Google 의 CSS 가 아니라 컴파일하던 날 `lessc` 가 받은 응답이다. Google Fonts 는 요청한 User-Agent 를 보고 답을 고르는데, `lessc` 에게는 `unicode-range` 로 나눈 woff2 대신 굵기마다 TTF 하나를 줬다.

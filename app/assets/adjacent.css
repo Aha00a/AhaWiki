@@ -74,9 +74,6 @@
   font-size: 12px;
   color: var(--color-adjacent-placeholder-muted);
 }
-.AhaWiki .adjacentPagesHud [data-hud-label]::before {
-  content: attr(data-hud-label);
-}
 .AhaWiki .adjacentPagesHud {
   position: absolute;
   top: 0;
@@ -84,6 +81,9 @@
   right: 0;
   bottom: 0;
   pointer-events: none;
+}
+.AhaWiki .adjacentPagesHud [data-hud-label]::before {
+  content: attr(data-hud-label);
 }
 .AhaWiki .adjacentPagesHud .hudPanel {
   position: absolute;

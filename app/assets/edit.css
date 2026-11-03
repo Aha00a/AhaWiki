@@ -181,7 +181,9 @@
   display: none;
 }
 #tableInlineOption {
-  width: 120px;
+  flex: 1 1 auto;
+  min-width: 120px;
+  max-width: 40ch;
 }
 #ganttEditorBar {
   display: none;

@@ -646,8 +646,7 @@
 				}
 
 				.year {
-					text-align: right;
-					font-variant-numeric: tabular-nums;
+					.tabularFigures();
 					font-weight: bold;
 					color: var(--color-muted-strong);
 
@@ -1122,6 +1121,8 @@
 					padding: 6px 12px;
 					vertical-align: top;
 				}
+				// Centred on purpose, numeric columns included: a contract's tables centre their
+				// headers, and the digits under them still right-align (_wiki_table.less).
 				th {
 					text-align: center;
 					font-weight: bold;
