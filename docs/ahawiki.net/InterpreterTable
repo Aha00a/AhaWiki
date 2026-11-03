@@ -7,7 +7,7 @@ TSV 또는 CSV 텍스트를 표로 렌더링합니다.
  1. format - required. `tsv` or `csv`.
  1. row header count - optional.
  1. column header count - optional.
- 1. options and CSS classes - optional. `=` 가 든 낱말은 옵션이고(아래 '''데이터 바'''의 `bar=`), 나머지는 표에 붙는 CSS class 입니다.
+ 1. options and CSS classes - optional. `=` 가 든 낱말은 옵션이고(아래 '''데이터 바'''의 `bar=`), 나머지는 표에 붙는 CSS class 입니다. 모르는 옵션(`bars=2` 같은 오타)은 아무 말 없이 버려집니다 — 옵션이 되기 전에도 그런 낱말은 버려졌고, 지금은 에디터의 자동완성이 철자를 맡습니다.
 
 == Examples
 
