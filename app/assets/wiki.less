@@ -615,9 +615,9 @@
 			}
 		}
 
-		// [[OnThisDay]]: a card of rows, year | property | page. Not floated like the boxes above — it
+		// [[OnThisDay]]: a card of rows, date | property | page. Not floated like the boxes above — it
 		// is the content of a day page, not a margin note. A date written without a year has an
-		// empty .year, which gets a dash so the column still reads as a column.
+		// empty .date, which gets a dash so the column still reads as a column.
 		// No `clear`: the front page has a Schema box floated right, and clearing it pushed this card
 		// below the box and left a gap under the heading. The list is overflow:hidden, so it forms
 		// its own block context and sits beside a float, narrower, instead.
@@ -635,7 +635,7 @@
 
 				li {
 					display: grid;
-					grid-template-columns: 4em auto 1fr;
+					grid-template-columns: 6em auto 1fr;
 					column-gap: 12px;
 					align-items: baseline;
 					padding: 6px 14px;
@@ -645,7 +645,7 @@
 					}
 				}
 
-				.year {
+				.date {
 					.tabularFigures();
 					font-weight: bold;
 					color: var(--color-muted-strong);
@@ -669,7 +669,7 @@
 
 				@media screen and @widthTablet {
 					li {
-						grid-template-columns: 3.5em auto;
+						grid-template-columns: 6em auto;
 						row-gap: 2px;
 
 						a {

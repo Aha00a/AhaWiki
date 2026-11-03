@@ -22,8 +22,8 @@ import models.tables.Site
 object MacroOnThisDay extends TraitMacro {
   override def isBlock: Boolean = true
 
-  /** A page, the property that put it on this day, and the year — absent when the date had none. */
-  case class Entry(year: Option[Int], prop: String, page: String)
+  /** A page, the property that put it on this day, and the full date — absent when the date had no year. */
+  case class Entry(date: Option[String], prop: String, page: String)
 
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String =
     monthDay(argument) match {
@@ -67,17 +67,18 @@ object MacroOnThisDay extends TraitMacro {
   def toEntries(rows: Seq[CalculatedSchemaOrg]): Seq[Entry] =
     rows
       .filter(r => InterpreterSchema.isDateKey(r.prop))
-      .map(r => Entry(yearOf(r.value), r.prop, r.page))
+      .map(r => Entry(dateOf(r.value), r.prop, r.page))
       .distinct
-      .sortBy(e => (e.year.isEmpty, e.year.getOrElse(0), e.page, e.prop))
+      .sortBy(e => (e.date.isEmpty, e.date.getOrElse(""), e.page, e.prop))
 
-  private def yearOf(value: String): Option[Int] = value match {
-    case DateTimeUtil.regexIsoLocalDate(y, _, _) => Some(y.toInt)
+  // Every entry shares the month and day, so ordering the dates as strings is ordering the years.
+  private def dateOf(value: String): Option[String] = value match {
+    case DateTimeUtil.regexIsoLocalDate(_, _, _) => Some(value)
     case _ => None
   }
 
   private def toListItem(e: Entry)(implicit wikiContext: ContextWikiPage): String = {
-    val year = e.year.map(_.toString).getOrElse("")
-    s"""<li><span class="year">$year</span> <span class="prop">${e.prop.escapeHtml()}</span> ${AhaMarkLink(e.page, noFollow = true).toHtmlString()}</li>"""
+    val date = e.date.getOrElse("")
+    s"""<li><span class="date">$date</span> <span class="prop">${e.prop.escapeHtml()}</span> ${AhaMarkLink(e.page, noFollow = true).toHtmlString()}</li>"""
   }
 }

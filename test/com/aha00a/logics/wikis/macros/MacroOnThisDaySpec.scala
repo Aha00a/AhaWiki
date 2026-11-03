@@ -69,8 +69,8 @@ class MacroOnThisDaySpec extends AnyFreeSpec with EmptyContextWikiPage {
       ))
 
       assert(entries === Seq(
-        Entry(Some(1066), "deathDate", "Old"),
-        Entry(Some(1815), "birthDate", "Ada"),
+        Entry(Some("1066-10-23"), "deathDate", "Old"),
+        Entry(Some("1815-10-23"), "birthDate", "Ada"),
         Entry(None, "birthDate", "Me"),
       ))
     }
@@ -81,7 +81,7 @@ class MacroOnThisDaySpec extends AnyFreeSpec with EmptyContextWikiPage {
         row("Ada", "birthDate", "1815-10-23", cls = "Thing"),
       ))
 
-      assert(entries === Seq(Entry(Some(1815), "birthDate", "Ada")))
+      assert(entries === Seq(Entry(Some("1815-10-23"), "birthDate", "Ada")))
     }
 
     "keep a page that has two dates on this day under both" in {
