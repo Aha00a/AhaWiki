@@ -68,6 +68,9 @@ object InterpreterBlockUnit {
       assertEquals(parseNumber("1e5"), None)
       assertEquals(parseNumber(".5"), None)
       assertEquals(parseNumber("(1"), None)
+      // A sign and parentheses together is text to tablesorter's digit parser, so it is text here.
+      assertEquals(parseNumber("-(1,234)"), None)
+      assertEquals(parseNumber("+(5)"), None)
       assertEquals(parseNumber("-"), None)
       assertEquals(parseNumber(""), None)
       assertEquals(parseNumber(null), None)

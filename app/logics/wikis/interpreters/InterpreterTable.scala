@@ -36,8 +36,9 @@ object InterpreterTable extends TraitInterpreter {
   // What counts here has to sort the same way in the browser: the header of a numeric column
   // names tablesorter's digit parser (thOpen below), which strips everything but digits, the
   // ASCII sign, parentheses and the separators before it reads the value. That is why the
-  // Unicode minus (U+2212) is not a sign here -- tablesorter would drop it and sort −3 as 3.
-  private val regexNumber: Regex = """^([+\-])?(\()?[$€£¥₩]?((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(\))?(?:\s*[\p{L}%‰℃°]{1,8})?$""".r
+  // Unicode minus (U+2212) is not a sign here -- tablesorter would drop it and sort −3 as 3 --
+  // and why a sign and parentheses cannot both appear: "-(1,234)" is text to that parser.
+  private val regexNumber: Regex = """^(?:([+\-])|(\())?[$€£¥₩]?((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(\))?(?:\s*[\p{L}%‰℃°]{1,8})?$""".r
 
   // What a numeric column may hold besides numbers and stay numeric: nothing, or the mark a
   // spreadsheet leaves for "no value" -- "#N/A" is what Excel pastes for a lookup that found
