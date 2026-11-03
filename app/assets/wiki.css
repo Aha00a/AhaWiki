@@ -2818,7 +2818,7 @@
 }
 .AhaWiki .wikiTableSimple th,
 .AhaWiki .wikiTableSimple td {
-  padding: 10px 12px;
+  padding: var(--table-cell-padding, 10px 12px);
   border: 1px solid var(--color-table-border);
 }
 .AhaWiki .wikiTableSimple th p:first-of-type,
@@ -2841,6 +2841,11 @@
 }
 .AhaWiki .wikiTableSimple tr:hover td {
   background: var(--color-table-row-hover-bg);
+}
+.AhaWiki .wikiTableSimple.compact {
+  --table-cell-padding: 4px 8px;
+  --bar-inset: 2px;
+  font-size: 0.92em;
 }
 .AhaWiki .InterpreterTable {
   --bar-color: hsla(var(--hue), 90%, 55%, 0.28);
@@ -2872,7 +2877,7 @@
 .AhaWiki .InterpreterTable td.dataBar::before {
   content: "";
   position: absolute;
-  inset: 3px 0;
+  inset: var(--bar-inset, 3px) 0;
   z-index: -1;
   pointer-events: none;
   background: linear-gradient(to right, transparent 0 var(--bar-start), var(--bar-color) var(--bar-start) var(--bar-end), transparent var(--bar-end) 100%);
@@ -2888,8 +2893,8 @@
 .AhaWiki .InterpreterTable td.dataBar.axis::after {
   content: "";
   position: absolute;
-  top: 3px;
-  bottom: 3px;
+  top: var(--bar-inset, 3px);
+  bottom: var(--bar-inset, 3px);
   left: var(--bar-axis);
   width: 1px;
   z-index: -1;
@@ -3103,11 +3108,12 @@
   width: 100%;
   border-collapse: collapse;
   margin: 1em 0;
+  --table-cell-padding: 6px 12px;
 }
 .AhaWiki .wikiContent .contract .InterpreterTable th,
 .AhaWiki .wikiContent .contract .InterpreterTable td {
   border: 1px solid;
-  padding: 6px 12px;
+  padding: var(--table-cell-padding);
   vertical-align: top;
 }
 .AhaWiki .wikiContent .contract .InterpreterTable th {

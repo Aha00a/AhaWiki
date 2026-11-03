@@ -1116,9 +1116,13 @@
 				width: 100%;
 				border-collapse: collapse;
 				margin: 1em 0;
+				--table-cell-padding: 6px 12px;
+				// Set by a selector here, unlike everywhere else (_wiki_table.less): this one is
+				// stronger than the header's sort-arrow room and takes it, on purpose -- the
+				// headers are centred, and equal padding keeps them centred on paper.
 				th, td {
 					border: 1px solid;
-					padding: 6px 12px;
+					padding: var(--table-cell-padding);
 					vertical-align: top;
 				}
 				// Centred on purpose, numeric columns included: a contract's tables centre their

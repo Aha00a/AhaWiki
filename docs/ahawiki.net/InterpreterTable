@@ -51,6 +51,8 @@ l,m,n,p
 
 === CSS Class
 
+옵션이 아닌 낱말은 표에 class 로 붙습니다. 스타일시트가 뜻을 주는 것은 `compact` 하나입니다 — 셀 여백을 줄이고(`4px 8px`) 글자를 조금 작게(`0.92em`) 해서, 시트에서 붙여 넣은 긴 표를 한 화면에 더 담습니다. 다른 낱말은 class 로 붙기만 하고 모양을 바꾸지 않습니다.
+
 [[[#!WikiSyntaxPreview Table tsv 1 1 compact
 Name	Score	Comment
 AhaWiki	10	Wiki page

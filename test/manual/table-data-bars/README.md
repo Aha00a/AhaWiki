@@ -13,6 +13,9 @@ argued from tablesorter's minified source when the numeric columns went in, by r
    empty `data-text`, and why number cells do not carry one.
  * **The look that can be measured:** numeric headers and cells right-aligned, an axis line only
    in the column with both signs, a bar in each barred cell and none in a column of zeros.
+ * **`compact`:** closer cells, type at 0.92, a thinner bar inset -- while the header keeps its
+   room for the sort arrow and the filter row its own padding. Those two are what setting the
+   padding with a selector instead of `--table-cell-padding` would take away.
 
 That every number spelling reads to tablesorter as the value the server gives it is
 `test/table.number-contract.test.mjs`, under `npm test`; this page is for what needs a browser.

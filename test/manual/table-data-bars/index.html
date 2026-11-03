@@ -55,6 +55,11 @@ document.documentElement.classList.add(new URLSearchParams(location.search).get(
 <table id="barAll" class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Month</p></div></th><th class="numeric sorter-digit"><div><p>Revenue</p></div></th><th class="numeric sorter-digit"><div><p>Change</p></div></th><th class="numeric sorter-digit"><div><p>Flat</p></div></th><th class="numeric sorter-digit"><div><p>Zero</p></div></th></tr></thead><tbody><tr><td><div><p>Jan</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:54.7%"><div><p>65,438,723</p></div></td><td class="numeric dataBar axis" style="--bar-start:50.0%;--bar-end:100.0%"><div><p>8%</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>5</p></div></td><td class="numeric"><div><p>0</p></div></td></tr>
 <tr><td><div><p>Feb</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>119,526,353</p></div></td><td class="numeric dataBar negative axis" style="--bar-start:0.0%;--bar-end:50.0%"><div><p>-8%</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>5</p></div></td><td class="numeric"><div><p>0</p></div></td></tr></tbody></table>
 
+<h2>bar=all compact</h2>
+<p>The same table with `compact`: closer cells and smaller type, the sort arrow's room and the filter row as they were.</p>
+<table id="compact" class="InterpreterTable wikiTableSimple tablesorter compact"><thead><tr><th><div><p>Month</p></div></th><th class="numeric sorter-digit"><div><p>Revenue</p></div></th><th class="numeric sorter-digit"><div><p>Change</p></div></th><th class="numeric sorter-digit"><div><p>Flat</p></div></th><th class="numeric sorter-digit"><div><p>Zero</p></div></th></tr></thead><tbody><tr><td><div><p>Jan</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:54.7%"><div><p>65,438,723</p></div></td><td class="numeric dataBar axis" style="--bar-start:50.0%;--bar-end:100.0%"><div><p>8%</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>5</p></div></td><td class="numeric"><div><p>0</p></div></td></tr>
+<tr><td><div><p>Feb</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>119,526,353</p></div></td><td class="numeric dataBar negative axis" style="--bar-start:0.0%;--bar-end:50.0%"><div><p>-8%</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>5</p></div></td><td class="numeric"><div><p>0</p></div></td></tr></tbody></table>
+
 </div>
 </div>
 </div>
@@ -126,6 +131,17 @@ async function check() {
     expect('an axis line only in the column with both signs', cells.map(td => axisWidth(td) > 0), [false, false, true, false, false]);
     const bar = td => getComputedStyle(td, '::before').backgroundImage !== 'none';
     expect('bars in every barred cell, none in Zero', cells.map(bar), [false, true, true, true, false]);
+
+    // compact moves the cell padding through a custom property, so what a stronger selector sets
+    // -- the header's room for the sort arrow, the filter row's padding -- stays.
+    const compact = document.getElementById('compact');
+    const padding = el => { const s = getComputedStyle(el); return [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft].join(' '); };
+    expect('plain: body cells', padding(barAll.tBodies[0].rows[0].cells[0]), '10px 12px 10px 12px');
+    expect('compact: body cells', padding(compact.tBodies[0].rows[0].cells[0]), '4px 8px 4px 8px');
+    expect('compact: header keeps the sort arrow room', padding(compact.tHead.rows[0].cells[1]), '4px 30px 4px 8px');
+    expect('compact: filter row as in the plain table', padding(compact.querySelector('.tablesorter-filter-row td')), padding(barAll.querySelector('.tablesorter-filter-row td')));
+    expect('compact: type 0.92 of the plain table', (parseFloat(getComputedStyle(compact).fontSize) / parseFloat(getComputedStyle(barAll).fontSize)).toFixed(2), '0.92');
+    expect('compact: the bar inset', getComputedStyle(compact.tBodies[0].rows[0].cells[1], '::before').top, '2px');
 
     document.getElementById('result').textContent = out.join('\n');
     console.log(out.join('\n'));

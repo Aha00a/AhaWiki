@@ -1253,7 +1253,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
             const schemaPropertyNamesByClass = new Map();
             const schemaPropertyLoadingByClass = new Set();
             let pageNames = [];
-            const tableOptionNames = ['tsv', 'csv', 'tsv 1', 'tsv 1 1', 'tsv 1 bar=all', 'tsv 1 1 tablesorter'];
+            const tableOptionNames = ['tsv', 'csv', 'tsv 1', 'tsv 1 1', 'tsv 1 bar=all', 'tsv 1 compact', 'tsv 1 1 tablesorter'];
             let macroSuggestions = [];
             let activeMacroSuggestionIndex = 0;
             let macroAutocompleteContext = null;
