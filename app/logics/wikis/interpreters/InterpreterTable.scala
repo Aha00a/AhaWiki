@@ -40,8 +40,9 @@ object InterpreterTable extends TraitInterpreter {
   private val regexNumber: Regex = """^([+\-])?(\()?[$€£¥₩]?((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(\))?(?:\s*[\p{L}%‰℃°]{1,8})?$""".r
 
   // What a numeric column may hold besides numbers and stay numeric: nothing, or the mark a
-  // spreadsheet leaves for "no value". Any other text makes the column text.
-  private val placeholders: Set[String] = Set("", "-", "–", "—", "n/a")
+  // spreadsheet leaves for "no value" -- "#N/A" is what Excel pastes for a lookup that found
+  // nothing. Any other text makes the column text.
+  private val placeholders: Set[String] = Set("", "-", "–", "—", "n/a", "#n/a")
 
   /**
    * The shebang, parsed: `#!Table tsv [thRow] [thColumn] [options and classes...]`.

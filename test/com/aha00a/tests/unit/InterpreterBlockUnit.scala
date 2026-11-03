@@ -101,11 +101,12 @@ object InterpreterBlockUnit {
       // tablesorter counts them as empty and sorts them last. A column that opened with "n/a"
       // used to sort as text.
       assertEquals(
-        Interpreters.toHtmlString("#!table tsv 1 bar=2\nName\tScore\nA\t10\nB\t-\nC\tn/a\nD\t"),
+        Interpreters.toHtmlString("#!table tsv 1 bar=2\nName\tScore\nA\t10\nB\t-\nC\tn/a\nD\t\nE\t#N/A"),
         """<table class="InterpreterTable wikiTableSimple tablesorter">""" + headNameScore + """<tbody><tr><td><div><p>A</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>10</p></div></td></tr>""" + "\n" +
           """<tr><td><div><p>B</p></div></td><td class="numeric" data-text=""><div><p>-</p></div></td></tr>""" + "\n" +
           """<tr><td><div><p>C</p></div></td><td class="numeric" data-text=""><div><p>n/a</p></div></td></tr>""" + "\n" +
-          """<tr><td><div><p>D</p></div></td><td class="numeric" data-text=""><div></div></td></tr></tbody></table>"""
+          """<tr><td><div><p>D</p></div></td><td class="numeric" data-text=""><div></div></td></tr>""" + "\n" +
+          """<tr><td><div><p>E</p></div></td><td class="numeric" data-text=""><div><p>#N/A</p></div></td></tr></tbody></table>"""
       )
       // A header column is a header whatever it holds; the body cell beside it is still judged.
       assertEquals(
