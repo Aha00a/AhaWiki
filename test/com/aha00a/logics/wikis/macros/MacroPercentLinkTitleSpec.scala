@@ -26,5 +26,28 @@ class MacroPercentLinkTitleSpec extends AnyFreeSpec {
 
       assert(!html.contains("""target="_blank""""))
     }
+
+    // MacroSimilarPages writes the page name in unquoted; this name broke a list on aha00a.com.
+    "takes a page name with commas whole" in {
+      val html = MacroPercentLinkTitle.toHtmlString(
+        "0.34, 사랑따윈 필요없어, 여름, \"\"",
+        pageNames = Set("사랑따윈 필요없어, 여름"),
+        sites = Seq.empty,
+      )
+
+      assert(html.contains("사랑따윈 필요없어, 여름</a>"))
+      assert(html.contains("34.00%"))
+    }
+
+    "keeps a title with commas apart from the link" in {
+      val html = MacroPercentLinkTitle.toHtmlString(
+        "0.5, A, B, \"x, y\"",
+        pageNames = Set("A, B"),
+        sites = Seq.empty,
+      )
+
+      assert(html.contains("A, B</a>"))
+      assert(html.contains("<span>x, y</span>"))
+    }
   }
 }

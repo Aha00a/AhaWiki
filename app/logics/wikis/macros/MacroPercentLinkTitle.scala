@@ -8,7 +8,14 @@ import models.tables.Site
 import scala.util.matching.Regex
 
 object MacroPercentLinkTitle extends TraitMacro {
-  val regex: Regex = """([^,\s]+),\s*([^,]+)(?:,\s*"([^"]*))"""".r
+  /**
+   * The link is everything between the first comma and the last `, "title"`, so a page name may
+   * hold commas. MacroSimilarPages writes the name in unquoted, and until 2026-11-04 the link
+   * stopped at its first comma: `사랑따윈 필요없어, 여름` turned every similar-pages list that
+   * held it into an Argument Error. The title is quoted and holds no quote, which is what keeps
+   * the last `, "` unambiguous.
+   */
+  val regex: Regex = """([^,\s]+),\s*(.+?),\s*"([^"]*)"""".r
 
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String =
     render(argument, link => resolveLink(link)).getOrElse(argumentError(argument))
