@@ -77,6 +77,11 @@
 	--bar-color: ~"hsla(var(--hue), 90%, 55%, 0.28)";
 	--bar-color-negative: hsla(0, 80%, 55%, 0.28);
 	--bar-axis-color: ~"hsla(var(--hue), 25%, 30%, 0.6)";
+	// The colour scale's lightness and its opacity at the top of the range. The colour itself is
+	// made on the cell: a custom property is resolved where it is declared, and --heat is only
+	// on the cell. The cap keeps the strongest cell's text readable in both themes.
+	--heat-lightness: 50%;
+	--heat-opacity: 0.45;
 	// Under `@media screen` for the same reason less.less keeps every dark token there: a page
 	// printed from the dark theme prints light, and the bar has to come out light with it.
 	@media screen {
@@ -84,6 +89,7 @@
 			--bar-color: ~"hsla(var(--hue), 90%, 65%, 0.35)";
 			--bar-color-negative: hsla(0, 80%, 65%, 0.35);
 			--bar-axis-color: ~"hsla(var(--hue), 25%, 85%, 0.6)";
+			--heat-lightness: 45%;
 		}
 	}
 	// The header of a numeric column sits over its digits, right-aligned like them (GOV.UK and
@@ -152,6 +158,17 @@
 		> div {
 			min-width: 3em;
 		}
+	}
+	// `heat=`: Excel's colour scale, the server writing how far along the range the value is as
+	// --heat, 0 to 1. It fills the whole cell, padding included, as Excel's does -- so not the
+	// bar's ::before, which is inset top and bottom, and not the cell's background, which
+	// `tr:nth-child(even) td` overwrites with its shorthand. An inset shadow is painted with the
+	// cell's own background, above it: under the bar, whose negative z-index still sits above
+	// its stacking context's background, and under the text.
+	td.heat {
+		box-shadow: inset 0 0 0 100vmax ~"hsla(var(--hue), 85%, var(--heat-lightness), calc(var(--heat) * var(--heat-opacity)))";
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
 	}
 }
 .revisionFlagColumn {

@@ -47,23 +47,23 @@ object InterpreterTable extends TraitInterpreter {
   private val placeholders: Set[String] = Set("", "-", "–", "—", "n/a", "#n/a")
 
   /**
-   * Which columns one comma-separated item of `bar=` names. What it was written as is kept, because
+   * Which columns one comma-separated item of `bar=` or `heat=` names. What it was written as is kept, because
    * a number or a span that names no position in the table is tried as header text instead.
    */
-  sealed trait BarColumns { def written: String }
-  object BarColumns {
+  sealed trait ScaleColumns { def written: String }
+  object ScaleColumns {
     /** `all`: every numeric column, each on its own scale. */
-    case object All extends BarColumns { val written = "all" }
+    case object All extends ScaleColumns { val written = "all" }
     /** `2`: the column in that 1-based position. */
-    case class Position(n: Int, written: String) extends BarColumns
+    case class Position(n: Int, written: String) extends ScaleColumns
     /** `2-4`: the columns from one position to the other, sharing one scale. */
-    case class Span(from: Int, to: Int, written: String) extends BarColumns
+    case class Span(from: Int, to: Int, written: String) extends ScaleColumns
     /** `Revenue`: the columns whose first header row says this, case aside. */
-    case class Header(written: String) extends BarColumns
+    case class Header(written: String) extends ScaleColumns
 
     private val regexSpan: Regex = """(\d+)-(\d+)""".r
 
-    def of(written: String): BarColumns = written match {
+    def of(written: String): ScaleColumns = written match {
       case "all" => All
       case regexSpan(from, to) => (from.toIntOption, to.toIntOption) match {
         case (Some(f), Some(t)) => Span(f, t, written)
@@ -75,21 +75,22 @@ object InterpreterTable extends TraitInterpreter {
   }
 
   /**
-   * One item of `bar=`: the columns, and the range their bars are drawn on when the author gives
-   * one (`2:0:100`) instead of letting the values decide.
+   * One item of `bar=` or `heat=`: the columns, and the range their bars or colours are drawn on
+   * when the author gives one (`2:0:100`) instead of letting the values decide. The two options
+   * name columns the same way so that an author learns one syntax.
    */
-  case class BarRule(columns: BarColumns, range: Option[(Double, Double)])
-  object BarRule {
+  case class ScaleRule(columns: ScaleColumns, range: Option[(Double, Double)])
+  object ScaleRule {
     // The range is the last two `:` fields, and only when both read as numbers -- with the cell's
     // own rules, so `0:100%` is the same range as `0:100`. Otherwise the whole item names columns:
     // a header may hold a colon.
-    def of(item: String): BarRule = item.split(":", -1).toSeq match {
+    def of(item: String): ScaleRule = item.split(":", -1).toSeq match {
       case init :+ lo :+ hi if init.nonEmpty =>
         (parseNumber(lo), parseNumber(hi)) match {
-          case (Some(l), Some(h)) => BarRule(BarColumns.of(init.mkString(":")), Some((l, h)))
-          case _ => BarRule(BarColumns.of(item), None)
+          case (Some(l), Some(h)) => ScaleRule(ScaleColumns.of(init.mkString(":")), Some((l, h)))
+          case _ => ScaleRule(ScaleColumns.of(item), None)
         }
-      case _ => BarRule(BarColumns.of(item), None)
+      case _ => ScaleRule(ScaleColumns.of(item), None)
     }
   }
 
@@ -98,13 +99,13 @@ object InterpreterTable extends TraitInterpreter {
    *
    * Among the trailing words, one with `=` is an option and the rest are CSS classes for the
    * table. Until 2026-11-02 a word with `=` was dropped by `sanitizeClasses`, so claiming it as
-   * an option changes no table that rendered before. The one option so far is `bar=`, which
-   * names the columns that get a data bar: `bar=all` for every numeric column, or `bar=2,3` by
-   * 1-based column number, or `bar=Revenue` by header text, `bar=2-4` for columns sharing one
-   * scale, and any of those with `:lo:hi` for a range of the author's. A header with a space in it
-   * cannot be named -- the shebang is split on whitespace -- so the number is the general form.
+   * an option changes no table that rendered before. `bar=` names the columns that get a data
+   * bar and `heat=` those that get a colour scale: `all` for every numeric column, or `2,3` by
+   * 1-based column number, or `Revenue` by header text, `2-4` for columns sharing one scale, and
+   * any of those with `:lo:hi` for a range of the author's. A header with a space in it cannot be
+   * named -- the shebang is split on whitespace -- so the number is the general form.
    */
-  case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int, classes:Option[String], bars:Seq[BarRule]) {
+  case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int, classes:Option[String], bars:Seq[ScaleRule], heats:Seq[ScaleRule]) {
     def getClasses: String =
       (Seq("wikiTableSimple", "tablesorter") ++ classes.toSeq.flatMap(_.split("""\s+""")).map(normalizeClassToken))
         .distinct
@@ -125,10 +126,10 @@ object InterpreterTable extends TraitInterpreter {
 
   // The key is matched case aside, like the interpreter's own name: `Bar=all` was neither an
   // option nor a class, and vanished without a word.
-  private def parseBars(tokens: Seq[String]): Seq[BarRule] = tokens
-    .collect { case s"$key=$columns" if key.equalsIgnoreCase("bar") => columns.split(",").toSeq.map(_.trim).filter(_.nonEmpty) }
+  private def parseRules(tokens: Seq[String], option: String): Seq[ScaleRule] = tokens
+    .collect { case s"$key=$columns" if key.equalsIgnoreCase(option) => columns.split(",").toSeq.map(_.trim).filter(_.nonEmpty) }
     .flatten
-    .map(BarRule.of)
+    .map(ScaleRule.of)
 
   private def csvPreferenceFrom(format: String): Option[CsvPreference] = format match {
     case "tsv" => Some(CsvPreference.TAB_PREFERENCE)
@@ -181,13 +182,17 @@ object InterpreterTable extends TraitInterpreter {
     }
   }
 
+  // A range a scale can be drawn on: low below high, and not so wide that the width is infinite --
+  // two finite values near the ends of a Double are infinitely far apart, and every bar or colour
+  // on that scale would be nothing. A range of the author's whose low end is not below its high
+  // end draws nothing -- Excel has no reversed bar or scale either, and the CSS draws one way.
+  private def isUsableRange(lo: Double, hi: Double): Boolean = {
+    val span = hi - lo
+    span > 0 && span < Double.PositiveInfinity
+  }
+
   private object BarScale {
-    // Two finite values near the ends of a Double are infinitely far apart, and every bar on
-    // that scale would be nothing.
-    private def finite(lo: Double, hi: Double): Option[BarScale] = {
-      val span = hi - lo
-      if (span > 0 && span < Double.PositiveInfinity) Some(BarScale(lo, hi)) else None
-    }
+    private def finite(lo: Double, hi: Double): Option[BarScale] = Some(BarScale(lo, hi)).filter(_ => isUsableRange(lo, hi))
 
     /**
      * Excel's default rule: proportional to the value, from zero, so the largest value fills
@@ -199,12 +204,32 @@ object InterpreterTable extends TraitInterpreter {
 
     /**
      * The author's range: Excel's "Number" minimum and maximum. It is the only way to keep 27%
-     * from filling its cell in a column of ratios whose largest value is 27%. A range whose low
-     * end is not below its high end draws nothing -- Excel has no reversed bar either, and the
-     * CSS draws left to right.
+     * from filling its cell in a column of ratios whose largest value is 27%.
      */
-    def explicit(lo: Double, hi: Double): Option[BarScale] = if (lo < hi) finite(lo, hi) else None
+    def explicit(lo: Double, hi: Double): Option[BarScale] = finite(lo, hi)
   }
+
+  /**
+   * How strongly a cell of a `heat=` column is coloured: Excel's two-colour scale, from nothing at
+   * the low end of the range to the full colour at the high end. Unlike a bar, it is not measured
+   * from zero: left to the values, the range runs from the column's smallest value to its largest,
+   * which is what lets a column of 92..98 show its spread at all. One outlier flattens the rest;
+   * the author's range is the answer to that, as it is for bars. A column of one repeated value
+   * has no range and no colour.
+   */
+  private case class HeatScale(lo: Double, hi: Double) {
+    def style(value: Double): String = s"--heat:${fraction((value - lo) / (hi - lo))}"
+  }
+
+  private object HeatScale {
+    private def finite(lo: Double, hi: Double): Option[HeatScale] = Some(HeatScale(lo, hi)).filter(_ => isUsableRange(lo, hi))
+    def of(values: Seq[Double]): Option[HeatScale] = if (values.isEmpty) None else finite(values.min, values.max)
+    def explicit(lo: Double, hi: Double): Option[HeatScale] = finite(lo, hi)
+  }
+
+  // A number from 0 to 1 with three decimals, for the stylesheet to multiply an opacity by.
+  private def fraction(ratio: Double): String =
+    JBigDecimal.valueOf(math.max(0, math.min(1, ratio))).setScale(3, RoundingMode.HALF_UP).toPlainString
 
   // One decimal, a dot whatever the locale, "100.0%" at the far end and never past it: floating
   // point can put the far end at 100.00000000000001. Only numbers reach style="".
@@ -213,10 +238,10 @@ object InterpreterTable extends TraitInterpreter {
 
   /**
    * What the table knows about its columns before it draws a cell: which columns are numeric, and
-   * for those named by `bar=`, the scale their bars are drawn on. Header rows and header columns
-   * take no part; a header column of years stays a header.
+   * for those named by `bar=` and `heat=`, the scales their bars and colours are drawn on. Header
+   * rows and header columns take no part; a header column of years stays a header.
    */
-  private case class Columns(numeric: Set[Int], barScales: Map[Int, BarScale]) {
+  private case class Columns(numeric: Set[Int], barScales: Map[Int, BarScale], heatScales: Map[Int, HeatScale]) {
     // The header of a numeric column is right-aligned over its digits (`numeric`) and names
     // tablesorter's parser (`sorter-digit`). Left to guess, tablesorter reads the first body cell
     // whose text is not empty and sorts the column as text when that cell is "-", "₩1,200" or
@@ -236,13 +261,14 @@ object InterpreterTable extends TraitInterpreter {
         // cells carry no data-text: the filter widget matches typed text against the same
         // attribute, and "65,438" has to find the cell that shows it.
         case None => """<td class="numeric" data-text="">"""
-        case Some(value) => barScales.get(columnIndex) match {
-          case Some(scale) =>
-            val negative = if (value < 0) " negative" else ""
-            val axis = if (scale.diverging) " axis" else ""
-            s"""<td class="numeric dataBar$negative$axis" style="${scale.style(value)}">"""
-          case None => """<td class="numeric">"""
-        }
+        case Some(value) =>
+          val bar = barScales.get(columnIndex)
+          val heat = heatScales.get(columnIndex)
+          val classes = "numeric" +
+            bar.fold("")(scale => " dataBar" + (if (value < 0) " negative" else "") + (if (scale.diverging) " axis" else "")) +
+            heat.fold("")(_ => " heat")
+          val styles = bar.map(_.style(value)) ++ heat.map(_.style(value))
+          if (styles.isEmpty) s"""<td class="$classes">""" else s"""<td class="$classes" style="${styles.mkString(";")}">"""
       }
     }
   }
@@ -263,10 +289,10 @@ object InterpreterTable extends TraitInterpreter {
       def byHeader(ref: String): Seq[Seq[Int]] = header.indices.filter(columnIndex => header(columnIndex).equalsIgnoreCase(ref)).map(Seq(_))
       def isPosition(n: Int): Boolean = n >= 1 && n <= width
       // Each rule names groups of columns; the columns of one group share a scale.
-      def groups(columns: BarColumns): Seq[Seq[Int]] = columns match {
-        case BarColumns.All => numeric.map(Seq(_))
-        case BarColumns.Position(n, _) if isPosition(n) => Seq(Seq(n - 1))
-        case BarColumns.Span(from, to, _) if isPosition(from) && isPosition(to) && from <= to => Seq(from - 1 until to)
+      def groups(columns: ScaleColumns): Seq[Seq[Int]] = columns match {
+        case ScaleColumns.All => numeric.map(Seq(_))
+        case ScaleColumns.Position(n, _) if isPosition(n) => Seq(Seq(n - 1))
+        case ScaleColumns.Span(from, to, _) if isPosition(from) && isPosition(to) && from <= to => Seq(from - 1 until to)
         case other => byHeader(other.written)
       }
       val numericSet = numeric.toSet
@@ -274,21 +300,23 @@ object InterpreterTable extends TraitInterpreter {
       // A column named twice takes the scale of the more specific rule: a range of the author's
       // over a shared scale, a shared scale over one of its own. Between equals the later wins.
       // A range that draws nothing wins too -- `2:5:5` turns column 2's bars off.
-      def rank(rule: BarRule): Int = if (rule.range.isDefined) 2 else rule.columns match {
-        case _: BarColumns.Span => 1
+      def rank(rule: ScaleRule): Int = if (rule.range.isDefined) 2 else rule.columns match {
+        case _: ScaleColumns.Span => 1
         case _ => 0
       }
-      val barScales: Map[Int, BarScale] = shebang.bars.sortBy(rank).foldLeft(Map.empty[Int, Option[BarScale]]) { (scales, rule) =>
-        groups(rule.columns).map(_.filter(numericSet.contains)).filter(_.nonEmpty).foldLeft(scales) { (scales, group) =>
-          val scale = rule.range match {
-            case Some((lo, hi)) => BarScale.explicit(lo, hi)
-            case None => BarScale.of(group.flatMap(columnIndex => bodyCells(columnIndex).flatMap(parseNumber)))
+      // `bar=` and `heat=` resolve their rules alike; only how a scale is made differs.
+      def scales[S](rules: Seq[ScaleRule])(of: Seq[Double] => Option[S], explicit: (Double, Double) => Option[S]): Map[Int, S] =
+        rules.sortBy(rank).foldLeft(Map.empty[Int, Option[S]]) { (scales, rule) =>
+          groups(rule.columns).map(_.filter(numericSet.contains)).filter(_.nonEmpty).foldLeft(scales) { (scales, group) =>
+            val scale = rule.range match {
+              case Some((lo, hi)) => explicit(lo, hi)
+              case None => of(group.flatMap(columnIndex => bodyCells(columnIndex).flatMap(parseNumber)))
+            }
+            scales ++ group.map(_ -> scale)
           }
-          scales ++ group.map(_ -> scale)
-        }
-      }.collect { case (columnIndex, Some(scale)) => columnIndex -> scale }
+        }.collect { case (columnIndex, Some(scale)) => columnIndex -> scale }
 
-      Columns(numericSet, barScales)
+      Columns(numericSet, scales(shebang.bars)(BarScale.of, BarScale.explicit), scales(shebang.heats)(HeatScale.of, HeatScale.explicit))
     }
   }
 
@@ -330,7 +358,7 @@ object InterpreterTable extends TraitInterpreter {
       // Split once; the classes and the options are read from the same words.
       val tokens: Seq[String] = Option(trailing).toSeq.flatMap(_.trim.split("""\s+""")).filter(_.nonEmpty)
       csvPreferenceFrom(format).map(csvPreference =>
-        Shebang(csvPreference, thRow.toIntOrZero, thColumn.toIntOrZero, sanitizeClasses(tokens), parseBars(tokens))
+        Shebang(csvPreference, thRow.toIntOrZero, thColumn.toIntOrZero, sanitizeClasses(tokens), parseRules(tokens, "bar"), parseRules(tokens, "heat"))
       )
     case _ => None
   }

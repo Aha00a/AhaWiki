@@ -13,6 +13,9 @@ argued from tablesorter's minified source when the numeric columns went in, by r
    empty `data-text`, and why number cells do not carry one.
  * **The look that can be measured:** numeric headers and cells right-aligned, an axis line only
    in the column with both signs, a bar in each barred cell and none in a column of zeros.
+ * **`heat=`:** the colour's opacity follows `--heat` on every row -- the even rows' background
+   does not cover it -- none on a placeholder, a bar and a colour in one cell, and the text on the
+   strongest cell at 4.5:1 or better in the theme drawn.
  * **`compact`:** closer cells, type at 0.92, a thinner bar inset -- while the header keeps its
    room for the sort arrow and the filter row its own padding. Those two are what setting the
    padding with a selector instead of `--table-cell-padding` would take away.
@@ -40,5 +43,5 @@ as `static`. `?theme=dark` draws the dark theme; nothing is stored.
 tablesorter starts. The parser, sort, placeholder and filter checks then fail, which shows they
 test something. The look checks do not depend on either, and keep passing.
 
-Look at the `bar=all` table in both themes, not only at the result. The checks do not see
+Look at the `bar=all` and `heat=` tables in both themes, not only at the result. The checks do not see
 whether a bar is too faint, or whether the axis line is visible against it.

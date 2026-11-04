@@ -219,6 +219,34 @@ object InterpreterBlockUnit {
       assertEquals(bars("bar=3-2", years), Seq("", "", "", ""))
       assertEquals(bars("bar=2-9", years), Seq("", "", "", ""))
       assertEquals(bars("bar=2024-25", "Name\t2024-25\nA\t10\nB\t5"), Seq("dataBar 0.0%-100.0%", "dataBar 0.0%-50.0%"))
+
+      // heat= names columns as bar= does; each numeric body cell gives its classes after
+      // "numeric" and its --heat, when it has one.
+      val regexStyledTd = """<td class="numeric([^"]*)"(?: style="([^"]*)")?""".r
+      def heats(shebang: String, body: String): Seq[String] =
+        regexStyledTd.findAllMatchIn(Interpreters.toHtmlString(s"#!table tsv 1 $shebang\n$body")).map(m =>
+          (m.group(1).trim + Option(m.group(2)).toSeq.flatMap(_.split(";")).collect { case s"--heat:$v" => s" $v" }.mkString).trim
+        ).toSeq
+      // Not from zero, as a bar is: from the column's smallest value to its largest, so 92..98
+      // shows its spread. A placeholder gets nothing.
+      assertEquals(heats("heat=2", "Name\tScore\nA\t92\nB\t95\nC\t98\nD\t-"), Seq("heat 0.000", "heat 0.500", "heat 1.000", ""))
+      // A range of the author's, read like cells; values outside stop at its ends.
+      assertEquals(heats("heat=2:0:100%", "Name\tShare\nA\t27%\nB\t120%"), Seq("heat 0.270", "heat 1.000"))
+      // A span shares one scale; all is each on its own.
+      assertEquals(heats("heat=2-3", years), Seq("heat 0.143", "heat 0.429", "heat 0.000", "heat 1.000"))
+      assertEquals(heats("heat=all", years), Seq("heat 1.000", "heat 0.000", "heat 0.000", "heat 1.000"))
+      // One repeated value has no range, and a reversed range draws nothing.
+      assertEquals(heats("heat=2", "Name\tScore\nA\t5\nB\t5"), Seq("", ""))
+      assertEquals(heats("heat=2:100:0", ratios), Seq("", ""))
+      // Negative values are only the low end of the range; the sign means nothing to a colour.
+      assertEquals(heats("heat=2", "Name\tScore\nA\t-10\nB\t10"), Seq("heat 0.000", "heat 1.000"))
+      // With a bar on the same column, both go on the cell, the bar first; the key case aside.
+      assertEquals(
+        Interpreters.toHtmlString("#!table tsv 1 bar=2 Heat=2\nName\tScore\nA\t10\nB\t-5"),
+        barred
+          .replace("""dataBar axis" style="--bar-start:33.3%;--bar-end:100.0%"""", """dataBar axis heat" style="--bar-start:33.3%;--bar-end:100.0%;--heat:1.000"""")
+          .replace("""dataBar negative axis" style="--bar-start:0.0%;--bar-end:33.3%"""", """dataBar negative axis heat" style="--bar-start:0.0%;--bar-end:33.3%;--heat:0.000"""")
+      )
     }; testInterpreterTable()
 
     def testInterpreterWiki(): Unit = {

@@ -60,6 +60,13 @@ document.documentElement.classList.add(new URLSearchParams(location.search).get(
 <table id="compact" class="InterpreterTable wikiTableSimple tablesorter compact"><thead><tr><th><div><p>Month</p></div></th><th class="numeric sorter-digit"><div><p>Revenue</p></div></th><th class="numeric sorter-digit"><div><p>Change</p></div></th><th class="numeric sorter-digit"><div><p>Flat</p></div></th><th class="numeric sorter-digit"><div><p>Zero</p></div></th></tr></thead><tbody><tr><td><div><p>Jan</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:54.7%"><div><p>65,438,723</p></div></td><td class="numeric dataBar axis" style="--bar-start:50.0%;--bar-end:100.0%"><div><p>8%</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>5</p></div></td><td class="numeric"><div><p>0</p></div></td></tr>
 <tr><td><div><p>Feb</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>119,526,353</p></div></td><td class="numeric dataBar negative axis" style="--bar-start:0.0%;--bar-end:50.0%"><div><p>-8%</p></div></td><td class="numeric dataBar" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>5</p></div></td><td class="numeric"><div><p>0</p></div></td></tr></tbody></table>
 
+<h2>heat=2-3 bar=4:0:100 heat=4:0:100</h2>
+<p>A colour scale over two columns sharing one range (90..99), and a column with both a bar and a colour on 0..100.</p>
+<table id="heat" class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>Name</p></div></th><th class="numeric sorter-digit"><div><p>Q1</p></div></th><th class="numeric sorter-digit"><div><p>Q2</p></div></th><th class="numeric sorter-digit"><div><p>Share</p></div></th></tr></thead><tbody><tr><td><div><p>A</p></div></td><td class="numeric heat" style="--heat:0.222"><div><p>92</p></div></td><td class="numeric heat" style="--heat:0.556"><div><p>95</p></div></td><td class="numeric dataBar heat" style="--bar-start:0.0%;--bar-end:27.0%;--heat:0.270"><div><p>27%</p></div></td></tr>
+<tr><td><div><p>B</p></div></td><td class="numeric heat" style="--heat:0.889"><div><p>98</p></div></td><td class="numeric heat" style="--heat:0.333"><div><p>93</p></div></td><td class="numeric dataBar heat" style="--bar-start:0.0%;--bar-end:64.0%;--heat:0.640"><div><p>64%</p></div></td></tr>
+<tr><td><div><p>C</p></div></td><td class="numeric heat" style="--heat:0.000"><div><p>90</p></div></td><td class="numeric heat" style="--heat:1.000"><div><p>99</p></div></td><td class="numeric dataBar heat" style="--bar-start:0.0%;--bar-end:91.0%;--heat:0.910"><div><p>91%</p></div></td></tr>
+<tr><td><div><p>D</p></div></td><td class="numeric" data-text=""><div><p>-</p></div></td><td class="numeric heat" style="--heat:0.667"><div><p>96</p></div></td><td class="numeric dataBar heat" style="--bar-start:0.0%;--bar-end:10.0%;--heat:0.100"><div><p>10%</p></div></td></tr></tbody></table>
+
 </div>
 </div>
 </div>
@@ -142,6 +149,28 @@ async function check() {
     expect('compact: filter row as in the plain table', padding(compact.querySelector('.tablesorter-filter-row td')), padding(barAll.querySelector('.tablesorter-filter-row td')));
     expect('compact: type 0.92 of the plain table', (parseFloat(getComputedStyle(compact).fontSize) / parseFloat(getComputedStyle(barAll).fontSize)).toFixed(2), '0.92');
     expect('compact: the bar inset', getComputedStyle(compact.tBodies[0].rows[0].cells[1], '::before').top, '2px');
+
+    // heat=: the colour is an inset shadow whose opacity is --heat times the cap, on every row --
+    // the even rows' background shorthand does not reach a shadow -- and under a bar.
+    const heat = document.getElementById('heat');
+    const rgba = s => { const m = s.match(/rgba?\(([^)]+)\)/); return m ? m[1].split(',').map(Number) : null; };
+    const shadowAlpha = td => { const c = rgba(getComputedStyle(td).boxShadow); return c ? +(c[3] ?? 1).toFixed(3) : 0; };
+    const cap = parseFloat(getComputedStyle(heat).getPropertyValue('--heat-opacity'));
+    const heatCells = [...heat.tBodies[0].rows].map(tr => tr.cells[2]);
+    expect('heat: opacity follows --heat on every row', heatCells.map(shadowAlpha), heatCells.map(td => +(parseFloat(td.style.getPropertyValue('--heat')) * cap).toFixed(3)));
+    expect('heat: no colour on a placeholder', shadowAlpha(heat.tBodies[0].rows[3].cells[1]), 0);
+    const share = heat.tBodies[0].rows[2].cells[3];
+    expect('heat: a bar and a colour in one cell', [bar(share), shadowAlpha(share) > 0], [true, true]);
+    // The strongest cell's text against the colour laid over the cell's background.
+    const background = el => { for (; el; el = el.parentElement) { const c = rgba(getComputedStyle(el).backgroundColor); if (c && (c[3] ?? 1) > 0) return c; } return [255, 255, 255]; };
+    const over = (top, under) => [0, 1, 2].map(i => top[i] * top[3] + under[i] * (1 - top[3]));
+    const luminance = c => { const [r, g, b] = c.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+    const contrast = (a, b) => { const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+    const strongest = heat.tBodies[0].rows[2].cells[2];
+    const shadow = rgba(getComputedStyle(strongest).boxShadow);
+    const ratio = contrast(rgba(getComputedStyle(strongest).color), over([shadow[0], shadow[1], shadow[2], shadow[3] ?? 1], background(strongest)));
+    expect('heat: text on the strongest cell reaches 4.5:1', ratio >= 4.5, true);
+    out.push(`     (contrast ${ratio.toFixed(2)}:1)`);
 
     document.getElementById('result').textContent = out.join('\n');
     console.log(out.join('\n'));
