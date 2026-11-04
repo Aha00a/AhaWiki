@@ -173,6 +173,52 @@ object InterpreterBlockUnit {
         """<table class="InterpreterTable wikiTableSimple tablesorter">""" + headNameScore + """<tbody><tr><td><div><p>A</p></div></td><td class="numeric dataBar negative" style="--bar-start:0.0%;--bar-end:100.0%"><div><p>-10</p></div></td></tr>""" + "\n" +
           """<tr><td><div><p>B</p></div></td><td class="numeric dataBar negative" style="--bar-start:50.0%;--bar-end:100.0%"><div><p>-5</p></div></td></tr></tbody></table>"""
       )
+
+      // From here on only the numeric body cells matter, in row order: the classes after
+      // "numeric", and the bar's two ends when there is one. The markup around them is the same
+      // as above.
+      val regexNumericTd = """<td class="numeric([^"]*)"(?: style="--bar-start:([^;]+);--bar-end:([^"]+)")?""".r
+      def bars(shebang: String, body: String): Seq[String] =
+        regexNumericTd.findAllMatchIn(Interpreters.toHtmlString(s"#!table tsv 1 $shebang\n$body")).map(m =>
+          (m.group(1).trim + Option(m.group(2)).map(start => s" $start-${m.group(3)}").getOrElse("")).trim
+        ).toSeq
+      val ratios = "Name\tShare\nA\t27%\nB\t10%"
+      // The values' own scale fills the cell with the largest; the author's range does not.
+      assertEquals(bars("bar=2", ratios), Seq("dataBar 0.0%-100.0%", "dataBar 0.0%-37.0%"))
+      assertEquals(bars("bar=2:0:100", ratios), Seq("dataBar 0.0%-27.0%", "dataBar 0.0%-10.0%"))
+      // The bounds are read like cells, so a percent sign changes nothing; all takes a range too.
+      assertEquals(bars("bar=2:0:100%", ratios), bars("bar=2:0:100", ratios))
+      assertEquals(bars("bar=all:0:100", ratios), bars("bar=2:0:100", ratios))
+      assertEquals(bars("bar=share:0:100", ratios), bars("bar=2:0:100", ratios))
+      // A range above zero starts at its low end; values outside stop at the edge.
+      assertEquals(bars("bar=2:50:100", "Name\tScore\nA\t75\nB\t30\nC\t120"), Seq("dataBar 0.0%-50.0%", "dataBar 0.0%-0.0%", "dataBar 0.0%-100.0%"))
+      // A range across zero has the axis wherever zero is in it, whatever the values hold.
+      assertEquals(bars("bar=2:-50:50", "Name\tScore\nA\t10\nB\t25"), Seq("dataBar axis 50.0%-60.0%", "dataBar axis 50.0%-75.0%"))
+      assertEquals(bars("bar=2:-50:50", "Name\tScore\nA\t10\nB\t-25"), Seq("dataBar axis 50.0%-60.0%", "dataBar negative axis 25.0%-50.0%"))
+      // Low not below high draws nothing, and wins over a plain mention of the same column.
+      assertEquals(bars("bar=2:5:5", ratios), Seq("", ""))
+      assertEquals(bars("bar=2:100:0", ratios), Seq("", ""))
+      assertEquals(bars("bar=2,2:5:5", ratios), Seq("", ""))
+      // Two numbers after a colon are a range only as the last two fields; one is not.
+      assertEquals(bars("bar=2:100", ratios), Seq("", ""))
+
+      // A span of columns shares one scale, as Excel's one rule over one range: 2024 and 2025
+      // side by side compare honestly only when 40 is the far end for both.
+      val years = "Name\t2024\t2025\nA\t10\t20\nB\t5\t40"
+      assertEquals(bars("bar=2,3", years), Seq("dataBar 0.0%-100.0%", "dataBar 0.0%-50.0%", "dataBar 0.0%-50.0%", "dataBar 0.0%-100.0%"))
+      assertEquals(bars("bar=2-3", years), Seq("dataBar 0.0%-25.0%", "dataBar 0.0%-50.0%", "dataBar 0.0%-12.5%", "dataBar 0.0%-100.0%"))
+      // Named twice, the span's scale wins whichever comes first; a range of the author's wins over both.
+      assertEquals(bars("bar=2,2-3", years), bars("bar=2-3", years))
+      assertEquals(bars("bar=2-3,2", years), bars("bar=2-3", years))
+      assertEquals(bars("bar=2-3,3:0:80", years), Seq("dataBar 0.0%-25.0%", "dataBar 0.0%-25.0%", "dataBar 0.0%-12.5%", "dataBar 0.0%-50.0%"))
+      // A span with a range puts all its columns on that range.
+      assertEquals(bars("bar=2-3:0:80", years), Seq("dataBar 0.0%-12.5%", "dataBar 0.0%-25.0%", "dataBar 0.0%-6.3%", "dataBar 0.0%-50.0%"))
+      // The text column inside a span takes no part in the scale.
+      assertEquals(bars("bar=1-3", years), bars("bar=2-3", years))
+      // A span whose ends are not both positions, low to high, is header text.
+      assertEquals(bars("bar=3-2", years), Seq("", "", "", ""))
+      assertEquals(bars("bar=2-9", years), Seq("", "", "", ""))
+      assertEquals(bars("bar=2024-25", "Name\t2024-25\nA\t10\nB\t5"), Seq("dataBar 0.0%-100.0%", "dataBar 0.0%-50.0%"))
     }; testInterpreterTable()
 
     def testInterpreterWiki(): Unit = {

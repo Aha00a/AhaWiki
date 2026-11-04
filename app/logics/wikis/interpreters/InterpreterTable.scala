@@ -47,16 +47,64 @@ object InterpreterTable extends TraitInterpreter {
   private val placeholders: Set[String] = Set("", "-", "–", "—", "n/a", "#n/a")
 
   /**
+   * Which columns one comma-separated item of `bar=` names. What it was written as is kept, because
+   * a number or a span that names no position in the table is tried as header text instead.
+   */
+  sealed trait BarColumns { def written: String }
+  object BarColumns {
+    /** `all`: every numeric column, each on its own scale. */
+    case object All extends BarColumns { val written = "all" }
+    /** `2`: the column in that 1-based position. */
+    case class Position(n: Int, written: String) extends BarColumns
+    /** `2-4`: the columns from one position to the other, sharing one scale. */
+    case class Span(from: Int, to: Int, written: String) extends BarColumns
+    /** `Revenue`: the columns whose first header row says this, case aside. */
+    case class Header(written: String) extends BarColumns
+
+    private val regexSpan: Regex = """(\d+)-(\d+)""".r
+
+    def of(written: String): BarColumns = written match {
+      case "all" => All
+      case regexSpan(from, to) => (from.toIntOption, to.toIntOption) match {
+        case (Some(f), Some(t)) => Span(f, t, written)
+        case _ => Header(written)
+      }
+      case _ if written.forall(_.isDigit) => written.toIntOption.map(Position(_, written)).getOrElse(Header(written))
+      case _ => Header(written)
+    }
+  }
+
+  /**
+   * One item of `bar=`: the columns, and the range their bars are drawn on when the author gives
+   * one (`2:0:100`) instead of letting the values decide.
+   */
+  case class BarRule(columns: BarColumns, range: Option[(Double, Double)])
+  object BarRule {
+    // The range is the last two `:` fields, and only when both read as numbers -- with the cell's
+    // own rules, so `0:100%` is the same range as `0:100`. Otherwise the whole item names columns:
+    // a header may hold a colon.
+    def of(item: String): BarRule = item.split(":", -1).toSeq match {
+      case init :+ lo :+ hi if init.nonEmpty =>
+        (parseNumber(lo), parseNumber(hi)) match {
+          case (Some(l), Some(h)) => BarRule(BarColumns.of(init.mkString(":")), Some((l, h)))
+          case _ => BarRule(BarColumns.of(item), None)
+        }
+      case _ => BarRule(BarColumns.of(item), None)
+    }
+  }
+
+  /**
    * The shebang, parsed: `#!Table tsv [thRow] [thColumn] [options and classes...]`.
    *
    * Among the trailing words, one with `=` is an option and the rest are CSS classes for the
    * table. Until 2026-11-02 a word with `=` was dropped by `sanitizeClasses`, so claiming it as
    * an option changes no table that rendered before. The one option so far is `bar=`, which
    * names the columns that get a data bar: `bar=all` for every numeric column, or `bar=2,3` by
-   * 1-based column number, or `bar=Revenue` by header text. A header with a space in it cannot
-   * be named -- the shebang is split on whitespace -- so the number is the general form.
+   * 1-based column number, or `bar=Revenue` by header text, `bar=2-4` for columns sharing one
+   * scale, and any of those with `:lo:hi` for a range of the author's. A header with a space in it
+   * cannot be named -- the shebang is split on whitespace -- so the number is the general form.
    */
-  case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int, classes:Option[String], bars:Seq[String]) {
+  case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int, classes:Option[String], bars:Seq[BarRule]) {
     def getClasses: String =
       (Seq("wikiTableSimple", "tablesorter") ++ classes.toSeq.flatMap(_.split("""\s+""")).map(normalizeClassToken))
         .distinct
@@ -77,9 +125,10 @@ object InterpreterTable extends TraitInterpreter {
 
   // The key is matched case aside, like the interpreter's own name: `Bar=all` was neither an
   // option nor a class, and vanished without a word.
-  private def parseBars(tokens: Seq[String]): Seq[String] = tokens
+  private def parseBars(tokens: Seq[String]): Seq[BarRule] = tokens
     .collect { case s"$key=$columns" if key.equalsIgnoreCase("bar") => columns.split(",").toSeq.map(_.trim).filter(_.nonEmpty) }
     .flatten
+    .map(BarRule.of)
 
   private def csvPreferenceFrom(format: String): Option[CsvPreference] = format match {
     case "tsv" => Some(CsvPreference.TAB_PREFERENCE)
@@ -111,35 +160,50 @@ object InterpreterTable extends TraitInterpreter {
   }
 
   /**
-   * Where a column's bars start and end, as Excel draws them by default: proportional to the
-   * value, from zero. A column with negative values puts zero on a shared axis, and a negative
-   * value's bar runs left from it. A column of one repeated value, or of zeros, has no bars.
+   * Where a column's bars start and end. Each bar runs from the anchor to the value: zero, or the
+   * end of the range nearest zero when zero is outside it -- `0:100` and `50:100` both start at
+   * the left edge. A range that holds both signs puts zero on a shared axis, and a value below
+   * zero runs left from it. Values outside the range stop at its edge.
    */
   private case class BarScale(lo: Double, hi: Double) {
     private val span: Double = hi - lo
-    private val axis: Double = (0 - lo) / span * 100
+    private def position(value: Double): Double = (value - lo) / span * 100
+    private val anchor: Double = position(math.max(lo, math.min(hi, 0)))
 
-    // Both signs in the column: zero is somewhere inside the cell, and Excel marks it with an
+    // Both signs in the range: zero is somewhere inside the cell, and Excel marks it with an
     // axis line in every cell of the column.
     def diverging: Boolean = lo < 0 && hi > 0
 
     def style(value: Double): String = {
-      val length = value / span * 100
-      val (start, end) = if (value >= 0) (axis, axis + length) else (axis + length, axis)
+      val at = position(value)
+      val (start, end) = if (at >= anchor) (anchor, at) else (at, anchor)
       s"--bar-start:${percent(start)};--bar-end:${percent(end)}"
     }
   }
 
   private object BarScale {
-    def of(values: Seq[Double]): Option[BarScale] = {
-      if (values.isEmpty) return None
-      val lo = math.min(values.min, 0)
-      val hi = math.max(values.max, 0)
-      // Two finite values near the ends of a Double are infinitely far apart, and every bar on
-      // that scale would be nothing.
+    // Two finite values near the ends of a Double are infinitely far apart, and every bar on
+    // that scale would be nothing.
+    private def finite(lo: Double, hi: Double): Option[BarScale] = {
       val span = hi - lo
       if (span > 0 && span < Double.PositiveInfinity) Some(BarScale(lo, hi)) else None
     }
+
+    /**
+     * Excel's default rule: proportional to the value, from zero, so the largest value fills
+     * its cell. A column of one repeated value runs from zero and fills it; a column of zeros
+     * has no range and no bars.
+     */
+    def of(values: Seq[Double]): Option[BarScale] =
+      if (values.isEmpty) None else finite(math.min(values.min, 0), math.max(values.max, 0))
+
+    /**
+     * The author's range: Excel's "Number" minimum and maximum. It is the only way to keep 27%
+     * from filling its cell in a column of ratios whose largest value is 27%. A range whose low
+     * end is not below its high end draws nothing -- Excel has no reversed bar either, and the
+     * CSS draws left to right.
+     */
+    def explicit(lo: Double, hi: Double): Option[BarScale] = if (lo < hi) finite(lo, hi) else None
   }
 
   // One decimal, a dot whatever the locale, "100.0%" at the far end and never past it: floating
@@ -192,21 +256,39 @@ object InterpreterTable extends TraitInterpreter {
 
       // `bar=` names a column by number or by the text of its header -- the first row, when there
       // is a header row, as written. A number names the column in that position; one that names
-      // no position is tried as header text, so a column headed "2024" can still be named. A name
-      // that is no column, or a column that is not numeric, draws nothing.
+      // no position is tried as header text, so a column headed "2024" can still be named. So is
+      // a span whose ends are not both positions, from low to high: a header "2024-25" is named
+      // by its text. A name that is no column, or a column that is not numeric, draws nothing.
       val header: Seq[String] = if (shebang.thRow > 0) rows.headOption.getOrElse(Seq.empty).map(cell => normalizeCell(cell).trim) else Seq.empty
-      def byHeader(ref: String): Seq[Int] = header.indices.filter(columnIndex => header(columnIndex).equalsIgnoreCase(ref))
-      val named: Set[Int] = shebang.bars.flatMap {
-        case "all" => numeric
-        case ref if ref.forall(_.isDigit) =>
-          ref.toIntOption.map(_ - 1).filter(columnIndex => columnIndex >= 0 && columnIndex < width).map(Seq(_)).getOrElse(byHeader(ref))
-        case ref => byHeader(ref)
-      }.toSet
-      val barScales = numeric.filter(named.contains).flatMap(columnIndex =>
-        BarScale.of(bodyCells(columnIndex).flatMap(parseNumber)).map(columnIndex -> _)
-      ).toMap
+      def byHeader(ref: String): Seq[Seq[Int]] = header.indices.filter(columnIndex => header(columnIndex).equalsIgnoreCase(ref)).map(Seq(_))
+      def isPosition(n: Int): Boolean = n >= 1 && n <= width
+      // Each rule names groups of columns; the columns of one group share a scale.
+      def groups(columns: BarColumns): Seq[Seq[Int]] = columns match {
+        case BarColumns.All => numeric.map(Seq(_))
+        case BarColumns.Position(n, _) if isPosition(n) => Seq(Seq(n - 1))
+        case BarColumns.Span(from, to, _) if isPosition(from) && isPosition(to) && from <= to => Seq(from - 1 until to)
+        case other => byHeader(other.written)
+      }
+      val numericSet = numeric.toSet
 
-      Columns(numeric.toSet, barScales)
+      // A column named twice takes the scale of the more specific rule: a range of the author's
+      // over a shared scale, a shared scale over one of its own. Between equals the later wins.
+      // A range that draws nothing wins too -- `2:5:5` turns column 2's bars off.
+      def rank(rule: BarRule): Int = if (rule.range.isDefined) 2 else rule.columns match {
+        case _: BarColumns.Span => 1
+        case _ => 0
+      }
+      val barScales: Map[Int, BarScale] = shebang.bars.sortBy(rank).foldLeft(Map.empty[Int, Option[BarScale]]) { (scales, rule) =>
+        groups(rule.columns).map(_.filter(numericSet.contains)).filter(_.nonEmpty).foldLeft(scales) { (scales, group) =>
+          val scale = rule.range match {
+            case Some((lo, hi)) => BarScale.explicit(lo, hi)
+            case None => BarScale.of(group.flatMap(columnIndex => bodyCells(columnIndex).flatMap(parseNumber)))
+          }
+          scales ++ group.map(_ -> scale)
+        }
+      }.collect { case (columnIndex, Some(scale)) => columnIndex -> scale }
+
+      Columns(numericSet, barScales)
     }
   }
 
