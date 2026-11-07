@@ -216,9 +216,8 @@ The classification is what decides whether a live page gets overwritten, so it i
 
 Three outcomes need a person rather than a flag:
 
-* **diverged** — the wiki holds content that was never committed here, so someone edited the
-  page in the browser. Read it, merge it into the local file, commit, then sync. The script
-  will not overwrite it.
+* **diverged** — the wiki holds content that was never committed here. The script will not
+  overwrite it; what to do instead is in `AGENTS.md` under **AhaWikiDoc Sync**.
 * **local only** — a file that is not a page on the wiki yet, or a page the owner deleted there.
   The report cannot tell them apart, so a page is created only when named:
   `--apply --comment="..." --create="MacroNew"`, repeatable, and refused if the wiki has that name.
