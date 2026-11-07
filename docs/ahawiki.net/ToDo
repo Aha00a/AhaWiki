@@ -370,9 +370,8 @@ https://www.wikimatrix.org/ 발견. 여기 기준에 좀 맞춰볼까.. --[2020-
  * [[CB(x)]] 사이트가 쓰는 해에서 먼 빈 날짜·달·해를 404 로
  * [[CB(x)]] `robots.txt` 에 `Disallow: /*?action=`
  * [[CB(x)]] `AhaWiki.Kanban.js` 를 보드가 있는 화면에서만
- * [ ] 배포 — 소유자 확인 뒤
- * [ ] 익명의 blame·history 를 로그인 뒤로 둘지 — 소유자가 정할 일
-
+ * [[CB(x)]] 배포(2026-11-08). 대기 인스턴스와 페이지마다 대조한 뒤 넘겼고, 운영에서 먼 날짜 404·robots.txt·보드 있는 화면에서만 Kanban.js 를 받는 것을 확인했다.
+ * [ ] 익명에게 옛 리비전(blame·history·diff)을 막을지 — 권한과 엮은 검토는 [AccessControl] 의 '''남은 과제''', 정하는 것은 소유자
 === 기타
  * 마크업 규칙 추가
   * from [[[

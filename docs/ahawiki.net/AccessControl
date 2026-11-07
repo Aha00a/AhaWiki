@@ -481,3 +481,10 @@ save 시에는 form body의 새 본문이 아니라 DB의 최신 본문을 기�
   * row 의미론은 `PermissionLogicUnit` — 매칭 row 없음 → 거부, specificity 우선순위, 같은 specificity 에서 target·actor 길이 tie-break, 정규식 full match.
   * 소비 지점은 `AccessControlFilteringSpec` — 목록(`/api/pageNames`)과 `[[Include(...)]]` 를 라우터로 통과시켜, 익명에게 비공개 페이지가 새지 않고 Exact actor 에게는 보이는 것까지.
   * '''검색만 자동화 밖이다.''' `Page.pageSearch` 의 `COLLATE utf8mb4_general_ci` 는 테이블이 `utf8mb4_bin` 이라 하중을 받는 절인데 H2 가 그 문법을 거부한다. 필터 자체는 위 둘과 같은 `WikiPermission.isReadable` 호출이고(`Search.scala`), 검사를 위해 COLLATE 를 빼면 운영 검색이 대소문자 구분으로 조용히 바뀐다 — 그 값을 치를 일이 아니다.
+ * [ ] 익명에게 옛 리비전(history·blame·diff)을 막을지 정한다. 2026-11-08 수집기가 `?action=blame`·`?action=raw` 를 긁은 뒤 소유자가 권한과 엮어 검토하라고 했다. 검토 결과 '''지금은 막지 않는다''' 를 제안하고, 정하는 것은 소유자다.
+  * '''수집 대책으로는 효과가 작다.''' 막히는 것은 옛 리비전뿐이고 지금 본문은 `view` 로 그대로 열린다. `raw` 는 `view` 와 같은 본문이라 막아도 얻는 것이 없다. 비용이 큰 blame 은 이미 한 번에 읽는 양에 상한이 있다([Dev Page] '''본문을 많이 읽는 두 경로''').
+  * '''권한으로서는 따로 볼 만하다.''' 막는다면 이유는 비용이 아니라, 지운 글이 옛 리비전에 남아 누구나 읽힌다는 점이다. 기록의 IP 는 이미 가려서 보인다(`IpAddressUtil.mask`).
+  * '''옛 리비전이 나가는 길은 history·blame 만이 아니다.''' `diff`, `?revision=N`(action 은 `view`), [RecentChanges] 가 거는 diff 링크(`/api/change`·`/api/v1/changes` 자체는 본문 없이 리비전 목록만 준다), signed read URL 의 `history`(`SignedReadUrlLogic.SignableActions`)까지 한 묶음이다. 일부만 막으면 막은 것처럼 보이기만 한다.
+  * '''`Permission` 등급에 끼우기는 어렵다.''' action 은 등급이라(`0 None` < `1 Read` < `2 Edit` …) «읽기보다 많고 편집보다 적은» 자리가 없다. 끼우려면 저장된 모든 row 의 값을 바꾸는 evolution 이 필요하고, 그동안 판정이 어긋나면 비공개 페이지가 열리는 쪽으로 틀린다.
+  * 그래서 막기로 한다면 '''사이트 단위 스위치''' 하나로 한다 — «옛 리비전은 로그인한 사람만». `Wiki.view` 한 곳에서 `history`·`blame`·`diff` 와 `revision != 0` 을 함께 거르고, signed read URL 의 `history` 도 같은 판정을 따른다. `Permission` 표는 그대로 「지금 본문을 누가 읽나」만 답한다.
+  * 정하는 데 필요한 것은 하나다 — 사람이 옛 리비전을 실제로 보는지. 앱의 접근 로그(`FilterAccessLog`)는 200 응답을 표본으로만 남기므로 앞단의 접근 로그에서, 수집기 대역을 빼고 `?action=history`·`?action=blame`·`?revision=` 요청을 센다. 로그인 여부는 그 로그에 없어서 센 수는 익명 독자의 상한이다.
