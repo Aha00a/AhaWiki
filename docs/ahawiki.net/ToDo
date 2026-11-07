@@ -365,6 +365,14 @@ https://www.wikimatrix.org/ 발견. 여기 기준에 좀 맞춰볼까.. --[2020-
   * [[CB(x)]] 관리 화면의 전 site 최근 변경(`ApiAdminReport.adminRecentChanges`)은 site 조건이 없어 71 의 키를 못 썼다 — evolution 72 의 `Page_dateTime_isMinorEdit_viaApi_index`. `schema/schema.sql` 도 손으로 맞췄으니 `sh ./schemaDump.sh --check` 대상이다. [Dev Page] «시간순 읽기 — 최근 변경». --[2026-11-02]
   * [[CB(x)]] `WikiPermission` 의 읽기 판정이 쓰지 않는 본문을 받았고, 쓰기 판정은 본문의 Some/None 만 보았다 — 호출하는 쪽 열 곳이 그것을 넘기려고 본문을 `PageContent` 로 쪼갰다(검색 결과 100개, unlinked mentions 500개, API v1 목록, WebSocket 핸드셰이크의 본문 읽기). 읽기는 이름만, 쓰기는 `pageExists` 한 비트를 받는다. WebSocket 은 리비전 번호만 읽는다. [AccessControl] «쓰기 권한 적용 지점», [Dev WebSocket]. --[2026-11-02]
 
+=== 2026-11-08 수집기 — 앱이 내주는 것 줄이기
+헤드리스 브라우저 하나가 날짜 페이지와 `?action=blame`·`?action=raw` 를 긁었다. 앞단에서 막은 기록은 운영 저장소에 있다. 앱 쪽의 결정과 택하지 않은 안은 [Dev Page] 의 '''없는 페이지 화면''', '''본문을 많이 읽는 두 경로''', '''화면이 불러오는 무거운 파일''' 에 있다.
+ * [[CB(x)]] 사이트가 쓰는 해에서 먼 빈 날짜·달·해를 404 로
+ * [[CB(x)]] `robots.txt` 에 `Disallow: /*?action=`
+ * [[CB(x)]] `AhaWiki.Kanban.js` 를 보드가 있는 화면에서만
+ * [ ] 배포 — 소유자 확인 뒤
+ * [ ] 익명의 blame·history 를 로그인 뒤로 둘지 — 소유자가 정할 일
+
 === 기타
  * 마크업 규칙 추가
   * from [[[

@@ -1,4 +1,10 @@
-document.addEventListener('DOMContentLoaded', function () {
+// AhaWiki.KanbanLoader.js fetches this after the page has loaded, when DOMContentLoaded has
+// already gone; it starts at once then. A test's stand-in document has no readyState and still
+// hands its DOMContentLoaded callback over.
+(function (start) {
+    if (document.readyState === 'interactive' || document.readyState === 'complete') start();
+    else document.addEventListener('DOMContentLoaded', start);
+})(function () {
     var kanbanInterpreters = document.querySelectorAll('.InterpreterKanban');
     var getKanbanMobileMediaQuery = function () {
         if (window.matchMedia) {

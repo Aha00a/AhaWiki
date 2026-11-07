@@ -311,9 +311,12 @@ controllerComponents: ControllerComponents,
 
     // A page shipped with the engine is a page. One made up from its name is too, but the names are
     // without end -- any date, any schema value -- and most hold nothing, so it is kept out of the
-    // index and its links are not followed. The wiki page Dev Page has why.
+    // index and its links are not followed. A date far from any the site uses is not made up at all,
+    // so the calendar has an end. The wiki page Dev Page has why.
     val templates = wikiContext.setPageNameByPermission.filter(PageTemplate.isTemplate).toSeq.sorted
-    DefaultPageLogic.getOption(name).map(content => render(Ok, content))
+    DefaultPageLogic.getOption(name).toOption
+      .filter(_ => DefaultPageLogic.isWithinCalendarSpan(name, wikiContext.setPageNameByPermission, wikiContext.localDateNow.getYear))
+      .map(content => render(Ok, content))
       .map(result => if (DefaultPageLogic.isShippedPage(name)) result else result.withHeaderRobotNoIndexNoFollow)
       .getOrElse(render(NotFound, WikiSnippet.notFound(name, templates)))
   }

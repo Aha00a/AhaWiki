@@ -35,6 +35,8 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
 
   private val dbName = TestApplication.randomDbName("single_connection")
   private val host = "single-connection.test"
+  // A day this year: the calendar runs only as far as the dates the site uses, and this one has none.
+  private val dayThisYear = s"/w/${java.time.LocalDate.now().getYear}-01-01"
 
   override def fakeApplication(): Application =
     GuiceApplicationBuilder()
@@ -182,7 +184,8 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
         "/w/Pool?action=rename" -> OK,
         "/w/Pool?action=delete" -> OK,
         "/w/NoSuchPage" -> NOT_FOUND,
-        "/w/2026-01-01" -> OK,
+        dayThisYear -> OK,
+        "/w/1001-01-01" -> NOT_FOUND,
         "/w/WikiStatistics" -> OK,
         "/w/NoSuchPage?action=edit" -> OK,
       )
@@ -197,8 +200,18 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
   "a page with no revision" should {
     "be indexed if it ships with the engine, and kept out if its name made it up" in {
       header("X-Robots-Tag", get("/w/WikiStatistics", loggedIn = false)) mustBe None
-      header("X-Robots-Tag", get("/w/2026-01-01", loggedIn = false)) mustBe Some("noindex, nofollow")
+      header("X-Robots-Tag", get(dayThisYear, loggedIn = false)) mustBe Some("noindex, nofollow")
       header("X-Robots-Tag", get("/w/schema:Movie", loggedIn = false)) mustBe Some("noindex, nofollow")
+    }
+
+    // 2026-11-08 a scraper that ignores nofollow walked day pages into 2042 and back into 1992.
+    "be not found if it is a date far from every date the site uses" in {
+      val next = java.time.LocalDate.now().getYear + 1
+      for (path <- Seq(s"/w/$next-12-31", s"/w/${next + 1}-01-01", s"/w/${next + 1}-01", s"/w/${next + 1}", "/w/1001-01-01"))
+        withClue(s"$path: ") {
+          status(get(path, loggedIn = false)) mustBe (if (path.contains(s"/$next-")) OK else NOT_FOUND)
+        }
+      status(get("/w/--01-01", loggedIn = false)) mustBe OK
     }
   }
 

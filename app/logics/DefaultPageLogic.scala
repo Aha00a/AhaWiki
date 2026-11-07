@@ -76,6 +76,31 @@ object DefaultPageLogic {
   /** A file under conf/Page/, as opposed to a page made up from the shape of its name. */
   def isShippedPage(title: String): Boolean = defaultPageExists(title)
 
+  /** The year a day, month or year page is about. A name without a year (`--07-10`) has none. */
+  def calendarYear(title: String): Option[Int] = {
+    import com.aha00a.commons.utils.DateTimeUtil
+
+    title match {
+      case DateTimeUtil.regexIsoLocalDate(y, _, _) => Some(y.toInt)
+      case DateTimeUtil.regexYearDashMonth(y, _) => Some(y.toInt)
+      case DateTimeUtil.regexYear(y) => Some(y.toInt)
+      case _ => None
+    }
+  }
+
+  /**
+   * Whether a calendar page nobody saved is near enough to the site's own dates to be drawn: from
+   * the earliest year a saved page is named after, or this year, to a year past the latest. Every
+   * day page links its neighbours and every month and year page the next one, so without an end a
+   * reader that ignores nofollow walks the calendar forever; 2026-11-08 one did. The yearless
+   * names are a finite set and need no end. Dev Page has the rest.
+   */
+  def isWithinCalendarSpan(title: String, savedNames: Iterable[String], thisYear: Int): Boolean =
+    calendarYear(title).forall { year =>
+      val years = savedNames.flatMap(calendarYear).toSeq :+ thisYear
+      years.min <= year && year <= years.max + 1
+    }
+
   def isDefined(title: String): Boolean = {
     import com.aha00a.commons.utils.DateTimeUtil
 

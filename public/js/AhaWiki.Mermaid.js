@@ -10,16 +10,8 @@
     const selector = ".mermaid:not([data-processed])";
     let library = null;
 
-    const load = () => library ??= new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = libraryUrl;
-        script.onload = () => {
-            mermaid.initialize({ startOnLoad: false });
-            resolve();
-        };
-        script.onerror = () => reject(new Error(`${libraryUrl} did not load`));
-        document.head.append(script);
-    });
+    const load = () => library ??= window.AhaWiki.loadScript(libraryUrl)
+        .then(() => mermaid.initialize({ startOnLoad: false }));
 
     window.AhaWiki.Mermaid = {
         renderAll: () => {

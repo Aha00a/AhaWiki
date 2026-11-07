@@ -70,6 +70,9 @@ class Home @Inject() (
     Redirect(AhaWikiConfig().site.favicon(), FOUND).withHeaders(CACHE_CONTROL -> "public, max-age=3600")
   }
 
+  // `/*?action=` is the history, blame, raw, diff and edit screens of every page. They were already
+  // noindex and linked nofollow; this is for a crawler that reads robots.txt before fetching. A `?`
+  // inside a page name is %3F in its address, so no page is left out with them.
   def robotsTxt: Action[AnyContent] = Action { implicit request =>
     val robots =
       s"""User-agent: Linguee
@@ -93,6 +96,7 @@ class Home @Inject() (
          |Disallow: /dev/
          |Disallow: /preview
          |Disallow: /search
+         |Disallow: /*?action=
          |
          |Sitemap: https://${request.host}/sitemap.xml
          |""".stripMargin
