@@ -12,6 +12,11 @@ English markdown is this file and the READMEs that sit next to the files they de
 standalone `docs/*.md` was the old shape, and the last five were moved to the wiki on
 2026-08-19.
 
+**Every file under `docs/ahawiki.net/` is a page on <https://ahawiki.net>, and the two must hold
+the same text.** The file name is the page name. Editing the file is half of the change; the
+other half is uploading it, which **AhaWikiDoc Sync** below describes. A change that touches one of
+these files is not finished until the sync reports the page in sync.
+
 Nothing links to these from anywhere a newcomer looks, so each has been rediscovered at least
 once by someone who could have read it instead. Add a line here when you add a document.
 
@@ -92,7 +97,9 @@ Assume anything that reaches a public remote is permanent. A force-push moves th
 
 ## AhaWikiDoc Sync
 
-Files under `docs/ahawiki.net/` are local copies of pages on `https://ahawiki.net`.
+Files under `docs/ahawiki.net/` are local copies of pages on `https://ahawiki.net`, and they are
+kept in step with it: after every commit that changes one, run the sync below with `--apply`, and
+read its report until every page is in sync. Nobody has to ask for it.
 
 Documents under `docs/ahawiki.net/` must use AhaMark format. Pay special attention to bullets, checkboxes, links, and code blocks:
 
@@ -139,7 +146,7 @@ When a ToDo document is fully completed, do not keep it as a historical checklis
  * Sync the deletion only after the cleanup commit is reviewed and committed, following the committed-content sync rule below.
  * The wiki side of that deletion is the owner's, in the browser. Deleting a page removes every revision it ever had, which is not something an agent does on its own; an agent that finds the page still there after the cleanup commit replaces its content with `#!redirect <the reference page>` so the stale checklist stops being reachable, and leaves the delete. That is why a `wiki only` page in the sync report may be such a stub, as `ToDo-User-Nickname-Change` was until the owner deleted it on 2026-10-31.
 
-When the user asks for `AhaWikiDoc sync`, sync committed files under `docs/ahawiki.net/` to the matching remote pages and also check for newer remote changes that should be pulled down locally. Do not upload uncommitted local edits by default; the user should review and commit local documentation changes before they become the source for remote sync. Only include uncommitted local edits in an upload if the user explicitly asks for that exception.
+A sync — after a commit, or when the user asks for `AhaWikiDoc sync` — uploads committed files under `docs/ahawiki.net/` to the matching remote pages and also checks for newer remote changes that should be pulled down locally. Do not upload uncommitted local edits by default; the user should review and commit local documentation changes before they become the source for remote sync. Only include uncommitted local edits in an upload if the user explicitly asks for that exception.
 
 **`scripts/sync.ahawiki.net.mjs` does this** — see `scripts/README.md` for its flags. Do not sync by hand. It was prose here for long enough that every sync re-implemented it, and the re-implementations kept dropping the sweep below.
 
