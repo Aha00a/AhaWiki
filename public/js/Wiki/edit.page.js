@@ -3,7 +3,10 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
 
         function adjustEditorLayoutHeight() {
             var windowInnerHeight = $(window).innerHeight();
-            var flashInnerHeight = $('.flash').innerHeight();
+            // jQuery 3 answers undefined for an empty set where 1.12 answered null, which the
+            // subtraction below read as 0. Without a flash message the heights became NaN and were
+            // never set, so the preview grew to its whole length (2026-11-01 to 11-12).
+            var flashInnerHeight = $('.flash').innerHeight() || 0;
             var baseColumnHeight = Math.max(280, windowInnerHeight - flashInnerHeight - 300);
 
             var leftFixedHeight = ($('.left > .toolbar').outerHeight(true) || 0) +

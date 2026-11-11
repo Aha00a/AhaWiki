@@ -90,6 +90,11 @@ Rules of the copy:
  * These packages are in `package.json`, so Dependabot reports their advisories. Raising one is
    a change to the pages, not to this script. jQuery stops at 3.7.1: 4 removes more than this
    code was checked against, and `jquery.form` 3.51 has no release that claims to work on it.
+ * One change from 1.12 to 3 was missed when the pages moved on 2026-11-01: `.innerHeight()`,
+   `.outerHeight()`, `.width()` and the like answer `undefined` for an empty set where 1.12
+   answered `null`. Arithmetic took `null` as 0 and takes `undefined` as NaN, so the editor's
+   heights were never set and its preview grew to the full length of the page until 2026-11-12.
+   Read a dimension of something that may be absent with `|| 0`.
 
 `test/manual/vendor-assets/` loads the copied files in the skeleton's order with no server and
 reports whether each library is there, whether MathJax typeset from the local tree, and whether
