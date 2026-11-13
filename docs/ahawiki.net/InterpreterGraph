@@ -12,5 +12,15 @@ p->q->r->s->t->u->p
 z->b->d->g->k->p
 ]]]
 
+== 점을 누르면 문서로
+`#!Graph` 뒤에 `enableWikiLink` 를 적으면, 점을 눌렀을 때 그 이름의 문서로 갑니다. 적지 않으면 눌러도 아무 일도 없습니다. 문서들의 지도를 그린 예는 ["예시 지식 지도"] 에 있습니다.
+
+[[[#!WikiSyntaxPreview Graph enableWikiLink
+AhaMark->Macro
+AhaMark->Interpreter
+]]]
+
+구간 안에 적은 이름은 링크로 세지 않습니다. 그래서 그 문서의 역링크에는 이 그림이 나오지 않습니다.
+
 == 모양
 노드가 12개 이상이면 서로 자주 이어진 무리마다 은은한 빛이 깔리고 노드 링에 무리 색이 입혀집니다. 이유와 규칙은 [Dev GraphGlow].

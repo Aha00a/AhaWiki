@@ -1,6 +1,6 @@
 = [AhaMark] Basic
-Brief descriptions of [AhaMark] Syntax.
-[AhaMark] 문법의 설명입니다.
+A cheat sheet of [AhaMark] syntax: what is used most, on one page.
+[AhaMark] 문법 치트시트입니다. 자주 쓰는 것을 한 쪽에 모았습니다.
 
 Left sides represent markup, right sides are rendered.
 왼쪽은 마크업, 오른쪽은 렌더링된 결과입니다.
@@ -89,4 +89,89 @@ content
 === h3 with closing and id === #h3
 ===> 스포일러
 기본으로 접혀서 나옵니다.
+]]]
+
+
+
+== 체크박스
+할 일 목록에 씁니다. 끝낸 일은 `[x]` 가 아니라 `[[CB(x)]]` 로 적습니다. `[x]` 는 `x` 라는 페이지로 가는 링크가 됩니다([MacroCheckBox]).
+
+[[[#!WikiSyntaxPreview
+ * [ ] 아직 안 한 일
+ * [[CB(x)]] 끝낸 일
+]]]
+
+
+
+== 날짜
+날짜를 링크로 적으면 그날의 페이지로 갑니다. 그 페이지는 저장한 적이 없어도 그 날짜를 적은 문서들을 모아 보여 줍니다.
+
+[[[#!WikiSyntaxPreview
+[2026-11-14] 에 회의를 했다.
+]]]
+
+
+
+== 코드
+한 줄 안의 코드는 위 '''Formatting''' 의 백틱입니다. 여러 줄은 구간으로 감쌉니다. `#!Vim` 뒤에 언어를 적으면 색을 입힙니다([InterpreterVim]).
+
+[[[#!WikiSyntaxPreview Vim python
+def hello(name):
+    return "Hello, " + name
+]]]
+
+이름 없이 `[[[` 와 `]]]` 로만 감싸면 쓴 글자 그대로 보여 줍니다([InterpreterText]).
+
+
+
+== 표
+칸은 탭으로 나눕니다. 스프레드시트에서 복사해 붙여 넣으면 그대로 표가 됩니다. `tsv` 뒤의 `1` 은 첫 줄이 머리글이라는 뜻입니다([InterpreterTable]).
+
+[[[#!WikiSyntaxPreview Table tsv 1
+이름	역할	시작
+김하나	기획	2026-10-05
+이두리	개발	2026-10-12
+]]]
+
+
+
+== 인용과 접기
+[[[#!WikiSyntaxPreview Quote
+한 번 적어 두면 두 번 묻지 않는다.
+]]]
+
+[[[#!WikiSyntaxPreview Fold 자세히 보기
+길어서 접어 둔 내용입니다.
+]]]
+
+`Fold` 뒤에 적은 글이 단추의 글이 됩니다([InterpreterQuote], [InterpreterFold]).
+
+
+
+== 자주 쓰는 매크로
+매크로는 `[[이름(인자)]]` 꼴입니다. 전체 목록은 [Macro] 에 있습니다.
+
+[[[#!WikiSyntaxPreview
+ * 단축키 [[Kbd(Ctrl S)]]
+ * 그림 [[Image(/public/favicon.png,20px)]]
+ * 이 위키의 문서 수 [[PageCount]]
+]]]
+
+다른 문서를 끼워 넣을 때는 `[[Include(문서이름)]]` 을 씁니다([MacroInclude]).
+
+
+
+== 더 있는 것
+[[[#!Table tsv 1
+하고 싶은 것	쓰는 것
+흐름도와 구조도	[InterpreterMermaid]
+할 일 보드	[InterpreterKanban] — ["예시 작업 보드"]
+점과 선으로 그린 지도	[InterpreterGraph] — ["예시 지식 지도"]
+일정 막대	[InterpreterGantt]
+수식	[InterpreterMath]
+지도	[InterpreterMap]
+발표 자료와 인쇄 문서	[InterpreterSlide], [InterpreterPaper]
+Markdown 으로 쓰기	[InterpreterMarkdown]
+화면에 보이지 않는 메모	[InterpreterComment]
+다른 문서로 보내기	첫 줄에 `#!redirect 문서이름` — [Interpreter]
 ]]]

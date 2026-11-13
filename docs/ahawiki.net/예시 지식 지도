@@ -1,0 +1,50 @@
+= 예시 지식 지도
+무엇이 무엇과 이어져 있는지를 점과 선으로 그린 그림입니다. 이 위키의 안내 문서들이 어떻게 이어지는지를 예로 들었습니다. 점을 누르면 그 문서로 갑니다.
+
+== 손으로 그린 지도
+[[[#!Graph enableWikiLink
+AhaWiki->GettingStarted->AhaMark
+AhaMark->AhaMark Basic
+AhaMark->Macro
+AhaMark->Interpreter
+Interpreter->InterpreterTable
+Interpreter->InterpreterMermaid
+Interpreter->InterpreterKanban
+Interpreter->InterpreterGraph
+GettingStarted->AccessControl
+AhaWiki->예시 개인 위키
+AhaWiki->예시 프로젝트 홈->예시 회의록
+예시 프로젝트 홈->예시 작업 보드->InterpreterKanban
+예시 지식 지도->InterpreterGraph
+]]]
+
+한 줄에 선을 하나씩 적습니다. `a->b->c` 처럼 이어 쓰면 선 둘이 됩니다.
+
+[[[
+AhaWiki->GettingStarted->AhaMark
+AhaMark->Macro
+]]]
+
+ * 점의 이름은 적은 그대로입니다. `->` 앞뒤에는 빈칸을 넣지 않습니다.
+ * `#!Graph` 뒤에 `enableWikiLink` 를 적으면, 점을 눌렀을 때 그 이름의 문서로 갑니다. 적지 않으면 그림만 그립니다.
+ * 점이 12개 이상이면 자주 이어진 무리마다 색이 입혀집니다.
+
+문법은 [InterpreterGraph] 에 있습니다.
+
+== 저절로 그려지는 지도
+지도를 손으로 그리지 않아도 됩니다. 문서에 링크를 걸어 두면 위키가 그립니다.
+
+ * 다른 문서와 링크로 이어진 문서는, 아래쪽에 그 문서와 이어진 문서들의 그래프가 나옵니다. 이 문서 아래에도 있습니다.
+ * 위키 전체의 그래프는 [PageMap] 에 있습니다.
+
+== 이럴 때 씁니다
+ * 공부하는 주제의 개념들이 어떻게 이어지는지 볼 때
+ * 시스템의 부품과 흐름을 한눈에 볼 때
+ * 문서가 늘어나 무엇이 어디 있는지 헷갈릴 때
+
+방향과 모양이 있는 도표가 필요하면 [InterpreterMermaid] 를 씁니다.
+
+== 함께 보기
+ * ["링크 중심 지식 관리"]
+ * ["예시 개인 위키"]
+ * ["예시 작업 보드"]
