@@ -724,10 +724,35 @@
 
     // Every write from the board carries the CSRF token, and each of the five used to fetch and
     // unwrap it in its own four lines. Play reads either header name, so both go on every request.
+    //
+    // Calls that start together share one request. A session with no token in it yet is given a
+    // new one by every /api/csrf it asks, and the browser keeps the cookie of whichever answer
+    // came last -- so two asked at once came back with two tokens, one of which no longer matched
+    // the cookie, and the POST carrying it was refused (403). Opening a card draws its description
+    // and comments together, so on a first visit one of them stayed as raw text.
+    //
+    // The answer is not kept once it is in. A board stays open for hours and the session under it
+    // can change (a login in another tab); a token remembered from before would then be refused on
+    // every save. The next call after an answer asks again, and by then the cookie is there.
+    //
+    // The account page and the admin bundle fetch the token in their own few lines. They send one
+    // write at a time, on a click, so they have no two calls to share between.
+    var csrfTokenRequest = null;
     var fetchCsrfTokenValue = function () {
-        return fetch('/api/csrf', { credentials: 'same-origin' })
+        if (csrfTokenRequest) {
+            return csrfTokenRequest;
+        }
+        var request = fetch('/api/csrf', { credentials: 'same-origin' })
             .then(function (response) { return response.json().catch(function () { return {}; }); })
             .then(function (csrfToken) { return csrfToken && csrfToken.value ? csrfToken.value : ''; });
+        var forget = function () {
+            if (csrfTokenRequest === request) {
+                csrfTokenRequest = null;
+            }
+        };
+        csrfTokenRequest = request;
+        request.then(forget, forget);
+        return request;
     };
 
     var withCsrfHeaders = function (tokenValue, headers) {
@@ -1123,6 +1148,7 @@
         window.__AhaWikiKanbanTestHooks.requestSaveKanban = requestSaveKanban;
         window.__AhaWikiKanbanTestHooks.rebaseKanbanColumns = rebaseKanbanColumns;
         window.__AhaWikiKanbanTestHooks.findKanbanBlockInRaw = findKanbanBlockInRaw;
+        window.__AhaWikiKanbanTestHooks.requestRenderInlineComment = requestRenderInlineComment;
     }
 
     var shiftMetaLineRangeAfterInsert = function (anchorWrapper, insertedLineNumber, delta) {
