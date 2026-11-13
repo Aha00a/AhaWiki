@@ -8,6 +8,21 @@
  1. 관리자가 `/Admin/NicknameRequests` 에서 대기 목록을 보고 승인하거나 거절한다. 승인은 확인을 한 번 받고, 거절은 사유가 없으면 보내지지 않는다 — 사유가 거절의 내용 전부이고 신청자가 보는 것도 그것뿐이다.
  1. 승인하면 `UserNicknameChangeLogic.approve` 가 한 트랜잭션에서 `User.nickname`·`User.dateNicknameChanged` 를 바꾸고 `UserNicknameHistory` 에 옛 값·새 값·승인한 관리자를 적고 신청을 `Approved` 로 바꾼다.
 
+== 가입 직후의 안내
+
+계정은 첫 로그인이 만들고, 그때의 닉네임은 이메일 주소의 `@` 앞부분이다(`User.insert` — 소문자로 바꾸고, 글자·숫자·밑줄이 아닌 것은 `_` 로 바꾸고, 이미 있는 이름이면 뒤에 무작위 꼬리를 붙인다). 로그인은 Google 계정뿐이라 그 앞부분은 주소의 거의 전부다. 그리고 그 이름은 그때부터 남에게 보인다 — 같은 페이지를 함께 보고 있는 사람에게는 커서 옆에([Dev WebSocket] 의 `cursor.hello`), 저장하는 글에는 작성자로. 2026-11-14 전에는 본인에게 이것을 알리는 곳이 없었다.
+
+이제 '''계정을 만든 그 로그인에 한 번''', 돌아간 화면 위에 안내가 뜬다. 받은 이름, 그것이 이메일에서 왔고 남에게 보인다는 것, 다른 이름은 `/account#nickname` 에서 신청하고 관리자가 승인한다는 것을 말한다. 글귀는 `FirstLoginNotice.html` 에 있고, `GoogleOAuth` 가 `User.selectOrInsert` 의 답(`LoggedInUser` 의 `isNew`)을 보고 flash 의 `info` 로 싣는다.
+
+ * '''새 화면은 만들지 않았다.''' 가입 직후 닉네임을 직접 고르는 화면이 처음 그리던 모습이지만([ToDo NewUserFlow]), 신청과 승인이 이미 있으니 그리로 보내는 것으로 족하다. 화면을 하나 더 두면 로그인이 돌아갈 주소를 그 화면이 다시 들고 다녀야 한다.
+ * '''이메일에서 이름을 따는 것은 그대로다.''' 이메일과 상관없는 이름을 주면 처음부터 드러나는 것이 없다. 대신 새 사용자의 작성자 이름이 모두 뜻 없는 글자가 되고, 신청과 승인이 사실상 가입의 한 단계가 된다. 어느 쪽이 나은지는 소유자가 정할 일이라 이번에는 알리는 데까지만 했다 — [ToDo NewUserFlow] 에 열린 항목으로 남겼다.
+ * '''승인 전까지는 그 이름이다.''' 안내를 보고 바로 신청해도 승인이 날 때까지는 이메일에서 온 이름으로 보인다. 승인되면 지난 글의 작성자도 새 이름으로 보인다 — 이력과 blame 은 `User.seq` 로 join 한다(아래 '''위키 내용과 링크''').
+ * '''한 번뿐이다.''' flash 는 다음 요청 하나에만 실리므로 놓치면 다시 뜨지 않는다. Account Settings 의 닉네임 절은 늘 그 자리에 있다.
+ * '''닉네임은 이스케이프한다.''' flash 값은 `_base.scala.html` 이 HTML 로 그대로 내보낸다. 그래서 안내에 링크를 실을 수 있고, 그래서 이름은 `FirstLoginNotice.html` 이 이스케이프한다. 지금 `User.insert` 와 `UserNicknamePolicy` 가 내는 이름에는 태그가 될 글자가 없지만, 안내가 그 사실에 기대지 않게 했다.
+ * '''redirect 페이지를 거쳐도 남는다.''' 로그인이 FrontPage 로 돌아가는데 그 FrontPage 가 `#!redirect` 이면 안내가 사라지고 있었다 — ahawiki.net 이 그런 위키다. 같이 고쳤고, 무엇이 왜 사라졌는지는 [Dev Page] '''redirect 페이지와 flash'''.
+ * 검사는 셋이다. `ApiSiteRequestSpec` 의 «a first login» — 처음 로그인에는 안내가 있고 같은 계정의 다음 로그인에는 없다. `FirstLoginNoticeUnit` — 이스케이프(빼면 실패하는 것을 봤다). `AccountSettingsRenderSpec` — 안내가 가리키는 `id="nickname"` 이 닉네임 절에 있다. 스펙은 Google 의 답 없이 닿을 수 있는 `/google/oauth/handoff` 로 들어간다. 보통의 로그인(`/google/oauth/callback`)도 `GoogleOAuth` 의 같은 코드에서 끝난다.
+ * '''확인하지 못한 것.''' 실제 Google 로그인으로 새 계정을 만들어 보지는 않았다. 화면은 운영 페이지에 같은 글귀를 넣어 밝은 테마·어두운 테마·좁은 화면에서 봤다.
+
 == 규칙
 
 닉네임은 `^[a-zA-Z0-9가-힣]{5,16}$` 이고, 검증은 `logics.UserNicknamePolicy.validate` 한 곳에서 한다. 앞뒤 공백은 자르고, 자른 뒤 비면 실패하고, 안의 공백은 실패한다. 대소문자는 표시용으로 보존하되 중복 비교는 DB collation 대로 대소문자를 가리지 않는다. 예약어 다섯 개(`Anonymous`·`Guest`·`Admin`·`AhaWiki`·`User`)는 막는다. 오류는 길이·허용 문자·이미 사용 중·이미 신청 중·대기 신청이 이미 있음으로 갈라 돌려준다(`UserNicknameChangeLogic.RequestError`).
@@ -78,7 +93,7 @@ Account 쪽은 `Account/settings.scala.html` 의 `accountNickname` 절이고, �
 staging 이 없어서, `ApiUserNicknameSpec`(요청 생성·승인·거절·취소·낡은 세션)과 stub API 에 물린 실제 번들에서의 클릭으로 대신했다. '''운영에서 실제로 신청하고 승인을 눌러 본 사람은 아직 없다.'''
 
 == 관련
- * [ToDo NewUserFlow] - 가입 직후의 안내
+ * [ToDo NewUserFlow] - 새 사용자가 거치는 단계 전체
  * [AccessControl]
  * [Dev Database]
  * [Dev Deploying]

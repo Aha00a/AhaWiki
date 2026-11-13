@@ -139,7 +139,7 @@
 
 2026-11-14 전에는 `success` 만 이어 줬다 — 들고 온 글귀 뒤에 `<br/>` 로 붙였다. `info`·`error`·`warning` 은 버려졌다. 이제 들고 온 flash 를 전부 넘기고, `success` 만 전처럼 이어 쓴다.
 
-드러난 자리는 로그인이다. referer 없이 시작한 로그인은 `/` 로 돌아오고(`Home.index` 는 flash 를 넘긴다) 그것은 FrontPage 인데, FrontPage 가 redirect 인 위키에서는 — ahawiki.net 이 그렇다 — 그 다음이 이 길이다. 그 길로 오는 `error` — «Login expired. Please try again.», «User creation failed» — 는 화면에 닿지 못하게 되어 있었다.
+드러난 자리는 로그인이다. referer 없이 시작한 로그인은 `/` 로 돌아오고(`Home.index` 는 flash 를 넘긴다) 그것은 FrontPage 인데, FrontPage 가 redirect 인 위키에서는 — ahawiki.net 이 그렇다 — 그 다음이 이 길이다. 그 길로 오는 `error` — «Login expired. Please try again.», «User creation failed» — 는 화면에 닿지 못하게 되어 있었다. 첫 로그인 안내([UserNicknameChange] '''가입 직후의 안내''')도 `info` 라서 같은 길에서 사라졌을 것이고, 이것을 찾은 것도 그 안내를 만들면서다.
 
 어떤 키를 화면에 그리는지는 `_base.scala.html` 이 정한다. 그래서 여기서는 키를 고르지 않고 전부 넘긴다 — 고르면 그 목록이 두 곳에 있게 된다.
 

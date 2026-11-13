@@ -171,8 +171,13 @@ class ApiSiteRequestSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAn
 
   private def sign(text: String): String = app.injector.instanceOf[CookieSigner].sign(text)
 
-  private def value(purpose: String = "handoff", host: String = s"alices.$parent", expires: Long = System.currentTimeMillis() + 60000) =
-    OAuthHandoff.Value(purpose, host, "/w/Page", "nonce", connect = false, expires, "alice@example.com", "")
+  private def value(
+    purpose: String = "handoff",
+    host: String = s"alices.$parent",
+    expires: Long = System.currentTimeMillis() + 60000,
+    email: String = "alice@example.com",
+  ) =
+    OAuthHandoff.Value(purpose, host, "/w/Page", "nonce", connect = false, expires, email, "")
 
   private def handoff(token: String, host: String, nonce: String) =
     route(app, FakeRequest(GET, s"/google/oauth/handoff?token=$token").withHeaders(HOST -> host).withFlash("oauthNonce" -> nonce)).get
@@ -208,6 +213,26 @@ class ApiSiteRequestSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAn
       OAuthHandoff.isUnderParent("example.com", parent) mustBe false
       OAuthHandoff.isUnderParent("notwiki.test", parent) mustBe false
       OAuthHandoff.isUnderParent("anything.test", "") mustBe false
+    }
+  }
+
+  // The handoff is the one way into the end of a login that needs no answer from Google, so the
+  // first-login notice is checked through it. The plain callback ends in the same code.
+  "a first login" should {
+    "say which name the newcomer was given and where to ask for another, and say it once" in {
+      def login() = handoff(OAuthHandoff.seal(value(email = "new.comer@example.com"), sign), s"alices.$parent", "nonce")
+
+      val first = login()
+      session(first).get(SessionLogic.sessionKeyNickname) mustBe Some("new_comer")
+      flash(first).get("success") mustBe Some("Successfully logged in.")
+      val notice = flash(first).get("info").getOrElse("")
+      notice must include("<strong>new_comer</strong>")
+      notice must include("""href="/account#nickname"""")
+
+      val second = login()
+      session(second).get(SessionLogic.sessionKeyNickname) mustBe Some("new_comer")
+      flash(second).get("success") mustBe Some("Successfully logged in.")
+      flash(second).get("info") mustBe None
     }
   }
 

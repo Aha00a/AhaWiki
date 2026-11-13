@@ -68,6 +68,9 @@ class AccountSettingsRenderSpec extends PlaySpec with GuiceOneAppPerSuite with B
       }
 
       html must include("accountNickname")
+      // Where the first-login notice sends a newcomer (FirstLoginNotice). Without the id the link
+      // still opens the page, at the top, and says nothing about having missed.
+      html must include("""id="nickname"""")
       html must include("data-nickname-form")
       html must include("data-nickname-cancel")
       html must include("accountApiKeys")

@@ -23,7 +23,8 @@ import play.api.test.Helpers._
   *
   * A login is where that bites. One started without a referer comes back to `/`, which is
   * FrontPage, which on a wiki like ahawiki.net is a redirect -- so a login that failed could not
-  * say so there: "Login expired. Please try again." is an `error`.
+  * say so there: "Login expired. Please try again." is an `error`. What a newcomer is told about
+  * their name (FirstLoginNotice) is an `info`, and making that is how this was found.
   *
   * The site has a seq and host of its own, because the memory caches are shared by every spec in
   * the JVM and keyed by site. */

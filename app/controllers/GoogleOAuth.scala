@@ -4,6 +4,7 @@ import com.aha00a.play.Implicits._
 import com.aha00a.play.utils.GoogleOAuthApi
 import logics.AhaWikiCacheMemoryDomainSite
 import logics.ApplicationConf
+import logics.FirstLoginNotice
 import logics.OAuthHandoff
 import logics.SessionLogic
 import models.tables.User
@@ -142,10 +143,13 @@ class GoogleOAuth @Inject()(
             .map(user => (user, profileImageUrl))
         }
       }
-        .map { case (user, profileImageUrl) =>
+        .map { case (loggedIn, profileImageUrl) =>
+          // Said once, on the login that made the account: the name it was given is public.
+          val notice = Some(loggedIn.user.nickname).filter(_ => loggedIn.isNew)
+            .map(nickname => "info" -> FirstLoginNotice.html(nickname, routes.Account.settings().url))
           Redirect(redirectUrl)
-            .withSession(SessionLogic.login(request, user, profileImageUrl))
-            .flashing("success" -> "Successfully logged in.")
+            .withSession(SessionLogic.login(request, loggedIn.user, profileImageUrl))
+            .flashing(Seq("success" -> "Successfully logged in.") ++ notice: _*)
         }
         .getOrElse {
           Redirect(redirectUrl)

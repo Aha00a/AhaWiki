@@ -18,6 +18,9 @@ case class User(seq: Long, created: LocalDateTime, updated: LocalDateTime, nickn
 object User {
   case class SessionUser(seq: Long, nickname: String, loginEmail: Option[String])
 
+  /** Who a login belongs to, and whether that login is the one that made the account. */
+  case class LoggedInUser(user: SessionUser, isNew: Boolean)
+
   //noinspection TypeAnnotation
   def tupled = (apply _).tupled
 
@@ -110,13 +113,21 @@ object User {
     tryInsert(0)
   }
 
-  def selectOrInsert(email: String, profileImageUrl: Option[String])(implicit connection: Connection): Option[SessionUser] = {
+  /**
+   * The account behind an email address, made here if there is none yet.
+   *
+   * `isNew` is true only for the call that inserted the row. Two first logins racing each other
+   * leave one of them told it is new and the other not, which is the honest answer for both.
+   */
+  def selectOrInsert(email: String, profileImageUrl: Option[String])(implicit connection: Connection): Option[LoggedInUser] = {
+    def existing(user: User) = LoggedInUser(user.toSessionUser(Some(email)), isNew = false)
+
     selectWhereEmail(email)
       .map { user =>
         if (profileImageUrl.isDefined && user.profileImageUrl != profileImageUrl) {
           SQL"""UPDATE User SET profileImageUrl = $profileImageUrl WHERE seq = ${user.seq}""".executeUpdate()
         }
-        user.toSessionUser(Some(email))
+        existing(user)
       }
       .orElse {
         try {
@@ -124,12 +135,12 @@ object User {
             insert(email, profileImageUrl).map {
               case (id, nickname) =>
                 UserEmail.insert(id, email, isPrimary = true)
-                SessionUser(id, nickname, Some(email))
+                LoggedInUser(SessionUser(id, nickname, Some(email)), isNew = true)
             }
           }
         } catch {
           case _: java.sql.SQLIntegrityConstraintViolationException =>
-            selectWhereEmail(email).map(_.toSessionUser(Some(email)))
+            selectWhereEmail(email).map(existing)
         }
       }
   }
