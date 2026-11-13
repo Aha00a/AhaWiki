@@ -21,7 +21,8 @@
  * '''닉네임은 이스케이프한다.''' flash 값은 `_base.scala.html` 이 HTML 로 그대로 내보낸다. 그래서 안내에 링크를 실을 수 있고, 그래서 이름은 `FirstLoginNotice.html` 이 이스케이프한다. 지금 `User.insert` 와 `UserNicknamePolicy` 가 내는 이름에는 태그가 될 글자가 없지만, 안내가 그 사실에 기대지 않게 했다.
  * '''redirect 페이지를 거쳐도 남는다.''' 로그인이 FrontPage 로 돌아가는데 그 FrontPage 가 `#!redirect` 이면 안내가 사라지고 있었다 — ahawiki.net 이 그런 위키다. 같이 고쳤고, 무엇이 왜 사라졌는지는 [Dev Page] '''redirect 페이지와 flash'''.
  * 검사는 셋이다. `ApiSiteRequestSpec` 의 «a first login» — 처음 로그인에는 안내가 있고 같은 계정의 다음 로그인에는 없다. `FirstLoginNoticeUnit` — 이스케이프(빼면 실패하는 것을 봤다). `AccountSettingsRenderSpec` — 안내가 가리키는 `id="nickname"` 이 닉네임 절에 있다. 스펙은 Google 의 답 없이 닿을 수 있는 `/google/oauth/handoff` 로 들어간다. 보통의 로그인(`/google/oauth/callback`)도 `GoogleOAuth` 의 같은 코드에서 끝난다.
- * '''확인하지 못한 것.''' 실제 Google 로그인으로 새 계정을 만들어 보지는 않았다. 화면은 운영 페이지에 같은 글귀를 넣어 밝은 테마·어두운 테마·좁은 화면에서 봤다.
+ * '''배포했다(2026-11-14).''' 릴리스 `20261114-062819`, 태그 `v20261114T062916-aha00a`. 대기 인스턴스에 먼저 올려 ahawiki.net 262경로를 옛 인스턴스와 대조했고 모두 같았다 — 로그인하지 않은 화면에는 바뀐 것이 없다. 운영에서 본 것은 둘이다. 로그인한 세션에서 `/account#nickname` 이 닉네임 절에 닿는다. 그리고 redirect 페이지가 flash 를 넘긴다([Dev Page] '''redirect 페이지와 flash''').
+ * '''확인하지 못한 것.''' 실제 Google 로그인으로 새 계정을 만들어 보지는 않았다 — 운영에서 안내가 뜨는 것은 아직 아무도 보지 못했다. 화면은 운영 페이지에 같은 글귀를 넣어 밝은 테마·어두운 테마·좁은 화면에서 봤다.
 
 == 규칙
 
