@@ -128,6 +128,26 @@ class ApiSiteRequestSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAn
       status(route(app, FakeRequest(GET, "/w/FrontPage").withHeaders(HOST -> s"alices.$parent")).get) mustBe OK
     }
 
+    // The next two screens the requester sees, in the order they see them: the request page with
+    // its answer, then the wiki itself. Nothing is sent to them, so these two say what to do.
+    "tell the requester where the wiki is and to log in there" in {
+      // The page draws the request form under the answer, and the form wants its token.
+      val html = contentAsString(route(app, as(aliceSeq, "alicewiki")(GET, "/site/request").withCSRFToken).get)
+      html must include(s"""<a href="https://alices.$parent/">alices.$parent</a>""")
+      html must include("Log in there with this Google account")
+    }
+
+    "open on a first page that says how to begin" in {
+      val html = contentAsString(route(app, FakeRequest(GET, "/w/FrontPage").withHeaders(HOST -> s"alices.$parent")).get)
+      Option(System.getenv("AHAWIKI_RENDER_DUMP")).filter(_.nonEmpty).foreach { path =>
+        java.nio.file.Files.write(java.nio.file.Paths.get(path), html.getBytes("UTF-8"))
+      }
+      // Nobody has saved a FrontPage here, so this is the text the engine ships (conf/Page), and
+      // it is written for whoever has just been handed the wiki.
+      html must include("""href="https://ahawiki.net/w/GettingStarted"""")
+      html must include("<code>[회의록]</code>")
+    }
+
     "not answer twice" in {
       val seq = requestOf("alices").seq
       status(route(app, admin(POST, s"/api/Admin/SiteRequests/$seq/approve").withCSRFToken).get) mustBe BAD_REQUEST

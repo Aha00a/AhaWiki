@@ -33,6 +33,10 @@
                 }
                 @if(rows.nonEmpty) {
                     <h2>Your requests</h2>
+                    @if(rows.exists(_.site.isDefined)) {
+                        @* Nothing is sent to the requester, and a login on this host is not one on the new wiki's. *@
+                        <p>An approved wiki is open at its address. Log in there with this Google account: it is that wiki's administrator, and the wiki's first page says how to begin.</p>
+                    }
                     <table class="wikiTableSimple">
                         <thead><tr><th>Site</th><th>Address</th><th>Status</th></tr></thead>
                         <tbody>
