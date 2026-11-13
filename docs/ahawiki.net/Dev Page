@@ -133,6 +133,18 @@
 
 검사는 `WikiOldRevisionViewSpec` 이다. 옛 리비전과 최신을 각각 그려서 안내 상자·읽기 전용·소켓을 확인한다.
 
+== redirect 페이지와 flash
+
+본문이 `#!redirect 다른페이지` 인 페이지를 열면 `Wiki.view` 가 그 페이지로 다시 보내면서 flash 의 `success` 에 «Redirected from …» 을 싣는다. flash 는 다음 요청 하나에만 실리는데 redirect 는 요청이 하나 더 드는 길이라, 들고 온 flash 를 여기서 이어 주지 않으면 사라진다.
+
+2026-11-14 전에는 `success` 만 이어 줬다 — 들고 온 글귀 뒤에 `<br/>` 로 붙였다. `info`·`error`·`warning` 은 버려졌다. 이제 들고 온 flash 를 전부 넘기고, `success` 만 전처럼 이어 쓴다.
+
+드러난 자리는 로그인이다. referer 없이 시작한 로그인은 `/` 로 돌아오고(`Home.index` 는 flash 를 넘긴다) 그것은 FrontPage 인데, FrontPage 가 redirect 인 위키에서는 — ahawiki.net 이 그렇다 — 그 다음이 이 길이다. 그 길로 오는 `error` — «Login expired. Please try again.», «User creation failed» — 는 화면에 닿지 못하게 되어 있었다.
+
+어떤 키를 화면에 그리는지는 `_base.scala.html` 이 정한다. 그래서 여기서는 키를 고르지 않고 전부 넘긴다 — 고르면 그 목록이 두 곳에 있게 된다.
+
+검사는 `WikiRedirectFlashSpec` 이다. 고치기 전 코드로는 `info` 가 없어 실패한다.
+
 === 왜
 
 2026-09-26 전에는 본문만 옛 리비전이고 둘레는 전부 최신을 말했다. `revisionInfo` 는 최신의 수정자·날짜·번호를 보였고, 옛 리비전이라는 표시는 어디에도 없었다. 그래서 «히스토리에서 번호를 눌러도 현재 버전으로 돌아간다» 는 보고가 왔다 — 차이가 작은 리비전이면 정말로 구별할 수 없다.

@@ -337,7 +337,10 @@ controllerComponents: ControllerComponents,
           val redirectFromEditLink = s"/w/${PageNameUrl.encode(page.name)}?action=edit"
           val message = s"""Redirected from <a href="$redirectFromEditLink">${page.name.escapeHtml()}</a>"""
           val newMessage = request.flash.get("success").map(v => v + "<br/>" + message).getOrElse(message)
-          Redirect(routes.Wiki.view(PageNameUrl.encode(directive), 0, "")).flashing("success" -> newMessage)
+          // This is one more hop, and a flash lives for one. Whatever arrived goes on with it, not
+          // only the message added to here: a login that comes back through a redirecting
+          // FrontPage is carrying what it has to say to the page after this one.
+          Redirect(routes.Wiki.view(PageNameUrl.encode(directive), 0, "")).flashing(request.flash + ("success" -> newMessage))
         case None =>
           SessionLogic.getUser(request).foreach(user => models.tables.UserViewHistory.insert(user.seq, site.seq, page.name))
           val description = wikiContext.seqPageByPermission
