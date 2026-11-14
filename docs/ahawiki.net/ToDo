@@ -19,13 +19,13 @@
 ===== Activity
  * [User:Aha00a] [2026-05-20]T17:14:06Z
   * Card Add - ["#cmpebn29sgylr3q" #삭제 권한 도입]
+=== Done
 ==== 그래프의 METRICS 상자가 목차를 덮는다 ==== #graphmetricsovertoc
 ===== Description
-1280px 폭에서 [예시 지식 지도] 를 열면, 그래프 오른쪽 위의 METRICS 상자가 페이지 오른쪽의 목차 위에 겹쳐 목차 아래쪽 항목을 가린다. 화면 그림을 찍다가 봤다(2026-11-15, `public/img/screenshots/README.md`). 그래프 상자의 위치와 목차의 위치 중 어느 쪽이 비켜야 하는지부터 정한다.
+1280px 폭에서 [예시 지식 지도] 를 열면, 그래프 오른쪽 위의 METRICS 상자가 페이지 오른쪽의 목차 위에 겹쳐 목차 아래쪽 항목을 가린다. 화면 그림을 찍다가 봤다(2026-11-15, `public/img/screenshots/README.md`). 고쳤다(2026-11-15). 그래프·지도의 비율 상자(`.aspectRatioWrapper`)가 떠 있는 목차 아래에서 시작한다(`clear: both`, `wiki.less`). 상자의 내용은 absolute 라 목차를 피할 수 없고, 상자를 좁혀 옆에 두면 비율이 틀어진다. 같이 본 것: 표의 Edit 단추가 마지막 머리글 칸 위에 얹혀 있었다 — 이제 자리가 있으면 표 바깥 오른쪽에 둔다(`js.js` 의 `positionEditLink`).
 ===== Property
  * Creator: [User:Aha00a]
  * dateCreated: [2026-11-15]
-=== Done
 ]]]
 
 

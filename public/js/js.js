@@ -400,6 +400,13 @@ document.addEventListener('DOMContentLoaded', function () {
             var top = targetRect.top - wrapperRect.top + 4;
             var rightOffset = 8;
             var left = targetRect.right - wrapperRect.left - editLink.offsetWidth - rightOffset;
+            // A table's top right corner is its last header cell, and the button sat on its name
+            // and sort arrow. Beside the table it covers nothing, so it goes there when the
+            // wrapper has the room -- a table as wide as the page keeps the corner.
+            var besideTable = targetRect.right - wrapperRect.left + 6;
+            if (wrapper.classList.contains('Table') && besideTable + editLink.offsetWidth <= wrapper.clientWidth) {
+                left = besideTable;
+            }
             editLink.style.top = top + 'px';
             editLink.style.left = (left < 0 ? 0 : left) + 'px';
             editLink.style.right = 'auto';

@@ -292,6 +292,7 @@
   }
 }
 .AhaWiki .aspectRatioWrapper {
+  clear: both;
   position: relative;
 }
 .AhaWiki .aspectRatioWrapper .ratio_1_1 {

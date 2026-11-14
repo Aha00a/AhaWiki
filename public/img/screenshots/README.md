@@ -28,5 +28,6 @@ in the table and reduce to 256 colours (Pillow: `quantize(colors=256, dither=NON
 these flat screens.
 
 Look at each one before committing it. The first graph shot showed the graph's METRICS box lying
-over the page's table of contents at 1280px — a layout fault of the page, not of the picture, and
-the reason `graph.png` is cropped.
+over the page's table of contents at 1280px — a layout fault of the page, not of the picture, which
+is why `graph.png` is cropped to the graph. The page was fixed the same day (the graph now starts
+below the contents); the crop still frames the graph best.

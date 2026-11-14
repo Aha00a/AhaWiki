@@ -150,7 +150,12 @@
 		}
 	}
 
+	// A graph, a map: the box is as wide as the page and what it draws is absolutely placed in
+	// it, so it took no notice of the table of contents floating at the right -- the graph's
+	// METRICS panel and its right-hand nodes lay over the contents at 1280px. It starts below
+	// the float instead.
 	.aspectRatioWrapper {
+		clear: both;
 		position: relative;
 		.ratio_1_1 {
 			padding-bottom: 100%;
