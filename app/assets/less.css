@@ -332,6 +332,13 @@ nav.topNavbar i.fas {
   font-size: 12px;
   opacity: 0.85;
 }
+nav.topNavbar .hotkeyHint {
+  display: inline-flex;
+  align-items: center;
+}
+nav.topNavbar .hotkeyHint > kbd {
+  top: 2px;
+}
 nav.topNavbar .groupMenu .groupMenuToggle {
   display: none;
   font-family: 'Noto Sans', 'Noto Sans KR', sans-serif;

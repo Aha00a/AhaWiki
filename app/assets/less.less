@@ -296,6 +296,20 @@ nav.topNavbar {
 		opacity: 0.85;
 	}
 
+	// The key hint beside a menu item sat 4px above the item's text and icon (2026-11-15, seen in
+	// Korean and English alike). Two lifts added up: the hint was a block whose line put the key
+	// on the text baseline, above the middle, and the global kbd rule raises the outer key 2px.
+	// Here the hint centres its key like the link centres its icon, and the outer key comes down
+	// those 2px; the inner key keeps the global -2px and its press on hover.
+	.hotkeyHint {
+		display: inline-flex;
+		align-items: center;
+
+		> kbd {
+			top: 2px;
+		}
+	}
+
 	.groupMenu {
 		.groupMenuToggle {
 			display: none;

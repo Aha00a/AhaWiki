@@ -21,7 +21,7 @@ object FrameText extends TextTable("FrameText", Map(
   "navigate" -> Text("이동", "Navigate"),
   "navigate.open" -> Text("이동 메뉴 열기", "Open navigation menu"),
   "search" -> Text("찾기", "Search"),
-  "random" -> Text("아무 문서", "Random"),
+  "random" -> Text("랜덤", "Random"),
   "log" -> Text("기록", "Log"),
   "page" -> Text("문서", "Page"),
   "page.open" -> Text("문서 메뉴 열기", "Open page menu"),
@@ -45,7 +45,7 @@ object FrameText extends TextTable("FrameText", Map(
   "login" -> Text("로그인", "Login"),
   // The one-key hints beside the menu items.
   "hotkey.S" -> Text("찾기 열기", "Open search"),
-  "hotkey.R" -> Text("아무 문서나 열기", "Open random page"),
+  "hotkey.R" -> Text("랜덤 문서 열기", "Open random page"),
   "hotkey.W" -> Text("기록 쓰기 열기", "Open write log"),
   "hotkey.H" -> Text("이 문서의 이력", "Open page history"),
   "hotkey.B" -> Text("이 문서의 줄별 작성자", "Open page blame"),
