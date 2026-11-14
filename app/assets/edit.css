@@ -630,6 +630,7 @@
   padding: 0 10px 10px;
   max-height: 40vh;
   overflow-y: auto;
+  container: editHelp / inline-size;
 }
 .editHelpBody p {
   margin: 4px 0 6px;
@@ -683,7 +684,7 @@
 .editHelpTable tr[hidden] {
   display: none;
 }
-@media (max-width: 767px) {
+@container editHelp (max-width: 560px) {
   .editHelpTable tr {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

@@ -617,6 +617,7 @@
 	padding: 0 10px 10px;
 	max-height: 40vh;
 	overflow-y: auto;
+	container: editHelp / inline-size;
 
 	p {
 		margin: 4px 0 6px;
@@ -683,9 +684,11 @@
 		display: none;
 	}
 
-	// A phone has no room for three columns: the name goes on a line of its own above the
-	// markup and what it draws.
-	@media @widthTablet {
+	// A narrow help has no room for three columns: the name goes on a line of its own above the
+	// markup and what it draws. Narrow is the help's own width, not the screen's: the editor
+	// column can be dragged narrow on a wide screen, and on a 855px window it was 390px wide
+	// while a screen query still drew three columns and pushed the results out of sight.
+	@container editHelp (max-width: 560px) {
 		tr {
 			display: grid;
 			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
