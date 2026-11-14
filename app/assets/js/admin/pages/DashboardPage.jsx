@@ -16,7 +16,7 @@ const recentChangeFlagLegend = [
 export default function DashboardPage() {
     const {me} = useAdminContext();
     const navigate = useNavigate();
-    const {loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, siteActivity, memoryCacheStats, load, loadSitesOnly, loadMemoryCacheStats} = useDashboardData();
+    const {loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, siteActivity, referrals, memoryCacheStats, load, loadSitesOnly, loadMemoryCacheStats} = useDashboardData();
 
     useEffect(() => {
         if (me === null) return;
@@ -96,6 +96,15 @@ export default function DashboardPage() {
                 {makeTable(["Site", "Created", "First Edited", "New Pages", "Page Edits", "Editors", "Last Edited"], siteActivity.sites.map((row) => {
                     const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
                     return [siteUrl ? <Anchor href={siteUrl} target="_blank">{row.siteName} (#{row.siteSeq})</Anchor> : `${row.siteName} (#${row.siteSeq})`, row.created, row.firstEditedAt ?? "-", row.pagesCreated30d, row.pagesEdited30d, row.editors30d, row.lastEditedAt ?? "-"];
+                }))}
+            </Card>
+            <Card withBorder radius="md" padding="lg">
+                <Group justify="space-between" mb="md"><Title order={3}>Where Readers Came From ({referrals.days} days)</Title><Badge color="teal" variant="light">{referrals.rows.reduce((sum, row) => sum + row.count, 0)}</Badge></Group>
+                <Text size="sm" c="dimmed" mb="md">A page on another host that linked a reader to a page here, counted every time, without query strings. Readers moving within a site are not counted. Most first.</Text>
+                {makeTable(["Site", "From", "To", "Count"], referrals.rows.map((row) => {
+                    const siteUrl = resolveSiteUrl({siteSeq: row.site}, siteDomainBySeq);
+                    const landingUrl = siteUrl ? `${siteUrl}${row.landing}` : "";
+                    return [siteUrl ? <Anchor href={siteUrl} target="_blank">{row.siteName} (#{row.site})</Anchor> : `${row.siteName} (#${row.site})`, <Anchor href={`https://${row.source}`} target="_blank" rel="noopener noreferrer">{row.source}</Anchor>, landingUrl ? <Anchor href={landingUrl} target="_blank">{row.landing}</Anchor> : row.landing, row.count];
                 }))}
             </Card>
             <Card withBorder radius="md" padding="lg">

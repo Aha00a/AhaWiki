@@ -18,6 +18,9 @@ What it checks, and prints as `PASS`/`FAIL` every second:
  * **The loading message is gone**, and on the dashboard **the two site-activity tables are
    drawn** from the canned `/api/Admin/SiteActivity` (the fixture mirrors
    `ApiAdminSiteActivitySpec`: a busy site and an idle one).
+ * **The dashboard shows where readers came from**: three canned referrals, drawn in the
+   «Where Readers Came From (30 days)» table with a Korean page name in it. What the server sends
+   is `ReferralSpec`'s.
  * **Site Requests offers a letter** for each answered request whose requester has an address:
    four canned rows, one of each kind the page treats differently (pending, approved, rejected,
    approved with no address), and exactly two `mailto:` buttons. The checks switch themselves off

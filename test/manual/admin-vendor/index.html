@@ -74,6 +74,13 @@
                 {seq: 2, user: 11, userNickname: "bobwiki", email: "bob@example.com", name: "Bob", domain: "bobs.wiki.test", isPublic: false, purpose: "team", status: "Rejected", rejectReason: "taken", dateInserted: "2026-11-12T09:00:00", dateReviewed: "2026-11-12T10:00:00"},
                 {seq: 1, user: 12, userNickname: "carol", email: null, name: "Carol", domain: "carols.wiki.test", isPublic: true, purpose: "blog", status: "Approved", rejectReason: null, dateInserted: "2026-11-11T09:00:00", dateReviewed: "2026-11-11T10:00:00"},
             ],
+            // Two referrals to the busy site, one to the idle one: the dashboard draws them most
+            // counted first (ReferralSpec holds what the server sends).
+            "/api/Admin/Referrals": {days: 30, rows: [
+                {site: 1, siteName: "Busy", source: "github.com/Aha00a/AhaWiki", landing: "/w/FrontPage", count: 7},
+                {site: 1, siteName: "Busy", source: "www.google.com/", landing: "/w/예시 회의록", count: 3},
+                {site: 2, siteName: "Idle", source: "news.example.net/item", landing: "/", count: 1},
+            ]},
             "/api/Admin/SiteActivity": {
                 months,
                 sites: [
@@ -123,6 +130,7 @@
                 ["nothing fetched off this origin", external.length === 0, external.join(" ")],
                 ["admin UI replaced the loading message", !text.includes("Admin UI 로딩 중"), ""],
                 ["dashboard shows Sites by Month", !onDashboard || (text.includes("Sites by Month") && text.includes("2026-10")), onDashboard ? "" : "(not on the dashboard)"],
+                ["dashboard shows where readers came from", !onDashboard || (text.includes("Where Readers Came From (30 days)") && text.includes("github.com/Aha00a/AhaWiki") && text.includes("/w/예시 회의록")), onDashboard ? "" : "(not on the dashboard)"],
                 ["dashboard shows Site Activity (30 days)", !onDashboard || (text.includes("Site Activity (30 days)") && text.includes("Idle (#2)")), onDashboard ? "" : "(not on the dashboard)"],
                 ["site requests offer a letter for each answered request with an address", !onSiteRequests || (letters.length === 2 && letters[0].startsWith("mailto:alice@example.com?") && letters[1].startsWith("mailto:bob@example.com?") && text.includes("dana@example.com")), onSiteRequests ? `${letters.length} letter(s)` : "(not on Site Requests)"],
             ];

@@ -63,6 +63,17 @@ dispatcher 까지 준 릴리스 (06:17)	전부 200·303	3.1초	0	0
 
 그 «만료된 가장 새 행» 의 `seq` 를 먼저 읽고, 지우는 문장에는 값으로 준다. 서브쿼리와 비교하는 `DELETE ... WHERE seq < (SELECT ...)` 는 MariaDB 가 테이블 전체를 훑는 계획을 세운다 — 2026-10-04 에 운영 DB 에서 그 한 문장이 하루 132번, 번번이 AccessLog 전체를 읽고 있었다. 숫자와 EXPLAIN 은 `ExpiredRows` 의 주석에, 지우는 행이 그대로인지는 `ExpiredRowsSpec` 에 있다.
 
+== Referral — 어디서 왔는지 세는 표 (evolution 73, 2026-11-15)
+
+다른 호스트의 페이지가 이 위키의 페이지로 독자를 보낸 횟수를 사이트·날짜·보낸 곳·도착한 곳마다 한 행으로 센다(`models.tables.Referral`). `FilterAccessLog` 가 응답마다 `Referral.of` 에 묻고, 해당하면 `ActorAccessLog.Referral` 로 넘겨 `INSERT … ON DUPLICATE KEY UPDATE count = count + 1` 한다. 관리 화면 대시보드의 «Where Readers Came From (30 days)» 가 `GET /api/Admin/Referrals` 로 읽는다.
+
+ * '''세는 것''' — GET 이고 200 이고, 루트(`/`)나 `/w/` 아래 페이지이고, `Referer` 가 http(s) 주소이고 그 호스트가 요청의 호스트(포트 빼고)와 다를 때. 같은 사이트 안에서 옮겨 다닌 것, 자산·API·리다이렉트·오류는 세지 않는다. 다른 AhaWiki 사이트에서 온 것은 센다 — 그것도 유입이다.
+ * '''`AccessLog` 의 칸이 아니라 따로 둔 표다.''' `AccessLog` 는 성공한 요청의 10%만 남기는 표본(`AhaWiki.accessLog.sampleRate`)이고, 다른 사이트에서 온 방문은 드물어서 표본이 대부분을 잃는다. 그리고 묻는 것은 «어디서 몇 번» 이라, 요청마다의 행보다 날짜별 합계가 맞다.
+ * '''독자를 적지 않는다.''' 주소·사용자·브라우저 없이, 보낸 페이지의 호스트+경로와 도착한 경로만. 둘 다 쿼리 문자열을 버린다 — 검색어, 토큰, 추적 번호가 거기 실린다. 도착 경로는 퍼센트 인코딩을 풀어 페이지 이름으로 적는다. 각각 255자에서 자른다.
+ * '''만료시키지 않는다.''' 위 «로그 테이블은 자기 행을 만료시킨다» 와 다르다. 행은 요청이 아니라 «하루에 한 번 이상 나타난 (보낸 곳, 도착한 곳) 쌍» 이라 느리게 늘고, 몇 달을 거슬러 비교할 수 있어야 쓸모가 있다. 행이 많아지면 그때 `Retention` 을 선언한다.
+ * '''날짜는 애플리케이션 시계(KST)의 오늘이다'''(`LocalDate.now()`). `lastSeen` 은 DB default 다 — 아래 KST 절의 규칙대로 둘 다 KST.
+ * 검사는 `ReferralSpec` — 무엇을 세는지, 같은 날의 반복이 그날 행에 더해지는지, 액터가 쓰는지, 관리 API 가 읽어 오는지. 스펙은 HTTP 필터 없이 돌아서 `FilterAccessLog` 의 보내는 한 줄은 거기서 닿지 않는다 — 그 줄은 배포 뒤 운영에서 확인한다.
+
 == datetime 컬럼은 KST 를 담는다
 
 '''이 저장소의 모든 `datetime` 컬럼은 한국 표준시(KST, UTC+9)를 담는다.'''

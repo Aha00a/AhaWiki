@@ -262,11 +262,12 @@ function useDashboardData() {
   const [topViewedPages, setTopViewedPages] = useState4([]);
   const [memoryCacheStats, setMemoryCacheStats] = useState4([]);
   const [siteActivity, setSiteActivity] = useState4({ months: [], sites: [] });
+  const [referrals, setReferrals] = useState4({ days: 30, rows: [] });
   const load = useCallback2(async () => {
     setLoading(true);
     setError("");
     try {
-      const [siteData, allUserData, dailyStatsData, recentChangesData, topViewedPagesData, siteActivityData] = await Promise.all([
+      const [siteData, allUserData, dailyStatsData, recentChangesData, topViewedPagesData, siteActivityData, referralData] = await Promise.all([
         fetchJson("/api/Admin/Sites"),
         fetchJson("/api/Admin/Users"),
         fetchJson("/api/Admin/DailyStats"),
@@ -275,7 +276,8 @@ function useDashboardData() {
         // were always empty.
         fetchJson("/api/Admin/RecentChanges?n=30&includeMinorEdit=1&includeViaApi=1"),
         fetchJson("/api/Admin/TopViewedPages?n=30"),
-        fetchJson("/api/Admin/SiteActivity")
+        fetchJson("/api/Admin/SiteActivity"),
+        fetchJson("/api/Admin/Referrals?days=30")
       ]);
       const allUserRows = Array.isArray(allUserData?.array) ? allUserData.array : Array.isArray(allUserData) ? allUserData : [];
       setSites(siteData);
@@ -286,6 +288,7 @@ function useDashboardData() {
         months: siteActivityData?.months ?? [],
         sites: siteActivityData?.sites ?? []
       });
+      setReferrals({ days: referralData?.days ?? 30, rows: referralData?.rows ?? [] });
       setDailyStats({
         userCreated: dailyStatsData?.userCreated ?? [],
         pageCreated: dailyStatsData?.pageCreated ?? [],
@@ -308,6 +311,7 @@ function useDashboardData() {
       setRecentChanges([]);
       setTopViewedPages([]);
       setSiteActivity({ months: [], sites: [] });
+      setReferrals({ days: 30, rows: [] });
       setDailyStats({ userCreated: [], pageCreated: [], pageEdited: [] });
     } catch (err) {
       logError("dashboard:sites-only:load:error", err);
@@ -324,7 +328,7 @@ function useDashboardData() {
       logError("memory-cache:load:error", err);
     }
   }, []);
-  return { loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, siteActivity, memoryCacheStats, load, loadSitesOnly, loadMemoryCacheStats };
+  return { loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, siteActivity, referrals, memoryCacheStats, load, loadSitesOnly, loadMemoryCacheStats };
 }
 
 // app/assets/js/site/siteWidgets.jsx
@@ -466,7 +470,7 @@ var recentChangeFlagLegend = [
 function DashboardPage() {
   const { me } = useAdminContext();
   const navigate = useNavigate3();
-  const { loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, siteActivity, memoryCacheStats, load, loadSitesOnly, loadMemoryCacheStats } = useDashboardData();
+  const { loading, error, sites, allUsers, dailyStats, recentChanges, topViewedPages, siteActivity, referrals, memoryCacheStats, load, loadSitesOnly, loadMemoryCacheStats } = useDashboardData();
   useEffect4(() => {
     if (me === null) return;
     if (me?.isAdmin) {
@@ -484,6 +488,10 @@ function DashboardPage() {
   return /* @__PURE__ */ React8.createElement(Stack4, { gap: "lg" }, /* @__PURE__ */ React8.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 3 }, spacing: "md" }, /* @__PURE__ */ React8.createElement(Card3, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React8.createElement(Group5, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React8.createElement(Stack4, { gap: 2 }, /* @__PURE__ */ React8.createElement(Text5, { size: "sm", c: "dimmed" }, "Sites"), /* @__PURE__ */ React8.createElement(Title4, { order: 2 }, sites.length)), /* @__PURE__ */ React8.createElement(ThemeIcon, { color: "indigo", variant: "light", radius: "xl" }, "S"))), /* @__PURE__ */ React8.createElement(Card3, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React8.createElement(Group5, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React8.createElement(Stack4, { gap: 2 }, /* @__PURE__ */ React8.createElement(Text5, { size: "sm", c: "dimmed" }, "All Users"), /* @__PURE__ */ React8.createElement(Title4, { order: 2 }, allUsers.length)), /* @__PURE__ */ React8.createElement(ThemeIcon, { color: "teal", variant: "light", radius: "xl" }, "U"))), /* @__PURE__ */ React8.createElement(Card3, { withBorder: true, radius: "md", padding: "md" }, /* @__PURE__ */ React8.createElement(Group5, { justify: "space-between", align: "flex-start" }, /* @__PURE__ */ React8.createElement(Stack4, { gap: 2 }, /* @__PURE__ */ React8.createElement(Text5, { size: "sm", c: "dimmed" }, "30\uC77C \uBB38\uC11C \uC218\uC815"), /* @__PURE__ */ React8.createElement(Title4, { order: 2 }, dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0))), /* @__PURE__ */ React8.createElement(ThemeIcon, { color: "grape", variant: "light", radius: "xl" }, "E")))), /* @__PURE__ */ React8.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React8.createElement(Group5, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React8.createElement(Title4, { order: 3 }, "\uBE60\uB978 \uC774\uB3D9"), /* @__PURE__ */ React8.createElement(Badge5, { color: "indigo", variant: "light" }, "Quick Access")), /* @__PURE__ */ React8.createElement(SimpleGrid, { cols: { base: 1, sm: 3 }, spacing: "sm" }, /* @__PURE__ */ React8.createElement(Button2, { variant: "light", onClick: () => navigate("/Admin/RecentChange") }, "\uCD5C\uADFC \uBCC0\uACBD \uBCF4\uAE30"), /* @__PURE__ */ React8.createElement(Button2, { variant: "light", onClick: () => navigate("/Admin/User") }, "\uC0AC\uC6A9\uC790 \uBAA9\uB85D \uBCF4\uAE30"))), /* @__PURE__ */ React8.createElement(SimpleGrid, { cols: { base: 1, sm: 2, lg: 3 }, spacing: "md" }, /* @__PURE__ */ React8.createElement(StatTrendCard, { title: "New Users", color: "blue", rows: dailyStats.userCreated, total: dailyStats.userCreated.reduce((sum, item) => sum + (item.count ?? 0), 0) }), /* @__PURE__ */ React8.createElement(StatTrendCard, { title: "New Pages", color: "indigo", rows: dailyStats.pageCreated, total: dailyStats.pageCreated.reduce((sum, item) => sum + (item.count ?? 0), 0) }), /* @__PURE__ */ React8.createElement(StatTrendCard, { title: "Page Edits", color: "grape", rows: dailyStats.pageEdited, total: dailyStats.pageEdited.reduce((sum, item) => sum + (item.count ?? 0), 0) })), /* @__PURE__ */ React8.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React8.createElement(Group5, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React8.createElement(Title4, { order: 3 }, "30\uC77C \uC6B4\uC601 \uCD94\uC774 \uCC28\uD2B8"), /* @__PURE__ */ React8.createElement(Badge5, { color: "blue", variant: "light" }, "Chart")), /* @__PURE__ */ React8.createElement(MultiTrendChart, { series: [{ name: "New Users", color: "blue", rows: dailyStats.userCreated }, { name: "New Pages", color: "indigo", rows: dailyStats.pageCreated }, { name: "Page Edits", color: "grape", rows: dailyStats.pageEdited }] })), /* @__PURE__ */ React8.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React8.createElement(Group5, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React8.createElement(Title4, { order: 3 }, "Sites by Month"), /* @__PURE__ */ React8.createElement(Badge5, { color: "indigo", variant: "light" }, siteActivity.months.length, "m")), /* @__PURE__ */ React8.createElement(Text5, { size: "sm", c: "dimmed", mb: "md" }, "A site is active in a month when any page revision was saved there; minor and API edits count, views do not. Oldest month first."), makeTable(["Month", "New Sites", "Active Sites", "New Pages", "Page Edits"], siteActivity.months.map((row) => [row.ym, row.sitesCreated, row.sitesActive, row.pagesCreated, row.pagesEdited]))), /* @__PURE__ */ React8.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React8.createElement(Group5, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React8.createElement(Title4, { order: 3 }, "Site Activity (30 days)"), /* @__PURE__ */ React8.createElement(Badge5, { color: "indigo", variant: "light" }, siteActivity.sites.length)), /* @__PURE__ */ React8.createElement(Text5, { size: "sm", c: "dimmed", mb: "md" }, "Counts are the last 30 days. First and last edited are over the site's whole history: first edited next to created says whether a new site was written to soon after it was opened."), makeTable(["Site", "Created", "First Edited", "New Pages", "Page Edits", "Editors", "Last Edited"], siteActivity.sites.map((row) => {
     const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
     return [siteUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, row.created, row.firstEditedAt ?? "-", row.pagesCreated30d, row.pagesEdited30d, row.editors30d, row.lastEditedAt ?? "-"];
+  }))), /* @__PURE__ */ React8.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React8.createElement(Group5, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React8.createElement(Title4, { order: 3 }, "Where Readers Came From (", referrals.days, " days)"), /* @__PURE__ */ React8.createElement(Badge5, { color: "teal", variant: "light" }, referrals.rows.reduce((sum, row) => sum + row.count, 0))), /* @__PURE__ */ React8.createElement(Text5, { size: "sm", c: "dimmed", mb: "md" }, "A page on another host that linked a reader to a page here, counted every time, without query strings. Readers moving within a site are not counted. Most first."), makeTable(["Site", "From", "To", "Count"], referrals.rows.map((row) => {
+    const siteUrl = resolveSiteUrl({ siteSeq: row.site }, siteDomainBySeq);
+    const landingUrl = siteUrl ? `${siteUrl}${row.landing}` : "";
+    return [siteUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.site, ")") : `${row.siteName} (#${row.site})`, /* @__PURE__ */ React8.createElement(Anchor, { href: `https://${row.source}`, target: "_blank", rel: "noopener noreferrer" }, row.source), landingUrl ? /* @__PURE__ */ React8.createElement(Anchor, { href: landingUrl, target: "_blank" }, row.landing) : row.landing, row.count];
   }))), /* @__PURE__ */ React8.createElement(Card3, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React8.createElement(Group5, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React8.createElement(Title4, { order: 3 }, "Most Viewed Pages"), /* @__PURE__ */ React8.createElement(Badge5, { color: "pink", variant: "light" }, Math.min(topViewedPages.length, 30))), makeTable(["Rank", "Site", "Page", "Views", "Last Viewed"], topViewedPages.slice(0, 30).map((row, index) => {
     const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
     const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.pageName)}` : "";

@@ -82,6 +82,7 @@ GET           /api/Admin/Users                       controllers.ApiAdminReport.
 GET           /api/Admin/UserViews                   controllers.ApiAdminReport.adminUserViews(userSeq: Long, n: Int ?= 200)
 GET           /api/Admin/DailyStats                  controllers.ApiAdminReport.adminDailyStats
 GET           /api/Admin/SiteActivity                controllers.ApiAdminReport.adminSiteActivity
+GET           /api/Admin/Referrals                   controllers.ApiAdminReport.adminReferrals(days: Int ?= 30)
 GET           /api/Admin/TopViewedPages              controllers.ApiAdminReport.adminTopViewedPages
 GET           /api/Admin/RecentChanges               controllers.ApiAdminReport.adminRecentChanges
 GET           /api/Admin/AccessLogs                  controllers.ApiAdminReport.adminAccessLogs

@@ -157,6 +157,10 @@ class FilterAccessLog @Inject()(
           enqueue(makeInsert(result.header.status, duration))
         else
           logger.debug(s"Skip AccessLog insert by policy: status=${result.header.status}")
+        // Every referral, not a sample: one from another site is rare, and the sample would lose
+        // most of them (evolution 73).
+        models.tables.Referral.of(rh.method, result.header.status, uri, rh.host, rh.referer)
+          .foreach(visit => actorAccessLog ! ActorAccessLog.Referral(site, visit))
         result.withHeaders("Request-Time" -> duration.toString)
       }
     }

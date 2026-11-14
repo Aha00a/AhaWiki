@@ -24,6 +24,10 @@ object ActorAccessLog {
   )
 
   final case class InsertAndDeny(insert: Insert, reason: String)
+
+  /** A reader linked here from another host (models.tables.Referral). Counted on the day it
+    * arrives, in the server's time zone, like the rest of the tables. */
+  final case class Referral(site: Site, visit: models.tables.Referral.Visit)
 }
 
 class ActorAccessLog @Inject()(database: Database) extends org.apache.pekko.actor.Actor with Logging {
@@ -40,6 +44,17 @@ class ActorAccessLog @Inject()(database: Database) extends org.apache.pekko.acto
         database.withConnection { implicit connection =>
           val accessLogSeq = insertAccessLogIfSiteFound(insert)
           IpDeny.insert(insert.remoteAddress, accessLogSeq, reason)
+        }
+      }
+
+    case Referral(site, visit) =>
+      if (!site.isNotFound) {
+        try {
+          database.withConnection { implicit connection =>
+            models.tables.Referral.record(site.seq, java.time.LocalDate.now(), visit)
+          }
+        } catch {
+          case t: Throwable => logger.error(s"Async Referral write failed: ${site.seq} ${visit.source} -> ${visit.landing}", t)
         }
       }
 

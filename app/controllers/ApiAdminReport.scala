@@ -47,6 +47,23 @@ class ApiAdminReport @Inject()(
     }
   }
 
+  /**
+   * Where readers came from in the last `days` days: per site, the page on another host that
+   * linked and the page here it linked to, with how many times (models.tables.Referral). The
+   * measurement section of ToDo-User-Acquisition asks for it.
+   */
+  def adminReferrals(days: Int): Action[AnyContent] = Action { implicit request =>
+    if (!isAdmin) {
+      AccessDenied
+    } else {
+      val window = days.max(1).min(ApiAdminReport.referralMaxDays)
+      database.withConnection { implicit connection =>
+        val rows = models.tables.Referral.since(java.time.LocalDate.now().minusDays(window - 1L), ApiAdminReport.referralRowLimit)
+        Ok(ApiAdminReport.ReferralReport(window, rows).asJson)
+      }
+    }
+  }
+
   def adminUsers: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
       AccessDenied
@@ -563,6 +580,14 @@ object ApiAdminReport {
 
   /** The window of the per-site counts, in days back from now. */
   val activeWindowDays = 30
+
+  /** The longest window the referral report answers for, in days. */
+  val referralMaxDays = 365
+
+  /** The most rows the referral report returns: the most counted first. */
+  val referralRowLimit = 500
+
+  case class ReferralReport(days: Int, rows: Seq[models.tables.Referral.Row])
 
   case class MonthlySiteActivity(
     ym: String,

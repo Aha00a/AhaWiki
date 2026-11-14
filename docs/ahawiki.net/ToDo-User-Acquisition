@@ -134,7 +134,7 @@ AhaWiki는 개인과 작은 팀이 지식을 꾸준히 기록하고 연결하기
  * [[CB(x)]] 사이트별 최근 30일 작성/수정 문서 수 — 같은 화면 «Site Activity (30 days)», 편집자 수와 처음·마지막 편집 시각까지
  * [ ] 신청 후 실제 개설 완료율 — `SiteRequest` 에 기록이 쌓인다. 화면에 세어 보이는 것은 신청이 들어온 뒤에
  * [ ] 개설 후 7일 내 첫 문서 작성 여부 — 사이트별 표의 Created 와 First Edited 를 나란히 두어 눈으로 읽을 수는 있다. 비율로 세는 것은 사이트가 열 개를 넘고 나서
- * [ ] 외부 유입 경로 확인 — `AccessLog` 에는 referer 가 없다. 넣으려면 컬럼부터
+ * [[CB(x)]] 외부 유입 경로 확인 (2026-11-15) — `AccessLog` 의 컬럼이 아니라 따로 센다. 대시보드 «Where Readers Came From (30 days)», `GET /api/Admin/Referrals`. 무엇을 세고 왜 따로 두었는지는 [Dev Database] «Referral».
 
 숫자는 처음부터 정교할 필요는 없지만, 매달 같은 기준으로 본다. 그 기준은 다음과 같다.
 
