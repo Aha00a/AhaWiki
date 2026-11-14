@@ -1,4 +1,18 @@
 = AhaWiki
-[https://ahawiki.net/w/AhaWiki AhaWiki] is document management system based on Wiki.
+이 위키는 [https://ahawiki.net AhaWiki] 로 만들었습니다. AhaWiki 는 글을 쌓아도 다시 찾을 수 있게, 페이지를 링크로 이어 두는 위키 엔진입니다.
 
-Please see https://ahawiki.net
+This wiki runs on [https://ahawiki.net AhaWiki], a wiki engine that keeps pages findable by linking them to each other.
+
+== 이 위키에서
+ * 글을 고치려면 로그인한 뒤 '''Edit''' 를 누릅니다. 편집 화면의 '''서식 도움말''' 에 자주 쓰는 문법이 있습니다.
+ * 새 문서는 링크로 만듭니다. 글에 `[새 문서 이름]` 을 적고 저장한 뒤, 그 링크를 누릅니다.
+ * 이 위키에는 지금 [[PageCount]]개의 문서가 있습니다. 전체 목록은 [TitleIndex], 최근에 고친 문서는 [RecentChanges].
+
+== 나도 위키를 만들고 싶다면
+[https://ahawiki.net/site/request 위키 개설 신청] 을 하면 `something.ahawiki.net` 주소로 열어 드립니다. Google 계정으로 로그인해서 신청하고, 그 계정이 새 위키의 관리자가 됩니다.
+
+== 더 알아보기
+ * [https://ahawiki.net/w/GettingStarted 시작하기] — 처음 쓰는 사람을 위한 안내
+ * [https://ahawiki.net/w/AhaMark%20Basic AhaMark Basic] — 문법 치트시트
+ * [https://ahawiki.net/w/AhaWiki ahawiki.net] — 이 엔진으로 할 수 있는 것과 예시
+ * [https://github.com/Aha00a/AhaWiki 소스 코드] (GitHub)

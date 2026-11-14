@@ -47,6 +47,10 @@ AhaWiki는 개인과 작은 팀이 지식을 꾸준히 기록하고 연결하기
  * [[CB(x)]] 개설 신청 안내를 페이지 상단 근처로 이동
  * [[CB(x)]] 실제로 운영 중인 공개 사이트 목록을 눈에 띄게 배치
  * [ ] 스크린샷 또는 데모 링크 추가
+ * [[CB(x)]] 다른 위키에서 온 사람에게도 말하기 (2026-11-15) — 모든 사이트의 아래쪽 «Powered by AhaWiki» 는 그 사이트의 `/w/AhaWiki` 로 간다. 그 페이지를 저장한 적 없는 사이트에서는 엔진이 싣고 다니는 `conf/Page/AhaWiki` 가 보이는데, 영어 두 줄(«document management system based on Wiki»)뿐이었다. 이제 이 위키가 무엇으로 만들어졌는지, 여기서 글을 고치고 새 문서를 만드는 법, 내 위키를 신청하는 곳, 더 읽을 곳(시작하기·치트시트·ahawiki.net·GitHub)을 말한다.
+  * 짧게 둔다. 사이트 주인이 이 페이지를 저장하면 그 글이 대신 보이고, 엔진의 글을 고치는 일은 배포다. 자세한 것은 ahawiki.net 에 두고 이 글은 그리로 보낸다([Setup] «GettingStarted 와 예시 문서는 사이트마다 싣지 않는다» 와 같은 이유).
+  * 첫 줄만 영어를 같이 둔다. 링크를 따라온 사람이 한국어를 못 읽어도 무엇인지는 알게.
+  * 검사는 `ApiSiteRequestSpec` «say what AhaWiki is to a visitor who follows the footer».
 
 == Signup Flow
 

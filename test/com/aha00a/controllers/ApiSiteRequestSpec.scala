@@ -156,6 +156,17 @@ class ApiSiteRequestSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAn
       html must include("<code>[회의록]</code>")
     }
 
+    // Every site's footer says "Powered by AhaWiki" and links /w/AhaWiki. On a site that never
+    // saved that page it is the shipped one (conf/Page/AhaWiki), and it is read by a visitor who
+    // followed that link: it says what the engine is, how this wiki is used, and how to get one.
+    "say what AhaWiki is to a visitor who follows the footer" in {
+      val html = contentAsString(route(app, FakeRequest(GET, "/w/AhaWiki").withHeaders(HOST -> s"alices.$parent")).get)
+      html must include("""href="https://ahawiki.net/site/request"""")
+      html must include("""href="https://ahawiki.net/w/GettingStarted"""")
+      html must include("""href="/w/TitleIndex"""")
+      html must include("""href="https://github.com/Aha00a/AhaWiki"""")
+    }
+
     "not answer twice" in {
       val seq = requestOf("alices").seq
       status(route(app, admin(POST, s"/api/Admin/SiteRequests/$seq/approve").withCSRFToken).get) mustBe BAD_REQUEST
