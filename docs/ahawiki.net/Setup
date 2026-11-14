@@ -19,7 +19,7 @@ reCAPTCHA	`ahawiki.net` 하나가 하위 도메인을 포함한다(Google 문서
 
 설치는 운영 저장소의 `ahawiki/wildcard-setup.sh` 이고 되돌리는 법도 거기 있다. 앱은 설정 `AhaWiki.siteRequest.parentDomain` 이 있을 때만 신청을 받고 로그인을 위임한다. 비어 있으면 둘 다 꺼진다.
 
-'''운영에서 켰다(2026-11-15).''' 스크립트의 여섯 단계를 모두 돌리고 앱을 재시작했다. 없는 하위 도메인은 새 와일드카드 인증서로 404, `/site/request` 는 200, 이미 있던 `*.ahawiki.net` 사이트는 자기 인증서 그대로다. 무엇을 만들었는지와 실행 기록은 운영 저장소 `ahawiki/README.md`. 콘솔도 같은 날 맞췄다 — 지도 API 키의 웹사이트 제한에 `https://*.ahawiki.net` 을 더했고(23개째, 기존 22개는 그대로), reCAPTCHA 는 v3 키 하나의 도메인 목록에 `ahawiki.net` 이 이미 있어 바꾸지 않았다(등록한 도메인은 하위 도메인을 포함한다).
+'''운영에서 켰다(2026-11-15).''' 스크립트의 여섯 단계를 모두 돌리고 앱을 재시작했다. 없는 하위 도메인은 새 와일드카드 인증서로 404, `/site/request` 는 200, 이미 있던 `*.ahawiki.net` 사이트는 자기 인증서 그대로다. 무엇을 만들었는지와 실행 기록은 운영 저장소 `ahawiki/README.md`. 콘솔도 같은 날 맞췄다 — 지도 API 키의 웹사이트 제한에 `https://*.ahawiki.net` 을 더했고(23개째, 기존 22개는 그대로), reCAPTCHA 는 v3 키 하나의 도메인 목록에 `ahawiki.net` 이 이미 있어 바꾸지 않았다(등록한 도메인은 하위 도메인을 포함한다). 그다음 넓은 규칙이 덮는 개별 항목을 뺐다 — 지도 키에서 `https://<이름>.ahawiki.net` 11개(23 → 12개), reCAPTCHA 에서 같은 11개와 `wiki.aha00a.com`(`aha00a.com` 이 덮는다, 20 → 8개). 뺀 뒤 drdr·hoteliv 에서 지도가 인증 실패 없이 그려지고 reCAPTCHA 토큰이 나오는 것을 봤다. '''이제 그 하위 도메인 사이트들은 와일드카드 하나에 기댄다''' — `https://*.ahawiki.net` 이나 `ahawiki.net` 을 지우면 모두 함께 막힌다.
 
 '''로그인.''' Google 은 redirect URI 에 와일드카드를 받지 않고 세션 쿠키는 호스트마다 따로다. 그래서 하위 도메인의 사이트는 Google 콜백을 상위 도메인으로 받고, 상위 도메인이 프로필을 서명해 사이트로 넘긴다(`OAuthHandoff`). 넘긴 값은 시작한 브라우저의 flash 쿠키와 일회값이 맞아야 열리므로, 주소만 훔치거나 링크로 심어서는 쓸 수 없다. 받을 수 있는 호스트는 `SiteDomain` 에 있는 곳뿐이고, 돌아가는 곳은 그 호스트 안의 경로뿐이다.
 
@@ -60,7 +60,7 @@ reCAPTCHA	`ahawiki.net` 하나가 하위 도메인을 포함한다(Google 문서
  * 공개/비공개 여부
 
 == DNS 설정
- * `something.ahawiki.net` CNAME → 서버 도메인 추가
+ * `wiki.example.com` CNAME → 서버 도메인 추가
 
 == DB 설정
  * `Site` row 추가
@@ -71,7 +71,7 @@ reCAPTCHA	`ahawiki.net` 하나가 하위 도메인을 포함한다(Google 문서
 == nginx 설정
  * nginx 설정 파일에 server block 추가
  * letsencrypt 인증서 발급 [[[#!Vim bash
-sudo certbot --nginx -d something.ahawiki.net
+sudo certbot --nginx -d wiki.example.com
 sudo nginx -t && sudo nginx -s reload
 ]]]
 `certbot --nginx` 는 인증서를 설치한 뒤 nginx 설정을 스스로 다시 읽는다. 둘째 줄은 설정 파일을 손으로 고친 뒤에만 필요하다.
@@ -79,15 +79,15 @@ sudo nginx -t && sudo nginx -s reload
 == Google API 설정
 https://console.cloud.google.com/apis/credentials
  * OAuth 2.0 Client에 redirect URI 추가 [[[#!text
-https://something.ahawiki.net/google/oauth/callback
+https://wiki.example.com/google/oauth/callback
 ]]]
- * API 키 HTTP referrer 제한에 도메인 추가 [[[#!text
-*.something.ahawiki.net/*
+ * 지도 API 키의 웹사이트 제한에 도메인 추가 [[[#!text
+https://wiki.example.com
 ]]]
 
 == reCAPTCHA 설정
 https://www.google.com/recaptcha/admin/
- * 기존 도메인 추가 (`something.ahawiki.net`)
+ * 기존 사이트 키의 도메인에 추가 (`wiki.example.com`). 등록한 도메인은 하위 도메인을 포함하므로, 이미 있는 도메인의 하위 이름이면 할 일이 없다
  * 도메인을 추가하지 않으면 그 사이트에서는 token 을 받을 수 없어 웹 저장이 전부 `403` 이 된다. 2026-09-13 전에는 빈 token 도 통과시켜서 이것이 드러나지 않았다.
 
 == 관리자 설정
