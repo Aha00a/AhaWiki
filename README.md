@@ -10,6 +10,16 @@ knowledge base, a small team's meeting notes and project pages, a research noteb
 Running here: **<https://ahawiki.net>** — the site is itself an AhaWiki, and its pages are mirrored
 in [`docs/ahawiki.net/`](docs/ahawiki.net/) (Korean).
 
+| | |
+|---|---|
+| ![A Kanban board kept as wiki text](public/img/screenshots/board.png) | ![A page graph drawn from the links](public/img/screenshots/graph.png) |
+| A task board, saved as the page's own text — [예시 작업 보드](https://ahawiki.net/w/%EC%98%88%EC%8B%9C%20%EC%9E%91%EC%97%85%20%EB%B3%B4%EB%93%9C) | The pages and their links, drawn — [예시 지식 지도](https://ahawiki.net/w/%EC%98%88%EC%8B%9C%20%EC%A7%80%EC%8B%9D%20%EC%A7%80%EB%8F%84) |
+
+![A project's home page: a table, a diagram and a table of contents](public/img/screenshots/project.png)
+A project's home page — [예시 프로젝트 홈](https://ahawiki.net/w/%EC%98%88%EC%8B%9C%20%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8%20%ED%99%88).
+The pictures are in [`public/img/screenshots/`](public/img/screenshots/), where the wiki shows the
+same files from; its README says how to take them again.
+
 ## What it does
 
 * **Pages and links first.** Type `[PageName]` and the link is there; follow it to write the page.

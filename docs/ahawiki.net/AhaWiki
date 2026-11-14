@@ -27,6 +27,16 @@ author	Aha00a
  * 조사한 것과 내린 결정을 남기려는 개발자 — ["링크 중심 지식 관리"], ["예시 지식 지도"]
  * 문서를 자기 서버와 자기 도메인에 두려는 사람 — ["호스팅 서비스 대신 위키를 직접 운영할 때"]
 
+== 이렇게 생겼습니다
+할 일 보드 — 보드도 페이지의 글로 저장됩니다. [예시 작업 보드]
+[[Image(/public/img/screenshots/board.png,100%)]]
+
+문서와 링크를 그린 지도. [예시 지식 지도]
+[[Image(/public/img/screenshots/graph.png,100%)]]
+
+표와 그림이 있는 프로젝트 홈. [예시 프로젝트 홈]
+[[Image(/public/img/screenshots/project.png,100%)]]
+
 총 [[PageCount]]개의 문서가 있습니다.
 
 == [AhaWiki]를 이용하고 있는 사이트 목록
