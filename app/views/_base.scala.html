@@ -1,15 +1,7 @@
 @(title: String, description: String, canonicalUrl: String = "", ogType: String = "website", socialImageUrl: Option[String] = None)(head: Html)(body: Html)(implicit contextSite: models.ContextSite)
-@hotKeyDescription(key: String) = @{
-    key.toUpperCase match {
-        case "S" => "Open search"
-        case "R" => "Open random page"
-        case "W" => "Open write log"
-        case "H" => "Open page history"
-        case "B" => "Open page blame"
-        case "E" => "Open page edit"
-        case _ => ""
-    }
-}
+@frameLanguage = @{ logics.ScreenLanguage.Language.current(contextSite) }
+@f(key: String) = @{ logics.FrameText(key, frameLanguage) }
+@hotKeyDescription(key: String) = @{ f("hotkey." + key.toUpperCase) }
 @kbdHotKey(key: String) = {
     <span class="hotkeyHint" title="@hotKeyDescription(key)" data-hotkey-tooltip="@hotKeyDescription(key)" data-hotkey-tooltip-position="bottom">
         <kbd data-hotkey-alt="@key"><kbd>@key</kbd></kbd>
@@ -22,14 +14,14 @@
     </button>
 }
 @themePickerInline = {
-    <div class="themePickerInline" role="group" aria-label="Theme">
-        <button type="button" class="themeOption themeToggle" aria-label="Toggle theme" title="Toggle theme" aria-pressed="false">
+    <div class="themePickerInline" role="group" aria-label="@f("theme.group")">
+        <button type="button" class="themeOption themeToggle" aria-label="@f("theme.toggle")" title="@f("theme.toggle")" aria-pressed="false">
             <i class="fas fa-sun"></i>
-            <span class="themeOptionLabel">Theme</span>
+            <span class="themeOptionLabel">@f("theme")</span>
         </button>
-        <button type="button" class="themeOption widthToggle" aria-label="Limit content width" title="Limit content width" aria-pressed="false">
+        <button type="button" class="themeOption widthToggle" aria-label="@f("wide.toggle")" title="@f("wide.toggle")" aria-pressed="false">
             <i class="fas fa-arrows-left-right"></i>
-            <span class="themeOptionLabel">Wide</span>
+            <span class="themeOptionLabel">@f("wide")</span>
         </button>
     </div>
 }
@@ -46,44 +38,44 @@
     @views.html.Wiki.hotkey(enablePageActions = wikiContextOpt.isDefined)
     @head
 } {
-    <a class="skipToContent" href="#mainContent">Skip to content</a>
+    <a class="skipToContent" href="#mainContent">@f("skipToContent")</a>
     <nav class="topNavbar">
         <div id="scrollProgressBar"></div>
         <div class="wrap">
             <a class="homeLink" href="/">@views.html._logoSvg()@contextSite.site.name <small>AhaWiki</small></a>
-            <button type="button" class="navDrawerToggle" aria-expanded="false" aria-label="Open main menu"><i class="fas fa-bars"></i>Menu</button>
+            <button type="button" class="navDrawerToggle" aria-expanded="false" aria-label="@f("menu.open")"><i class="fas fa-bars"></i>@f("menu")</button>
             <div class="groupMenu actionNavigateMenu">
-                <button type="button" class="groupMenuToggle" aria-expanded="false" aria-label="Open navigation menu"><i class="fas fa-compass"></i>Navigate</button>
+                <button type="button" class="groupMenuToggle" aria-expanded="false" aria-label="@f("navigate.open")"><i class="fas fa-compass"></i>@f("navigate")</button>
                 <ul class="actionNavigate groupMenuList">
                     <li>
-                        <a href="javascript:showSearch();" rel="nofollow"><i class="fas fa-search"></i>Search@kbdHotKey("S")</a>
+                        <a href="javascript:showSearch();" rel="nofollow"><i class="fas fa-search"></i>@f("search")@kbdHotKey("S")</a>
                     </li>
                     <li>
-                        <a href="/r" rel="nofollow"><i class="fas fa-random"></i>Random@kbdHotKey("R")</a>
+                        <a href="/r" rel="nofollow"><i class="fas fa-random"></i>@f("random")@kbdHotKey("R")</a>
                     </li>
                     @if(canWrite) {
                         <li>
-                            <a href="javascript:showWrite();" rel="nofollow"><i class="fas fa-signature"></i>Log@kbdHotKey("W")</a>
+                            <a href="javascript:showWrite();" rel="nofollow"><i class="fas fa-signature"></i>@f("log")@kbdHotKey("W")</a>
                         </li>
                     }
             </ul>
             </div>
             @if(wikiContextOpt.isDefined) {
                 <div class="groupMenu actionPageMenu">
-                    <button type="button" class="groupMenuToggle" aria-expanded="false" aria-label="Open page menu"><i class="fas fa-file-alt"></i>Page</button>
+                    <button type="button" class="groupMenuToggle" aria-expanded="false" aria-label="@f("page.open")"><i class="fas fa-file-alt"></i>@f("page")</button>
                     <ul class="actionPage groupMenuList">
                         <li>
-                            <a href="?action=raw" rel="nofollow"><i class="fas fa-file-alt"></i>Raw</a>
+                            <a href="?action=raw" rel="nofollow"><i class="fas fa-file-alt"></i>@f("raw")</a>
                         </li>
                         <li>
-                            <a href="?action=history" rel="nofollow"><i class="fas fa-history"></i>History@kbdHotKey("H")</a>
+                            <a href="?action=history" rel="nofollow"><i class="fas fa-history"></i>@f("history")@kbdHotKey("H")</a>
                         </li>
                         <li>
-                            <a href="?action=blame" rel="nofollow"><i class="fas fa-users"></i>Blame@kbdHotKey("B")</a>
+                            <a href="?action=blame" rel="nofollow"><i class="fas fa-users"></i>@f("blame")@kbdHotKey("B")</a>
                         </li>
                         @if(canWrite) {
                             <li>
-                                <a href="?action=edit" rel="nofollow"><i class="fas fa-edit"></i>Edit@kbdHotKey("E")</a>
+                                <a href="?action=edit" rel="nofollow"><i class="fas fa-edit"></i>@f("edit")@kbdHotKey("E")</a>
                             </li>
                         }
                 </ul>
@@ -94,7 +86,7 @@
                 @if(currentUserOpt) {
                     @currentUserOpt.map { user =>
                         <li class="authMenu">
-                            <button type="button" class="authMenuToggle" aria-expanded="false" aria-label="Open account menu">
+                            <button type="button" class="authMenuToggle" aria-expanded="false" aria-label="@f("account.open")">
                                 @currentUserProfileImageUrl.map { imageUrl =>
                                     <img src="@imageUrl" alt="@(user.nickname)" class="userInlineProfileImage"/>
                                 }.getOrElse {
@@ -104,59 +96,59 @@
                             <ul class="authSubmenu">
                                 <li class="authHuePicker">
                                     <i class="fas fa-palette"></i>
-                                    <span>Color</span>
-                                    <input type="range" class="hueSlider" min="0" max="360" value="220" aria-label="Theme color hue">
-                                    <button type="button" class="hueReset" title="사이트 기본값으로 되돌리기" aria-label="Reset hue to site default"><i class="fas fa-rotate-left"></i></button>
+                                    <span>@f("color")</span>
+                                    <input type="range" class="hueSlider" min="0" max="360" value="220" aria-label="@f("color.hue")">
+                                    <button type="button" class="hueReset" title="@f("color.reset")" aria-label="@f("color.reset")"><i class="fas fa-rotate-left"></i></button>
                                 </li>
                                 <li>
-                                    <a href="/w/User:@(user.nickname)"><i class="fas fa-user-gear"></i>Profile</a>
+                                    <a href="/w/User:@(user.nickname)"><i class="fas fa-user-gear"></i>@f("profile")</a>
                                 </li>
                                 <li>
-                                    <a href="@routes.Account.settings()" rel="nofollow"><i class="fas fa-user-shield"></i>Account</a>
+                                    <a href="@routes.Account.settings()" rel="nofollow"><i class="fas fa-user-shield"></i>@f("account")</a>
                                 </li>
                                 @if(canAccessAdmin) {
                                     <li>
-                                        <a href="@routes.Admin.index()" rel="nofollow"><i class="fas fa-screwdriver-wrench"></i>Admin</a>
+                                        <a href="@routes.Admin.index()" rel="nofollow"><i class="fas fa-screwdriver-wrench"></i>@f("admin")</a>
                                     </li>
                                 }
                                 <li>
-                                    <a href="@(routes.Auth.logout)"><i class="fas fa-right-from-bracket"></i>Logout</a>
+                                    <a href="@(routes.Auth.logout)"><i class="fas fa-right-from-bracket"></i>@f("logout")</a>
                                 </li>
                             </ul>
                         </li>
                     }
                 } else {
                     <li>
-                        <a href="@(routes.Auth.login)" rel="nofollow"><i class="fas fa-right-to-bracket"></i>Login</a>
+                        <a href="@(routes.Auth.login)" rel="nofollow"><i class="fas fa-right-to-bracket"></i>@f("login")</a>
                     </li>
                 }
             </ul>
             <ul class="mobileFlatMenu">
-                <li><a href="javascript:showSearch();" rel="nofollow"><i class="fas fa-search"></i>Search</a></li>
-                <li><a href="/r" rel="nofollow"><i class="fas fa-random"></i>Random</a></li>
+                <li><a href="javascript:showSearch();" rel="nofollow"><i class="fas fa-search"></i>@f("search")</a></li>
+                <li><a href="/r" rel="nofollow"><i class="fas fa-random"></i>@f("random")</a></li>
                 @if(canWrite) {
-                    <li><a href="javascript:showWrite();" rel="nofollow"><i class="fas fa-signature"></i>Log</a></li>
+                    <li><a href="javascript:showWrite();" rel="nofollow"><i class="fas fa-signature"></i>@f("log")</a></li>
                 }
                 <li class="menuSplitter" aria-hidden="true"></li>
                 @if(currentUserOpt) {
                     @currentUserOpt.map { user =>
                         <li><a href="/w/User:@(user.nickname)">@currentUserProfileImageUrl.map { imageUrl => <img src="@imageUrl" alt="@(user.nickname)" class="userInlineProfileImage"/> }.getOrElse { <i class="fas fa-user-gear"></i> }@(user.nickname)</a></li>
-                        <li><a href="@routes.Account.settings()" rel="nofollow"><i class="fas fa-user-shield"></i>Account</a></li>
+                        <li><a href="@routes.Account.settings()" rel="nofollow"><i class="fas fa-user-shield"></i>@f("account")</a></li>
                         @if(canAccessAdmin) {
-                            <li><a href="@routes.Admin.index()" rel="nofollow"><i class="fas fa-screwdriver-wrench"></i>Admin</a></li>
+                            <li><a href="@routes.Admin.index()" rel="nofollow"><i class="fas fa-screwdriver-wrench"></i>@f("admin")</a></li>
                         }
-                        <li><a href="@(routes.Auth.logout)"><i class="fas fa-right-from-bracket"></i>Logout</a></li>
+                        <li><a href="@(routes.Auth.logout)"><i class="fas fa-right-from-bracket"></i>@f("logout")</a></li>
                     }
                 } else {
-                    <li><a href="@(routes.Auth.login)" rel="nofollow"><i class="fas fa-right-to-bracket"></i>Login</a></li>
+                    <li><a href="@(routes.Auth.login)" rel="nofollow"><i class="fas fa-right-to-bracket"></i>@f("login")</a></li>
                 }
                 @if(wikiContextOpt.isDefined) {
                     <li class="menuSplitter" aria-hidden="true"></li>
-                    <li><a href="?action=raw" rel="nofollow"><i class="fas fa-file-alt"></i>Raw</a></li>
-                    <li><a href="?action=history" rel="nofollow"><i class="fas fa-history"></i>History</a></li>
-                    <li><a href="?action=blame" rel="nofollow"><i class="fas fa-users"></i>Blame</a></li>
+                    <li><a href="?action=raw" rel="nofollow"><i class="fas fa-file-alt"></i>@f("raw")</a></li>
+                    <li><a href="?action=history" rel="nofollow"><i class="fas fa-history"></i>@f("history")</a></li>
+                    <li><a href="?action=blame" rel="nofollow"><i class="fas fa-users"></i>@f("blame")</a></li>
                     @if(canWrite) {
-                        <li><a href="?action=edit" rel="nofollow"><i class="fas fa-edit"></i>Edit</a></li>
+                        <li><a href="?action=edit" rel="nofollow"><i class="fas fa-edit"></i>@f("edit")</a></li>
                     }
                 }
             </ul>
@@ -164,6 +156,8 @@
     </nav>
     <script type="text/javascript">
         window.AhaWikiCurrentUserNickname = @Html(logics.HtmlJson.string(currentUserOpt.map(_.nickname).getOrElse("")));
+        // The words js.js puts on each section, in the reader's language (FrameText).
+        window.AhaWikiFrameText = @Html(logics.HtmlJson.stringify(play.api.libs.json.Json.toJson(logics.FrameText.scriptTexts(frameLanguage))));
         $(function () {
             const $nav = $('nav.topNavbar');
             const $drawerToggle = $nav.find('.navDrawerToggle');

@@ -1,5 +1,6 @@
 @(isWritable:Boolean, wikiFirst:models.tables.PageWithoutContent, wikiLast:models.tables.Page, hasReadPermissionRestriction:Boolean = false)(implicit wikiContext:ContextWikiPage)
 @isAdmin = @{ logics.AdminLogic.isAdmin(wikiContext.requestWrapper) }
+@f(key: String) = @{ logics.FrameText(key, logics.ScreenLanguage.Language.current(wikiContext)) }
 @currentAction = @{ wikiContext.requestWrapper.getQueryString("action").getOrElse("") }
 @currentRevision = @{
     val queryRevision = wikiContext.requestWrapper.getQueryString("revision").flatMap(r => scala.util.Try(r.toInt).toOption).getOrElse(0)
@@ -8,15 +9,15 @@
 @if(wikiFirst != null && wikiLast != null) {
     <div class="revisionInfo">
         @if(wikiFirst != null) {
-            <div class="first">created by @Html(logics.wikis.UserPageLogic.toHtmlStringOrAnonymous(wikiFirst.nickname)) at <a href="?action=history" rel="nofollow">@(wikiFirst.toIsoLocalDateString)</a></div>
+            <div class="first">@f("createdBy") @Html(logics.wikis.UserPageLogic.toHtmlStringOrAnonymous(wikiFirst.nickname)) @f("at") <a href="?action=history" rel="nofollow">@(wikiFirst.toIsoLocalDateString)</a></div>
         }
         @if(wikiLast != null) {
-            <div class="last">last modified by @Html(logics.wikis.UserPageLogic.toHtmlStringOrAnonymous(wikiLast.nickname)) at <a href="?action=diff&after=@(wikiLast.revision)" rel="nofollow">@(wikiLast.toIsoLocalDateString)</a></div>
-            <div class="revision">revision: <a href="?action=blame" rel="nofollow">@(wikiLast.revision)</a> </div>
+            <div class="last">@f("lastModifiedBy") @Html(logics.wikis.UserPageLogic.toHtmlStringOrAnonymous(wikiLast.nickname)) @f("at") <a href="?action=diff&after=@(wikiLast.revision)" rel="nofollow">@(wikiLast.toIsoLocalDateString)</a></div>
+            <div class="revision">@f("revision") <a href="?action=blame" rel="nofollow">@(wikiLast.revision)</a> </div>
         }
         @if(isAdmin && hasReadPermissionRestriction && (currentAction == "" || currentAction == "view") && currentRevision > 0) {
             <div class="signedReadUrlAction">
-                <a href="#" id="generateSignedViewUrl" rel="nofollow" data-page-name="@wikiContext.name" data-revision="@currentRevision"><i class="fas fa-link"></i>Generate signed URL (view r@currentRevision)</a>
+                <a href="#" id="generateSignedViewUrl" rel="nofollow" data-page-name="@wikiContext.name" data-revision="@currentRevision"><i class="fas fa-link"></i>@f("signedUrl") (view r@currentRevision)</a>
             </div>
             <script type="text/javascript" src="@logics.PublicAsset.url("js/Wiki/action.signedReadUrl.js")"></script>
         }

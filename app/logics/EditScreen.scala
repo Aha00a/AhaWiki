@@ -1,6 +1,6 @@
 package logics
 
-import logics.ScreenLanguage.{Language, Text}
+import logics.ScreenLanguage.{Language, Text, TextTable}
 
 /**
  * The words of the edit screen, in both languages (ScreenLanguage): what edit.scala.html prints
@@ -9,16 +9,14 @@ import logics.ScreenLanguage.{Language, Text}
  *
  * One table for the template and the script. The script gets the chosen language's half as
  * `AhaWikiEditConfig.text` and reads it with `editText(key)`; a key the script asks for and this table
- * lacks fails test/ahawiki.edit-screen-text.test.mjs by name, and one the template asks for fails
+ * lacks fails test/ahawiki.screen-text.test.mjs by name, and one the template asks for fails
  * the edit screen's render spec, because `apply` throws rather than printing nothing.
  *
  * What stays English on purpose: the names of the wiki's own things (AhaMark, InfoBox's
  * Wikipedia), key names in the hints (Alt, Ctrl, Tab), and the permission summary's values, which
  * are the permission rules as written (`All(*)`, `Exact(...)`).
  */
-object EditScreen {
-
-  val texts: Map[String, Text] = Map(
+object EditScreen extends TextTable("EditScreen", Map(
     // The Alt-key hints beside the buttons.
     "hotkey.W" -> Text("줄 바꿈 켜고 끄기", "Toggle word wrap"),
     "hotkey.I" -> Text("위키백과에서 정보 상자 가져오기", "Fetch infobox from Wikipedia"),
@@ -103,17 +101,13 @@ object EditScreen {
     "save.conflict" -> Text("충돌", "Conflict"),
     "save.sameContent" -> Text("바뀐 내용이 없습니다.", "You are trying to save the same content"),
     "infoBox.notFound" -> Text("정보 상자를 찾지 못했습니다.", "No infobox found"),
-  )
-
-  /** The text for `key`. A key this table lacks is a mistake in the caller, so it throws. */
-  def apply(key: String, language: Language): String =
-    texts.getOrElse(key, throw new NoSuchElementException(s"EditScreen has no text for '$key'"))(language)
+  )) {
 
   /** A permission summary label in the reader's language, or as it is when it has no entry. */
   def summaryLabel(label: String, language: Language): String =
     texts.get(s"permission.summary.$label").map(_(language)).getOrElse(label)
 
-  /** The chosen language's half, for edit.page.js. */
+  /** The chosen language's half, for edit.page.js: everything but the Alt hints. */
   def scriptTexts(language: Language): Map[String, String] =
-    texts.collect { case (key, text) if !key.startsWith("hotkey.") => key -> text(language) }
+    scriptTexts(language, key => !key.startsWith("hotkey."))
 }

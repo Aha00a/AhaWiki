@@ -3,7 +3,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
 
 // The screen's words in the reader's language, from logics.EditScreen through the template. A
 // key it lacks comes back as itself rather than as nothing, so a missing one shows where it is;
-// test/ahawiki.edit-screen-text.test.mjs fails on it before that.
+// test/ahawiki.screen-text.test.mjs fails on it before that.
 function editText(key) {
     const text = AhaWikiEditConfig.text && AhaWikiEditConfig.text[key];
     return text != null ? text : key;

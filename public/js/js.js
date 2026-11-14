@@ -87,6 +87,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+// The words on the buttons below, in the reader's language: _base.scala.html writes the `js.`
+// keys of logics.FrameText as window.AhaWikiFrameText. A key it lacks shows as itself, and
+// test/ahawiki.screen-text.test.mjs fails on it first.
+function frameText(key) {
+    var texts = window.AhaWikiFrameText;
+    return texts && texts[key] != null ? texts[key] : key;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     var wrappers = document.querySelectorAll('.InterpreterRenderMetaWrapper');
     var foldControllers = [];
@@ -125,7 +133,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 editLink = document.createElement('a');
                 editLink.className = 'InterpreterRenderEditLink';
                 editLink.rel = 'nofollow';
-                editLink.innerHTML = '<i class="fas fa-edit"></i>&nbsp;Edit';
+                editLink.innerHTML = '<i class="fas fa-edit"></i>&nbsp;';
+                editLink.appendChild(document.createTextNode(frameText('js.edit')));
                 editLink.style.position = 'absolute';
                 editLink.style.top = '6px';
                 editLink.style.right = '8px';
@@ -170,7 +179,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 copyButton = document.createElement('button');
                 copyButton.type = 'button';
                 copyButton.className = 'InterpreterRenderCopyButton';
-                copyButton.innerHTML = '<i class="fas fa-copy"></i>&nbsp;Copy';
+                copyButton.innerHTML = '<i class="fas fa-copy"></i>&nbsp;';
+                copyButton.appendChild(document.createTextNode(frameText('js.copy')));
                 copyButton.style.position = 'absolute';
                 copyButton.style.top = '6px';
                 copyButton.style.right = '8px';
@@ -229,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 foldToggle = document.createElement('button');
                 foldToggle.type = 'button';
                 foldToggle.className = 'InterpreterRenderFoldToggle';
-                foldToggle.setAttribute('aria-label', 'Fold this section');
+                foldToggle.setAttribute('aria-label', frameText('js.fold'));
                 foldToggle.style.position = 'static';
                 foldToggle.style.display = 'inline-flex';
                 foldToggle.style.alignItems = 'center';
@@ -346,6 +356,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
                 heading.style.opacity = isCollapsed ? '0.5' : '';
                 foldToggle.innerHTML = isCollapsed ? '<i class="fas fa-chevron-right fa-fw"></i>' : '<i class="fas fa-chevron-down fa-fw"></i>';
+                foldToggle.setAttribute('aria-label', frameText(isCollapsed ? 'js.unfold' : 'js.fold'));
                 foldToggle.setAttribute('aria-expanded', (!isCollapsed).toString());
             };
             var isInitiallyCollapsed = isSchemaHeading

@@ -215,6 +215,25 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
 
     // In the browser's language, as the names of days are (MacroWeekdayName): Korean for a Korean
     // browser, English for any other. The search reads both, whichever is shown.
+    // The frame every page wears, and a page view's own words (FrameText), in the same language.
+    "write the navigation and a page's frame in the browser's language" in {
+      val korean = contentAsString(get("/w/Pool", loggedIn = true, acceptLanguage = "ko-KR,ko;q=0.9"))
+      val english = contentAsString(get("/w/Pool", loggedIn = true, acceptLanguage = "en-US,en;q=0.9"))
+      korean must include("""<i class="fas fa-search"></i>찾기""")
+      korean must include("처음 쓴 사람")
+      korean must include(""""js.edit":"편집"""")
+      english must include("""<i class="fas fa-search"></i>Search""")
+      english must include("created by")
+      english must include(""""js.edit":"Edit"""")
+      english must not include "처음 쓴 사람"
+      // The generated sections keep their ids whatever their titles say.
+      if (english.contains("See-Also-Generated")) {
+        english must include("See Also")
+        korean must include("함께 보기")
+        korean must include("See-Also-Generated")
+      }
+    }
+
     "write the edit screen and its help in the browser's language" in {
       val korean = contentAsString(get("/w/Pool?action=edit", loggedIn = true, acceptLanguage = "ko-KR,ko;q=0.9"))
       korean must include("""<details class="editHelp" lang="ko">""")

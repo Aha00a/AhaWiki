@@ -1,6 +1,6 @@
 package logics
 
-import models.ContextWikiPage
+import models.ContextSite
 
 import java.util.Locale
 
@@ -15,7 +15,8 @@ import java.util.Locale
  * The page's content stays in the site's language (`AhaWikiConfig.ContentLanguage`); this is only
  * the words around it.
  *
- * Used by the edit screen (EditScreen) and its formatting help (EditHelp).
+ * Used by the page frame (FrameText), the edit screen (EditScreen) and its formatting help
+ * (EditHelp).
  */
 object ScreenLanguage {
 
@@ -28,7 +29,7 @@ object ScreenLanguage {
       * someone whose browser asks for another language reads English more readily than Korean. */
     def of(locale: Locale): Language = if (locale.getLanguage == "ko") Korean else English
 
-    def current(implicit wikiContext: ContextWikiPage): Language = of(wikiContext.requestWrapper.locale)
+    def current(implicit context: ContextSite): Language = of(context.requestWrapper.locale)
   }
 
   /** A text in both languages, side by side, so a sentence and its translation change together. */
@@ -42,4 +43,18 @@ object ScreenLanguage {
   }
 
   val NoText: Text = Text("", "")
+
+  /**
+   * A screen's words by key. A key the table lacks is a mistake in the caller, so `apply` throws
+   * rather than print nothing; the render specs reach every template's keys, and the node tests
+   * check the scripts' keys from the sources.
+   */
+  class TextTable(name: String, val texts: Map[String, Text]) {
+    def apply(key: String, language: Language): String =
+      texts.getOrElse(key, throw new NoSuchElementException(s"$name has no text for '$key'"))(language)
+
+    /** The chosen language's half of the keys a script asks for. */
+    def scriptTexts(language: Language, keys: String => Boolean): Map[String, String] =
+      texts.collect { case (key, text) if keys(key) => key -> text(language) }
+  }
 }

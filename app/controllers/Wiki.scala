@@ -419,35 +419,37 @@ controllerComponents: ControllerComponents,
       adjacentPages = adjacentPagesCount,
     )
 
-    if (isEmptyMarkup(context)) "" else generateFullMarkup(context)
+    // The titles in the reader's language (FrameText); the ids stay, so links to them hold.
+    if (isEmptyMarkup(context)) "" else generateFullMarkup(context, logics.ScreenLanguage.Language.current)
   }
 
   private def generateSchemaMarkup(schema: String): String =
     s"=== [schema:Schema Schema] === #Schema-Generated.generated\n$schema"
 
-  private def generateBacklinksMarkup: String =
-    """=== Backlinks === #Backlinks-Generated.generated
+  private def generateBacklinksMarkup(t: String => String): String =
+    s"""=== ${t("backlinks")} === #Backlinks-Generated.generated
       |<Columns count="3" gap="16" minWidth="220">
       |[[Backlinks]]
       |</Columns>
       |[[UnlinkedMentions]]""".stripMargin
 
-  private def generateSimilarPagesMarkup: String =
-    "=== Similar Pages === #Similar-Pages-Generated.generated\nSimilar pages by cosine similarity. Words after page name are term frequency.\n[[SimilarPages]]"
+  private def generateSimilarPagesMarkup(t: String => String): String =
+    s"=== ${t("similarPages")} === #Similar-Pages-Generated.generated\n${t("similarPages.note")}\n[[SimilarPages]]"
 
-  private def generateTwinPagesMarkup: String =
-    "=== Twin Pages === #Twin-Pages-Generated.generated\n[[TwinPages]]"
+  private def generateTwinPagesMarkup(t: String => String): String =
+    s"=== ${t("twinPages")} === #Twin-Pages-Generated.generated\n[[TwinPages]]"
 
   private def isEmptyMarkup(context: MarkupContext): Boolean =
     context.schema.isEmpty && !context.backlinks && !context.twinPages && !context.similarPages && context.adjacentPages == 0
 
-  private def generateFullMarkup(context: MarkupContext): String = {
-    val backlinksMarkup = if (context.backlinks) generateBacklinksMarkup else ""
-    val twinPagesMarkup = if (context.twinPages) generateTwinPagesMarkup else ""
-    val similarPagesMarkup = if (context.similarPages) generateSimilarPagesMarkup else ""
+  private def generateFullMarkup(context: MarkupContext, language: logics.ScreenLanguage.Language): String = {
+    val t: String => String = key => logics.FrameText(key, language)
+    val backlinksMarkup = if (context.backlinks) generateBacklinksMarkup(t) else ""
+    val twinPagesMarkup = if (context.twinPages) generateTwinPagesMarkup(t) else ""
+    val similarPagesMarkup = if (context.similarPages) generateSimilarPagesMarkup(t) else ""
 
     s"""
-       |== See Also == #See-Also-Generated.generated
+       |== ${t("seeAlso")} == #See-Also-Generated.generated
        |${context.schema}
        |
        |$backlinksMarkup
@@ -457,7 +459,7 @@ controllerComponents: ControllerComponents,
        |$similarPagesMarkup
        |
        |[[Html(<div style="clear: both;"></div>)]]
-       |=== Adjacent Pages === #Adjacent-Pages-Generated.generated
+       |=== ${t("adjacentPages")} === #Adjacent-Pages-Generated.generated
        |[[AdjacentPages]]
        |""".stripMargin
   }

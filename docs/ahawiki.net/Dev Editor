@@ -248,8 +248,13 @@ Source API:
  * '''말은 브라우저 언어를 따른다 — 한국어면 한국어, 아니면 영어(2026-11-15 소유자 결정).''' 엔진에는 번역 층이 없고(`conf/messages` 는 비어 있고 `Messages` 를 부르는 곳이 없다), 모든 사이트의 본문 언어가 `AhaWikiConfig.ContentLanguage` 의 한국어다. 브라우저 언어를 따르는 것은 날짜 이름 하나였다 — `MacroWeekdayName`(그래서 `MacroDayHeader`), `MacroMonthName`, `MacroCalendar`, `MacroInlineDays` 가 요청의 첫 `Accept-Language` 로 요일·달 이름을 짓는다(`RequestWrapper.locale`). 같은 날 페이지가 한국어 브라우저에는 «토», 영어 브라우저에는 «Sat» 다. 도움말은 같은 `RequestWrapper.locale` 로 고른다(`ScreenLanguage.Language`) — 고르는 길을 둘 만들지 않기 위해서다. 처음(2026-11-14)에는 본문 언어를 따라 한국어로만 썼는데, 소유자가 날짜 이름처럼 브라우저를 따르기로 했다. 한국어가 아닌 브라우저에 영어를 주는 것은, 그 사람에게는 한국어보다 영어가 읽기 쉬울 가능성이 크기 때문이다.
   * '''편집 화면 전체가 같은 언어다(2026-11-15).''' 도움말만 바꾸니 한 화면에 두 언어가 섞였다 — 도움말은 한국어, 단추·툴팁·편집 요약·저장은 영어, 끌어 놓기 안내만 한국어. 이제 편집 화면의 글자는 모두 `logics.EditScreen` 의 표 하나에서 나온다. 고르는 것은 `ScreenLanguage.Language`(도움말과 같은 것)다.
    * 템플릿은 `@t("key")` 로, 스크립트(`edit.page.js`)는 `editText('key')` 로 꺼낸다. 스크립트에는 고른 언어의 절반만 `AhaWikiEditConfig.text` 로 넘긴다 — 알림(저장 실패·충돌·첨부 실패 등)과 바뀌는 단추 글.
-   * 표에 없는 키를 부르면 템플릿은 렌더 중에 던지고, 스크립트는 키를 그대로 보인다. 둘 다 그 전에 `test/ahawiki.edit-screen-text.test.mjs` 가 이름으로 잡는다.
-   * 영어로 두는 것: 키 이름(Alt, Ctrl, Tab), 권한 요약의 값(`All(*)` 같은 규칙 그대로). 위쪽 내비게이션(Search·Random·Log…)은 모든 화면이 함께 쓰는 `_base.scala.html` 이라 이번에 바꾸지 않았다.
+   * 표에 없는 키를 부르면 템플릿은 렌더 중에 던지고, 스크립트는 키를 그대로 보인다. 둘 다 그 전에 `test/ahawiki.screen-text.test.mjs` 가 이름으로 잡는다.
+   * 영어로 두는 것: 키 이름(Alt, Ctrl, Tab), 권한 요약의 값(`All(*)` 같은 규칙 그대로).
+  * '''모든 페이지의 틀도 같은 언어다(2026-11-15).''' 위쪽 내비게이션과 계정 메뉴(`_base.scala.html`), 제목 옆의 «처음 쓴 사람 / 마지막으로 고친 사람 / 리비전»(`Wiki/action.scala.html`), 보기 화면 아래에 붙는 «함께 보기» 절의 제목들(`Wiki.getAhaMarkAdditionalInfo`), 문단마다 붙는 편집·복사·접기 단추(`js.js`)가 `logics.FrameText` 의 표에서 나온다. `js.js` 에는 `js.` 키만 `window.AhaWikiFrameText` 로 넘긴다.
+   * 두 표(`EditScreen`, `FrameText`)는 같은 `ScreenLanguage.TextTable` 이다 — 키로 꺼내고, 없는 키는 던진다. 템플릿·스크립트가 부르는 키가 표에 있는지는 `test/ahawiki.screen-text.test.mjs` 가 두 표 모두 본다.
+   * «함께 보기» 절은 제목만 바뀌고 id(`#See-Also-Generated` 등)는 그대로라, 그 절을 가리키는 링크는 언어와 상관없이 닿는다. 이 마크업은 요청마다 새로 만들고 캐시하지 않으므로 언어가 섞이지 않는다.
+   * `Accept-Language` 가 없는 요청(검색 로봇, 배포 때의 인스턴스 비교)은 서버 JVM 의 기본 locale 을 따른다(`RequestWrapper.locale`).
+   * 관리 화면(`_baseAdmin.scala.html`, React)은 아직 영어다.
   * 두 언어는 `EditHelp` 에 나란히(`Text(ko, en)`) 적는다. 문장과 그 번역은 함께 바뀌어야 하므로 한 곳에 둔다. 견본 마크업도 언어마다 있다(«'''굵게'''» / «'''bold'''»). `EditHelpUnit` 이 한쪽만 있는 문구를 잡는다.
   * 한국어 이름은 뒤에 영어 이름을 괄호로 둔다. 인터프리터의 이름이고, 영어로 찾는 사람도 있어서다.
   * 찾기는 표시된 언어와 상관없이 두 언어를 다 본다. 영어 화면에서 «표» 로도, 한국어 화면에서 «table» 로도 찾는다.
