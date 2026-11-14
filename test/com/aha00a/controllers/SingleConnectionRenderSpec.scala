@@ -215,11 +215,15 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
 
     // In the browser's language, as the names of days are (MacroWeekdayName): Korean for a Korean
     // browser, English for any other. The search reads both, whichever is shown.
-    "write the editor's help in the browser's language" in {
+    "write the edit screen and its help in the browser's language" in {
       val korean = contentAsString(get("/w/Pool?action=edit", loggedIn = true, acceptLanguage = "ko-KR,ko;q=0.9"))
       korean must include("""<details class="editHelp" lang="ko">""")
       korean must include("서식 도움말")
       korean must include("""data-markup=" * 항목""")
+      // The rest of the screen too (EditScreen), and the script's words handed to it.
+      korean must include("""<input type="submit" value="저장"/>""")
+      korean must include("<h1>편집 - ")
+      korean must include(""""save.sameContent":"바뀐 내용이 없습니다."""")
 
       Option(System.getenv("AHAWIKI_RENDER_DUMP_EN")).filter(_.nonEmpty).foreach { path =>
         java.nio.file.Files.write(java.nio.file.Paths.get(path), contentAsString(get("/w/Pool?action=edit", loggedIn = true, acceptLanguage = "en-US,en;q=0.9")).getBytes("UTF-8"))
@@ -231,6 +235,9 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
         other must include("""data-markup=" * item""")
         other must not include "서식 도움말"
         other must include("""data-search="표 table""")
+        other must include("""<input type="submit" value="Save"/>""")
+        other must include("<h1>Edit - ")
+        other must not include "편집 요약"
       }
     }
   }

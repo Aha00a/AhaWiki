@@ -2,7 +2,7 @@ package com.aha00a.tests.unit
 
 import com.aha00a.tests.TestUtil
 import logics.EditHelp
-import logics.EditHelp.Language
+import logics.ScreenLanguage.Language
 import models.ContextWikiPage
 import play.api.mvc.{AnyContent, Request}
 

@@ -3,8 +3,6 @@ package logics
 import logics.wikis.interpreters.Interpreters
 import models.ContextWikiPage
 
-import java.util.Locale
-
 /**
  * What the editor's formatting help shows: the markup people reach for most, each with what
  * it draws, and the blocks -- `[[[#!Name ... ]]]` -- with a small sample that works as inserted.
@@ -15,40 +13,15 @@ import java.util.Locale
  * would not. A block the browser draws -- a diagram, a board, a formula, a map -- has nothing to
  * show until its script runs, so it gets a sentence instead (`drawn = false`).
  *
- * It speaks the reader's language: Korean when the browser asks for Korean, English otherwise
- * ([[Language.of]]). That is the one thing the engine already does by browser language -- the
- * names of days and months (`MacroWeekdayName`, `MacroMonthName`, ...) follow the same
- * `RequestWrapper.locale` -- and the help follows it rather than adding a second way to choose.
- * There is no translation layer (`conf/messages` is empty), so both languages are written here,
- * side by side, as [[Text]]: a sentence and its translation change together, and in one place.
+ * It speaks the reader's language (ScreenLanguage), like the rest of the edit screen; both
+ * languages are written here, side by side, as Text.
  *
  * The longer cheat sheet is the AhaMark Basic page on ahawiki.net, which the help links to first;
  * it is a wiki page with its own readers and lives on one site, so the two are not merged.
  */
 object EditHelp {
 
-  sealed trait Language { def code: String }
-  object Language {
-    case object Korean extends Language { val code = "ko" }
-    case object English extends Language { val code = "en" }
-
-    /** Korean for a Korean browser, English for every other. The wiki's content is Korean, but
-      * someone whose browser asks for another language reads English more readily than Korean. */
-    def of(locale: Locale): Language = if (locale.getLanguage == "ko") Korean else English
-
-    def current(implicit wikiContext: ContextWikiPage): Language = of(wikiContext.requestWrapper.locale)
-  }
-
-  /** A text in both languages. An empty Korean side means there is nothing to say in either. */
-  case class Text(ko: String, en: String) {
-    def apply(language: Language): String = language match {
-      case Language.Korean => ko
-      case Language.English => en
-    }
-    def nonEmpty: Boolean = ko.nonEmpty
-    def both: String = s"$ko $en"
-  }
-  val NoText: Text = Text("", "")
+  import ScreenLanguage.{Language, NoText, Text}
 
   /** The words around the rows, in edit.scala.html. */
   object Ui {

@@ -1,19 +1,9 @@
 @(page: models.tables.Page, applicationConf: logics.ApplicationConf, initialEditorText: String, partialRange: Option[(Int, Int)], canManagePagePermission: Boolean, pagePermissionDefault: String, pagePermissionSummary: Seq[(String, String)], isNewPage: Boolean, isRenamable: Boolean, isDeletable: Boolean)(implicit wikiContext: models.ContextWikiPage, request: play.api.mvc.Request[Any])
 @import helper._
 @permissionSelected(mode: String) = @{ if(pagePermissionDefault == mode) "selected" else "" }
-@hotKeyDescription(key: String) = @{
-    key.toUpperCase match {
-        case "W" => "Toggle word wrap"
-        case "I" => "Fetch infobox from Wikipedia"
-        case "A" => "Open attachment upload"
-        case "C" => "Focus revision comment input"
-        case "M" => "Toggle minor edit"
-        case "S" => "Save page"
-        case "R" => "Rename page"
-        case "T" => "Delete page"
-        case _ => ""
-    }
-}
+@screenLanguage = @{ logics.ScreenLanguage.Language.current }
+@t(key: String) = @{ logics.EditScreen(key, screenLanguage) }
+@hotKeyDescription(key: String) = @{ t("hotkey." + key.toUpperCase) }
 @kbdHotKeyAlt(key: String) = {
     <span class="hotkeyHint" title="@hotKeyDescription(key)" data-hotkey-tooltip="@hotKeyDescription(key)">
         <kbd data-hotkey-alt="@key"><kbd>Alt</kbd><kbd>@key</kbd></kbd>
@@ -41,7 +31,9 @@
                     schemaClassNames: "@routes.Api.schemaClassNames",
                     schemaPropertyNames: "@routes.Api.schemaPropertyNames",
                     pageNames: "@routes.Api.pageNames"
-                }
+                },
+                // The script's words in the reader's language (EditScreen.scriptTexts).
+                text: @Html(logics.HtmlJson.stringify(play.api.libs.json.Json.toJson(logics.EditScreen.scriptTexts(screenLanguage))))
             };
         })();
     </script>
@@ -51,13 +43,13 @@
     <script type="text/javascript" src="@logics.PublicAsset.url("js/Wiki/edit.hotkeyAlt.js")"></script>
     <script type="text/javascript" src="@logics.PublicAsset.url("js/Wiki/edit.divider.js")"></script>
     <div class="wikiContent">
-        <div id="uploadDragOverlay" class="uploadDragOverlay">파일을 여기에 놓아 업로드</div>
+        <div id="uploadDragOverlay" class="uploadDragOverlay">@t("dropToUpload")</div>
         <div class="limitWidth">
-            <h1>Edit - <a href="?">@page.name</a></h1>
+            <h1>@t("title") - <a href="?">@page.name</a></h1>
             @partialRange.map { case (lineStart, lineEnd) =>
                 <div class="flashMessage warning">
-                    Partial edit mode (L@lineStart-L@lineEnd)
-                    <a href="#" class="toggleTableEditor" rel="nofollow">Switch to Table Editor</a>
+                    @t("partialEdit") (L@lineStart-L@lineEnd)
+                    <a href="#" class="toggleTableEditor" rel="nofollow">@t("switchToTable")</a>
                 </div>
             }
         </div>
@@ -76,57 +68,57 @@
                         <div class="left">
                             <div class="toolbar">
                                 <div class="toolbarLeft">
-                                    <label class="toolbarTableOnly"><input type="checkbox" class="checkboxWrap" checked="checked"> Word Wrap@kbdHotKeyAlt("W")</label>
-                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="bold" title="Bold ('''...''')"><i class="fas fa-bold"></i></a>
-                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="italic" title="Italic (''...'')"><i class="fas fa-italic"></i></a>
-                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="underline" title="Underline (__...__)"><i class="fas fa-underline"></i></a>
-                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="strike" title="Strikethrough (~~...~~)"><i class="fas fa-strikethrough"></i></a>
-                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="code" title="Inline code (`...`)"><i class="fas fa-code"></i></a>
-                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="heading" title="Heading (== )"><i class="fas fa-heading"></i></a>
-                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="ul" title="Bullet list ( * )"><i class="fas fa-list-ul"></i></a>
-                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="link" title="Link ([...])"><i class="fas fa-link"></i></a>
+                                    <label class="toolbarTableOnly"><input type="checkbox" class="checkboxWrap" checked="checked"> @t("wordWrap")@kbdHotKeyAlt("W")</label>
+                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="bold" title="@t("format.bold")"><i class="fas fa-bold"></i></a>
+                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="italic" title="@t("format.italic")"><i class="fas fa-italic"></i></a>
+                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="underline" title="@t("format.underline")"><i class="fas fa-underline"></i></a>
+                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="strike" title="@t("format.strike")"><i class="fas fa-strikethrough"></i></a>
+                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="code" title="@t("format.code")"><i class="fas fa-code"></i></a>
+                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="heading" title="@t("format.heading")"><i class="fas fa-heading"></i></a>
+                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="ul" title="@t("format.ul")"><i class="fas fa-list-ul"></i></a>
+                                    <a class="formatButton toolbarTableOnly" href="#" rel="nofollow" data-format="link" title="@t("format.link")"><i class="fas fa-link"></i></a>
                                 </div>
                                 <div class="toolbarRight">
-                                    <a class="fetchInfoBoxFromWikipedia toolbarTableOnly" href="#" rel="nofollow"><i class="fab fa-wikipedia-w"></i>InfoBox@kbdHotKeyAlt("I")</a>
-                                    <a class="openAttachmentUpload toolbarTableOnly" href="#" rel="nofollow"><i class="fas fa-paperclip"></i>Attach@kbdHotKeyAlt("A")</a>
+                                    <a class="fetchInfoBoxFromWikipedia toolbarTableOnly" href="#" rel="nofollow"><i class="fab fa-wikipedia-w"></i>@t("infoBox")@kbdHotKeyAlt("I")</a>
+                                    <a class="openAttachmentUpload toolbarTableOnly" href="#" rel="nofollow"><i class="fas fa-paperclip"></i>@t("attach")@kbdHotKeyAlt("A")</a>
                                 </div>
                             </div>
                             <input type="file" id="attachmentUploadInput" multiple />
                             @if(canManagePagePermission) {
                                 <div class="pagePermissionControl">
                                     <div class="pagePermissionCompact">
-                                        <button type="button" class="pagePermissionToggle" aria-expanded="false" aria-controls="pagePermissionDetails" aria-label="Show page permission details" title="Show page permission details">
+                                        <button type="button" class="pagePermissionToggle" aria-expanded="false" aria-controls="pagePermissionDetails" aria-label="@t("permission.show")" title="@t("permission.show")" data-label-show="@t("permission.show")" data-label-hide="@t("permission.hide")">
                                             <i class="fas fa-chevron-right" aria-hidden="true"></i>
                                         </button>
                                         <label class="pagePermissionModeLabel">
-                                            <span>Page Permission:</span>
+                                            <span>@t("permission.label")</span>
                                             <select name="pagePermissionMode">
                                                 @if(!isNewPage) {
-                                                    <option value="keep" @permissionSelected("keep")>Keep Current</option>
+                                                    <option value="keep" @permissionSelected("keep")>@t("permission.keep")</option>
                                                 }
-                                                <option value="general" @permissionSelected("general")>General</option>
-                                                <option value="privateRead" @permissionSelected("privateRead")>Only me can read</option>
-                                                <option value="privateWrite" @permissionSelected("privateWrite")>Only me can edit</option>
+                                                <option value="general" @permissionSelected("general")>@t("permission.general")</option>
+                                                <option value="privateRead" @permissionSelected("privateRead")>@t("permission.privateRead")</option>
+                                                <option value="privateWrite" @permissionSelected("privateWrite")>@t("permission.privateWrite")</option>
                                             </select>
                                         </label>
                                         @if(pagePermissionSummary.nonEmpty) {
                                             <span class="pagePermissionCompactSeparator" aria-hidden="true">:</span>
                                             <span class="pagePermissionCompactSummary">
                                                 @pagePermissionSummary.map { case (label, value) =>
-                                                    <span class="pagePermissionCompactItem"><strong>@label</strong>: @value</span>
+                                                    <span class="pagePermissionCompactItem"><strong>@logics.EditScreen.summaryLabel(label, screenLanguage)</strong>: @value</span>
                                                 }
                                             </span>
                                         }
                                     </div>
                                     <dl id="pagePermissionDetails" class="pagePermissionSummary" hidden>
                                         @pagePermissionSummary.map { case (label, value) =>
-                                            <dt>@label</dt>
+                                            <dt>@logics.EditScreen.summaryLabel(label, screenLanguage)</dt>
                                             <dd>@value</dd>
                                         }
                                     </dl>
                                 </div>
                             }
-                            @defining(logics.EditHelp.Language.current) { helpLanguage =>
+                            @defining(screenLanguage) { helpLanguage =>
                             @defining(logics.EditHelp.Ui) { ui =>
                             <details class="editHelp" lang="@helpLanguage.code">
                                 <summary>@ui.summary(helpLanguage)</summary>
@@ -173,37 +165,37 @@
                             <div class="editorBody">
                                 <div id="tableInlineEditor" class="tableInlineEditor">
                                     <div class="tableInlineEditorHeader">
-                                        <strong>Table</strong>
+                                        <strong>@t("table")</strong>
                                         <input type="text" id="tableInlineOption" value="tsv" />
-                                        <button id="tableAddRow" class="tableInlineEditorButton" type="button">+ Row</button>
-                                        <button id="tableDeleteRow" class="tableInlineEditorButton" type="button">- Row</button>
-                                        <button id="tableAddCol" class="tableInlineEditorButton" type="button">+ Col</button>
-                                        <button id="tableDeleteCol" class="tableInlineEditorButton" type="button">- Col</button>
+                                        <button id="tableAddRow" class="tableInlineEditorButton" type="button">@t("table.addRow")</button>
+                                        <button id="tableDeleteRow" class="tableInlineEditorButton" type="button">@t("table.deleteRow")</button>
+                                        <button id="tableAddCol" class="tableInlineEditorButton" type="button">@t("table.addCol")</button>
+                                        <button id="tableDeleteCol" class="tableInlineEditorButton" type="button">@t("table.deleteCol")</button>
                                     </div>
                                     <div class="tableInlineEditorBody">
                                         <table class="tableBlockEditorGrid"><tbody id="tableInlineEditorGrid"></tbody></table>
                                     </div>
                                 </div>
                                 <div id="ganttEditorBar">
-                                    <button id="openGanttEditor" class="tableInlineEditorButton" type="button">Switch to Gantt Editor</button>
+                                    <button id="openGanttEditor" class="tableInlineEditorButton" type="button">@t("switchToGantt")</button>
                                 </div>
                                 <div id="ganttInlineEditor" class="ganttInlineEditor">
                                     <div class="tableInlineEditorHeader">
-                                        <strong>Gantt</strong>
-                                        <button id="ganttAddRow" class="tableInlineEditorButton" type="button" title="Add row (Enter)"><i class="fas fa-plus"></i></button>
-                                        <button id="ganttDeleteRow" class="tableInlineEditorButton" type="button" title="Delete target row(s) (Shift+Del)"><i class="fas fa-minus"></i></button>
-                                        <button id="ganttMoveUp" class="tableInlineEditorButton" type="button" title="Move target row(s) up (Alt+↑)"><i class="fas fa-arrow-up"></i></button>
-                                        <button id="ganttMoveDown" class="tableInlineEditorButton" type="button" title="Move target row(s) down (Alt+↓)"><i class="fas fa-arrow-down"></i></button>
-                                        <button id="ganttIndent" class="tableInlineEditorButton" type="button" title="Indent target row(s) (Tab)"><i class="fas fa-indent"></i></button>
-                                        <button id="ganttOutdent" class="tableInlineEditorButton" type="button" title="Outdent target row(s) (Shift+Tab)"><i class="fas fa-outdent"></i></button>
-                                        <button id="ganttTodayDate" class="tableInlineEditorButton" type="button" title="Insert today's date into Start field"><i class="fas fa-calendar-day"></i></button>
-                                        <button id="ganttUndo" class="tableInlineEditorButton" type="button" title="Undo (Ctrl+Z)" disabled><i class="fas fa-undo"></i></button>
-                                        <button id="ganttRedo" class="tableInlineEditorButton" type="button" title="Redo (Ctrl+Y / Ctrl+Shift+Z)" disabled><i class="fas fa-redo"></i></button>
-                                        <button id="ganttToggleRaw" class="tableInlineEditorButton" type="button" title="Switch to raw editor"><i class="fas fa-code"></i></button>
+                                        <strong>@t("gantt")</strong>
+                                        <button id="ganttAddRow" class="tableInlineEditorButton" type="button" title="@t("gantt.addRow")"><i class="fas fa-plus"></i></button>
+                                        <button id="ganttDeleteRow" class="tableInlineEditorButton" type="button" title="@t("gantt.deleteRow")"><i class="fas fa-minus"></i></button>
+                                        <button id="ganttMoveUp" class="tableInlineEditorButton" type="button" title="@t("gantt.moveUp")"><i class="fas fa-arrow-up"></i></button>
+                                        <button id="ganttMoveDown" class="tableInlineEditorButton" type="button" title="@t("gantt.moveDown")"><i class="fas fa-arrow-down"></i></button>
+                                        <button id="ganttIndent" class="tableInlineEditorButton" type="button" title="@t("gantt.indent")"><i class="fas fa-indent"></i></button>
+                                        <button id="ganttOutdent" class="tableInlineEditorButton" type="button" title="@t("gantt.outdent")"><i class="fas fa-outdent"></i></button>
+                                        <button id="ganttTodayDate" class="tableInlineEditorButton" type="button" title="@t("gantt.today")"><i class="fas fa-calendar-day"></i></button>
+                                        <button id="ganttUndo" class="tableInlineEditorButton" type="button" title="@t("gantt.undo")" disabled><i class="fas fa-undo"></i></button>
+                                        <button id="ganttRedo" class="tableInlineEditorButton" type="button" title="@t("gantt.redo")" disabled><i class="fas fa-redo"></i></button>
+                                        <button id="ganttToggleRaw" class="tableInlineEditorButton" type="button" title="@t("gantt.toggleRaw")"><i class="fas fa-code"></i></button>
                                     </div>
                                     <div class="tableInlineEditorBody">
                                         <table class="ganttEditorGrid">
-                                            <thead><tr><th style="width:32px">#</th><th>Task</th><th style="width:160px">Start / Ref</th><th style="width:60px">Est</th><th style="width:60px">%</th></tr></thead>
+                                            <thead><tr><th style="width:32px">#</th><th>@t("gantt.task")</th><th style="width:160px">@t("gantt.start")</th><th style="width:60px">@t("gantt.est")</th><th style="width:60px">%</th></tr></thead>
                                             <tbody id="ganttInlineEditorGrid"></tbody>
                                         </table>
                                     </div>
@@ -213,13 +205,13 @@
                             <div class="attachmentList" id="attachmentList"></div>
                             <div class="editorAdditional">
                                 <div class="toolbarLeft">
-                                    <label>Comment <input type="text" name="comment" placeholder="Comment"/>@kbdHotKeyAlt("C")</label>
+                                    <label>@t("comment") <input type="text" name="comment" placeholder="@t("comment")"/>@kbdHotKeyAlt("C")</label>
                                     @if(page.revision != 0) {
-                                        <label><input type="checkbox" name="minorEdit" value="true"/> Minor edit@kbdHotKeyAlt("M")</label>
+                                        <label><input type="checkbox" name="minorEdit" value="true"/> @t("minorEdit")@kbdHotKeyAlt("M")</label>
                                     }
                                 </div>
                                 <div class="toolbarRight">
-                                    <label><input type="submit" value="Save"/>@kbdHotKeyAlt("S")</label>
+                                    <label><input type="submit" value="@t("save")"/>@kbdHotKeyAlt("S")</label>
                                 </div>
                             </div>
                         </div>
@@ -230,10 +222,10 @@
                                 </div>
                                 <div class="toolbarRight">
                                     @if(page.revision != 0 && isRenamable) {
-                                        <a href="?action=rename"><i class="fas fa-pen-alt"></i>Rename@kbdHotKeyAlt("R")</a>
+                                        <a href="?action=rename"><i class="fas fa-pen-alt"></i>@t("rename")@kbdHotKeyAlt("R")</a>
                                     }
                                     @if(page.revision != 0 && isDeletable) {
-                                        <a href="?action=delete"><i class="fas fa-trash-alt"></i>Delete@kbdHotKeyAlt("T")</a>
+                                        <a href="?action=delete"><i class="fas fa-trash-alt"></i>@t("delete")@kbdHotKeyAlt("T")</a>
                                     }
                                 </div>
                             </div>

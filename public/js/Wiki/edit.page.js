@@ -1,6 +1,14 @@
 ﻿const AhaWikiEditConfig = window.AhaWikiEditConfig || {};
 AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
 
+// The screen's words in the reader's language, from logics.EditScreen through the template. A
+// key it lacks comes back as itself rather than as nothing, so a missing one shows where it is;
+// test/ahawiki.edit-screen-text.test.mjs fails on it before that.
+function editText(key) {
+    const text = AhaWikiEditConfig.text && AhaWikiEditConfig.text[key];
+    return text != null ? text : key;
+}
+
         function adjustEditorLayoutHeight() {
             var windowInnerHeight = $(window).innerHeight();
             // jQuery 3 answers undefined for an empty set where 1.12 answered null, which the
@@ -99,7 +107,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     return;
 
                 function setExpanded(expanded) {
-                    const label = expanded ? 'Hide page permission details' : 'Show page permission details';
+                    const label = expanded ? editText('permission.hide') : editText('permission.show');
                     $toggle
                         .attr('aria-expanded', expanded ? 'true' : 'false')
                         .attr('aria-label', label)
@@ -327,7 +335,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 $tableInlineEditor.addClass('visible');
                 hideStandardEditor();
                 $('.toolbarTableOnly').hide();
-                $('.toggleTableEditor').text('Switch to Raw Editor');
+                $('.toggleTableEditor').text(editText('switchToRaw'));
                 return true;
             }
             function closeInlineTableEditor() {
@@ -340,7 +348,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 $tableInlineEditor.removeClass('visible');
                 showStandardEditor();
                 $('.toolbarTableOnly').show();
-                $('.toggleTableEditor').text('Switch to Table Editor');
+                $('.toggleTableEditor').text(editText('switchToTable'));
             }
 
             function parseGanttSource(src) {
@@ -909,7 +917,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 $ganttInlineEditor.addClass('visible');
                 hideStandardEditor();
                 $('.toolbarTableOnly').hide();
-                $('.toggleTableEditor').text('Switch to Raw Editor');
+                $('.toggleTableEditor').text(editText('switchToRaw'));
                 $('.editHelp').hide();
                 focusAndSelectGanttRow(0, 0, true);
                 return true;
@@ -923,7 +931,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 $ganttInlineEditor.removeClass('visible');
                 showStandardEditor();
                 $('.toolbarTableOnly').show();
-                $('.toggleTableEditor').text('Switch to Gantt Editor');
+                $('.toggleTableEditor').text(editText('switchToGantt'));
                 $('.editHelp').show();
                 $('#ganttEditorBar').show();
             }
@@ -932,7 +940,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 const src = window.AhaWikiCodeMirrorEditor ? window.AhaWikiCodeMirrorEditor.getValue() : $textarea.val();
                 const table = detectTableBlock(src);
                 if (!table) {
-                    alert('Partial text가 #!table 블록이 아닙니다.');
+                    alert(editText('partialNotTable'));
                     return;
                 }
                 const option = ($tableInlineOption.val() || table.option || 'tsv').toString().trim();
@@ -1918,7 +1926,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     });
 
                     $delete.on('click', function () {
-                        if (!confirm('첨부파일을 삭제하시겠습니까?'))
+                        if (!confirm(editText('attachment.deleteConfirm')))
                             return;
                         $.post('/api/deleteAttachment', {
                             csrfToken: $('[name=csrfToken]').val(),
@@ -1927,7 +1935,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                         }).done(function () {
                             loadAttachments();
                         }).fail(function (jqXHR) {
-                            alert('Attachment delete failed. ' + (jqXHR.responseText || jqXHR.statusText));
+                            alert(editText('attachment.deleteFailed') + ' ' + (jqXHR.responseText || jqXHR.statusText));
                         });
                     });
 
@@ -1949,7 +1957,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                         renderAttachmentList();
                     })
                     .fail(function (jqXHR) {
-                        alert('Attachment list load failed. ' + (jqXHR.responseText || jqXHR.statusText));
+                        alert(editText('attachment.listFailed') + ' ' + (jqXHR.responseText || jqXHR.statusText));
                     });
             }
 
@@ -1994,7 +2002,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     if (data && data.attachmentMacro) {
                         insertTextAtCursor(data.attachmentMacro + '\n');
                     } else {
-                        alert('File upload failed.');
+                        alert(editText('upload.fileFailed'));
                     }
                     uploadingMap.delete(uploadId);
                     loadAttachments();
@@ -2006,7 +2014,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                         uploadingMap.set(uploadId, uploading);
                         renderAttachmentList();
                     }
-                    alert('File upload failed. ' + (jqXHR.responseText || jqXHR.statusText));
+                    alert(editText('upload.fileFailed') + ' ' + (jqXHR.responseText || jqXHR.statusText));
                 });
             }
 
@@ -2077,10 +2085,10 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                         insertTextAtCursor(data.attachmentMacro + '\n');
                         loadAttachments();
                     } else {
-                        alert('Image upload failed.');
+                        alert(editText('upload.imageFailed'));
                     }
                 }).fail(function (jqXHR) {
-                    alert('Image upload failed. ' + (jqXHR.responseText || jqXHR.statusText));
+                    alert(editText('upload.imageFailed') + ' ' + (jqXHR.responseText || jqXHR.statusText));
                 });
             });
 
@@ -2118,7 +2126,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                         recaptchaTokenFilled = true;
                         $form.submit();
                     }, function () {
-                        alert('Could not get a reCAPTCHA token, so the page was not saved. Something may be blocking reCAPTCHA.');
+                        alert(editText('save.noRecaptcha'));
                     }).finally(function () {
                         recaptchaTokenPending = false;
                     });
@@ -2129,19 +2137,19 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 },
                 error: function (jqXHR) {
                     if(jqXHR.status === 403 && /^reCAPTCHA/.test(jqXHR.responseText || '')) {
-                        alert(`Not saved - ${jqXHR.responseText}. Saving again asks for a new token.`);
+                        alert(`${editText('save.notSaved')} - ${jqXHR.responseText}. ${editText('save.retryToken')}`);
                         return;
                     }
                     if(jqXHR.status === 403) {
-                        alert(`Permission denied - ${jqXHR.responseText}`);
+                        alert(`${editText('save.permissionDenied')} - ${jqXHR.responseText}`);
                         return;
                     }
                     if(jqXHR.status === 409) {
-                        alert(`Conflict - ${jqXHR.responseText}`);
+                        alert(`${editText('save.conflict')} - ${jqXHR.responseText}`);
                         return;
                     }
                     if(jqXHR.status === 400 && jqXHR.responseText === "body == latestText") {
-                        alert("You are trying to save the same content");
+                        alert(editText('save.sameContent'));
                         return;
                     }
 
@@ -2424,7 +2432,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                         .filter(v => v.content);
 
                     if(!arrayResult.length) {
-                        alert('No infobox found');
+                        alert(editText('infoBox.notFound'));
                         return false;
                     }
 
