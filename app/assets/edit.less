@@ -611,16 +611,15 @@
 	}
 }
 
+// Open, the help takes its height from the editor (adjustEditorLayoutHeight), so it scrolls
+// inside itself rather than pushing the editor down to its 220px floor.
 .editHelpBody {
 	padding: 0 10px 10px;
+	max-height: 40vh;
+	overflow-y: auto;
 
-	ul {
-		margin: 6px 0;
-		padding-left: 18px;
-	}
-
-	li {
-		margin: 3px 0;
+	p {
+		margin: 4px 0 6px;
 	}
 
 	code {
@@ -628,6 +627,87 @@
 		color: var(--color-code-text);
 		border-radius: 3px;
 		padding: 1px 4px;
+	}
+}
+
+.editHelpTable {
+	width: 100%;
+	border-collapse: collapse;
+
+	th,
+	td {
+		padding: 5px 6px;
+		border-top: 1px solid var(--color-border);
+		vertical-align: top;
+		text-align: left;
+	}
+
+	th {
+		font-weight: 700;
+		white-space: nowrap;
+	}
+
+	// A phone has no room for three columns: the name goes on a line of its own above the
+	// markup and what it draws.
+	@media @widthTablet {
+		tr {
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+			border-top: 1px solid var(--color-border);
+		}
+
+		th {
+			grid-column: 1 / -1;
+			padding-bottom: 0;
+		}
+
+		th,
+		td {
+			border-top: none;
+		}
+	}
+}
+
+.editHelpRow {
+	cursor: pointer;
+
+	&:hover,
+	&:focus {
+		background: var(--color-link-hover-bg);
+		outline: none;
+	}
+}
+
+.editHelpMarkup code {
+	display: inline-block;
+	white-space: pre;
+}
+
+.editHelpNote {
+	margin-top: 3px;
+	color: var(--color-muted);
+}
+
+// What the renderer drew, at the help's size. Its links are examples, not ways out of the
+// editor: a click on one is a click on the row, which inserts it. Under .editHelpTable so it
+// outweighs wiki.css's heading sizes.
+.editHelpTable .editHelpResult {
+	pointer-events: none;
+
+	p,
+	ul,
+	ol,
+	table,
+	pre,
+	hr {
+		margin: 0;
+	}
+
+	h1,
+	h2,
+	h3 {
+		margin: 0;
+		font-size: 14px;
 	}
 }
 

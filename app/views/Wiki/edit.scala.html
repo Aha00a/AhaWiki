@@ -128,21 +128,26 @@
                             <details class="editHelp">
                                 <summary>Wiki Formatting Help</summary>
                                 <div class="editHelpBody">
-                                    <ul>
-                                        <li><strong>Emphasis</strong>: Use <code>'''bold'''</code> and <code>''italic''</code>.</li>
-                                        <li><strong>Headings</strong>: Use <code>= Heading</code> and <code>== Subheading</code>.</li>
-                                        <li><strong>Links</strong>: Use <code>[Page]</code> and <code>["Page Name"]</code>.</li>
-                                    </ul>
-                                    <ul>
-                                        <li>
-                                            see also
-                                            <a href="https://ahawiki.net/w/AhaMark" target="_blank" rel="noopener noreferrer">AhaMark</a>
-                                            <a href="https://ahawiki.net/w/AhaMark%20Basic" target="_blank" rel="noopener noreferrer">AhaMark Basic</a>
-                                            <a href="https://ahawiki.net/w/Macro" target="_blank" rel="noopener noreferrer">Macro</a>
-                                            <a href="https://ahawiki.net/w/Interpreter" target="_blank" rel="noopener noreferrer">Interpreter</a>
-                                            <a href="https://ahawiki.net/w/Interpreter%20Examples" target="_blank" rel="noopener noreferrer">Interpreter Examples</a>
-                                        </li>
-                                    </ul>
+                                    <p class="editHelpLead">Click a row to put it where the cursor is.</p>
+                                    <table class="editHelpTable">
+                                        <tbody>
+                                        @logics.EditHelp.rows.map { row =>
+                                            <tr class="editHelpRow" data-markup="@row.example.markup" data-block="@row.example.block" tabindex="0" title="Insert">
+                                                <th>@row.example.label</th>
+                                                <td class="editHelpMarkup"><code>@row.example.markup</code>@if(row.example.note.nonEmpty) {<div class="editHelpNote">@row.example.note</div>}</td>
+                                                <td class="editHelpResult" data-render-inert>@Html(row.html)</td>
+                                            </tr>
+                                        }
+                                        </tbody>
+                                    </table>
+                                    <p class="editHelpMore">
+                                        More:
+                                        <a href="https://ahawiki.net/w/AhaMark%20Basic" target="_blank" rel="noopener noreferrer">AhaMark Basic</a> (cheat sheet) ·
+                                        <a href="https://ahawiki.net/w/AhaMark" target="_blank" rel="noopener noreferrer">AhaMark</a> ·
+                                        <a href="https://ahawiki.net/w/Macro" target="_blank" rel="noopener noreferrer">Macro</a> ·
+                                        <a href="https://ahawiki.net/w/Interpreter" target="_blank" rel="noopener noreferrer">Interpreter</a> ·
+                                        <a href="https://ahawiki.net/w/Interpreter%20Examples" target="_blank" rel="noopener noreferrer">Interpreter Examples</a>
+                                    </p>
                                 </div>
                             </details>
                             <div class="editorBody">

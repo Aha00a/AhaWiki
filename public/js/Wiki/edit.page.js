@@ -1701,6 +1701,29 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 $textarea.change();
             }
 
+            // Wiki Formatting Help (EditHelp.scala): a row puts its markup where the cursor is. A
+            // block -- a list, a table -- only means anything at the start of a line, so it gets a
+            // line of its own: a line break before it when the cursor is mid-line, one after it.
+            function insertEditHelpMarkup(row) {
+                const markup = row.getAttribute('data-markup') || '';
+                if (row.getAttribute('data-block') !== 'true') {
+                    insertTextAtCursor(markup);
+                    return;
+                }
+                const cm = getEditor();
+                const atLineStart = cm
+                    ? cm.getCursor('from').ch === 0
+                    : (function (el) { return el.selectionStart === 0 || el.value.charAt(el.selectionStart - 1) === '\n'; })($textarea.get(0));
+                insertTextAtCursor((atLineStart ? '' : '\n') + markup + '\n');
+            }
+            $('.editHelpRow')
+                .on('click', function () { insertEditHelpMarkup(this); })
+                .on('keydown', function (e) {
+                    if (e.key !== 'Enter' && e.key !== ' ') return;
+                    e.preventDefault();
+                    insertEditHelpMarkup(this);
+                });
+
             // Formatting toolbar. Read the selection, compute the edit with the pure ops in
             // AhaWiki.Format, and apply it -- via replaceRange on CodeMirror so its undo history
             // survives, or by splicing the textarea value on the fallback path.

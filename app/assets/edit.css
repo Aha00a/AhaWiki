@@ -628,19 +628,80 @@
 }
 .editHelpBody {
   padding: 0 10px 10px;
+  max-height: 40vh;
+  overflow-y: auto;
 }
-.editHelpBody ul {
-  margin: 6px 0;
-  padding-left: 18px;
-}
-.editHelpBody li {
-  margin: 3px 0;
+.editHelpBody p {
+  margin: 4px 0 6px;
 }
 .editHelpBody code {
   background: var(--color-code-bg);
   color: var(--color-code-text);
   border-radius: 3px;
   padding: 1px 4px;
+}
+.editHelpTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+.editHelpTable th,
+.editHelpTable td {
+  padding: 5px 6px;
+  border-top: 1px solid var(--color-border);
+  vertical-align: top;
+  text-align: left;
+}
+.editHelpTable th {
+  font-weight: 700;
+  white-space: nowrap;
+}
+@media (max-width: 767px) {
+  .editHelpTable tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    border-top: 1px solid var(--color-border);
+  }
+  .editHelpTable th {
+    grid-column: 1 / -1;
+    padding-bottom: 0;
+  }
+  .editHelpTable th,
+  .editHelpTable td {
+    border-top: none;
+  }
+}
+.editHelpRow {
+  cursor: pointer;
+}
+.editHelpRow:hover,
+.editHelpRow:focus {
+  background: var(--color-link-hover-bg);
+  outline: none;
+}
+.editHelpMarkup code {
+  display: inline-block;
+  white-space: pre;
+}
+.editHelpNote {
+  margin-top: 3px;
+  color: var(--color-muted);
+}
+.editHelpTable .editHelpResult {
+  pointer-events: none;
+}
+.editHelpTable .editHelpResult p,
+.editHelpTable .editHelpResult ul,
+.editHelpTable .editHelpResult ol,
+.editHelpTable .editHelpResult table,
+.editHelpTable .editHelpResult pre,
+.editHelpTable .editHelpResult hr {
+  margin: 0;
+}
+.editHelpTable .editHelpResult h1,
+.editHelpTable .editHelpResult h2,
+.editHelpTable .editHelpResult h3 {
+  margin: 0;
+  font-size: 14px;
 }
 .previewSyncBlink {
   animation: previewSyncBlinkAnimation 900ms ease-in-out 1;

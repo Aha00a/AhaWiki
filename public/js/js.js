@@ -96,6 +96,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!content) {
             return;
         }
+        // Drawn as an example, not part of the page (the editor's Wiki Formatting Help): its
+        // line numbers name lines of a snippet, so an edit button or a fold on it would act on
+        // the wrong lines of this page.
+        if (wrapper.closest('[data-render-inert]')) {
+            return;
+        }
 
         wrapper.style.pointerEvents = 'none';
         content.style.pointerEvents = 'none';

@@ -195,6 +195,19 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
         mustNotHaveStarved(contentAsString(result))
       }
     }
+
+    // The Wiki Formatting Help draws its examples with the renderer on every edit screen
+    // (EditHelp.scala); what each one draws is EditHelpUnit's. Here: that they reach the page.
+    // AHAWIKI_RENDER_DUMP writes the screen there, to look at it without a server.
+    "put a drawn example of each formatting in the editor's help" in {
+      val html = contentAsString(get("/w/Pool?action=edit", loggedIn = true))
+      Option(System.getenv("AHAWIKI_RENDER_DUMP")).filter(_.nonEmpty).foreach { path =>
+        java.nio.file.Files.write(java.nio.file.Paths.get(path), html.getBytes("UTF-8"))
+      }
+      "class=\"editHelpRow\"".r.findAllIn(html).size mustBe logics.EditHelp.examples.size
+      html must include("""data-markup=" * item""")
+      html must include("""data-block="true"""")
+    }
   }
 
   "a page with no revision" should {
