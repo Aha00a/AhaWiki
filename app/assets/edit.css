@@ -640,6 +640,31 @@
   border-radius: 3px;
   padding: 1px 4px;
 }
+.editHelpTools {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 4px 0 6px;
+  background: var(--color-surface-alt);
+}
+.editHelpSearch {
+  flex: 0 1 16em;
+  min-width: 10em;
+  font-size: 12px;
+  padding: 3px 6px;
+}
+.editHelpLead {
+  color: var(--color-muted);
+}
+.editHelpGroupTitle th {
+  padding-top: 10px;
+  font-size: 13px;
+  color: var(--color-muted-strong);
+}
 .editHelpTable {
   width: 100%;
   border-collapse: collapse;
@@ -654,6 +679,9 @@
 .editHelpTable th {
   font-weight: 700;
   white-space: nowrap;
+}
+.editHelpTable tr[hidden] {
+  display: none;
 }
 @media (max-width: 767px) {
   .editHelpTable tr {
@@ -677,6 +705,17 @@
 .editHelpRow:focus {
   background: var(--color-link-hover-bg);
   outline: none;
+}
+.editHelpRow.editHelpCurrent {
+  background: var(--color-link-hover-bg);
+  box-shadow: inset 3px 0 0 var(--color-link);
+}
+.editHelpPage {
+  display: inline-block;
+  margin-top: 3px;
+}
+.editHelpTable .editHelpDescription {
+  color: var(--color-muted);
 }
 .editHelpMarkup code {
   display: inline-block;

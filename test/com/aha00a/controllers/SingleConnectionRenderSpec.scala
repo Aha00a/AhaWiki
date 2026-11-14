@@ -196,7 +196,7 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
       }
     }
 
-    // The Wiki Formatting Help draws its examples with the renderer on every edit screen
+    // The editor's formatting help draws its examples with the renderer on every edit screen
     // (EditHelp.scala); what each one draws is EditHelpUnit's. Here: that they reach the page.
     // AHAWIKI_RENDER_DUMP writes the screen there, to look at it without a server.
     "put a drawn example of each formatting in the editor's help" in {
@@ -205,8 +205,11 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
         java.nio.file.Files.write(java.nio.file.Paths.get(path), html.getBytes("UTF-8"))
       }
       "class=\"editHelpRow\"".r.findAllIn(html).size mustBe logics.EditHelp.examples.size
-      html must include("""data-markup=" * item""")
+      html must include("""data-markup=" * 항목""")
       html must include("""data-block="true"""")
+      html must include("""data-kind="kanban"""")
+      html must include("editHelpSearch")
+      html must include("AhaWiki.EditHelpContext.js")
     }
   }
 

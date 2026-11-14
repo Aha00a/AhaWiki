@@ -23,6 +23,7 @@
     <script type="text/javascript" src="@logics.PublicAsset.url("js/jquery.paste_image_reader.js")"></script>
     <script type="text/javascript" src="@logics.PublicAsset.url("js/AhaWiki.Editor.js")"></script>
     <script type="text/javascript" src="@logics.PublicAsset.url("js/AhaWiki.Format.js")"></script>
+    <script type="text/javascript" src="@logics.PublicAsset.url("js/AhaWiki.EditHelpContext.js")"></script>
     <link rel="stylesheet" href="@logics.PublicAsset.url("vendor/codemirror/codemirror.css")"/>
     <link rel="stylesheet" href="@logics.PublicAsset.url("edit.css")">
     <script type="text/javascript" src="@logics.PublicAsset.url("vendor/codemirror/codemirror.min.js")"></script>
@@ -126,23 +127,38 @@
                                 </div>
                             }
                             <details class="editHelp">
-                                <summary>Wiki Formatting Help</summary>
+                                <summary>서식 도움말 (Formatting Help)</summary>
                                 <div class="editHelpBody">
-                                    <p class="editHelpLead">Click a row to put it where the cursor is.</p>
+                                    <div class="editHelpTools">
+                                        <input type="search" class="editHelpSearch" placeholder="찾기 — 표, 링크, kanban …" aria-label="서식 찾기" autocomplete="off">
+                                        <span class="editHelpLead">줄을 누르면 커서 자리에 넣습니다. 커서가 있는 곳의 서식은 색으로 표시됩니다.</span>
+                                    </div>
                                     <table class="editHelpTable">
-                                        <tbody>
-                                        @logics.EditHelp.rows.map { row =>
-                                            <tr class="editHelpRow" data-markup="@row.example.markup" data-block="@row.example.block" tabindex="0" title="Insert">
+                                        @logics.EditHelp.groups.map { group =>
+                                        <tbody class="editHelpGroup">
+                                            <tr class="editHelpGroupTitle"><th colspan="3">@group.title</th></tr>
+                                            @logics.EditHelp.rows(group).map { row =>
+                                            <tr class="editHelpRow" data-markup="@row.example.markup" data-block="@row.example.block" data-kind="@row.example.kind" data-search="@{Seq(row.example.label, row.example.markup, row.example.note, row.example.description, row.example.page).mkString(" ").toLowerCase}" tabindex="0" title="커서 자리에 넣기">
                                                 <th>@row.example.label</th>
-                                                <td class="editHelpMarkup"><code>@row.example.markup</code>@if(row.example.note.nonEmpty) {<div class="editHelpNote">@row.example.note</div>}</td>
+                                                <td class="editHelpMarkup">
+                                                    <code>@row.example.markup</code>
+                                                    @if(row.example.note.nonEmpty) {<div class="editHelpNote">@row.example.note</div>}
+                                                    @if(row.example.page.nonEmpty) {<a class="editHelpPage" href="@logics.EditHelp.pageUrl(row.example.page)" target="_blank" rel="noopener noreferrer">자세히</a>}
+                                                </td>
+                                                @if(row.example.drawn) {
                                                 <td class="editHelpResult" data-render-inert>@Html(row.html)</td>
+                                                } else {
+                                                <td class="editHelpResult editHelpDescription">@row.example.description</td>
+                                                }
                                             </tr>
-                                        }
+                                            }
                                         </tbody>
+                                        }
                                     </table>
+                                    <p class="editHelpEmpty" hidden>찾는 서식이 없습니다. 아래 문서에서 찾아보세요.</p>
                                     <p class="editHelpMore">
-                                        More:
-                                        <a href="https://ahawiki.net/w/AhaMark%20Basic" target="_blank" rel="noopener noreferrer">AhaMark Basic</a> (cheat sheet) ·
+                                        더 보기:
+                                        <a href="https://ahawiki.net/w/AhaMark%20Basic" target="_blank" rel="noopener noreferrer">AhaMark Basic</a> (치트시트) ·
                                         <a href="https://ahawiki.net/w/AhaMark" target="_blank" rel="noopener noreferrer">AhaMark</a> ·
                                         <a href="https://ahawiki.net/w/Macro" target="_blank" rel="noopener noreferrer">Macro</a> ·
                                         <a href="https://ahawiki.net/w/Interpreter" target="_blank" rel="noopener noreferrer">Interpreter</a> ·

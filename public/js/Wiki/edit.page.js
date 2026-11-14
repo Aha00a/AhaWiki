@@ -1701,7 +1701,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 $textarea.change();
             }
 
-            // Wiki Formatting Help (EditHelp.scala): a row puts its markup where the cursor is. A
+            // The formatting help (EditHelp.scala): a row puts its markup where the cursor is. A
             // block -- a list, a table -- only means anything at the start of a line, so it gets a
             // line of its own: a line break before it when the cursor is mid-line, one after it.
             function insertEditHelpMarkup(row) {
@@ -1717,12 +1717,73 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                 insertTextAtCursor((atLineStart ? '' : '\n') + markup + '\n');
             }
             $('.editHelpRow')
-                .on('click', function () { insertEditHelpMarkup(this); })
+                .on('click', function (e) {
+                    // "자세히" opens the block's page in a new tab; it is not a request to insert.
+                    if ($(e.target).closest('a').length) return;
+                    insertEditHelpMarkup(this);
+                })
                 .on('keydown', function (e) {
+                    if (e.target !== this) return;
                     if (e.key !== 'Enter' && e.key !== ' ') return;
                     e.preventDefault();
                     insertEditHelpMarkup(this);
                 });
+
+            // The search box keeps the rows whose label, markup or explanation hold every word
+            // typed; a group with none left loses its title too.
+            function filterEditHelp(query) {
+                const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+                let shown = 0;
+                $('.editHelpGroup').each(function () {
+                    let shownInGroup = 0;
+                    $(this).find('.editHelpRow').each(function () {
+                        const haystack = this.getAttribute('data-search') || '';
+                        const match = words.every(function (word) { return haystack.indexOf(word) !== -1; });
+                        this.hidden = !match;
+                        if (match) shownInGroup++;
+                    });
+                    this.hidden = shownInGroup === 0;
+                    shown += shownInGroup;
+                });
+                $('.editHelpEmpty').prop('hidden', shown > 0);
+                setTimeout(adjustEditorLayoutHeight, 0);
+            }
+            $('.editHelpSearch')
+                .on('input', function () { filterEditHelp(this.value); })
+                .on('keydown', function (e) {
+                    // Enter in the box inserts the first row left, then goes back to writing.
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const first = $('.editHelpRow').filter(function () { return !this.hidden; }).get(0);
+                        if (first) insertEditHelpMarkup(first);
+                    } else if (e.key === 'Escape') {
+                        this.value = '';
+                        filterEditHelp('');
+                    }
+                });
+
+            // Light the row about what the cursor is on (AhaWiki.EditHelpContext.kindAt), and
+            // bring it into view inside the help -- only when the kind changes, so moving along a
+            // line does not keep scrolling the help under the reader.
+            let editHelpCurrentKind = null;
+            function markEditHelpRowForCursor(cm) {
+                if (!window.AhaWiki || !window.AhaWiki.EditHelpContext) return;
+                const cursor = cm.getCursor();
+                const kind = window.AhaWiki.EditHelpContext.kindAt(function (i) { return cm.getLine(i); }, cursor.line, cursor.ch);
+                if (kind === editHelpCurrentKind) return;
+                editHelpCurrentKind = kind;
+                const $rows = $('.editHelpRow').removeClass('editHelpCurrent');
+                if (!kind) return;
+                const $current = $rows.filter(function () { return this.getAttribute('data-kind') === kind; }).addClass('editHelpCurrent');
+                const body = document.querySelector('.editHelp[open] .editHelpBody');
+                const first = $current.get(0);
+                if (body && first && !first.hidden) {
+                    const row = first.getBoundingClientRect();
+                    const view = body.getBoundingClientRect();
+                    if (row.top < view.top || row.bottom > view.bottom)
+                        body.scrollTop += row.top - view.top - 40;
+                }
+            }
 
             // Formatting toolbar. Read the selection, compute the edit with the pure ops in
             // AhaWiki.Format, and apply it -- via replaceRange on CodeMirror so its undo history
@@ -2099,6 +2160,7 @@ AhaWikiEditConfig.api = AhaWikiEditConfig.api || {};
                     tabSize: 4
                 });
                 window.AhaWikiCodeMirrorEditor = editor;
+                editor.on('cursorActivity', markEditHelpRowForCursor);
                 editor.on('change', function (cm) {
                     cm.save();
                     $textarea.trigger('input');

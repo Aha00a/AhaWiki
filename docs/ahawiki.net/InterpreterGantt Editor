@@ -139,7 +139,7 @@ GanttEditor는 원문 CodeMirror history와 별도로 Gantt 전용 Undo/Redo 스
 
 == 기타 동작
 
- * Gantt 에디터 진입 시 Wiki Formatting Help(`details.editHelp`)를 자동으로 숨기고, 에디터 종료 시 복원한다.
+ * Gantt 에디터 진입 시 서식 도움말(`details.editHelp`)을 자동으로 숨기고, 에디터 종료 시 복원한다.
  * 에디터 진입 시 첫 행 첫 열(Task)에 자동 포커스한다.
  * input 변경 시 120ms 디바운스로 `applyGanttBlockEditor()`를 호출해 원문 textarea/CodeMirror에 즉시 반영한다.
  * Gantt 에디터가 열려 있고 일반 input/textarea에 포커스가 없을 때도 document 레벨에서 [[Kbd(Ctrl Z)]] / [[Kbd(Ctrl Y)]] / [[Kbd(Ctrl Shift Z)]] 단축키를 보조 처리한다.

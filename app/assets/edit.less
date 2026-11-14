@@ -630,6 +630,36 @@
 	}
 }
 
+// The search box stays at the top while the rows scroll under it.
+.editHelpTools {
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 10px;
+	padding: 4px 0 6px;
+	background: var(--color-surface-alt);
+}
+
+.editHelpSearch {
+	flex: 0 1 16em;
+	min-width: 10em;
+	font-size: 12px;
+	padding: 3px 6px;
+}
+
+.editHelpLead {
+	color: var(--color-muted);
+}
+
+.editHelpGroupTitle th {
+	padding-top: 10px;
+	font-size: 13px;
+	color: var(--color-muted-strong);
+}
+
 .editHelpTable {
 	width: 100%;
 	border-collapse: collapse;
@@ -645,6 +675,12 @@
 	th {
 		font-weight: 700;
 		white-space: nowrap;
+	}
+
+	// The search hides rows with the hidden attribute; the phone layout below gives rows a
+	// display of their own, which would otherwise outweigh it.
+	tr[hidden] {
+		display: none;
 	}
 
 	// A phone has no room for three columns: the name goes on a line of its own above the
@@ -676,6 +712,21 @@
 		background: var(--color-link-hover-bg);
 		outline: none;
 	}
+
+	// What the cursor in the editor is on (AhaWiki.EditHelpContext).
+	&.editHelpCurrent {
+		background: var(--color-link-hover-bg);
+		box-shadow: inset 3px 0 0 var(--color-link);
+	}
+}
+
+.editHelpPage {
+	display: inline-block;
+	margin-top: 3px;
+}
+
+.editHelpTable .editHelpDescription {
+	color: var(--color-muted);
 }
 
 .editHelpMarkup code {
