@@ -229,7 +229,7 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
       // The generated sections keep their ids whatever their titles say.
       if (english.contains("See-Also-Generated")) {
         english must include("See Also")
-        korean must include("함께 보기")
+        korean must include("이어진 문서")
         korean must include("See-Also-Generated")
       }
     }

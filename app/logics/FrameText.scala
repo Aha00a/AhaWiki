@@ -59,7 +59,9 @@ object FrameText extends TextTable("FrameText", Map(
   "signedUrl" -> Text("서명된 주소 만들기", "Generate signed URL"),
 
   // The sections a page view adds under the content.
-  "seeAlso" -> Text("함께 보기", "See Also"),
+  // Not 함께 보기: twelve of ahawiki.net's own pages end in a section of that name, and the table
+  // of contents showed two of them side by side (2026-11-15). Nothing there is called 이어진 문서.
+  "seeAlso" -> Text("이어진 문서", "See Also"),
   "backlinks" -> Text("이 문서를 가리키는 문서", "Backlinks"),
   "twinPages" -> Text("다른 위키의 같은 이름", "Twin Pages"),
   "similarPages" -> Text("비슷한 문서", "Similar Pages"),
