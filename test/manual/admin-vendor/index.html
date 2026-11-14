@@ -66,6 +66,14 @@
             "/api/Admin/RecentChanges": [],
             "/api/Admin/TopViewedPages": [],
             "/api/Admin/MemoryCacheStats": [],
+            // One of each kind the Site Requests page treats differently. The status filter is
+            // ignored here, so every row shows under every filter.
+            "/api/Admin/SiteRequests": [
+                {seq: 4, user: 13, userNickname: "dana", email: "dana@example.com", name: "Dana's notes", domain: "dana.wiki.test", isPublic: true, purpose: "study notes", status: "Pending", rejectReason: null, dateInserted: "2026-11-14T09:00:00", dateReviewed: null},
+                {seq: 3, user: 10, userNickname: "alicewiki", email: "alice@example.com", name: "My wiki", domain: "alices.wiki.test", isPublic: true, purpose: "notes", status: "Approved", rejectReason: null, dateInserted: "2026-11-13T09:00:00", dateReviewed: "2026-11-13T10:00:00"},
+                {seq: 2, user: 11, userNickname: "bobwiki", email: "bob@example.com", name: "Bob", domain: "bobs.wiki.test", isPublic: false, purpose: "team", status: "Rejected", rejectReason: "taken", dateInserted: "2026-11-12T09:00:00", dateReviewed: "2026-11-12T10:00:00"},
+                {seq: 1, user: 12, userNickname: "carol", email: null, name: "Carol", domain: "carols.wiki.test", isPublic: true, purpose: "blog", status: "Approved", rejectReason: null, dateInserted: "2026-11-11T09:00:00", dateReviewed: "2026-11-11T10:00:00"},
+            ],
             "/api/Admin/SiteActivity": {
                 months,
                 sites: [
@@ -99,6 +107,10 @@
             // The two dashboard checks only mean something on the dashboard; the navigation
             // works, and following a link to another page must not read as a failure.
             const onDashboard = location.pathname === "/Admin";
+            // Site Requests: an answered request whose requester has an address gets a letter to
+            // send (siteRequestMail.js); a pending one gets its two buttons and nothing else does.
+            const onSiteRequests = location.pathname === "/Admin/SiteRequests";
+            const letters = [...document.querySelectorAll('#main a[href^="mailto:"]')].map((a) => a.getAttribute("href"));
             const expectedScheme = localStorage.getItem("ahawiki-theme") === "ahawiki-dark" ? "dark" : "light";
             const root = document.documentElement;
             const scheme = root.getAttribute("data-mantine-color-scheme");
@@ -112,6 +124,7 @@
                 ["admin UI replaced the loading message", !text.includes("Admin UI 로딩 중"), ""],
                 ["dashboard shows Sites by Month", !onDashboard || (text.includes("Sites by Month") && text.includes("2026-10")), onDashboard ? "" : "(not on the dashboard)"],
                 ["dashboard shows Site Activity (30 days)", !onDashboard || (text.includes("Site Activity (30 days)") && text.includes("Idle (#2)")), onDashboard ? "" : "(not on the dashboard)"],
+                ["site requests offer a letter for each answered request with an address", !onSiteRequests || (letters.length === 2 && letters[0].startsWith("mailto:alice@example.com?") && letters[1].startsWith("mailto:bob@example.com?") && text.includes("dana@example.com")), onSiteRequests ? `${letters.length} letter(s)` : "(not on Site Requests)"],
             ];
             const box = document.getElementById("harness");
             box.innerHTML = checks.map(([name, ok, detail]) => `<span class="${ok ? "pass" : "fail"}">${ok ? "PASS" : "FAIL"}</span> ${name}${detail ? "\n     " + detail : ""}`).join("\n")

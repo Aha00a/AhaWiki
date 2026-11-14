@@ -100,6 +100,13 @@ object SiteRequestLogic {
   }
 
   /**
+   * The address a requester is known by: the one the new wiki's Permission row is granted to, and
+   * the one the admin screen offers to write to once the request is answered.
+   */
+  def emailOf(userSeq: Long)(implicit connection: Connection): Option[String] =
+    UserEmail.selectPrimaryEmailByUser(userSeq).orElse(UserEmail.selectEmailsByUser(userSeq).headOption)
+
+  /**
    * Makes the site. The address is validated and checked again, because the rules can change and
    * somebody can take the name between asking and answering.
    *
@@ -116,7 +123,7 @@ object SiteRequestLogic {
       case Some(row) if !row.isPending => Left(NotPending)
       case Some(_) if parentDomain.isEmpty => Left(NotConfigured)
       case Some(row) =>
-        val email = UserEmail.selectPrimaryEmailByUser(row.user).orElse(UserEmail.selectEmailsByUser(row.user).headOption)
+        val email = emailOf(row.user)
         validateSubdomain(row.subdomain).flatMap { subdomain =>
           if (isTaken(subdomain, parentDomain)) Left(SubdomainTaken)
           else if (User.selectBySeq(row.user).isEmpty || email.isEmpty) Left(NoEmail)

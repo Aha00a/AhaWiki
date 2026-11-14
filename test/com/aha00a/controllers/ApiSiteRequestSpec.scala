@@ -137,6 +137,14 @@ class ApiSiteRequestSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAn
       html must include("Log in there with this Google account")
     }
 
+    // Nothing is sent to the requester, so the admin screen offers a letter to send by hand
+    // (siteRequestMail.js). It needs the address, which only this admin answer carries.
+    "tell the admin whom to write to" in {
+      val rows = contentAsJson(route(app, admin(GET, "/api/Admin/SiteRequests?status=Approved")).get).as[Seq[play.api.libs.json.JsValue]]
+      val row = rows.find(row => (row \ "domain").as[String] == s"alices.$parent").get
+      (row \ "email").asOpt[String] mustBe Some("alice@example.com")
+    }
+
     "open on a first page that says how to begin" in {
       val html = contentAsString(route(app, FakeRequest(GET, "/w/FrontPage").withHeaders(HOST -> s"alices.$parent")).get)
       Option(System.getenv("AHAWIKI_RENDER_DUMP")).filter(_.nonEmpty).foreach { path =>

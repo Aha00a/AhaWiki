@@ -80,10 +80,13 @@ class ApiSiteRequest @Inject()(
     }
   }
 
-  private def requestJson(row: SiteRequest, user: Option[User]): Json = Json.obj(
+  // Only ever an answer to an admin, which is why it may carry the requester's address. The app
+  // sends the requester nothing; the admin screen offers a letter to send by hand.
+  private def requestJson(row: SiteRequest, user: Option[User])(implicit connection: java.sql.Connection): Json = Json.obj(
     "seq" -> Json.fromLong(row.seq),
     "user" -> Json.fromLong(row.user),
     "userNickname" -> user.map(u => Json.fromString(u.nickname)).getOrElse(Json.Null),
+    "email" -> SiteRequestLogic.emailOf(row.user).map(Json.fromString).getOrElse(Json.Null),
     "name" -> Json.fromString(row.name),
     "domain" -> Json.fromString(SiteRequestLogic.domainOf(row.subdomain, parentDomain)),
     "isPublic" -> Json.fromBoolean(row.isPublic),

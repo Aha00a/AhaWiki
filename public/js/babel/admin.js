@@ -1890,6 +1890,48 @@ function NicknameRequestsPage() {
 import React25, { useCallback as useCallback15, useEffect as useEffect19, useState as useState29 } from "react";
 import { Badge as Badge20, Button as Button16, Card as Card14, Group as Group21, SegmentedControl as SegmentedControl2, Text as Text21, Title as Title15 } from "@mantine/core";
 import { DataTable as DataTable9 } from "mantine-datatable";
+
+// app/assets/js/admin/siteRequestMail.js
+function approvedLetter(row) {
+  return {
+    subject: `[AhaWiki] \uC704\uD0A4\uAC00 \uC5F4\uB838\uC2B5\uB2C8\uB2E4 \u2014 ${row.domain}`,
+    lines: [
+      "\uC548\uB155\uD558\uC138\uC694. \uC2E0\uCCAD\uD558\uC2E0 \uC704\uD0A4\uAC00 \uC5F4\uB838\uC2B5\uB2C8\uB2E4.",
+      `https://${row.domain}/`,
+      "",
+      "\uC704 \uC8FC\uC18C\uC5D0\uC11C Login \uC744 \uB204\uB974\uACE0, \uC2E0\uCCAD\uD560 \uB54C \uC4F0\uC2E0 Google \uACC4\uC815\uC73C\uB85C \uB85C\uADF8\uC778\uD558\uC138\uC694. \uADF8 \uACC4\uC815\uC774 \uC704\uD0A4\uC758 \uAD00\uB9AC\uC790\uC774\uACE0, \uCCAB \uD654\uBA74\uC5D0 \uC2DC\uC791\uD558\uB294 \uBC29\uBC95\uC774 \uC788\uC2B5\uB2C8\uB2E4.",
+      "",
+      "Your wiki is open at the address above. Log in there with the Google account you asked with: it is the wiki's administrator, and the first page says how to begin."
+    ]
+  };
+}
+function rejectedLetter(row) {
+  const parentDomain = row.domain.split(".").slice(1).join(".");
+  return {
+    subject: `[AhaWiki] \uC704\uD0A4 \uC2E0\uCCAD\uC5D0 \uB300\uD55C \uB2F5 \u2014 ${row.domain}`,
+    lines: [
+      `\uC548\uB155\uD558\uC138\uC694. \uC2E0\uCCAD\uD558\uC2E0 \uC704\uD0A4(${row.domain})\uB294 \uC5F4\uC5B4 \uB4DC\uB9AC\uC9C0 \uBABB\uD588\uC2B5\uB2C8\uB2E4. \uC0AC\uC720\uB294 \uC2E0\uCCAD \uD654\uBA74\uC5D0 \uC788\uC2B5\uB2C8\uB2E4.`,
+      `https://${parentDomain}/site/request`,
+      "",
+      `Your request for ${row.domain} was not approved. The reason is on the request page above.`
+    ]
+  };
+}
+var LETTERS = { Approved: approvedLetter, Rejected: rejectedLetter };
+function siteRequestMail(row) {
+  const letter = row && row.email && row.domain ? LETTERS[row.status] : null;
+  if (!letter) return null;
+  const { subject, lines } = letter(row);
+  return { to: row.email, subject, body: lines.join("\r\n") };
+}
+function siteRequestMailto(row) {
+  const mail = siteRequestMail(row);
+  if (!mail) return null;
+  const to = encodeURIComponent(mail.to).replace(/%40/g, "@");
+  return `mailto:${to}?subject=${encodeURIComponent(mail.subject)}&body=${encodeURIComponent(mail.body)}`;
+}
+
+// app/assets/js/admin/pages/SiteRequestsPage.jsx
 var STATUS_FILTERS2 = ["Pending", "Approved", "Rejected", "Canceled", "All"];
 function SiteRequestsPage() {
   const [status, setStatus] = useState29("Pending");
@@ -1937,6 +1979,14 @@ function SiteRequestsPage() {
     const color = { Pending: "yellow", Approved: "green", Rejected: "red", Canceled: "gray" }[row.status] ?? "gray";
     return /* @__PURE__ */ React25.createElement(Badge20, { color, variant: "light" }, row.status);
   };
+  const requester = (row) => /* @__PURE__ */ React25.createElement(React25.Fragment, null, row.userNickname ? `${row.userNickname} (#${row.user})` : `#${row.user}`, row.email ? /* @__PURE__ */ React25.createElement(Text21, { size: "xs", c: "dimmed" }, row.email) : null);
+  const action = (row) => {
+    if (row.status === "Pending") {
+      return /* @__PURE__ */ React25.createElement(Group21, { gap: 6 }, /* @__PURE__ */ React25.createElement(Button16, { size: "xs", variant: "light", color: "green", loading: busySeq === row.seq, onClick: () => review(row, "approve") }, "Approve"), /* @__PURE__ */ React25.createElement(Button16, { size: "xs", variant: "light", color: "red", loading: busySeq === row.seq, onClick: () => review(row, "reject") }, "Reject"));
+    }
+    const mailto = siteRequestMailto(row);
+    return mailto ? /* @__PURE__ */ React25.createElement(Button16, { component: "a", href: mailto, size: "xs", variant: "light", title: `Write to ${row.email}`, leftSection: /* @__PURE__ */ React25.createElement("i", { className: "fas fa-envelope", "aria-hidden": "true" }) }, "Email") : "-";
+  };
   return /* @__PURE__ */ React25.createElement(Card14, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React25.createElement(Group21, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React25.createElement(Title15, { order: 3 }, "Site Requests"), /* @__PURE__ */ React25.createElement(Badge20, { color: "grape", variant: "light" }, rows.length, " rows")), error ? /* @__PURE__ */ React25.createElement(Text21, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React25.createElement(Group21, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React25.createElement(SegmentedControl2, { value: status, onChange: setStatus, data: STATUS_FILTERS2 }), /* @__PURE__ */ React25.createElement(Button16, { variant: "filled", loading, onClick: load, leftSection: /* @__PURE__ */ React25.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "Refresh")), /* @__PURE__ */ React25.createElement(
     DataTable9,
     {
@@ -1949,7 +1999,7 @@ function SiteRequestsPage() {
       idAccessor: "seq",
       columns: [
         { accessor: "seq", title: "ID", width: 80 },
-        { accessor: "userNickname", title: "User", render: (row) => row.userNickname ? `${row.userNickname} (#${row.user})` : `#${row.user}` },
+        { accessor: "userNickname", title: "User", render: requester },
         { accessor: "name", title: "Name" },
         { accessor: "domain", title: "Address" },
         { accessor: "isPublic", title: "Reading", render: (row) => row.isPublic ? "Public" : "Private" },
@@ -1957,11 +2007,7 @@ function SiteRequestsPage() {
         { accessor: "status", title: "Status", render: statusBadge },
         { accessor: "rejectReason", title: "Reason", render: (row) => row.rejectReason || "-" },
         { accessor: "dateInserted", title: "Asked", render: (row) => formatDateTimeInClientTimezone(row.dateInserted) },
-        {
-          accessor: "action",
-          title: "Action",
-          render: (row) => row.status !== "Pending" ? "-" : /* @__PURE__ */ React25.createElement(Group21, { gap: 6 }, /* @__PURE__ */ React25.createElement(Button16, { size: "xs", variant: "light", color: "green", loading: busySeq === row.seq, onClick: () => review(row, "approve") }, "Approve"), /* @__PURE__ */ React25.createElement(Button16, { size: "xs", variant: "light", color: "red", loading: busySeq === row.seq, onClick: () => review(row, "reject") }, "Reject"))
-        }
+        { accessor: "action", title: "Action", render: action }
       ]
     }
   ));

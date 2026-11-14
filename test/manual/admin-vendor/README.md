@@ -18,6 +18,12 @@ What it checks, and prints as `PASS`/`FAIL` every second:
  * **The loading message is gone**, and on the dashboard **the two site-activity tables are
    drawn** from the canned `/api/Admin/SiteActivity` (the fixture mirrors
    `ApiAdminSiteActivitySpec`: a busy site and an idle one).
+ * **Site Requests offers a letter** for each answered request whose requester has an address:
+   four canned rows, one of each kind the page treats differently (pending, approved, rejected,
+   approved with no address), and exactly two `mailto:` buttons. The checks switch themselves off
+   on the other pages; go there with the navigation. Do not press the buttons -- they open the
+   mail program -- but hover one to read the link. The letter itself is checked by
+   `test/admin.site-request-mail.test.mjs`.
  * **The colour scheme follows `ahawiki-theme`**: Mantine's attribute, the class on `<html>`, and
    the page background actually being that dark or light. The stylesheets are the same as
    `_baseAdmin.scala.html` in the same order, because the wiki's own CSS sets `html` and `body`
