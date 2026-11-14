@@ -12,18 +12,27 @@
     // cursor move must not walk a whole long page.
     var blockScanLimit = 500;
 
-    var blockStart = /^\[\[\[(?:#!\s*([A-Za-z][\w-]*))?/;
+    var blockStart = /^\[\[\[(?:#!\s*([A-Za-z][\w-]*)(?:\s+([A-Za-z][\w-]*))?)?/;
     var blockEnd = /^\]\]\]/;
 
     // The name of the block the cursor is in, in lower case; "text" for a block with no #! line;
-    // null outside any block.
+    // null outside any block, and inside one that draws its body as wiki text.
+    //
+    // WikiSyntaxPreview, which the wiki's own syntax pages are made of, shows its body raw and
+    // drawn side by side, drawn by the interpreter named after it -- `#!WikiSyntaxPreview Table`
+    // is a table -- or as wiki text when none is named. So the cursor in it is on that block, or on
+    // whatever the line is, as anywhere else on the page (InterpreterWikiSyntaxPreview).
     function blockAt(getLine, line) {
         var lowest = Math.max(0, line - blockScanLimit);
         for (var i = line; i >= lowest; i--) {
             var text = getLine(i) || '';
             if (i < line && blockEnd.test(text)) return null;
             var m = text.match(blockStart);
-            if (m) return (m[1] || 'text').toLowerCase();
+            if (m) {
+                var name = (m[1] || 'text').toLowerCase();
+                if (name === 'wikisyntaxpreview') return m[2] ? m[2].toLowerCase() : (i === line ? 'wikisyntaxpreview' : null);
+                return name;
+            }
         }
         return null;
     }

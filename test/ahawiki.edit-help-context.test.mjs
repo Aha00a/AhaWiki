@@ -69,6 +69,16 @@ test('after a block has closed, the line is itself again', () => {
     assert.equal(kindOf('[[[#!Table tsv\na\tb\n]]]\n== 제|목'), 'heading');
 });
 
+test('inside WikiSyntaxPreview, the block it draws as, or the wiki text it holds', () => {
+    // How the wiki's own syntax pages are written (AhaMark Basic and the like).
+    assert.equal(kindOf('[[[#!WikiSyntaxPreview Table tsv 1\n이름\t역|할\n]]]'), 'table');
+    assert.equal(kindOf('[[[#!WikiSyntaxPreview Vim python\nprint(|1)\n]]]'), 'vim');
+    assert.equal(kindOf('[[[#!WikiSyntaxPreview\n * 항|목\n]]]'), 'list');
+    assert.equal(kindOf("[[[#!WikiSyntaxPreview\n'''굵|게'''\n]]]"), 'emphasis');
+    assert.equal(kindOf('[[[#!WikiSyntaxPreview\n그냥 |글\n]]]'), '');
+    assert.equal(kindOf('[[[#!WikiSyntax|Preview\n * 항목\n]]]'), 'wikisyntaxpreview');
+});
+
 test('a block with no #! line is text, which has no row', () => {
     assert.equal(kindOf('[[[\n그대|로\n]]]'), 'text');
 });
