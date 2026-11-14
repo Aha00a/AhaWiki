@@ -130,8 +130,9 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
     mustNotHaveStarved(html)
   }
 
-  private def get(path: String, loggedIn: Boolean) = {
+  private def get(path: String, loggedIn: Boolean, acceptLanguage: String = "") = {
     val request = FakeRequest(GET, path).withHeaders(HOST -> host)
+      .withHeaders(Seq(ACCEPT_LANGUAGE -> acceptLanguage).filter(_._2.nonEmpty): _*)
     val withReader = if (loggedIn) request.withSession(SessionLogic.sessionKeySeq -> "61", SessionLogic.sessionKeyNickname -> "writer") else request
     // The edit, rename and delete screens draw a form, and a form wants the token the CSRF filter
     // would have added. Specs run without filters.
@@ -200,7 +201,7 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
     // (EditHelp.scala); what each one draws is EditHelpUnit's. Here: that they reach the page.
     // AHAWIKI_RENDER_DUMP writes the screen there, to look at it without a server.
     "put a drawn example of each formatting in the editor's help" in {
-      val html = contentAsString(get("/w/Pool?action=edit", loggedIn = true))
+      val html = contentAsString(get("/w/Pool?action=edit", loggedIn = true, acceptLanguage = "ko-KR,ko;q=0.9,en;q=0.8"))
       Option(System.getenv("AHAWIKI_RENDER_DUMP")).filter(_.nonEmpty).foreach { path =>
         java.nio.file.Files.write(java.nio.file.Paths.get(path), html.getBytes("UTF-8"))
       }
@@ -210,6 +211,27 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
       html must include("""data-kind="kanban"""")
       html must include("editHelpSearch")
       html must include("AhaWiki.EditHelpContext.js")
+    }
+
+    // In the browser's language, as the names of days are (MacroWeekdayName): Korean for a Korean
+    // browser, English for any other. The search reads both, whichever is shown.
+    "write the editor's help in the browser's language" in {
+      val korean = contentAsString(get("/w/Pool?action=edit", loggedIn = true, acceptLanguage = "ko-KR,ko;q=0.9"))
+      korean must include("""<details class="editHelp" lang="ko">""")
+      korean must include("서식 도움말")
+      korean must include("""data-markup=" * 항목""")
+
+      Option(System.getenv("AHAWIKI_RENDER_DUMP_EN")).filter(_.nonEmpty).foreach { path =>
+        java.nio.file.Files.write(java.nio.file.Paths.get(path), contentAsString(get("/w/Pool?action=edit", loggedIn = true, acceptLanguage = "en-US,en;q=0.9")).getBytes("UTF-8"))
+      }
+      for (acceptLanguage <- Seq("en-US,en;q=0.9", "ja-JP,ja;q=0.9")) withClue(acceptLanguage) {
+        val other = contentAsString(get("/w/Pool?action=edit", loggedIn = true, acceptLanguage = acceptLanguage))
+        other must include("""<details class="editHelp" lang="en">""")
+        other must include("Formatting help")
+        other must include("""data-markup=" * item""")
+        other must not include "서식 도움말"
+        other must include("""data-search="표 table""")
+      }
     }
   }
 

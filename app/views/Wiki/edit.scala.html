@@ -126,39 +126,41 @@
                                     </dl>
                                 </div>
                             }
-                            <details class="editHelp">
-                                <summary>서식 도움말 (Formatting Help)</summary>
+                            @defining(logics.EditHelp.Language.current) { helpLanguage =>
+                            @defining(logics.EditHelp.Ui) { ui =>
+                            <details class="editHelp" lang="@helpLanguage.code">
+                                <summary>@ui.summary(helpLanguage)</summary>
                                 <div class="editHelpBody">
                                     <div class="editHelpTools">
-                                        <input type="search" class="editHelpSearch" placeholder="찾기 — 표, 링크, kanban …" aria-label="서식 찾기" autocomplete="off">
-                                        <span class="editHelpLead">줄을 누르면 커서 자리에 넣습니다. 커서가 있는 곳의 서식은 색으로 표시됩니다.</span>
+                                        <input type="search" class="editHelpSearch" placeholder="@ui.searchPlaceholder(helpLanguage)" aria-label="@ui.searchLabel(helpLanguage)" autocomplete="off">
+                                        <span class="editHelpLead">@ui.lead(helpLanguage)</span>
                                     </div>
                                     <table class="editHelpTable">
                                         @logics.EditHelp.groups.map { group =>
                                         <tbody class="editHelpGroup">
-                                            <tr class="editHelpGroupTitle"><th colspan="3">@group.title</th></tr>
-                                            @logics.EditHelp.rows(group).map { row =>
-                                            <tr class="editHelpRow" data-markup="@row.example.markup" data-block="@row.example.block" data-kind="@row.example.kind" data-search="@{Seq(row.example.label, row.example.markup, row.example.note, row.example.description, row.example.page).mkString(" ").toLowerCase}" tabindex="0" title="커서 자리에 넣기">
-                                                <th>@row.example.label</th>
+                                            <tr class="editHelpGroupTitle"><th colspan="3">@group.title(helpLanguage)</th></tr>
+                                            @logics.EditHelp.rows(group, helpLanguage).map { row =>
+                                            <tr class="editHelpRow" data-markup="@row.example.markup(helpLanguage)" data-block="@row.example.block" data-kind="@row.example.kind" data-search="@logics.EditHelp.searchText(row.example)" tabindex="0" title="@ui.insert(helpLanguage)">
+                                                <th>@logics.EditHelp.label(row.example, helpLanguage)</th>
                                                 <td class="editHelpMarkup">
-                                                    <code>@row.example.markup</code>
-                                                    @if(row.example.note.nonEmpty) {<div class="editHelpNote">@row.example.note</div>}
-                                                    @if(row.example.page.nonEmpty) {<a class="editHelpPage" href="@logics.EditHelp.pageUrl(row.example.page)" target="_blank" rel="noopener noreferrer">자세히</a>}
+                                                    <code>@row.example.markup(helpLanguage)</code>
+                                                    @if(row.example.note.nonEmpty) {<div class="editHelpNote">@row.example.note(helpLanguage)</div>}
+                                                    @if(row.example.page.nonEmpty) {<a class="editHelpPage" href="@logics.EditHelp.pageUrl(row.example.page)" target="_blank" rel="noopener noreferrer">@ui.more(helpLanguage)</a>}
                                                 </td>
                                                 @if(row.example.drawn) {
                                                 <td class="editHelpResult" data-render-inert>@Html(row.html)</td>
                                                 } else {
-                                                <td class="editHelpResult editHelpDescription">@row.example.description</td>
+                                                <td class="editHelpResult editHelpDescription">@row.example.description(helpLanguage)</td>
                                                 }
                                             </tr>
                                             }
                                         </tbody>
                                         }
                                     </table>
-                                    <p class="editHelpEmpty" hidden>찾는 서식이 없습니다. 아래 문서에서 찾아보세요.</p>
+                                    <p class="editHelpEmpty" hidden>@ui.empty(helpLanguage)</p>
                                     <p class="editHelpMore">
-                                        더 보기:
-                                        <a href="https://ahawiki.net/w/AhaMark%20Basic" target="_blank" rel="noopener noreferrer">AhaMark Basic</a> (치트시트) ·
+                                        @ui.seeAlso(helpLanguage):
+                                        <a href="https://ahawiki.net/w/AhaMark%20Basic" target="_blank" rel="noopener noreferrer">AhaMark Basic</a> (@ui.cheatSheet(helpLanguage)) ·
                                         <a href="https://ahawiki.net/w/AhaMark" target="_blank" rel="noopener noreferrer">AhaMark</a> ·
                                         <a href="https://ahawiki.net/w/Macro" target="_blank" rel="noopener noreferrer">Macro</a> ·
                                         <a href="https://ahawiki.net/w/Interpreter" target="_blank" rel="noopener noreferrer">Interpreter</a> ·
@@ -166,6 +168,8 @@
                                     </p>
                                 </div>
                             </details>
+                            }
+                            }
                             <div class="editorBody">
                                 <div id="tableInlineEditor" class="tableInlineEditor">
                                     <div class="tableInlineEditorHeader">

@@ -75,7 +75,7 @@ test('a block with no #! line is text, which has no row', () => {
 
 test('every kind the help lists can be answered, and every answer but text has a row', () => {
     const scala = fs.readFileSync(new URL('../app/logics/EditHelp.scala', import.meta.url), 'utf8');
-    const kinds = new Set([...scala.matchAll(/Example\("[^"]*", "(?:[^"\\]|\\.)*", "([a-z]+)"/g)].map((m) => m[1]));
+    const kinds = new Set([...scala.matchAll(/kind = "([a-z]+)"/g)].map((m) => m[1]));
     assert.ok(kinds.size > 15, `found ${kinds.size} kinds in EditHelp.scala`);
     const answered = new Set(['heading', 'list', 'numbered', 'checkbox', 'hr', 'link', 'emphasis', 'code', 'include',
         'table', 'vim', 'fold', 'quote', 'mermaid', 'kanban', 'graph', 'gantt', 'math', 'map']);
