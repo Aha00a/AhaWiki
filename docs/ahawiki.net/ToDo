@@ -9,16 +9,6 @@
  * [User:Aha00a] [2026-05-20]T17:09:52Z
   * Card Add - ["#cmpebhmf4hubz1f" #Admin - Export / Import]
 === ToDo
-==== 삭제 권한 도입 ==== #cmpebn29sgylr3q
-===== Description
-이미 된 것으로 보인다. 카드를 만든 2026-05-20 다음 주에 Delete(32) action 과 WikiPermission.isDeletable 이 들어갔고(커밋 51deff34, f659ef31), 지금 삭제하는 네 경로가 전부 그것으로 막힌다 — 페이지 삭제, 마지막 revision 삭제, 첨부 삭제, API v1 삭제. 자세한 건 [AccessControl] 의 쓰기 권한 적용 지점.
-그래서 이 카드가 그 일이면 Done 이고, 더 하려던 것(예: 휴지통, 복구)이 있으면 그것을 카드 제목으로 다시 적는 편이 낫다. 어느 쪽인지는 만든 사람만 안다 — 옮기지 않고 둔다. --[2026-09-25]
-===== Property
- * Creator: [User:Aha00a]
- * dateCreated: [2026-05-20]T17:14:06Z
-===== Activity
- * [User:Aha00a] [2026-05-20]T17:14:06Z
-  * Card Add - ["#cmpebn29sgylr3q" #삭제 권한 도입]
 === Done
 ]]]
 
