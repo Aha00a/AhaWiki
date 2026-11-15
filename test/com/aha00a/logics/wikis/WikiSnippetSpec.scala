@@ -1,5 +1,6 @@
 package com.aha00a.logics.wikis
 
+import logics.ScreenLanguage.Language
 import logics.wikis.WikiSnippet
 import org.scalatest.freespec.AnyFreeSpec
 
@@ -11,7 +12,7 @@ import org.scalatest.freespec.AnyFreeSpec
  */
 class WikiSnippetSpec extends AnyFreeSpec {
   "without templates" - {
-    val text = WikiSnippet.notFound("Missing")
+    val text = WikiSnippet.notFound("Missing", Seq.empty, Language.English)
 
     "the list is one block: no blank line between its items" in {
       val items = text.linesIterator.dropWhile(!_.startsWith("== Possible actions")).drop(1).toSeq
@@ -25,7 +26,7 @@ class WikiSnippetSpec extends AnyFreeSpec {
   }
 
   "with templates" - {
-    val text = WikiSnippet.notFound("Missing", Seq("Template:Person", "Template:Restaurant Review"))
+    val text = WikiSnippet.notFound("Missing", Seq("Template:Person", "Template:Restaurant Review"), Language.English)
     val items = text.linesIterator.dropWhile(!_.startsWith("== Possible actions")).drop(1).toSeq
 
     "each is an item in the same list" in {
@@ -43,11 +44,29 @@ class WikiSnippetSpec extends AnyFreeSpec {
     }
 
     "keeps a ) or markup in a template's name from ending the macro or opening a tag" in {
-      val hostile = WikiSnippet.notFound("Missing", Seq("Template:A) <b>x</b>"))
+      val hostile = WikiSnippet.notFound("Missing", Seq("Template:A) <b>x</b>"), Language.English)
       val line = hostile.linesIterator.find(_.contains("create from template")).get
       assert(line.endsWith(")]]"), line)
       assert(!line.contains("<b>"), line)
       assert(line.count(_ == ')') === 1, line)
+    }
+  }
+
+  // In the reader's language (FrameText). The texts go into markup as they are, so in either
+  // language the page must keep its one heading, its one Html macro per action and its links.
+  "for a Korean reader" - {
+    val text = WikiSnippet.notFound("없는문서", Seq("Template:Person"), Language.Korean)
+
+    "says so in Korean" in {
+      assert(text.contains("이 문서는 아직 없습니다."))
+      assert(text.contains("== 할 수 있는 것"))
+      assert(text.contains("""rel="nofollow">이 문서 만들기</a>)]]"""))
+      assert(text.contains("틀로 만들기: Person</a>)]]"))
+    }
+
+    "keeps the search links whole" in {
+      assert(text.contains("""["https://google.com/search?q=없는문서" 없는문서] — Google 에서 찾기"""))
+      assert(!text.contains("Search ["))
     }
   }
 }

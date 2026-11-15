@@ -70,6 +70,39 @@ object FrameText extends TextTable("FrameText", Map(
     "Similar pages by cosine similarity. Words after page name are term frequency."),
   "adjacentPages" -> Text("가까운 문서", "Adjacent Pages"),
 
+  // A page that does not exist (WikiSnippet.notFound). These go into wiki markup, so none may
+  // hold `[`, `]` or `)`; {link} and {engine} are filled in.
+  "notFound.body" -> Text("이 문서는 아직 없습니다.", "This page does not exist."),
+  "notFound.actions" -> Text("할 수 있는 것", "Possible actions"),
+  "notFound.create" -> Text("이 문서 만들기", "create page"),
+  "notFound.fromTemplate" -> Text("틀로 만들기:", "create from template:"),
+  "notFound.search" -> Text("{link} — {engine} 에서 찾기", "Search {link} on {engine}"),
+
+  // A page the reader may not see (Wiki/error.scala.html).
+  "denied" -> Text("권한이 없습니다.", "Permission denied."),
+  "denied.noPermission" -> Text(
+    "이 계정에는 여기에 대한 권한이 없습니다. 이 위키의 관리자에게 접근을 요청하거나, ",
+    "Your account has no permission for this here. Ask this wiki's administrator for access, or "),
+  "denied.requestWiki" -> Text("내 위키를 신청하세요", "request a wiki of your own"),
+  "denied.end" -> Text(".", "."),
+
+  // The notice on a page with read restrictions (Wiki/view.scala.html).
+  "restriction.title" -> Text("이 문서에는 권한 제한이 걸려 있습니다.", "This page has permission restrictions applied."),
+  "restriction.currentUser" -> Text("지금 사용자", "Current User"),
+  "restriction.read" -> Text("읽기", "Read"),
+  "restriction.write" -> Text("쓰기", "Write"),
+  "restriction.anonymousRead" -> Text("로그인 안 한 사람의 읽기", "Anonymous Read"),
+  "restriction.allowed" -> Text("허용", "Allowed"),
+  "restriction.denied" -> Text("막힘", "Denied"),
+
+  // An old revision's notice (Wiki/view.scala.html). {revision}, {time}, {author} and {latest}
+  // are filled in; the word order differs, so each language is one sentence.
+  "oldRevision.notice" -> Text(
+    "리비전 {revision} 입니다. {author} 이(가) {time} 에 저장했습니다. 가장 최근은 리비전 {latest} 입니다.",
+    "This is revision {revision}, saved {time} by {author}. The latest is revision {latest}."),
+  "oldRevision.latest" -> Text("최신 보기", "View the latest"),
+  "oldRevision.changesSince" -> Text("그 뒤의 변경", "Changes since"),
+
   // js.js, through window.AhaWikiFrameText.
   "js.edit" -> Text("편집", "Edit"),
   "js.copy" -> Text("복사", "Copy"),

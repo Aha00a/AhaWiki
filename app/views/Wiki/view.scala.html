@@ -9,6 +9,8 @@
 @publishedDateTime = @{ wikiFirst.map(page => s"${page.dateTime}+09:00") }
 @modifiedDateTime = @{ wikiLast.map(page => s"${page.dateTime}+09:00") }
 @showPermissionFlash = @{ hasReadPermissionRestriction }
+@f(key: String) = @{ logics.FrameText(key, logics.ScreenLanguage.Language.current(wikiContext)) }
+@allowedOrDenied(allowed: Boolean) = @{ f(if (allowed) "restriction.allowed" else "restriction.denied") }
 @jsonLdWebPage = @{
     val websiteId = s"https://${wikiContext.requestWrapper.host}/#website"
     val webpageId = s"$canonicalUrl#webpage"
@@ -126,27 +128,27 @@
     @if(showPermissionFlash) {
         <div class="flash" onclick="$(this).slideUp(function () {$(this).remove()})">
             <div class="info permissionRestrictionFlash">
-                <div class="permissionRestrictionTitle">This page has permission restrictions applied.</div>
+                <div class="permissionRestrictionTitle">@f("restriction.title")</div>
                 @permissionDetail.map { detail =>
                     <div class="permissionRestrictionDetail">
                         <dl>
-                            <dt>Current User</dt>
+                            <dt>@f("restriction.currentUser")</dt>
                             <dd>
                                 <strong>@detail.actorLabel</strong>
                             </dd>
-                            <dt>Read</dt>
+                            <dt>@f("restriction.read")</dt>
                             <dd>
-                                <strong>@if(detail.currentReadable) { Allowed } else { Denied }</strong>
+                                <strong>@allowedOrDenied(detail.currentReadable)</strong>
                                 <span>@detail.tableReadSource</span>
                             </dd>
-                            <dt>Write</dt>
+                            <dt>@f("restriction.write")</dt>
                             <dd>
-                                <strong>@if(detail.currentWritable) { Allowed } else { Denied }</strong>
+                                <strong>@allowedOrDenied(detail.currentWritable)</strong>
                                 <span>@detail.tableWriteSource</span>
                             </dd>
-                            <dt>Anonymous Read</dt>
+                            <dt>@f("restriction.anonymousRead")</dt>
                             <dd>
-                                <strong>@if(detail.anonymousReadable) { Allowed } else { Denied }</strong>
+                                <strong>@allowedOrDenied(detail.anonymousReadable)</strong>
                                 <span>@detail.tableAnonymousReadSource</span>
                             </dd>
                         </dl>
@@ -160,11 +162,17 @@
             <div class="limitWidth">
                 @for((shown, last) <- oldRevision) {
                     <div class="oldRevisionNotice" role="note">
-                        This is revision @(shown.revision), saved <time datetime="@(shown.toIsoLocalDateTimeString)">@(shown.toIsoLocalDateTimeString)</time> by @(Html(logics.wikis.UserPageLogic.toHtmlStringOrAnonymous(shown.nickname))).
-                        The latest is revision @(last.revision).
+                        @* One sentence per language, since the word order differs (FrameText "oldRevision.notice").
+                           The table's text is the engine's own; what fills it is escaped or already HTML, and the
+                           author goes in last so nothing in a name is read as a placeholder. *@
+                        @Html(f("oldRevision.notice")
+                            .replace("{revision}", shown.revision.toString)
+                            .replace("{time}", s"""<time datetime="${play.twirl.api.HtmlFormat.escape(shown.toIsoLocalDateTimeString)}">${play.twirl.api.HtmlFormat.escape(shown.toIsoLocalDateTimeString)}</time>""")
+                            .replace("{latest}", last.revision.toString)
+                            .replace("{author}", logics.wikis.UserPageLogic.toHtmlStringOrAnonymous(shown.nickname)))
                         <span class="oldRevisionActions">
-                            <a href="/w/@encodedTitle">View the latest</a>
-                            <a href="?action=diff&before=@(shown.revision)&after=@(last.revision)" rel="nofollow">Changes since</a>
+                            <a href="/w/@encodedTitle">@f("oldRevision.latest")</a>
+                            <a href="?action=diff&before=@(shown.revision)&after=@(last.revision)" rel="nofollow">@f("oldRevision.changesSince")</a>
                         </span>
                     </div>
                 }

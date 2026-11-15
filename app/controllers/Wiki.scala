@@ -234,7 +234,7 @@ controllerComponents: ControllerComponents,
           )).withHeaders("X-Robots-Tag" -> "noindex, nofollow")
 
         case (None, "edit", _, false) =>
-          Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
+          Forbidden(views.html.Wiki.error(name)).withHeaderRobotNoIndexNoFollow
 
 
         case (None, _, _, _) =>
@@ -271,7 +271,7 @@ controllerComponents: ControllerComponents,
           )).withHeaderRobotNoIndexNoFollow
         case (Some(page), "rename", _, _) if isRenamable => Ok(views.html.Wiki.rename(page)).withHeaderRobotNoIndexNoFollow
         case (Some(page), "delete", _, _) if isDeletable => Ok(views.html.Wiki.delete(page)).withHeaderRobotNoIndexNoFollow
-        case _ => Forbidden(views.html.Wiki.error(name, "Permission denied.")).withHeaderRobotNoIndexNoFollow
+        case _ => Forbidden(views.html.Wiki.error(name)).withHeaderRobotNoIndexNoFollow
       }
     }
   }
@@ -318,7 +318,7 @@ controllerComponents: ControllerComponents,
       .filter(_ => DefaultPageLogic.isWithinCalendarSpan(name, wikiContext.setPageNameByPermission, wikiContext.localDateNow.getYear))
       .map(content => render(Ok, content))
       .map(result => if (DefaultPageLogic.isShippedPage(name)) result else result.withHeaderRobotNoIndexNoFollow)
-      .getOrElse(render(NotFound, WikiSnippet.notFound(name, templates)))
+      .getOrElse(render(NotFound, WikiSnippet.notFound(name, templates, logics.ScreenLanguage.Language.current)))
   }
 
   private def renderReadablePage(page: Page,

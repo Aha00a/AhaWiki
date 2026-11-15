@@ -1,5 +1,7 @@
-@(title:String, message:String)(implicit wikiContext: models.ContextWikiPage)
-@_base(title, message) {
+@(title:String)(implicit wikiContext: models.ContextWikiPage)
+@* The page a reader may not see. Its words follow the reader's language (FrameText). *@
+@f(key: String) = @{ logics.FrameText(key, logics.ScreenLanguage.Language.current(wikiContext)) }
+@_base(title, f("denied")) {
 } {
     <div class="wikiContent">
         <div class="limitWidth">
@@ -8,14 +10,14 @@
                 <div class="errorPageIcon">
                     <i class="fas fa-lock"></i>
                 </div>
-                <p class="errorPageMessage">@message</p>
+                <p class="errorPageMessage">@f("denied")</p>
                 @if(!wikiContext.requestWrapper.getUser) {
                     <a href="@(routes.Auth.login)" class="errorPageLoginButton">
                         <i class="fas fa-right-to-bracket"></i>
-                        Login
+                        @f("login")
                     </a>
                 } else {
-                    <p>Your account has no permission for this here. Ask this wiki's administrator for access, or <a href="@(routes.ApiSiteRequest.page)">request a wiki of your own</a>.</p>
+                    <p>@f("denied.noPermission")<a href="@(routes.ApiSiteRequest.page)">@f("denied.requestWiki")</a>@f("denied.end")</p>
                 }
             </div>
         </div>

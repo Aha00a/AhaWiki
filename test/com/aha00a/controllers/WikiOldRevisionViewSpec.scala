@@ -72,9 +72,11 @@ class WikiOldRevisionViewSpec extends PlaySpec with GuiceOneAppPerSuite with Bef
     super.afterAll()
   }
 
-  private def view(query: String): String =
+  // In English: the notice speaks the browser's language (FrameText), and a request without one
+  // gets the JVM's default, which differs between machines.
+  private def view(query: String, acceptLanguage: String = "en-US"): String =
     contentAsString(route(app, FakeRequest(GET, s"/w/Recipe$query")
-      .withHeaders(HOST -> host)
+      .withHeaders(HOST -> host, ACCEPT_LANGUAGE -> acceptLanguage)
       .withSession(SessionLogic.sessionKeySeq -> "61", SessionLogic.sessionKeyNickname -> "editor")).get)
 
   "an old revision" should {
@@ -89,6 +91,16 @@ class WikiOldRevisionViewSpec extends PlaySpec with GuiceOneAppPerSuite with Bef
       html must include ("""This is revision 1, saved <time datetime="2026-09-01T10:00:00">2026-09-01T10:00:00</time> by""")
       html must include ("The latest is revision 2.")
       html must include ("""href="?action=diff&before=1&after=2"""")
+    }
+
+    // The same notice for a Korean browser, in Korean word order (FrameText "oldRevision.notice").
+    "say the same in Korean to a Korean browser" in {
+      val html = view("?revision=1", acceptLanguage = "ko-KR")
+      html must include ("""리비전 1 입니다.""")
+      html must include ("""에 저장했습니다. 가장 최근은 리비전 2 입니다.""")
+      html must include ("""<time datetime="2026-09-01T10:00:00">2026-09-01T10:00:00</time> 에 저장했습니다""")
+      html must include ("최신 보기")
+      html must not include "This is revision"
     }
 
     // The editor may write the page, but not from here: a Kanban board drawn from an old
