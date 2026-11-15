@@ -416,7 +416,9 @@ document.addEventListener('DOMContentLoaded', function () {
             // block it covers nothing, so it goes there when the wrapper has the room. A heading
             // and a block as wide as the page -- code, a quote -- have none and keep the corner.
             var besideBlock = targetRect.right - wrapperRect.left + 6;
-            if (!heading && besideBlock + editLink.offsetWidth <= wrapper.clientWidth) {
+            // h1 counts as a heading here though not for folding: the page title is one, and
+            // beside it is the created/modified line, which the button lay across on 예시 모음.
+            if (!content.querySelector('h1, h2, h3, h4, h5, h6') && besideBlock + editLink.offsetWidth <= wrapper.clientWidth) {
                 left = besideBlock;
             }
             editLink.style.top = top + 'px';
