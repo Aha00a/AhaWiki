@@ -231,6 +231,13 @@
 
 	}
 
+	// A #!Graph block gets js.js's Edit button at its top right, about 4px to 24px down, where the
+	// METRICS panel sat at 10px and the button lay across its corner. In a block, the panel starts
+	// below the button. The page's own Adjacent Pages graph has no such button and keeps 10px.
+	.InterpreterRenderMetaWrapper .adjacentPagesHud .hudPanel.topRight {
+		top: 32px;
+	}
+
 	@media (max-width: 768px) {
 		.aspectRatioWrapper.adjacentPagesGraphWrapper {
 			.ratio_16_9 {

@@ -189,6 +189,9 @@
 .AhaWiki .adjacentPagesHud .dot.hop2 {
   background: var(--color-adjacent-dot-hop2);
 }
+.AhaWiki .InterpreterRenderMetaWrapper .adjacentPagesHud .hudPanel.topRight {
+  top: 32px;
+}
 @media (max-width: 768px) {
   .AhaWiki .aspectRatioWrapper.adjacentPagesGraphWrapper .ratio_16_9 {
     padding-bottom: 100%;
