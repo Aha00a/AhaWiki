@@ -391,6 +391,24 @@ primary key:
 
 읽기가 거부되면 보통 `Permission denied.`를 반환합니다.
 
+=== 거부 화면
+
+읽기가 거부되면(없는 페이지를 편집하려다 막힌 경우도) `Wiki/error.scala.html` 이 자물쇠 아이콘과 «권한이 없습니다»(Permission denied.)를 보여 줍니다. 문구는 `FrameText` 의 `denied*` 이고 화면 언어를 따릅니다.
+
+ * 로그인하지 않았으면 '''로그인'''(Login) 단추를 함께 보여 줍니다. 로그인은 온 곳(referer)으로 돌아옵니다(`GoogleOAuth.login`).
+ * 로그인했는데도 권한이 없으면, 이 계정에 권한이 없다는 것과 이 위키의 관리자에게 요청하라는 것, 그리고 자기 위키를 신청하는 곳(`/site/request`)을 보여 줍니다.
+
+=== 처음 온 사람이 거치는 길
+
+ 1. 로그인하지 않고 들어옵니다. 사이트에 `All`/`Read` 행이 있으면 읽습니다(위 '''Public Wiki''').
+ 1. 막히면 위 '''거부 화면'''의 로그인으로 갑니다.
+ 1. Google 로 로그인합니다(`/login` → `/google/oauth/login` → `/google/oauth/callback`, 하위 도메인은 [Setup] 의 handoff). 첫 로그인이 계정을 만듭니다(위 '''로그인 사용자''').
+ 1. 닉네임은 이메일 `@` 앞부분이고, 그 로그인에 한 번 안내가 뜹니다 — [UserNicknameChange] '''가입 직후의 안내'''.
+ 1. 사이트 권한대로 읽고 씁니다(위 '''Action''').
+ 1. 자기 위키는 `/site/request` 에서 신청합니다 — [Setup].
+
+실제 Google 로그인과 가입 직후 화면은 사람이 해 본 적이 없습니다([UserNicknameChange] «확인하지 못한 것»).
+
 signed read URL은 `Permission` 테이블 밖의 예외 경로입니다. 아래 '''signed read URL''' 참고.
 
 === signed read URL
@@ -467,6 +485,8 @@ save 시에는 form body의 새 본문이 아니라 DB의 최신 본문을 기�
 이 flash도 shebang/default 기준 설명은 표시하지 않습니다.
 
 == 남은 과제
+
+ * [ ] 로그인하면 더 보인다는 것을 알릴 자리가 없다. 목록과 검색은 읽을 수 없는 페이지를 아예 감추므로(위 '''목록·검색 필터링'''), 로그인하지 않은 방문자는 감춰진 것이 있는지 모른다. 거부 화면은 그 페이지를 직접 열었을 때만 나온다. --[2026-11-01]
 
  * [[CB(x)]] hard-coded 전체 관리자 판정(`seq == 1`)을 role/permission 기반으로 옮길지 결정한다. → '''옮기지 않는다.''' (2026-08-31)
   * 전체 관리자가 둘 이상 필요했던 적이 없고, 사이트 단위 위임은 이미 `SiteAdmin` 테이블이 합니다([Dev SiteAdmin]). 지금 role 테이블을 만들면 쓰는 사람 없는 테이블이 하나 늘고, 부트스트랩 row가 빠지면 관리자가 잠기는 위험만 얹힙니다.

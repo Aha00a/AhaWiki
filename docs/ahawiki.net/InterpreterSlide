@@ -72,6 +72,13 @@ JavaScript 가 없으면 덱은 슬라이드가 세로로 쌓인 읽기용으로
 == 아직 없는 것 (앞으로)
 슬라이드 사이 전환(fade 등), 한 클릭씩 등장(fragment), 슬라이드별 배경, 발표자 노트는 아직 없습니다. v1 은 덱의 기본(화면맞춤·한 장씩·전체화면·유인물 인쇄)만 담았습니다.
 
+== 설계 (개발자용)
+[InterpreterPaper] 와 분할·렌더·인쇄 코어(`PaperSlideCore`)를 같이 쓰고, `#!Slide` 는 화면에서 발표하는 부분만 더합니다(2026-09-16, 소유자와 정한 «접근 B»).
+ * 발표 자료도 인쇄하면 결국 Paper 같은 유인물입니다. 그래서 인쇄 경로를 따로 만들지 않았습니다.
+ * Word(Paper)와 PowerPoint(Slide)의 가장 큰 차이는 자유 배치(캔버스)인데, AhaWiki 에는 그것이 애초에 없습니다(전부 흐름 마크업). 그래서 코어를 같이 쓸 수 있습니다.
+ * 택하지 않은 것: 새 디렉티브 없이 Paper 에 «발표» 버튼만 두기 — 발표 모양이 약해 «전체화면 Word» 처럼 됩니다. 완전히 따로 만들기 — 인쇄 경로가 Paper 와 갈라져 유인물이라는 생각과 어긋납니다.
+ * 외부 라이브러리는 쓰지 않습니다. 화면은 CSS(`_slide.less`, 글자 크기는 컨테이너 쿼리 `cqw`)와 작은 JS(`AhaWiki.Slide.js`)입니다. 검사는 `SlideUnit` 과 `test/ahawiki.slide.test.mjs`.
+
 == Related Pages
  * [InterpreterPaper] - 같은 코어를 쓰는 인쇄용 자매 인터프리터
  * [Interpreter]

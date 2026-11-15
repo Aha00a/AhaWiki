@@ -113,6 +113,8 @@ TTL 이 지나면 다음 요청이 그 자리에서 다시 계산합니다(호�
  * 주기적 초기화: 10분마다 전체 삭제
  * 수동 무효화: 페이지가 다시 계산될 때 그 페이지 항목만 삭제 — 저장·rename·마지막 리비전 삭제, API v1 삭제, 그리고 조회가 부른 재계산(`onlyIfStale`, 실제로 계산했을 때만) 뒤 actor 가 `Calculate` 를 처리하고 나서(`ServicePageCalculator`)다. 저장 응답과 동시가 아니다. 웹의 페이지 삭제(`/actions/delete`)는 `Calculate` 를 보내지 않아 그 항목이 다음 `ApiLinksCacheClear` 까지 남는다. 관리 화면의 캐시 삭제(`DELETE /api/cache/:siteSeq`)는 이 인스턴스의 항목을 전부 비운다
 
+'''백링크를 셀 때는 `/api/links` 를 쓰지 않습니다.''' 응답은 부르는 사람이 볼 수 있는 페이지에서 온 링크만 담고(`pageCanSee`), 다시 계산할 때 그 페이지 자신의 항목만 지우므로 링크된 쪽 항목은 10분마다 비울 때까지 낡은 채 남습니다. 2026-11-15 에 로그인 없이 셌더니 비공개 일기에서 온 링크가 빠져 18페이지가 «백링크 0개» 로 보였고, 처음에는 링크 표가 낡았다고 잘못 읽었습니다 — DB 에는 다 있었습니다. 셀 때는 DB 의 `CalculatedLink` 를 봅니다.
+
 == AhaWikiCacheMemoryPermission
 
 `app/logics/AhaWikiCacheMemoryPermission.scala`

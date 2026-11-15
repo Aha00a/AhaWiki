@@ -184,6 +184,24 @@ its own, and its requests looked up in the server's access log. On aha00a.com in
 one of them was the machine running the sweep, or an advertising frame holding the load event —
 never the server.
 
+What the whole of ahawiki.net, whohow.net and aha00a.com (3,823 pages) gave on 2026-10-03/04:
+no uncaught exception and no `console.error` anywhere, and every one of the 33,384 requests the
+server took answered within five seconds, none with a 5xx.
+
+A cheaper check — collect the image and link addresses out of every page's source through the
+API and fetch each one — flags things that are fine in a browser: example addresses written in
+a document, Google Docs iframes, source links, `http` addresses the browser upgrades to `https`,
+code samples. Nor does the sweep see inside an iframe (embedded Facebook posts). Call a link dead
+only after a browser has failed to open it too. Three things such checks keep running into:
+
+ * A direct `upload.wikimedia.org` address does not follow a file rename, and English
+   Wikipedia's non-free files (posters, title cards, logos) are deleted when a newer one
+   replaces them. For a page's image, use a free file on Commons — Wikidata's logo (P154).
+ * `<video>` has no `referrerpolicy`. A video that is served only without a Referer loads inside
+   a `srcdoc` iframe whose document carries `<meta name='referrer' content='no-referrer'>`.
+ * archive.ph times out from some networks; from the server it answers with a 302 to
+   archive.li and then 200. Such a link is not dead.
+
 ## Wiki page sync
 
 `sync.ahawiki.net.mjs` compares the **committed** copies under `docs/ahawiki.net/` against the

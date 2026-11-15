@@ -153,7 +153,8 @@
 	// A graph, a map: the box is as wide as the page and what it draws is absolutely placed in
 	// it, so it took no notice of the table of contents floating at the right -- the graph's
 	// METRICS panel and its right-hand nodes lay over the contents at 1280px. It starts below
-	// the float instead.
+	// the float instead. Narrowing the box to sit beside the float would change its ratio, and
+	// the ratio is what the box is for.
 	.aspectRatioWrapper {
 		clear: both;
 		position: relative;

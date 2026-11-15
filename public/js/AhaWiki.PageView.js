@@ -500,6 +500,8 @@
             });
         })();
 
+        // A map's table is left out: Wiki/map.scala.html sets it up itself, with a different
+        // filter for each column (Tag, Category, Score).
         $('.tablesorter').not('[id^="mapTable"]').tablesorter({ widgets: ["filter"] });
 
 

@@ -11,6 +11,9 @@ object ApplicationConf {
 
 @Singleton
 class ApplicationConf @Inject()(configuration: Configuration) {
+  // The method's own name is the configuration key, read off a stack trace on every call. Left as
+  // it is on purpose: the render-CPU measurement of 2026-10-07 put it at 0.0% of a render, and the
+  // design (method name == key, since 2015) is not worth changing for that.
   private def fqn: String = {
     val ste = Thread.currentThread.getStackTrace()(2)
     val classPart = ste.getClassName.replace(getClass.getName, "").replaceFirst("^\\$", "")

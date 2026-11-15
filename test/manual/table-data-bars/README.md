@@ -5,7 +5,9 @@ the real `less.css`, `wiki.css` and `interpreter.css`, without a server. It chec
 argued from tablesorter's minified source when the numeric columns went in, by running it:
 
  * **Two header rows:** the `sorter-digit` on the header picks the parser, even when the first
-   body cell is `₩1,200`, which tablesorter would otherwise read as text.
+   body cell is `₩1,200`, which tablesorter would otherwise read as text. That table holds a
+   `-7%` because tablesorter's text sort is a natural sort: it puts `9` before `10` too, so
+   without a negative the check passed with the wrong parser.
  * **Placeholders sort last**, ascending and descending. The empty `data-text` on `-`, `n/a`,
    `#N/A` and an empty cell is what does it.
  * **Spellings sort by value:** units, accounting parentheses and currency marks.

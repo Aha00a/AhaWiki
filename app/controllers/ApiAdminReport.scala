@@ -34,8 +34,8 @@ class ApiAdminReport @Inject()(
 
   /**
    * Whether the sites are being used: new and active sites per month, and what each site did
-   * in the last 30 days. The numbers behind the measurement section of the wiki's
-   * ToDo-User-Acquisition page, which asks to look at them monthly on one fixed definition.
+   * in the last 30 days, read monthly on one fixed definition. What counts as a new or an active
+   * site is on the wiki page Dev ApiControllers, «사이트 활동 보고서».
    */
   def adminSiteActivity: Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {
@@ -49,8 +49,8 @@ class ApiAdminReport @Inject()(
 
   /**
    * Where readers came from in the last `days` days: per site, the page on another host that
-   * linked and the page here it linked to, with how many times (models.tables.Referral). The
-   * measurement section of ToDo-User-Acquisition asks for it.
+   * linked and the page here it linked to, with how many times (models.tables.Referral). Part of
+   * the same report as adminSiteActivity -- wiki page Dev ApiControllers, «사이트 활동 보고서».
    */
   def adminReferrals(days: Int): Action[AnyContent] = Action { implicit request =>
     if (!isAdmin) {

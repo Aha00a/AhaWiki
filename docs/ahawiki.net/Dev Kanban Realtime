@@ -199,7 +199,7 @@ mutationQueue = mutationQueue
 
 == `interpreterStartLine` 갱신
 
-화면이 그려진 줄 번호(`data-line-start`)는 맨 위 `#!` 줄을 뺀 번호이고, 저장(`Wiki.save` 의 `lineStart`/`lineEnd`)은 원문 줄 번호로 받는다. 그래서 원문을 읽은 적이 없는 보드는 제 자리를 모른다(`placedOnRaw`). 원문을 읽는 두 곳 — `applyRemoteKanbanUpdate`, 그리고 저장 쪽의 `rebaseOntoServer` — 은 모두 `adoptServerBlock` 으로 `interpreterStartLine`·`currentKanbanLineCount`·리비전을 원문 기준으로 다시 잡는다. 페이지를 연 뒤 첫 저장은 원격 업데이트를 기다리지 않고 먼저 원문을 읽는다. 2026-09-15 전에는 그러지 않아서, `#!var` 같은 줄이 있는 페이지의 첫 저장이 그 줄 수만큼 위에 들어갔다.
+화면이 그려진 줄 번호(`data-line-start`)는 맨 위 `#!` 줄을 뺀 번호이고, 저장(`Wiki.save` 의 `lineStart`/`lineEnd`)은 원문 줄 번호로 받는다. 그래서 원문을 읽은 적이 없는 보드는 제 자리를 모른다(`placedOnRaw`). 원문을 읽는 두 곳 — `applyRemoteKanbanUpdate`, 그리고 저장 쪽의 `rebaseOntoServer` — 은 모두 `adoptServerBlock` 으로 `interpreterStartLine`·`currentKanbanLineCount`·리비전을 원문 기준으로 다시 잡는다. 페이지를 연 뒤 첫 저장은 원격 업데이트를 기다리지 않고 먼저 원문을 읽는다. 2026-09-15 전에는 그러지 않아서, `#!var` 같은 줄이 있는 페이지의 첫 저장이 그 줄 수만큼 위에 들어갔다. 저장 경로에서 디렉티브 줄 수를 보정하는 안과 화면이 원문 줄 번호를 내려 주는 안은 택하지 않았다 — 409 가 이미 쓰는 길(원문을 읽어 다시 얹기)을 첫 저장도 쓰면 따로 맞출 것이 생기지 않는다.
 
 == 409 Conflict 처리
 

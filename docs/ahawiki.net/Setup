@@ -5,6 +5,8 @@ AhaWiki는 같은 앱과 DB가 여러 도메인을 함께 서비스하므로, �
 == `*.ahawiki.net` 은 승인이면 끝난다
 `something.ahawiki.net` 은 사람이 [https://ahawiki.net/site/request 개설 신청] 하고 관리자가 `/Admin/SiteRequests` 에서 승인하면 열린다. `SiteRequestLogic.approve` 가 `Site`, `SiteDomain`, `SiteAdmin` 과 `Permission` 을 한 번에 만들고 도메인 캐시를 버린다. 신청이 들어오면 텔레그램으로 알린다. 이 아래 체크리스트는 필요 없다.
 
+'''신청은 위키 안의 신청 버튼 하나로 받는다.''' 이메일이나 이슈로 받으면 다른 곳으로 가는 동안 사람이 빠지고, 신청이 `SiteRequest` 표에 남아야 셀 수 있다. 양식(`Account/siteRequest.scala.html`)은 사이트 이름, 하위 도메인, 공개/비공개, 쓰려는 곳을 묻는다. 이메일은 묻지 않는다 — 로그인한 Google 계정이 새 위키의 관리자가 된다.
+
 그렇게 되는 것은 사이트마다 하던 일을 와일드카드로 한 번에 끝냈기 때문이다.
 
 [[[#!Table tsv 1
@@ -48,6 +50,7 @@ reCAPTCHA	`ahawiki.net` 하나가 하위 도메인을 포함한다(Google 문서
   * 앱이 직접 보내는 안은 택하지 않았다. 발송 서비스와 그 자격 증명, 반송과 스팸 처리가 따라오는데, 신청은 아직 손으로 셀 만큼이다.
   * 검사는 `test/admin.site-request-mail.test.mjs`(편지와 링크의 길이)와 `ApiSiteRequestSpec`(응답의 주소), 화면은 `test/manual/admin-vendor/` 의 Site Requests 다.
  * 검사는 `ApiSiteRequestSpec` 이다. 승인 뒤의 신청 화면과 새 위키의 첫 화면을 차례로 그려 본다.
+ * '''«Powered by AhaWiki» 를 따라온 사람에게도 말한다(2026-11-15).''' 모든 사이트 아래쪽의 «Powered by AhaWiki»(`conf/Page/.footer`)는 그 사이트의 `/w/AhaWiki` 로 가고, 그 페이지를 저장한 적 없는 사이트에서는 엔진의 `conf/Page/AhaWiki` 가 보인다. 거기에는 이 위키가 무엇으로 만들어졌는지, 여기서 글을 고치고 새 문서를 만드는 법, 내 위키를 신청하는 곳, 더 읽을 곳(시작하기·치트시트·ahawiki.net·GitHub)만 짧게 적는다 — 사이트 주인이 저장하면 그 글이 대신 보이고, 엔진의 글을 고치는 일은 배포이기 때문이다(위 «GettingStarted 와 예시 문서는 사이트마다 싣지 않는다» 와 같은 이유). 첫 줄만 영어를 같이 둔다 — 한국어를 못 읽는 사람도 무엇인지는 알게. 검사는 `ApiSiteRequestSpec` «say what AhaWiki is to a visitor who follows the footer».
  * '''배포했다(2026-11-14).''' 릴리스 `20261114-073159`, 태그 `v20261114T073245-aha00a`. 대기 인스턴스에 먼저 올려 ahawiki.net 262경로를 옛 인스턴스와 대조했고 모두 같았다. 기존 사이트는 모두 자기 FrontPage 가 있어서 이 두 화면은 처음 승인하는 위키에서 보인다(신청은 2026-11-15 에 켰다).
 
 == 자기 도메인을 쓰는 사이트

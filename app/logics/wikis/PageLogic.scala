@@ -170,7 +170,9 @@ object PageLogic {
    * went live on 2026-10-24: the repeats. Calculations started by views ran 18.6 times per 80
    * minutes before and 20.2 after -- crawlers spread their views over pages that have not been
    * calculated in a day -- while a page recalculated within half an hour of the last time went
-   * from 293 cases to 3, about 7% of the runs. The wiki ToDo page has the figures.
+   * from 293 cases to 3, about 7% of the runs. How the runs were told apart and why the cost of
+   * one run went up afterwards are on the wiki page Dev Page, «Calculation». Kept: the price is a
+   * similar-pages list up to a day late, which is the same as before, and the repeats are gone.
    */
   val ViewRecalculationInterval: java.time.Duration = java.time.Duration.ofDays(1)
 

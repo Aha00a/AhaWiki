@@ -370,7 +370,7 @@ class Api @Inject()(
     * adjacent-pages graph both hand it out. The graph had a copy of its own that knew only full
     * URLs and `attachment:`, and glued anything else after `https://<host>/` -- `/public/x.png`
     * became `https://<host>//public/x.png`. nginx merged the two slashes until 2026-10-04, when
-    * proxy_pass stopped rewriting paths (wiki page ToDo), and from then on that address was a
+    * proxy_pass stopped rewriting paths (wiki page Dev Deploying), and from then on that address was a
     * 404. */
   private def pageImageUrl(raw: String)(implicit request: RequestHeader, site: Site): String = {
     val trimmed = Option(raw).map(_.trim).getOrElse("")
