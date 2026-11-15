@@ -4,7 +4,7 @@
 This wiki runs on [https://ahawiki.net AhaWiki], a wiki engine that keeps pages findable by linking them to each other.
 
 == 이 위키에서
- * 글을 고치려면 로그인한 뒤 '''Edit''' 를 누릅니다. 편집 화면의 '''서식 도움말''' 에 자주 쓰는 문법이 있습니다.
+ * 글을 고치려면 로그인한 뒤 '''편집'''(Edit)을 누릅니다. 편집 화면의 '''서식 도움말''' 에 자주 쓰는 문법이 있습니다.
  * 새 문서는 링크로 만듭니다. 글에 `[새 문서 이름]` 을 적고 저장한 뒤, 그 링크를 누릅니다.
  * 이 위키에는 지금 [[PageCount]]개의 문서가 있습니다. 전체 목록은 [TitleIndex], 최근에 고친 문서는 [RecentChanges].
 
