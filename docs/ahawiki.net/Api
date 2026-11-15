@@ -295,7 +295,7 @@ API Key로 저장한 revision은 `viaApi = true`로 기록되고, 저장에 사�
 
 == AI 에이전트에게 맡기기
 
-AI 에이전트(Claude·Codex·Gemini 등)가 이 API 로 위키를 읽고 고치게 하는 법 — 키 만들기, 키를 건네는 법, 붙여 넣을 프롬프트 — 은 ["AI 에이전트로 위키 쓰기"] 에 있습니다.
+AI 에이전트(Claude·Codex·Gemini 등)가 이 API 로 위키를 읽고 고치게 하는 법 — 키 만들기, 키를 건네는 법, 붙여 넣을 프롬프트 — 은 [AiAgent] 에 있습니다.
 
 == 에러 코드
 
@@ -312,5 +312,5 @@ AI 에이전트(Claude·Codex·Gemini 등)가 이 API 로 위키를 읽고 고�
 == 관련
 
  * ["Dev Api"]
- * ["AI 에이전트로 위키 쓰기"] - 에이전트를 붙이려는 사용자를 위한 안내
+ * [AiAgent] - 에이전트를 붙이려는 사용자를 위한 안내
  * [Dev Mcp] - 이 API 를 에이전트에게 도구로 쥐여 주는 MCP 서버

@@ -1,4 +1,4 @@
-= AI 에이전트로 위키 쓰기
+= AiAgent
 Claude·ChatGPT(Codex)·Gemini·Cursor 같은 AI 에이전트가 위키를 찾고, 읽고, 허락하면 고치게 하는 법입니다. 에이전트는 '''내 API 키'''로 위키의 [Api] 를 부릅니다. 그래서 에이전트는 내가 볼 수 있는 것만 보고, 내가 고칠 수 있는 것만 고칩니다.
 
 [[[#!Table tsv 1
@@ -43,6 +43,13 @@ MCP 를 지원하고, 이 저장소를 받아 둔 경우	[Dev Mcp] 의 MCP 서�
 [[[#!Vim text
 앞으로 AhaWiki 를 읽고 쓸 일이 있으면 아래 규칙대로 AhaWiki API 를 써라.
 
+AhaWiki 는 웹 위키 엔진이다. 위키마다 주소가 다르지만(예: https://ahawiki.net, https://<이름>.ahawiki.net) API 는 모두 같다.
+AhaWiki 자체의 설명서는 https://ahawiki.net 에 있고, 로그인 없이 원문(텍스트)으로 읽을 수 있다:
+- API 전체 설명: https://ahawiki.net/w/Api?action=raw
+- 위키 문법(AhaMark) 요약: https://ahawiki.net/w/AhaMark%20Basic?action=raw
+- 이 안내의 원본: https://ahawiki.net/w/AiAgent?action=raw
+아래 규칙과 그 설명서가 다르면 설명서가 맞다. 모르는 것은 추측하지 말고 거기서 찾아라.
+
 ## 접속
 - 위키 주소(Base URL): https://<위키 주소>   ← 여기만 바꾼다.
 - API Key 는 환경변수 AHAWIKI_API_KEY 에 있다. 모든 요청에 `Authorization: Bearer $AHAWIKI_API_KEY` 헤더를 붙인다.
@@ -57,7 +64,7 @@ MCP 를 지원하고, 이 저장소를 받아 둔 경우	[Dev Mcp] 의 MCP 서�
 - 저장: POST /api/v1/page/<이름>, JSON {"revision": <읽은 revision>, "text": "<전체 본문>", "comment": "<무엇을 바꿨는지>", "minorEdit": true|false}
   - 새 페이지는 revision 0.
 - 이름 바꾸기·삭제 API 도 있지만 쓰지 마라. 필요하면 사람에게 브라우저에서 하라고 알려라.
-- 자세한 것은 위키의 Api 페이지에 있다.
+- 요청·응답의 자세한 모양과 오류 코드: https://ahawiki.net/w/Api?action=raw
 
 ## 읽기
 - 무엇이 어디 있는지 모르면 먼저 검색하고, 그다음 페이지를 읽어라. 추측으로 페이지 이름을 지어 내지 마라.
@@ -84,7 +91,7 @@ MCP 를 지원하고, 이 저장소를 받아 둔 경우	[Dev Mcp] 의 MCP 서�
 '''굵게'''  ''기울임''  `코드`
 코드 블록은 대괄호 셋에 #!Vim bash 를 붙인 줄로 열고, 대괄호 셋을 닫는 줄로 닫는다.
 표는 같은 모양으로 #!Table tsv 1 블록을 쓴다(끝의 1 은 머리글 줄 수, 칸은 탭으로 나눈다).
-블록의 정확한 모양과 모르는 문법은 지어내지 말고, 위키에서 비슷한 페이지의 원문을 읽어 그대로 따라라.
+블록의 정확한 모양과 모르는 문법은 지어내지 말고, https://ahawiki.net/w/AhaMark%20Basic?action=raw 나 위키의 비슷한 페이지 원문을 읽어 그대로 따라라.
 (이 안내에 블록 기호를 그대로 적지 않은 것은, 이 안내 자체가 위키의 블록 안에 있기 때문이다.)
 ]]]
 
