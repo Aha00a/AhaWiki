@@ -52,8 +52,9 @@ object FrameText extends TextTable("FrameText", Map(
   "hotkey.E" -> Text("이 문서 편집", "Open page edit"),
 
   // The created/modified line beside the title.
-  // Short on purpose: the line sits at the top right beside the title, and 처음 쓴 사람 / 마지막으로
-  // 고친 사람 ran into the title's Edit button on 예시 모음 (2026-11-15).
+  // Short: the line sits at the top right beside the title. They were 처음 쓴 사람 / 마지막으로 고친
+  // 사람 and were cut when the title's Edit button lay over them on 예시 모음 (2026-11-15); the real
+  // cause was js.js putting the h1's button outside the title, fixed the same day.
   "createdBy" -> Text("만든 사람", "created by"),
   "lastModifiedBy" -> Text("마지막 수정", "last modified by"),
   "at" -> Text("·", "at"),
