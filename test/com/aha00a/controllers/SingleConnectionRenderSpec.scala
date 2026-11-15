@@ -220,12 +220,12 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
       val korean = contentAsString(get("/w/Pool", loggedIn = true, acceptLanguage = "ko-KR,ko;q=0.9"))
       val english = contentAsString(get("/w/Pool", loggedIn = true, acceptLanguage = "en-US,en;q=0.9"))
       korean must include("""<i class="fas fa-search"></i>찾기""")
-      korean must include("처음 쓴 사람")
+      korean must include("만든 사람")
       korean must include(""""js.edit":"편집"""")
       english must include("""<i class="fas fa-search"></i>Search""")
       english must include("created by")
       english must include(""""js.edit":"Edit"""")
-      english must not include "처음 쓴 사람"
+      english must not include "만든 사람"
       // The generated sections keep their ids whatever their titles say.
       if (english.contains("See-Also-Generated")) {
         english must include("See Also")

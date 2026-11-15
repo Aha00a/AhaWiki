@@ -250,7 +250,7 @@ Source API:
    * 템플릿은 `@t("key")` 로, 스크립트(`edit.page.js`)는 `editText('key')` 로 꺼낸다. 스크립트에는 고른 언어의 절반만 `AhaWikiEditConfig.text` 로 넘긴다 — 알림(저장 실패·충돌·첨부 실패 등)과 바뀌는 단추 글.
    * 표에 없는 키를 부르면 템플릿은 렌더 중에 던지고, 스크립트는 키를 그대로 보인다. 둘 다 그 전에 `test/ahawiki.screen-text.test.mjs` 가 이름으로 잡는다.
    * 영어로 두는 것: 키 이름(Alt, Ctrl, Tab), 권한 요약의 값(`All(*)` 같은 규칙 그대로).
-  * '''모든 페이지의 틀도 같은 언어다(2026-11-15).''' 위쪽 내비게이션과 계정 메뉴(`_base.scala.html`), 제목 옆의 «처음 쓴 사람 / 마지막으로 고친 사람 / 리비전»(`Wiki/action.scala.html`), 보기 화면 아래에 붙는 «See Also»(한국어로는 «이어진 문서») 절의 제목들(`Wiki.getAhaMarkAdditionalInfo`), 문단마다 붙는 편집·복사·접기 단추(`js.js`)가 `logics.FrameText` 의 표에서 나온다. `js.js` 에는 `js.` 키만 `window.AhaWikiFrameText` 로 넘긴다.
+  * '''모든 페이지의 틀도 같은 언어다(2026-11-15).''' 위쪽 내비게이션과 계정 메뉴(`_base.scala.html`), 제목 옆의 «만든 사람 / 마지막 수정 / 리비전»(처음에는 «처음 쓴 사람 / 마지막으로 고친 사람» 이었는데, 제목의 편집 단추에 닿아 줄였다)(`Wiki/action.scala.html`), 보기 화면 아래에 붙는 «See Also»(한국어로는 «이어진 문서») 절의 제목들(`Wiki.getAhaMarkAdditionalInfo`), 문단마다 붙는 편집·복사·접기 단추(`js.js`)가 `logics.FrameText` 의 표에서 나온다. `js.js` 에는 `js.` 키만 `window.AhaWikiFrameText` 로 넘긴다.
    * 두 표(`EditScreen`, `FrameText`)는 같은 `ScreenLanguage.TextTable` 이다 — 키로 꺼내고, 없는 키는 던진다. 템플릿·스크립트가 부르는 키가 표에 있는지는 `test/ahawiki.screen-text.test.mjs` 가 두 표 모두 본다.
    * 그 절은 제목만 바뀌고 id(`#See-Also-Generated` 등)는 그대로라, 그 절을 가리키는 링크는 언어와 상관없이 닿는다. 이 마크업은 요청마다 새로 만들고 캐시하지 않으므로 언어가 섞이지 않는다.
    * `Accept-Language` 가 없는 요청(검색 로봇, 배포 때의 인스턴스 비교)은 서버 JVM 의 기본 locale 을 따른다(`RequestWrapper.locale`).
