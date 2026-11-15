@@ -44,6 +44,7 @@ window.AhaWikiEditConfig = {
 <script src="/public/js/jquery.paste_image_reader.js"></script>
 <script src="/public/js/AhaWiki.Editor.js"></script>
 <script src="/public/js/AhaWiki.CodeMirror.AhaMark.js"></script>
+<script src="/public/js/Wiki/edit.tableOptions.js"></script>
 <script src="/public/js/Wiki/edit.page.js"></script>
 
 <script>
@@ -91,9 +92,28 @@ const EXPECTED = { value: ' * [JIH0]', ch: 8 };
         say('    after  ' + JSON.stringify(value) + ' ch=' + ch + '  ' + (ok ? 'OK' : 'MISMATCH'));
     }
 
+    // After the format word the popup offers the next word, not the first again. It used to offer
+    // `tsv` and `tsv 1 bar=all` at every word, and Tab wrote "[[[#!table tsv 1 tsv".
+    cm.setValue('');
+    cm.replaceSelection('[[[#!table tsv 1 ');
+    await sleep(350);
+    const tableVisible = !!(popup && popup.offsetParent !== null);
+    const offered = tableVisible ? popup.innerText.trim().split('\n').map(s => s.trim()).filter(Boolean) : [];
+    say('--- table option after "tsv 1 " | offered ' + JSON.stringify(offered));
+    if (!tableVisible || offered.includes('tsv') || offered.includes('csv') || offered.some(s => s.includes(' '))) {
+        bad++;
+        say('    MISMATCH: expected the next word only (1, bar=all, heat=all, compact)');
+    } else {
+        cm.getInputField().dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', code: 'Tab', bubbles: true, cancelable: true }));
+        await sleep(250);
+        const ok = cm.getValue() === '[[[#!table tsv 1 ' + offered[0];
+        if (!ok) bad++;
+        say('    Tab -> ' + JSON.stringify(cm.getValue()) + '  ' + (ok ? 'OK' : 'MISMATCH'));
+    }
+
     say(bad === 0
-        ? 'PASS — both keys give ' + JSON.stringify(EXPECTED.value) + ' ch=' + EXPECTED.ch
-        : 'FAIL — ' + bad + ' of 2');
+        ? 'PASS — both keys give ' + JSON.stringify(EXPECTED.value) + ' ch=' + EXPECTED.ch + ', and the table options follow the word'
+        : 'FAIL — ' + bad + ' of 3');
     document.title = 'done';
 })();
 </script>

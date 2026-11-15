@@ -1264,7 +1264,6 @@ function editText(key) {
             const schemaPropertyNamesByClass = new Map();
             const schemaPropertyLoadingByClass = new Set();
             let pageNames = [];
-            const tableOptionNames = ['tsv', 'csv', 'tsv 1', 'tsv 1 1', 'tsv 1 bar=all', 'tsv 1 compact', 'tsv 1 1 tablesorter'];
             let macroSuggestions = [];
             let activeMacroSuggestionIndex = 0;
             let macroAutocompleteContext = null;
@@ -1310,18 +1309,9 @@ function editText(key) {
                 };
             }
 
+            // What fits depends on which word of the shebang is being typed: edit.tableOptions.js.
             function getTableOptionPrefix(value, cursorIndex) {
-                const left = value.slice(0, cursorIndex);
-                const match = left.match(/\[\[\[#!table(?:\s+([^\]\n]*))?$/i);
-                if (!match)
-                    return null;
-                const optionInput = match[1] || '';
-                const tokenMatch = optionInput.match(/(?:^|\s)([^\s]*)$/);
-                const prefix = tokenMatch ? tokenMatch[1] : '';
-                return {
-                    start: cursorIndex - prefix.length,
-                    prefix: prefix
-                };
+                return window.AhaWiki.TableOptions.suggest(value.slice(0, cursorIndex));
             }
 
             function getSchemaBlockStart(left) {
@@ -1563,7 +1553,7 @@ function editText(key) {
                 const sourceNames = autocompleteType === 'interpreter'
                     ? interpreterNames
                     : autocompleteType === 'table-option'
-                        ? tableOptionNames
+                        ? tableOptionPrefixInfo.names
                     : autocompleteType === 'schema-class'
                         ? schemaClassNames
                     : autocompleteType === 'schema-property'

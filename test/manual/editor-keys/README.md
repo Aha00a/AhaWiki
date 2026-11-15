@@ -11,6 +11,10 @@ acted on one key, and the second one edited coordinates the first had already mo
  * [JIH        with JIH0 offered, then Enter  ->  " * [JIH0\n * ]"
 ```
 
+It also types `[[[#!table tsv 1 ` and reads what the popup offers. That list used to be the same
+at every word, so it offered `tsv` and whole first lines again and Tab wrote `tsv 1 tsv`; now
+`Wiki/edit.tableOptions.js` picks by position and the harness expects only the next word.
+
 ## Running it
 
 ```bash
@@ -27,7 +31,7 @@ off disk, so whatever is in the working tree is what gets tested.
 
 ## What is real and what is not
 
-Real: `AhaWiki.Editor.js`, `AhaWiki.CodeMirror.AhaMark.js`, `Wiki/edit.page.js`, CodeMirror, and
+Real: `AhaWiki.Editor.js`, `AhaWiki.CodeMirror.AhaMark.js`, `Wiki/edit.tableOptions.js`, `Wiki/edit.page.js`, CodeMirror, and
 the `keydown` events. Faked: the page-name list, because fetching the real one needs a login, and
 the surrounding page elements that `edit.page.js` measures on load.
 
@@ -51,8 +55,15 @@ Point those two script tags at `./_old/…`, reload, and it should say:
     after  " * [JIH0\n * ]" ch=3  MISMATCH
 --- Tab | popup visible "JIH0"
     after  "  * [JIH0]" ch=9  MISMATCH
-FAIL — 2 of 2
+--- table option after "tsv 1 " | offered ["1","bar=all","heat=all","compact"]
+    Tab -> "[[[#!table tsv 1 1"  OK
+FAIL — 2 of 3
 ```
+
+The table check has its own old version: `Wiki/edit.page.js` from the parent of the commit that
+added `Wiki/edit.tableOptions.js` (`git log --diff-filter=A --format=%h -- public/js/Wiki/edit.tableOptions.js`).
+Point the `edit.page.js` tag at that copy and it offers `tsv`, `csv` and the whole first lines
+after `tsv 1 `, and ends `FAIL — 1 of 3`.
 
 Then `git checkout` the harness and delete `_old`. If it prints `PASS` against those scripts,
 the harness is lying and the result means nothing.
