@@ -411,12 +411,13 @@ document.addEventListener('DOMContentLoaded', function () {
             var top = targetRect.top - wrapperRect.top + 4;
             var rightOffset = 8;
             var left = targetRect.right - wrapperRect.left - editLink.offsetWidth - rightOffset;
-            // A table's top right corner is its last header cell, and the button sat on its name
-            // and sort arrow. Beside the table it covers nothing, so it goes there when the
-            // wrapper has the room -- a table as wide as the page keeps the corner.
-            var besideTable = targetRect.right - wrapperRect.left + 6;
-            if (wrapper.classList.contains('Table') && besideTable + editLink.offsetWidth <= wrapper.clientWidth) {
-                left = besideTable;
+            // Inside the top right corner of what it edits, the button covers whatever is there:
+            // a table's last header cell, a short formula (2026-11-15, 예시 연구 노트). Beside the
+            // block it covers nothing, so it goes there when the wrapper has the room. A heading
+            // and a block as wide as the page -- code, a quote -- have none and keep the corner.
+            var besideBlock = targetRect.right - wrapperRect.left + 6;
+            if (!heading && besideBlock + editLink.offsetWidth <= wrapper.clientWidth) {
+                left = besideBlock;
             }
             editLink.style.top = top + 'px';
             editLink.style.left = (left < 0 ? 0 : left) + 'px';
