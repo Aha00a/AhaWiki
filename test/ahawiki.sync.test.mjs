@@ -90,6 +90,29 @@ test('a page whose remote content is an older committed version is local-ahead',
   assert.equal(diverged.length, 0);
 });
 
+/** A page renamed in this tree, with the content it had under its old name just before. */
+function renamedPage() {
+  const log = git(['-c', 'core.quotePath=false', 'log', '--diff-filter=R', '--name-status', '--format=%H', '--', docsGitPath]);
+  let commit = null;
+  for (const line of log.split('\n')) {
+    if (/^[0-9a-f]{40}$/.test(line.trim())) { commit = line.trim(); continue; }
+    const [status, oldPath, newPath] = line.split('\t');
+    if (!status?.startsWith('R') || !newPath?.startsWith(`${docsGitPath}/`)) continue;
+    const file = newPath.slice(docsGitPath.length + 1);
+    if (!localPages.has(file)) continue;
+    return { file, beforeRename: git(['show', `${commit}~1:${oldPath}`]) };
+  }
+  return null;
+}
+
+test('a renamed page whose remote content was committed under its old name is local-ahead', (t) => {
+  // The rename on the wiki (/api/v1/rename) keeps the content; the history that holds it is under
+  // the old file name. AiAgent was reported diverged this way on 2026-11-15.
+  const found = renamedPage();
+  if (!found) return t.skip('no page under docs/ahawiki.net/ has been renamed');
+  assert.equal(remoteIsOlderLocalVersion(found.file, remoteHash(asStoredOnWiki(found.beforeRename))), true);
+});
+
 test('a page whose remote content was never committed here is diverged, not local-ahead', () => {
   const neverCommitted = `${localPages.get(somePage)}\n\n== edited in the browser at some point\n`;
   assert.equal(remoteIsOlderLocalVersion(somePage, remoteHash(neverCommitted)), false);

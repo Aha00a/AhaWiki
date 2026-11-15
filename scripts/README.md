@@ -218,6 +218,9 @@ npm run sync:ahawiki.net -- --apply --comment="AccessControl: the new permission
 
 The classification is what decides whether a live page gets overwritten, so it is covered by
 `test/ahawiki.sync.test.mjs` (part of `npm test`) against this repository's real git history.
+That history is followed across renames (`git log --follow`): after a page is renamed here and
+on the wiki, the wiki still holds content committed under the old file name, and without it the
+page was reported diverged although no one had edited it.
 
 Three outcomes need a person rather than a flag:
 

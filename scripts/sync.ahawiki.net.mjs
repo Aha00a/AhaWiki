@@ -75,19 +75,34 @@ export function readCommittedPages() {
  * to be merged by hand — AGENTS.md is explicit that neither side gets overwritten blindly.
  */
 export function remoteIsOlderLocalVersion(file, remoteContentHash) {
-  const path = `${docsGitPath}/${file}`;
-  const commits = git(['log', `--max-count=${historyDepth}`, '--format=%H', '--', path])
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  return commits.some((commit) => {
+  return committedVersions(`${docsGitPath}/${file}`).some(({ commit, path }) => {
     try {
       return hashMatches(git(['show', `${commit}:${path}`]), remoteContentHash);
     } catch {
       return false; // The file did not exist at that commit.
     }
   });
+}
+
+/**
+ * The commits that touched a file, each with the path the file had in that commit.
+ *
+ * Followed across renames. Without --follow a renamed page's history starts at the rename, and
+ * the wiki, renamed through /api/v1/rename, still holds the content committed under the old
+ * name — so the sync called it diverged although nothing had been edited in the browser. That
+ * happened to AiAgent on 2026-11-15. The path has to come back with each commit because
+ * `git show <commit>:<path>` needs the name the file had then.
+ */
+export function committedVersions(path) {
+  // quotePath off so a Korean name comes back as itself rather than in octal escapes.
+  const lines = git(['-c', 'core.quotePath=false', 'log', '--follow', `--max-count=${historyDepth}`,
+    '--format=%H', '--name-only', '--', path]).split('\n').map((line) => line.trim());
+  const versions = [];
+  for (const line of lines) {
+    if (/^[0-9a-f]{40}$/.test(line)) versions.push({ commit: line, path: null });
+    else if (line !== '' && versions.length > 0 && versions.at(-1).path === null) versions.at(-1).path = line;
+  }
+  return versions.filter((version) => version.path !== null);
 }
 
 /** Sorts every page into one of the six states a sync can find it in. */
