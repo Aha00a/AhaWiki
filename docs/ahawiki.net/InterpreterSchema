@@ -94,7 +94,8 @@ JSON-LD에는 다음 기본 값이 자동으로 들어갑니다.
  * `mainEntityOfPage`: 현재 문서 URL
  * `@id`: 현재 문서 URL
  * `name`: 현재 문서 이름. 단, `name` property를 직접 쓴 경우에는 직접 쓴 값을 사용합니다.
- * `inLanguage`: 현재 요청 locale
+ * `inLanguage`: 사이트 본문 언어(`AhaWikiConfig.ContentLanguage`, `ko`). 단, schema.org 가 그 클래스에 `inLanguage` 를 허용할 때만 넣습니다 — `CreativeWork`·`Event` 계열에는 들어가고 `Person`·`Place`·`Organization` 에는 들어가지 않습니다. `inLanguage` 를 직접 쓴 경우에는 직접 쓴 값을 사용합니다.
+  * 2026-11-16 전에는 요청의 `Accept-Language` 를 넣었습니다. 그래서 영어 브라우저나 크롤러가 열면 한국어 페이지가 `en-US` 라고 나갔고, `Person` 에도 붙어 검사기가 모르는 속성이 되었습니다.
 
 `address`는 `PostalAddress`, `location`과 `foundingLocation`은 `Place`, `geo`의 `lat,lng` 값은 `GeoCoordinates`로 변환합니다.
 

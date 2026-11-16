@@ -113,7 +113,17 @@ object InterpreterSchemaUnit {
       assertEquals((json \ "url").as[String], ("https://example.com/w/Aha00a"))
       assertEquals((json \ "mainEntityOfPage").as[String], ("https://example.com/w/Aha00a"))
       assertEquals((json \ "name").as[String], ("Aha00a"))
-      assertEquals((json \ "inLanguage").as[String], ("ko-KR"))
+      // schema.org gives Person no inLanguage, so the language passed in is not written.
+      assertEquals((json \ "inLanguage").toOption, None)
+    }
+
+    {
+      // A CreativeWork does take it, through Movie's superclass.
+      val json = InterpreterSchema.toJsonLdObject(ParseResult("Movie", Seq(Seq("name", "무빙"))), language = Some("ko")).get
+      assertEquals((json \ "inLanguage").as[String], "ko")
+      // A value written on the page wins over the default.
+      val written = InterpreterSchema.toJsonLdObject(ParseResult("Movie", Seq(Seq("inLanguage", "en"))), language = Some("ko")).get
+      assertEquals((written \ "inLanguage").as[String], "en")
     }
 
     {

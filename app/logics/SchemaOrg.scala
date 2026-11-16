@@ -282,6 +282,10 @@ object CalculatedSchemaOrg {
     mapClass.get(schema).map(v => v.id +: v.subClassOf.flatMap(p => getClassHierarchy(p))).getOrElse(Seq())
   }
 
+  /** Whether schema.org lets `schema` carry `property`, directly or through a superclass. */
+  def isPropertyOf(property: String, schema: String): Boolean =
+    mapProperty.get(property).exists(p => getClassHierarchy(schema).exists(p.domainIncludes.contains))
+
   def getParents(schema:String): Seq[String] = {
     mapClass.get(schema) match {
       case Some(n) => n.subClassOf

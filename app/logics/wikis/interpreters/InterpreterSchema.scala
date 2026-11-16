@@ -182,7 +182,11 @@ object InterpreterSchema extends TraitInterpreter {
         pageUrl.map("mainEntityOfPage" -> JsString(_)),
         pageUrl.map("@id" -> JsString(_)),
         pageName.filter(_ => !fields.contains("name")).map("name" -> JsString(_)),
-        language.map("inLanguage" -> JsString(_)),
+        // Only where schema.org allows it: a Person or a Place has no inLanguage, and saying one
+        // anyway is a property validators reject.
+        language
+          .filter(_ => parseResult.schemaClasses.exists(c => logics.CalculatedSchemaOrg.isPropertyOf("inLanguage", c)))
+          .map("inLanguage" -> JsString(_)),
       ).flatten
 
       // JSON-LD takes @type as a string or as an array. Keep the string for the ordinary single
@@ -346,7 +350,9 @@ object InterpreterSchema extends TraitInterpreter {
       baseUrl = baseUrl,
       pageUrl = pageUrl,
       pageName = Some(wikiContext.name),
-      language = Some(wikiContext.requestWrapper.locale.toLanguageTag),
+      // The language the page is written in, not the reader's: until 2026-11-16 this was the
+      // request's Accept-Language, so a crawler asking in English was told a Korean page was en-US.
+      language = Some(logics.AhaWikiConfig.ContentLanguage),
     ).map(json =>
       <script type="application/ld+json">{scala.xml.Unparsed(logics.HtmlJson.stringify(json))}</script>
     )
