@@ -80,13 +80,6 @@ class PageColorSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfte
       PageColor.parse("rgb(1,2,3)") mustBe None
     }
 
-    "give the hue a large surface draws with" in {
-      PageColor.hue("#ff0000") mustBe 0
-      PageColor.hue("#00ff00") mustBe 120
-      PageColor.hue("#0000ff") mustBe 240
-      PageColor.hue("#808080") mustBe 0
-    }
-
     "take the first valid themeColor of a block" in {
       PageColor.fromFields(Seq(Seq("name", "x"), Seq("themeColor", "nope", "#123"), Seq("themeColor", "#456"))) mustBe Some("#112233")
       PageColor.fromFields(Seq(Seq("name", "x"))) mustBe None

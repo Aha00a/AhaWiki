@@ -11,6 +11,9 @@ package logics
  *
  * Only `#rgb` and `#rrggbb` are taken. Whatever passes is the only thing that reaches a style
  * attribute or a script, so a value cannot carry anything else into the page.
+ *
+ * The colour is sent as written. Which shade of it is drawn depends on the theme the browser is
+ * showing, so public/js/AhaWiki.PageColor.js decides that, against the background it lands on.
  */
 object PageColor {
   val Key: String = "themeColor"
@@ -28,24 +31,4 @@ object PageColor {
   /** The first valid `themeColor` among a block's fields (key +: values). */
   def fromFields(fields: Seq[Seq[String]]): Option[String] =
     fields.collect { case Key +: values => values }.flatten.flatMap(parse).headOption
-
-  /**
-   * The hue, 0 to 359, of a parsed colour. Large surfaces take only this and draw it the way the
-   * site draws its own `--hue`, so text on them reads in either theme whatever colour was chosen.
-   */
-  def hue(color: String): Int = {
-    val v = Integer.parseInt(color.stripPrefix("#"), 16)
-    val (r, g, b) = (((v >> 16) & 0xff) / 255.0, ((v >> 8) & 0xff) / 255.0, (v & 0xff) / 255.0)
-    val max = Seq(r, g, b).max
-    val min = Seq(r, g, b).min
-    val d = max - min
-    if (d == 0) 0
-    else {
-      val h =
-        if (max == r) ((g - b) / d) % 6
-        else if (max == g) (b - r) / d + 2
-        else (r - g) / d + 4
-      ((math.round(h * 60).toInt % 360) + 360) % 360
-    }
-  }
 }

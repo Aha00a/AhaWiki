@@ -362,10 +362,13 @@ object InterpreterSchema extends TraitInterpreter {
     )
     val pageColor: Option[String] = logics.PageColor.fromFields(parseResult.seqSeqField)
     val wrapperClass: String = "schema InterpreterSchema" + pageColor.fold("")(_ => " hasPageColor")
-    val wrapperStyle: Option[scala.xml.Text] = pageColor.map(c => scala.xml.Text(s"--page-color: $c; --page-hue: ${logics.PageColor.hue(c)}"))
+    // The colour as written goes in the style, which is what shows without scripts; with them,
+    // AhaWiki.PageColor.js reads data-page-color and sets the style to a shade that stands on the
+    // theme's background (InterpreterSchema «페이지 색»).
+    val wrapperStyle: Option[scala.xml.Text] = pageColor.map(c => scala.xml.Text(s"--page-color: $c"))
     wikiContext.renderingMode match {
       case RenderingMode.Normal =>
-        val r = <div class={wrapperClass} style={wrapperStyle}>{dl}{jsonLdScript.getOrElse(scala.xml.NodeSeq.Empty)}</div>
+        val r = <div class={wrapperClass} style={wrapperStyle} data-page-color={pageColor.map(scala.xml.Text(_))}>{dl}{jsonLdScript.getOrElse(scala.xml.NodeSeq.Empty)}</div>
         r.toString()
       case RenderingMode.Preview =>
         // Recommendations come from every declared class, deduplicated: a page typed as both a
@@ -386,7 +389,7 @@ object InterpreterSchema extends TraitInterpreter {
           ""
         }
         val r =
-          <div class={wrapperClass} style={wrapperStyle}>
+          <div class={wrapperClass} style={wrapperStyle} data-page-color={pageColor.map(scala.xml.Text(_))}>
             {dl}
             {jsonLdScript.getOrElse(scala.xml.NodeSeq.Empty)}
             <div class="preview info">

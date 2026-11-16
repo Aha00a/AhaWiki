@@ -73,22 +73,20 @@ window.AhaWikiAdjacentPagesGraph = {
                 return value || fallback;
             }
 
-            // A page's own colour (its #!Schema themeColor, logics.PageColor), as a node can show it:
-            // the hue and saturation kept, the lightness held between 35% and 65% so a near-white or
-            // near-black choice still shows as a dot on either theme's background. The server has
-            // already accepted only #rrggbb.
-            function displayColor(hex) {
-                var m = /^#([0-9a-f]{6})$/i.exec(hex || '');
-                if(!m) return '';
-                var v = parseInt(m[1], 16);
-                var r = ((v >> 16) & 255) / 255, g = ((v >> 8) & 255) / 255, b = (v & 255) / 255;
-                var max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
-                var l = (max + min) / 2;
-                var s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
-                var h = d === 0 ? 0 : (max === r ? ((g - b) / d) % 6 : (max === g ? (b - r) / d + 2 : (r - g) / d + 4)) * 60;
-                if(h < 0) h += 360;
-                l = Math.min(0.65, Math.max(0.35, l));
-                return 'hsl(' + Math.round(h) + ', ' + Math.round(s * 100) + '%, ' + Math.round(l * 100) + '%)';
+            // A page's own colour (its #!Schema themeColor, logics.PageColor), in the shade that
+            // stands on this theme's graph background -- AhaWiki.PageColor.js decides that for the
+            // infobox and the link preview too. Worked out again at every draw, because the theme
+            // can change under a running graph; the answer is remembered per colour and background.
+            var shownColors = {};
+            function shownColor(hex, palette) {
+                if(!hex) return '';
+                var api = window.AhaWiki && window.AhaWiki.PageColor;
+                if(!api) return hex;
+                var key = hex + '|' + palette.bgStart + '|' + palette.bgEnd;
+                if(!(key in shownColors)) {
+                    shownColors[key] = api.forBackgrounds(hex, [api.resolveColor(palette.bgStart), api.resolveColor(palette.bgEnd)]) || hex;
+                }
+                return shownColors[key];
             }
 
             function graphPalette() {
@@ -412,7 +410,8 @@ window.AhaWikiAdjacentPagesGraph = {
                     ctx.globalAlpha = nodeAlpha;
                     // A page's own colour wins over the distance colours, the root's included (the
                     // root keeps its ring). Hover and its neighbours keep their highlight.
-                    ctx.fillStyle = isRoot ? (n.color || palette.root) : (isHover ? palette.hover : (isNeighbor ? palette.neighbor : (n.color ? n.color : (depth <= 1 ? palette.hop1 : (depth <= 2 ? palette.hop2 : palette.distant)))));
+                    var pageColor = shownColor(n.color, palette);
+                    ctx.fillStyle = isRoot ? (pageColor || palette.root) : (isHover ? palette.hover : (isNeighbor ? palette.neighbor : (pageColor ? pageColor : (depth <= 1 ? palette.hop1 : (depth <= 2 ? palette.hop2 : palette.distant)))));
                     ctx.arc(p.x, p.y, rScreen, 0, Math.PI * 2);
                     ctx.fill();
 
@@ -439,7 +438,7 @@ window.AhaWikiAdjacentPagesGraph = {
                         // The thumbnail covers the fill, so the colour shows as the ring instead.
                         ctx.beginPath();
                         ctx.arc(p.x, p.y, rScreen, 0, Math.PI * 2);
-                        ctx.strokeStyle = n.color;
+                        ctx.strokeStyle = pageColor;
                         ctx.lineWidth = 2;
                         ctx.stroke();
                     } else {
@@ -549,8 +548,8 @@ window.AhaWikiAdjacentPagesGraph = {
                     var dstNode = ensureNode(v.dst);
                     if(v.srcImageUrl && !srcNode.imageUrl) srcNode.imageUrl = v.srcImageUrl;
                     if(v.dstImageUrl && !dstNode.imageUrl) dstNode.imageUrl = v.dstImageUrl;
-                    if(v.srcColor && !srcNode.color) srcNode.color = displayColor(v.srcColor);
-                    if(v.dstColor && !dstNode.color) dstNode.color = displayColor(v.dstColor);
+                    if(v.srcColor && !srcNode.color) srcNode.color = v.srcColor;
+                    if(v.dstColor && !dstNode.color) dstNode.color = v.dstColor;
                     changed = addLink(v.src, v.dst) || changed;
                     consumed++;
                 }

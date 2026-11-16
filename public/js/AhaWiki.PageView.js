@@ -396,14 +396,18 @@
                 } else {
                     $inner.addClass('noPreviewImage');
                 }
-                // The page's own colour (/api/pagePreview's color, already #rrggbb), as a stripe.
+                // The page's own colour (/api/pagePreview's color, already #rrggbb), as a stripe, in
+                // the shade AhaWiki.PageColor.js finds for the card's background once it is shown.
                 if (/^#[0-9a-f]{6}$/i.test(data.color || "")) {
-                    $inner.addClass('hasPageColor').css('--page-color', data.color);
+                    $inner.addClass('hasPageColor').attr('data-page-color', data.color).css('--page-color', data.color);
                 }
                 $inner
                     .append($('<h5/>').text(data.title || ""))
                     .append($('<p/>').text(data.description || ""));
                 div.html('').append($inner);
+                if ($inner.attr('data-page-color') && window.AhaWiki && window.AhaWiki.PageColor) {
+                    window.AhaWiki.PageColor.apply($inner[0]);
+                }
                 positionPreview($link, div);
             }
 
