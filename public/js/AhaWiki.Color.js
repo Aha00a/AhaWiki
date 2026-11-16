@@ -182,20 +182,34 @@
 
     // Any CSS colour the browser understands -- a custom property's `hsl(220, 16%, 11%)`, a computed
     // `rgba(…)` -- as [r, g, b], or null when it is transparent or not a colour.
+    //
+    // Anything not rgb() is painted on a one-pixel canvas and read back, so the browser does the
+    // conversion, gamut mapping included. Reading the canvas's fillStyle back, the first version,
+    // stopped working the day the theme went OKLCH: Chrome keeps `oklch(0.47 0.228 263)` as it is
+    // in both a computed style and fillStyle, the parse found no rgb(), and every OKLCH background
+    // was taken for transparent -- a page colour on the dark theme was fitted to white.
     var probe = null;
     function resolveColor(css) {
         var m = /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:\s*[,\/]\s*([\d.]+%?))?\s*\)$/i.exec((css || '').trim());
         if (!m && typeof document !== 'undefined') {
-            probe = probe || document.createElement('canvas').getContext('2d');
-            if (probe) {
-                probe.fillStyle = '#010203';
-                probe.fillStyle = css;
-                var resolved = probe.fillStyle;
-                if (/^#[0-9a-f]{6}$/i.test(resolved) && !(resolved === '#010203' && css.trim() !== '#010203')) {
-                    return parseHex(resolved);
-                }
-                m = /^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:\s*[,\/]\s*([\d.]+%?))?\s*\)$/i.exec(resolved);
+            if (!probe) {
+                var canvas = document.createElement('canvas');
+                canvas.width = canvas.height = 1;
+                probe = canvas.getContext('2d', { willReadFrequently: true });
             }
+            if (!probe) {
+                return null;
+            }
+            // A value the canvas does not take leaves fillStyle as it was: the sentinel shows it.
+            probe.fillStyle = '#010203';
+            probe.fillStyle = css;
+            if (probe.fillStyle === '#010203' && !/^#010203$/i.test((css || '').trim())) {
+                return null;
+            }
+            probe.clearRect(0, 0, 1, 1);
+            probe.fillRect(0, 0, 1, 1);
+            var pixel = probe.getImageData(0, 0, 1, 1).data;
+            return pixel[3] === 0 ? null : [pixel[0], pixel[1], pixel[2]];
         }
         if (!m) {
             return null;
