@@ -1,16 +1,21 @@
-// A page's own colour (its #!Schema themeColor, logics.PageColor) as it can be drawn on the
-// background it lands on. The colour as written is kept for its hue; the lightness moves until the
-// stripe or dot stands at 3:1 against the background -- what WCAG 1.4.11 asks of a mark that is not
-// text. Measured on aha00a.com's language pages (2026-11-16), GitHub's JavaScript yellow stood at
-// 1.35:1 on the light theme's white and C's grey at 2.31:1 on the dark one, so no single lightness
-// range serves both themes: the answer depends on the background, and is worked out against it.
+// Colour arithmetic in OKLCH, whose lightness follows what the eye sees where HSL's does not, and
+// the two things the wiki does with it (2026-11-16). Plain ES5 maths that hands the browser
+// ordinary #rrggbb or a number, so it asks nothing of the browser's own CSS colour support.
 //
-// The lightness moved is OKLCH's, which follows what the eye sees: an HSL clamp to 35-65%, the first
-// version, left that yellow at 65% and as bright as ever. Chroma is lowered only as far as the
-// moved colour needs to stay inside sRGB.
+// 1. The theme's hue. The stored hue (slider, site default) is an HSL hue; the theme's tokens in
+//    less.less are OKLCH and turn by --hue-ok, the same hue on OKLCH's circle. hueFromHsl gives it.
 //
-// The infobox, the adjacent-pages graph and the link preview all go through here, so the three
-// cannot disagree about a colour. The reasons are on the wiki page InterpreterSchema «페이지 색».
+// 2. A page's own colour (its #!Schema themeColor, logics.PageColor) as it can be drawn on the
+//    background it lands on. The colour as written is kept for its hue; the lightness moves until
+//    the stripe or dot stands at 3:1 against the background -- what WCAG 1.4.11 asks of a mark that
+//    is not text. Measured on aha00a.com's language pages, GitHub's JavaScript yellow stood at
+//    1.35:1 on the light theme's white and C's grey at 2.31:1 on the dark one, so no single
+//    lightness range serves both themes: the answer depends on the background. An HSL clamp to
+//    35-65%, the first version, left that yellow at 65% and as bright as ever. Chroma is lowered
+//    only as far as the moved colour needs to stay inside sRGB. The infobox, the adjacent-pages
+//    graph and the link preview all go through here, so the three cannot disagree about a colour.
+//
+// The reasons are on the wiki pages InterpreterSchema «페이지 색» and Dev Theme Support.
 (function () {
     if (typeof window.AhaWiki === 'undefined') {
         window.AhaWiki = {};
@@ -105,6 +110,32 @@
         });
     }
 
+    /**
+     * The hue on OKLCH's circle, 0 to 360, of the HSL hue `hue` -- the hue of the fully saturated
+     * HSL colour. Not linear: HSL's 90 to 150 are all greens and land within 16 degrees of each other.
+     */
+    function hueFromHsl(hue) {
+        var h = ((Number(hue) % 360) + 360) % 360;
+        var f = function (n) {
+            var k = (n + h / 30) % 12;
+            return 0.5 - 0.5 * Math.max(-1, Math.min(k - 3, 9 - k, 1));
+        };
+        var lch = toOklch([f(0) * 255, f(8) * 255, f(4) * 255]);
+        var degrees = lch[2] * 180 / Math.PI;
+        return Math.round((degrees < 0 ? degrees + 360 : degrees) * 10) / 10;
+    }
+
+    /**
+     * [r, g, b] of CSS `oklch(L C h)` (L 0..1, h in degrees) as browsers draw it when sRGB cannot
+     * hold it: each channel clipped, not the chroma reduced. What the theme's tokens look like at a
+     * hue whose chroma they overshoot; test/theme.oklch-contrast.test.mjs reads them through this.
+     */
+    function cssOklch(L, C, hueDegrees) {
+        return oklchToLinear(L, C, hueDegrees * Math.PI / 180).map(function (c) {
+            return Math.round(fromLinear(Math.min(1, Math.max(0, c))));
+        });
+    }
+
     function standsOnAll(rgb, backgrounds) {
         return backgrounds.every(function (bg) {
             return contrast(rgb, bg) >= targetRatio;
@@ -191,7 +222,7 @@
      * Sets `--page-color` on an element carrying `data-page-color`: a stripe along its edge sits
      * between the element's own background and what is behind it, so it has to stand on both.
      */
-    function apply(element) {
+    function applyPageColor(element) {
         var raw = element.getAttribute('data-page-color');
         var backgrounds = [backgroundBehind(element)];
         if (element.parentElement) {
@@ -203,26 +234,28 @@
         }
     }
 
-    function applyAll(root) {
-        Array.prototype.forEach.call((root || document).querySelectorAll('[data-page-color]'), apply);
+    function applyPageColors(root) {
+        Array.prototype.forEach.call((root || document).querySelectorAll('[data-page-color]'), applyPageColor);
     }
 
-    window.AhaWiki.PageColor = {
+    window.AhaWiki.Color = {
+        hueFromHsl: hueFromHsl,
+        cssOklch: cssOklch,
         forBackgrounds: forBackgrounds,
         contrast: contrast,
         resolveColor: resolveColor,
-        apply: apply,
-        applyAll: applyAll
+        applyPageColor: applyPageColor,
+        applyPageColors: applyPageColors
     };
 
     if (typeof document !== 'undefined' && document.addEventListener) {
         document.addEventListener('DOMContentLoaded', function () {
-            applyAll(document);
+            applyPageColors(document);
         });
         // _base.scala.html announces a theme switch through jQuery once the classes have changed.
         if (window.jQuery) {
             window.jQuery(document).on('ahawiki:themeChanged', function () {
-                applyAll(document);
+                applyPageColors(document);
             });
         }
     }

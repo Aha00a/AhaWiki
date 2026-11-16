@@ -796,7 +796,7 @@ import { Anchor as Anchor4, Badge as Badge10, Button as Button6, Card as Card7, 
 
 // app/assets/js/admin/hooks/useSiteConfigData.js
 import { useCallback as useCallback6, useState as useState12 } from "react";
-var DEFAULT_THEME = { defaultHue: "" };
+var DEFAULT_THEME = { defaultHue: "", fallbackHue: null };
 var DEFAULT_TELEGRAM = { chatId: "" };
 function useSiteConfigData(siteSeq) {
   const [faviconUrl, setFaviconUrl] = useState12("/public/favicon.png");
@@ -860,7 +860,7 @@ function useSiteConfigData(siteSeq) {
     }
     try {
       const data = await fetchJson(`/api/Admin/SiteTheme?siteSeq=${encodeURIComponent(siteSeq)}`);
-      setSiteTheme({ defaultHue: data?.defaultHue ?? "" });
+      setSiteTheme({ defaultHue: data?.defaultHue ?? "", fallbackHue: data?.fallbackHue ?? null });
     } catch (err) {
       logError("site-theme:load:error", err);
       setError(err.message);
@@ -872,7 +872,7 @@ function useSiteConfigData(siteSeq) {
     setError("");
     try {
       const data = await sendForm("/api/Admin/SiteTheme", "PUT", { siteSeq: String(siteSeq), ...theme });
-      setSiteTheme({ defaultHue: data?.defaultHue ?? "" });
+      setSiteTheme({ defaultHue: data?.defaultHue ?? "", fallbackHue: data?.fallbackHue ?? null });
     } catch (err) {
       logError("site-theme:save:error", err);
       setError(err.message);
@@ -939,8 +939,8 @@ function SiteConfigPage() {
     await loadFavicon();
     setFaviconFile(null);
   } }, "Reset to default")), /* @__PURE__ */ React15.createElement(Text11, { size: "xs", c: "dimmed" }, "\uAD8C\uC7A5: 32x32 \uB610\uB294 48x48 PNG/ICO"))))), /* @__PURE__ */ React15.createElement(Card7, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group11, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React15.createElement(Title8, { order: 3 }, "Theme"), /* @__PURE__ */ React15.createElement(Badge10, { color: "grape", variant: "light" }, "\uB514\uC790\uC778")), /* @__PURE__ */ React15.createElement(Text11, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uAE30\uBCF8 \uC0C9\uC870(Hue)\uB97C \uC9C0\uC815\uD569\uB2C8\uB2E4."), (() => {
-    const hue = siteTheme.defaultHue === "" ? 220 : Number(siteTheme.defaultHue);
-    return /* @__PURE__ */ React15.createElement(SimpleGrid2, { cols: { base: 1, sm: 2 }, spacing: "md", mb: "md" }, /* @__PURE__ */ React15.createElement(Stack7, { gap: 4 }, /* @__PURE__ */ React15.createElement(Text11, { size: "sm", fw: 500 }, "\uAE30\uBCF8 \uC0C9\uC870 (Default Hue) ", /* @__PURE__ */ React15.createElement(Text11, { span: true, size: "xs", c: "dimmed" }, "\u2014 \uC0AC\uC6A9\uC790 \uBBF8\uC124\uC815 \uC2DC \uCD08\uAE30\uAC12, \uBBF8\uC9C0\uC815 \uC2DC 220")), /* @__PURE__ */ React15.createElement(Group11, { gap: "sm", align: "center" }, /* @__PURE__ */ React15.createElement(
+    const hue = siteTheme.defaultHue === "" ? siteTheme.fallbackHue ?? 0 : Number(siteTheme.defaultHue);
+    return /* @__PURE__ */ React15.createElement(SimpleGrid2, { cols: { base: 1, sm: 2 }, spacing: "md", mb: "md" }, /* @__PURE__ */ React15.createElement(Stack7, { gap: 4 }, /* @__PURE__ */ React15.createElement(Text11, { size: "sm", fw: 500 }, "\uAE30\uBCF8 \uC0C9\uC870 (Default Hue) ", /* @__PURE__ */ React15.createElement(Text11, { span: true, size: "xs", c: "dimmed" }, "\u2014 \uC0AC\uC6A9\uC790 \uBBF8\uC124\uC815 \uC2DC \uCD08\uAE30\uAC12, \uBBF8\uC9C0\uC815 \uC2DC ", siteTheme.fallbackHue ?? "\uAE30\uBCF8\uAC12")), /* @__PURE__ */ React15.createElement(Group11, { gap: "sm", align: "center" }, /* @__PURE__ */ React15.createElement(
       "input",
       {
         type: "range",
@@ -948,9 +948,10 @@ function SiteConfigPage() {
         max: 360,
         value: hue,
         onChange: (e) => setSiteTheme((prev) => ({ ...prev, defaultHue: e.target.value })),
-        style: { flex: 1, height: 8, borderRadius: 4, appearance: "none", WebkitAppearance: "none", background: "linear-gradient(to right, hsl(0,80%,55%), hsl(30,80%,55%), hsl(60,80%,55%), hsl(90,80%,55%), hsl(120,80%,55%), hsl(150,80%,55%), hsl(180,80%,55%), hsl(210,80%,55%), hsl(240,80%,55%), hsl(270,80%,55%), hsl(300,80%,55%), hsl(330,80%,55%), hsl(360,80%,55%))", cursor: "pointer", outline: "none", border: "none" }
+        className: "hueTrack",
+        style: { flex: 1, height: 8, borderRadius: 4, appearance: "none", WebkitAppearance: "none", cursor: "pointer", outline: "none", border: "none" }
       }
-    ), /* @__PURE__ */ React15.createElement("div", { style: { width: 24, height: 24, borderRadius: 6, backgroundColor: `hsl(${hue},80%,55%)`, border: "1px solid rgba(0,0,0,0.15)", flexShrink: 0 } }), /* @__PURE__ */ React15.createElement(Text11, { size: "sm", style: { width: 32, textAlign: "right" } }, hue))), /* @__PURE__ */ React15.createElement(Paper2, { withBorder: true, radius: "md", p: "md" }, /* @__PURE__ */ React15.createElement(Text11, { size: "sm", fw: 600, mb: 8 }, "\uBBF8\uB9AC\uBCF4\uAE30"), /* @__PURE__ */ React15.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React15.createElement("span", { style: { color: `hsl(${hue},99%,43%)`, textDecoration: "underline", fontSize: 13, cursor: "pointer" } }, "\uB9C1\uD06C"), /* @__PURE__ */ React15.createElement("span", { style: { padding: "1px 6px", borderRadius: 4, backgroundColor: `hsl(${hue},100%,7%)`, color: `hsl(${hue},100%,80%)`, fontFamily: "monospace", fontSize: 12 } }, "code"), /* @__PURE__ */ React15.createElement("span", { style: { padding: "2px 10px", borderRadius: 5, backgroundColor: `hsl(${hue},89%,47%)`, color: "#fff", fontSize: 12, fontWeight: 600 } }, "\uBC84\uD2BC"), /* @__PURE__ */ React15.createElement("span", { style: { display: "block", width: "100%", height: 6, borderRadius: 3, background: `linear-gradient(to right, hsl(${hue},100%,96%), hsl(${hue},89%,47%))`, marginTop: 4 } }))));
+    ), /* @__PURE__ */ React15.createElement("div", { className: "hueScope", style: { "--hue": hue, width: 24, height: 24, borderRadius: 6, backgroundColor: "var(--color-kanban-primary)", border: "1px solid rgba(0,0,0,0.15)", flexShrink: 0 } }), /* @__PURE__ */ React15.createElement(Text11, { size: "sm", style: { width: 32, textAlign: "right" } }, hue))), /* @__PURE__ */ React15.createElement(Paper2, { withBorder: true, radius: "md", p: "md" }, /* @__PURE__ */ React15.createElement(Text11, { size: "sm", fw: 600, mb: 8 }, "\uBBF8\uB9AC\uBCF4\uAE30"), /* @__PURE__ */ React15.createElement("div", { className: "hueScope", style: { "--hue": hue, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React15.createElement("span", { style: { color: "var(--color-link)", textDecoration: "underline", fontSize: 13, cursor: "pointer" } }, "\uB9C1\uD06C"), /* @__PURE__ */ React15.createElement("span", { style: { padding: "1px 6px", borderRadius: 4, backgroundColor: "var(--color-code-bg)", color: "var(--color-code-link)", fontFamily: "monospace", fontSize: 12 } }, "code"), /* @__PURE__ */ React15.createElement("span", { style: { padding: "2px 10px", borderRadius: 5, backgroundColor: "var(--color-adjacent-hud-action-active-bg)", color: "var(--color-adjacent-hud-action-active-text)", fontSize: 12, fontWeight: 600 } }, "\uBC84\uD2BC"), /* @__PURE__ */ React15.createElement("span", { style: { display: "block", width: "100%", height: 6, borderRadius: 3, background: "linear-gradient(to right, var(--color-link-hover-bg), var(--color-kanban-primary))", marginTop: 4 } }))));
   })(), /* @__PURE__ */ React15.createElement(Group11, { mt: "md" }, /* @__PURE__ */ React15.createElement(Button6, { variant: "filled", color: "grape", loading: savingTheme, disabled: !siteSeq, onClick: async () => {
     await saveTheme(siteTheme);
     await loadTheme();

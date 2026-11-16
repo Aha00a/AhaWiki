@@ -81,29 +81,33 @@ export default function SiteConfigPage() {
                 <Group justify="space-between" mb="md"><Title order={3}>Theme</Title><Badge color="grape" variant="light">디자인</Badge></Group>
                 <Text size="sm" c="dimmed" mb="md">사이트별 기본 색조(Hue)를 지정합니다.</Text>
                 {(() => {
-                    const hue = siteTheme.defaultHue === "" ? 220 : Number(siteTheme.defaultHue);
+                    // An OKLCH hue; the server says what an empty one falls back to.
+                    const hue = siteTheme.defaultHue === "" ? (siteTheme.fallbackHue ?? 0) : Number(siteTheme.defaultHue);
                     return (
                         <SimpleGrid cols={{base: 1, sm: 2}} spacing="md" mb="md">
                             <Stack gap={4}>
-                                <Text size="sm" fw={500}>기본 색조 (Default Hue) <Text span size="xs" c="dimmed">— 사용자 미설정 시 초기값, 미지정 시 220</Text></Text>
+                                <Text size="sm" fw={500}>기본 색조 (Default Hue) <Text span size="xs" c="dimmed">— 사용자 미설정 시 초기값, 미지정 시 {siteTheme.fallbackHue ?? "기본값"}</Text></Text>
                                 <Group gap="sm" align="center">
                                     <input
                                         type="range" min={0} max={360}
                                         value={hue}
                                         onChange={(e) => setSiteTheme((prev) => ({...prev, defaultHue: e.target.value}))}
-                                        style={{flex: 1, height: 8, borderRadius: 4, appearance: "none", WebkitAppearance: "none", background: "linear-gradient(to right, hsl(0,80%,55%), hsl(30,80%,55%), hsl(60,80%,55%), hsl(90,80%,55%), hsl(120,80%,55%), hsl(150,80%,55%), hsl(180,80%,55%), hsl(210,80%,55%), hsl(240,80%,55%), hsl(270,80%,55%), hsl(300,80%,55%), hsl(330,80%,55%), hsl(360,80%,55%))", cursor: "pointer", outline: "none", border: "none"}}
+                                        className="hueTrack"
+                                        style={{flex: 1, height: 8, borderRadius: 4, appearance: "none", WebkitAppearance: "none", cursor: "pointer", outline: "none", border: "none"}}
                                     />
-                                    <div style={{width: 24, height: 24, borderRadius: 6, backgroundColor: `hsl(${hue},80%,55%)`, border: "1px solid rgba(0,0,0,0.15)", flexShrink: 0}}/>
+                                    <div className="hueScope" style={{"--hue": hue, width: 24, height: 24, borderRadius: 6, backgroundColor: "var(--color-kanban-primary)", border: "1px solid rgba(0,0,0,0.15)", flexShrink: 0}}/>
                                     <Text size="sm" style={{width: 32, textAlign: "right"}}>{hue}</Text>
                                 </Group>
                             </Stack>
                             <Paper withBorder radius="md" p="md">
                                 <Text size="sm" fw={600} mb={8}>미리보기</Text>
-                                <div style={{display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap"}}>
-                                    <span style={{color: `hsl(${hue},99%,43%)`, textDecoration: "underline", fontSize: 13, cursor: "pointer"}}>링크</span>
-                                    <span style={{padding: "1px 6px", borderRadius: 4, backgroundColor: `hsl(${hue},100%,7%)`, color: `hsl(${hue},100%,80%)`, fontFamily: "monospace", fontSize: 12}}>code</span>
-                                    <span style={{padding: "2px 10px", borderRadius: 5, backgroundColor: `hsl(${hue},89%,47%)`, color: "#fff", fontSize: 12, fontWeight: 600}}>버튼</span>
-                                    <span style={{display: "block", width: "100%", height: 6, borderRadius: 3, background: `linear-gradient(to right, hsl(${hue},100%,96%), hsl(${hue},89%,47%))`, marginTop: 4}}/>
+                                {/* The wiki's own tokens, worked out again at this hue: .hueScope re-declares them
+                                    (less.less), so the preview cannot drift from the pages. */}
+                                <div className="hueScope" style={{"--hue": hue, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap"}}>
+                                    <span style={{color: "var(--color-link)", textDecoration: "underline", fontSize: 13, cursor: "pointer"}}>링크</span>
+                                    <span style={{padding: "1px 6px", borderRadius: 4, backgroundColor: "var(--color-code-bg)", color: "var(--color-code-link)", fontFamily: "monospace", fontSize: 12}}>code</span>
+                                    <span style={{padding: "2px 10px", borderRadius: 5, backgroundColor: "var(--color-adjacent-hud-action-active-bg)", color: "var(--color-adjacent-hud-action-active-text)", fontSize: 12, fontWeight: 600}}>버튼</span>
+                                    <span style={{display: "block", width: "100%", height: 6, borderRadius: 3, background: "linear-gradient(to right, var(--color-link-hover-bg), var(--color-kanban-primary))", marginTop: 4}}/>
                                 </div>
                             </Paper>
                         </SimpleGrid>

@@ -363,7 +363,7 @@ object InterpreterSchema extends TraitInterpreter {
     val pageColor: Option[String] = logics.PageColor.fromFields(parseResult.seqSeqField)
     val wrapperClass: String = "schema InterpreterSchema" + pageColor.fold("")(_ => " hasPageColor")
     // The colour as written goes in the style, which is what shows without scripts; with them,
-    // AhaWiki.PageColor.js reads data-page-color and sets the style to a shade that stands on the
+    // AhaWiki.Color.js reads data-page-color and sets the style to a shade that stands on the
     // theme's background (InterpreterSchema «페이지 색»).
     val wrapperStyle: Option[scala.xml.Text] = pageColor.map(c => scala.xml.Text(s"--page-color: $c"))
     wikiContext.renderingMode match {

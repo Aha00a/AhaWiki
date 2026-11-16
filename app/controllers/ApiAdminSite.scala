@@ -498,6 +498,8 @@ class ApiAdminSite @Inject()(
             Ok(Json.obj(
               "siteSeq" -> Json.fromLong(site.seq),
               "defaultHue" -> Json.fromString(defaultHue),
+              // What an empty defaultHue means, so the admin UI does not keep a copy of it.
+              "fallbackHue" -> Json.fromInt(SiteThemeLogic.DefaultHue),
             ))
       }
     }
@@ -556,6 +558,8 @@ class ApiAdminSite @Inject()(
               "ok" -> Json.fromBoolean(true),
               "siteSeq" -> Json.fromLong(site.seq),
               "defaultHue" -> Json.fromString(defaultHue),
+              // What an empty defaultHue means, so the admin UI does not keep a copy of it.
+              "fallbackHue" -> Json.fromInt(SiteThemeLogic.DefaultHue),
             ))
       }
     }

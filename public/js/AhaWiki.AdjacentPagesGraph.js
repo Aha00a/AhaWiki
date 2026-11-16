@@ -74,13 +74,13 @@ window.AhaWikiAdjacentPagesGraph = {
             }
 
             // A page's own colour (its #!Schema themeColor, logics.PageColor), in the shade that
-            // stands on this theme's graph background -- AhaWiki.PageColor.js decides that for the
+            // stands on this theme's graph background -- AhaWiki.Color.js decides that for the
             // infobox and the link preview too. Worked out again at every draw, because the theme
             // can change under a running graph; the answer is remembered per colour and background.
             var shownColors = {};
             function shownColor(hex, palette) {
                 if(!hex) return '';
-                var api = window.AhaWiki && window.AhaWiki.PageColor;
+                var api = window.AhaWiki && window.AhaWiki.Color;
                 if(!api) return hex;
                 var key = hex + '|' + palette.bgStart + '|' + palette.bgEnd;
                 if(!(key in shownColors)) {

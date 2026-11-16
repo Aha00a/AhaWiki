@@ -52,7 +52,7 @@ Admin 화면(React + Mantine)은 테마를 따로 갖지 않는다. '''위키의
  * 그래서 로딩 화면(`Admin/_loading.scala.html`)의 글자색도 Mantine 변수다. 고정색이면 어두운 바탕에 어두운 글자가 된다. 첫 화면과 사이트 목록이 글귀만 다른 같은 마크업이어서 하나로 합쳤다.
  * 값이 세 곳에 적혀 있다 — `_themeClass.scala.html`(인라인이어야 한다), `_base.scala.html` 의 토글, `theme.js`(번들 안의 모듈). 셋이 상수를 나눌 길이 없어서, `test/admin.theme.test.mjs` 가 셋이 같은 키와 값을 쓰는지 본다.
  * Recharts 는 툴팁을 흰색으로, 축 글자를 고정 회색으로 그린다. `mainWidgets.jsx` 의 두 차트가 Mantine 변수를 넘긴다. 격자는 `gray-2` 고정이었는데 어두운 바탕에서 너무 밝아 `default-border` 를 투명도 0.6 으로 쓴다 — 밝은 쪽에서는 전과 거의 같다.
- * 사이트 설정의 색조 미리보기(`SiteConfigPage`)는 일부러 밝은 테마 색 그대로다. 그 사이트의 밝은 테마가 어떻게 보이는지를 보여 주는 자리다.
+ * 사이트 설정의 색조 미리보기(`SiteConfigPage`)는 위키의 토큰을 그대로 쓴다(아래 «Theme Palette» 의 `.hueScope`). 2026-11-16 까지는 밝은 테마 색을 HSL 로 '''베껴''' 적은 사본이었고, 일부러 밝은 테마 색만 보여 줬다 — 그래서 어두운 테마에서는 밝은 테마용 짙은 링크색이 어두운 카드 위에 놓였고, 토큰이 OKLCH 로 바뀌자 사본은 다른 색을 보여 주게 됐다. 지금은 보고 있는 테마의 색이다.
 
 확인은 `test/manual/admin-vendor/` 를 `?theme=dark` 로 연다.
 
@@ -60,7 +60,20 @@ Admin 화면(React + Mantine)은 테마를 따로 갖지 않는다. '''위키의
 
 테마 색상은 Less 변수가 아니라 CSS custom properties로 정의한다.
 
-색상 팔레트는 `--hue` 하나로 만든다. 계정 메뉴의 슬라이더가 `ahawiki-hue` 로 `localStorage` 에 저장하고 `<html>` 의 `--hue` 에 넣는다. 없으면 사이트 기본값(`contextSite.defaultHue`, 그것도 없으면 220)이다.
+색상 팔레트는 `--hue` 하나로 만든다. 계정 메뉴의 슬라이더가 `ahawiki-hue-oklch` 로 `localStorage` 에 저장하고 `<html>` 의 `--hue` 에 넣는다. 없으면 사이트 기본값(`contextSite.defaultHue`, 그것도 없으면 `SiteThemeLogic.DefaultHue`)이다. `less.less` 도 같은 기본값을 적는다 — 스크립트가 돌기 전 첫 칠을 위해서이고, CSS 는 Scala 상수를 읽을 수 없어서 `test/theme.oklch-contrast.test.mjs` 가 둘이 같은지 본다.
+
+=== OKLCH (2026-11-16)
+
+토큰은 `oklch(L C var(--hue))` 다. 그 전에는 `hsl(var(--hue), S%, L%)` 였다.
+
+ * '''왜:''' HSL 의 밝기(L)는 눈에 보이는 밝기가 아니다. 같은 `hsl(h, 99%, 43%)` 링크가 색조 220(파랑)에서는 흰 바탕에 7:1 이었지만 60~180(노랑~청록)에서는 1.5~1.9:1 이었다 — 글자는 4.5:1 이 필요하다. 슬라이더를 노랑 쪽으로 옮기면 링크를 읽을 수 없었다. OKLCH 의 밝기는 눈을 따르므로 색조를 돌려도 대비가 거의 같다.
+ * '''값을 어떻게 정했나:''' 각 토큰을 옛 기본 색조 220 에서 HSL 이 주던 색으로 그린 뒤 OKLCH 로 다시 적었다. 기본값에서는 전과 같은 색이다(가장 큰 차이 ΔE_OK 0.006). 하나만 바꿨다 — 밝은 테마의 `--color-link` 를 47.8% 에서 47% 로. 청록에서 `--color-link-hover-bg` 위 대비가 4.4:1 이었다.
+ * '''색조 숫자도 OKLCH 다.''' 옛 기본 220 은 OKLCH 로 263 이어서 기본값이 263 이 됐다. 처음에는 저장값을 HSL 로 두고 그때그때 OKLCH 로 옮기려 했으나 버렸다 — sRGB 의 초록과 파랑 모서리 때문에 HSL 100~140 이 OKLCH 의 6도 안에, 220~245 가 3도 안에 몰려서, 슬라이더의 3분의 1 이 움직여도 색이 그대로였다. 슬라이더 아래 무지개(`.hueTrack`)도 OKLCH 색조로 그린다. 위키 슬라이더와 관리 화면 슬라이더가 같은 클래스를 쓴다.
+ * '''옛 저장값:''' `localStorage` 의 `ahawiki-hue`(HSL)는 처음 보는 페이지에서 한 번 `AhaWiki.Color.js` 의 `hueFromHsl` 로 같은 색의 OKLCH 색조로 바꿔 `ahawiki-hue-oklch` 에 옮기고 지운다. 사이트 기본값(`Config` 의 `site.theme.defaultHue`)은 키를 바꾸지 않았다 — 의미가 바뀐 날 운영 DB 에 그 행이 하나도 없었다. 그 전에 저장한 행이 다른 DB 에 있다면 HSL 값으로 적힌 것이니 다시 고르면 된다.
+ * '''채도:''' 어떤 색조는 sRGB 가 그 채도를 못 낸다(노랑의 진한 쪽 등). 그러면 브라우저가 채널을 잘라 그린다. `test/theme.oklch-contrast.test.mjs` 가 그렇게 잘린 색으로 '''모든 색조(1도 간격)'''에서 글자 4.5:1, 표시 3:1 을 본다. 기본 색조의 파랑보다 다른 색조가 조금 덜 선명한 것은 이 때문이다.
+ * '''브라우저:''' CSS `oklch()` 는 Chrome·Edge 111, Safari 15.4, Firefox 113 부터다. 그보다 오래된 브라우저에서는 토큰이 무효가 되어 그 자리의 기본색(검정 글자 등)으로 그려진다.
+ * '''`.hueScope`:''' 커스텀 속성은 선언된 자리에서 풀리므로, 어떤 요소에 `--hue` 만 주면 `<html>` 에서 이미 풀린 토큰은 바뀌지 않는다. `.hueScope` 클래스가 있는 요소에서는 토큰이 다시 선언되어 그 요소의 `--hue` 로 풀린다. 관리 화면의 색조 미리보기가 그렇게 위키의 토큰을 그대로 쓴다.
+ * 색 계산은 `public/js/AhaWiki.Color.js` 하나에 있다. 페이지 색 대비 보정([InterpreterSchema] «페이지 색»)도 같은 파일이다.
 
 == Scope
 이번 범위에서 제외하는 것:

@@ -1,7 +1,7 @@
 import {useCallback, useState} from "react";
 import {fetchJson, logError, sendForm, sendJson, sendMultipart} from "../api.js";
 
-const DEFAULT_THEME = {defaultHue: ""};
+const DEFAULT_THEME = {defaultHue: "", fallbackHue: null};
 const DEFAULT_TELEGRAM = {chatId: ""};
 
 export function useSiteConfigData(siteSeq) {
@@ -52,7 +52,7 @@ export function useSiteConfigData(siteSeq) {
         if (!siteSeq) { setSiteTheme(DEFAULT_THEME); return; }
         try {
             const data = await fetchJson(`/api/Admin/SiteTheme?siteSeq=${encodeURIComponent(siteSeq)}`);
-            setSiteTheme({defaultHue: data?.defaultHue ?? ""});
+            setSiteTheme({defaultHue: data?.defaultHue ?? "", fallbackHue: data?.fallbackHue ?? null});
         } catch (err) { logError("site-theme:load:error", err); setError(err.message); }
     }, [siteSeq]);
 
@@ -62,7 +62,7 @@ export function useSiteConfigData(siteSeq) {
         setError("");
         try {
             const data = await sendForm("/api/Admin/SiteTheme", "PUT", {siteSeq: String(siteSeq), ...theme});
-            setSiteTheme({defaultHue: data?.defaultHue ?? ""});
+            setSiteTheme({defaultHue: data?.defaultHue ?? "", fallbackHue: data?.fallbackHue ?? null});
         } catch (err) { logError("site-theme:save:error", err); setError(err.message); }
         finally { setSavingTheme(false); }
     }, [siteSeq]);

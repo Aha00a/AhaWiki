@@ -13,7 +13,7 @@ package logics
  * attribute or a script, so a value cannot carry anything else into the page.
  *
  * The colour is sent as written. Which shade of it is drawn depends on the theme the browser is
- * showing, so public/js/AhaWiki.PageColor.js decides that, against the background it lands on.
+ * showing, so public/js/AhaWiki.Color.js decides that, against the background it lands on.
  */
 object PageColor {
   val Key: String = "themeColor"

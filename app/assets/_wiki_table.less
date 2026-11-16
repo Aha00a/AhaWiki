@@ -74,22 +74,24 @@
 // background on the inner div would stop at the padding. The number stays text and the bar is
 // decoration -- it takes no pointer events, and the content is positioned so it paints above it.
 .InterpreterTable {
-	--bar-color: ~"hsla(var(--hue), 90%, 55%, 0.28)";
+	--bar-color: ~"oklch(56.6% 0.218 var(--hue) / 0.28)";
 	--bar-color-negative: hsla(0, 80%, 55%, 0.28);
-	--bar-axis-color: ~"hsla(var(--hue), 25%, 30%, 0.6)";
+	--bar-axis-color: ~"oklch(39.5% 0.047 var(--hue) / 0.6)";
 	// The colour scale's lightness and its opacity at the top of the range. The colour itself is
 	// made on the cell: a custom property is resolved where it is declared, and --heat is only
 	// on the cell. The cap keeps the strongest cell's text readable in both themes.
-	--heat-lightness: 50%;
+	--heat-lightness: 52.9%;
+	--heat-chroma: 0.228;
 	--heat-opacity: 0.45;
 	// Under `@media screen` for the same reason less.less keeps every dark token there: a page
 	// printed from the dark theme prints light, and the bar has to come out light with it.
 	@media screen {
 		html.theme-ahawiki-dark & {
-			--bar-color: ~"hsla(var(--hue), 90%, 65%, 0.35)";
+			--bar-color: ~"oklch(65.2% 0.170 var(--hue) / 0.35)";
 			--bar-color-negative: hsla(0, 80%, 65%, 0.35);
-			--bar-axis-color: ~"hsla(var(--hue), 25%, 85%, 0.6)";
-			--heat-lightness: 45%;
+			--bar-axis-color: ~"oklch(87.4% 0.019 var(--hue) / 0.6)";
+			--heat-lightness: 49%;
+			--heat-chroma: 0.21;
 		}
 	}
 	// The header of a numeric column sits over its digits, right-aligned like them (GOV.UK and
@@ -166,7 +168,7 @@
 	// cell's own background, above it: under the bar, whose negative z-index still sits above
 	// its stacking context's background, and under the text.
 	td.heat {
-		box-shadow: inset 0 0 0 100vmax ~"hsla(var(--hue), 85%, var(--heat-lightness), calc(var(--heat) * var(--heat-opacity)))";
+		box-shadow: inset 0 0 0 100vmax ~"oklch(var(--heat-lightness) var(--heat-chroma) var(--hue) / calc(var(--heat) * var(--heat-opacity)))";
 		-webkit-print-color-adjust: exact;
 		print-color-adjust: exact;
 	}

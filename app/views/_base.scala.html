@@ -97,7 +97,7 @@
                                 <li class="authHuePicker">
                                     <i class="fas fa-palette"></i>
                                     <span>@f("color")</span>
-                                    <input type="range" class="hueSlider" min="0" max="360" value="220" aria-label="@f("color.hue")">
+                                    <input type="range" class="hueSlider" min="0" max="360" value="@logics.SiteThemeLogic.DefaultHue" aria-label="@f("color.hue")">
                                     <button type="button" class="hueReset" title="@f("color.reset")" aria-label="@f("color.reset")"><i class="fas fa-rotate-left"></i></button>
                                 </li>
                                 <li>
@@ -251,18 +251,41 @@
                 applyWidthStep(currentWidthStep);
             });
 
-            const hueStorageKey = 'ahawiki-hue';
-            const defaultHue = @{contextSite.defaultHue.getOrElse(220)};
+            // An OKLCH hue since 2026-11-16 (less.less has why). Until then the slider stored an HSL
+            // hue under 'ahawiki-hue'; such a value is turned into the OKLCH hue that looks the same,
+            // stored under the new key, and the old one removed -- once, on the first page after.
+            const hueStorageKey = 'ahawiki-hue-oklch';
+            const hslHueStorageKey = 'ahawiki-hue';
+            const defaultHue = @{contextSite.defaultHue.getOrElse(logics.SiteThemeLogic.DefaultHue)};
+
+            function storedHue() {
+                const hue = localStorage.getItem(hueStorageKey);
+                if (hue !== null) {
+                    return hue;
+                }
+                const hslHue = parseInt(localStorage.getItem(hslHueStorageKey), 10);
+                if (isNaN(hslHue) || !(window.AhaWiki && window.AhaWiki.Color)) {
+                    return null;
+                }
+                const converted = String(Math.round(window.AhaWiki.Color.hueFromHsl(hslHue)) % 360);
+                localStorage.setItem(hueStorageKey, converted);
+                localStorage.removeItem(hslHueStorageKey);
+                return converted;
+            }
 
             function applyHue(hue) {
                 const h = parseInt(hue, 10);
                 const v = (!isNaN(h) && h >= 0 && h <= 360) ? h : defaultHue;
                 document.documentElement.style.setProperty('--hue', String(v));
+                // A page's own colour was fitted to the old background, so it is fitted again.
+                if (window.AhaWiki && window.AhaWiki.Color) {
+                    window.AhaWiki.Color.applyPageColors(document);
+                }
                 $nav.find('.hueSlider').val(v);
             }
 
             (function () {
-                try { applyHue(localStorage.getItem(hueStorageKey)); } catch (e) { applyHue(defaultHue); }
+                try { applyHue(storedHue()); } catch (e) { applyHue(defaultHue); }
             })();
 
             $nav.find('.authHuePicker').on('click mousedown pointerdown', function (event) {

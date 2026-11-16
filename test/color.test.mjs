@@ -1,4 +1,4 @@
-// A page's own colour, as AhaWiki.PageColor.js draws it: moved in lightness until it stands at 3:1
+// A page's own colour, as AhaWiki.Color.js draws it: moved in lightness until it stands at 3:1
 // on the background. The colours are the eleven GitHub language colours put on aha00a.com's language
 // pages on 2026-11-16, where the first version (an HSL clamp to 35-65%) left JavaScript's yellow at
 // 1.35:1 on the light theme and C's grey at 2.31:1 on the dark one. The backgrounds are the two
@@ -8,11 +8,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 
-const source = fs.readFileSync('public/js/AhaWiki.PageColor.js', 'utf8').replace(/^﻿/, '');
+const source = fs.readFileSync('public/js/AhaWiki.Color.js', 'utf8').replace(/^﻿/, '');
 const sandbox = { window: {} };
 vm.createContext(sandbox);
 vm.runInContext(source, sandbox);
-const { forBackgrounds, contrast, resolveColor } = sandbox.window.AhaWiki.PageColor;
+const { forBackgrounds, contrast, resolveColor } = sandbox.window.AhaWiki.Color;
 
 const languages = {
     Go: '#00add8', Perl: '#0298c3', PHP: '#4f5d95', C: '#555555', Haskell: '#5e5086', J: '#9eedff',
