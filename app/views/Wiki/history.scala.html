@@ -17,7 +17,7 @@
             $('#showMinorEdit, #showViaApi').change(updateHistoryRows);
             updateHistoryRows();
             $('.buttonDeleteLastRevision').click(function () {
-                if(!confirm('This is an irreversible operation! Do you want to delete last revision?'))
+                if(!confirm('Delete the last revision? This cannot be undone. If it is the only revision, the page is deleted and kept for a site admin to restore.'))
                     return false;
 
                 $.ajax({

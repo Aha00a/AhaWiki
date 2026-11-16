@@ -10,7 +10,7 @@ import io.circe.Json
 import io.circe.syntax._
 import logics.AhaWikiCache
 import logics.ApplicationConf
-import logics.AttachmentLogic
+import logics.PageTrashLogic
 import logics.CrossInstanceBus
 import logics.SessionLogic
 import logics.SearchSnippet
@@ -457,12 +457,11 @@ class ApiV1 @Inject()(
                 case (Some(page), Some(_)) =>
                   implicit val tupleDatabaseSite: (Database, Site) = (database, site)
                   ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
-                  AttachmentLogic.deletePageAttachments(site.seq, name) match {
-                    case Left(error) =>
-                      logger.error(error)
+                  PageTrashLogic.trash(name, Some(user.seq), viaApi = true) match {
+                    case Left(failure) =>
+                      logger.error(s"API page delete failed: host=${request.host}, name=$name, $failure")
                       JsonError(InternalServerError, "Attachment delete failed.")
                     case Right(_) =>
-                      Page.deleteWithRelatedData(name)
                       wikiActors.pageCalculation ! Calculate(site, name)
 
                       Ok(Json.obj(

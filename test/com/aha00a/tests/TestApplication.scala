@@ -80,5 +80,6 @@ object TestApplication {
   def resetMemoryCaches(): Unit = {
     logics.AhaWikiCacheMemoryDomainSite.invalidate()
     logics.AhaWikiCacheMemoryPermission.clear()
+    logics.AhaWikiCacheMemorySiteAdmin.clear()
   }
 }

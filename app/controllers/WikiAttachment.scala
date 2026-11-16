@@ -189,7 +189,10 @@ class WikiAttachment @Inject()(
             // so a listing taken later already holds it. Listed first, an upload finishing in between
             // would show its own new row as DB_ONLY.
             val listing = AttachmentLogic.listPageObjects(site.seq, pageName)
-            val s3OnlyObjects = listing.map(_.keys).getOrElse(Seq.empty).filterNot(dbObjectKeys.contains)
+            // An object another page's row holds, or a kept deleted page's, is not this page's
+            // S3_ONLY: the prefix is shared, not the object (AttachmentLogic.heldElsewhere).
+            val notInRows = listing.map(_.keys).getOrElse(Seq.empty).filterNot(dbObjectKeys.contains)
+            val s3OnlyObjects = notInRows.filterNot(AttachmentLogic.heldElsewhere(site.seq, pageName, notInRows).contains)
             val s3OnlyJson = s3OnlyObjects.map { objectKey =>
               val presignedUrlOption = logics.wikis.macros.S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption
               val inferredFilename = objectKey.split("/").toSeq.lastOption.getOrElse(objectKey)

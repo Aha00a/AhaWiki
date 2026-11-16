@@ -104,42 +104,63 @@ object AttachmentLogic extends Logging {
     }
 
   /**
-   * Deletes every attachment object of a page, from S3 and then from the table.
+   * A page is being deleted and kept as `deletedPage`: its attachments are kept with it.
    *
-   * The table rows are marked deleted only once every object is gone. Marking them first
-   * would leave an object with nothing pointing at it if a delete failed.
+   * Rows are marked Trashed and their objects stay in S3, so a restore only flips the rows back
+   * ([[models.tables.Attachment.restoreTrashed]]). An object under the page's prefix that no row
+   * holds cannot be restored -- nothing would name it -- so it is deleted now, as every object was
+   * before pages were kept (2026-11-16).
+   *
+   * Rows are marked only once those deletes have succeeded. Marking first would leave a row
+   * pointing at an object a failed delete had half dealt with.
    */
-  def deletePageAttachments(siteSeq: Long, pageName: String)
-                           (implicit connection: Connection, applicationConf: ApplicationConf): Either[String, Unit] = {
-    val objectKeysFromDb = Attachment.selectObjectKeysByPage(siteSeq, pageName)
-    val objectKeysFromS3 = listPageObjectKeys(siteSeq, pageName)
-    val objectKeys = (objectKeysFromDb ++ objectKeysFromS3).map(_.trim).filter(_.nonEmpty).distinct
+  def trashPageAttachments(siteSeq: Long, pageName: String, deletedPage: Long)
+                          (implicit connection: Connection, applicationConf: ApplicationConf): Either[String, Int] = {
+    val objectKeysFromDb = Attachment.selectObjectKeysByPage(siteSeq, pageName).map(_.trim).filter(_.nonEmpty).toSet
+    val objectKeysFromS3 = listPageObjectKeys(siteSeq, pageName).map(_.trim).filter(_.nonEmpty).distinct
+    val rowless = objectKeysFromS3.filterNot(objectKeysFromDb.contains)
+    val objectKeysToDelete = rowless.filterNot(heldElsewhere(siteSeq, pageName, rowless).contains)
 
-    // listPageObjectKeys lists S3 by the sanitized page prefix, and sanitizing collapses distinct
-    // names onto one prefix -- `A B` and `A_B` both become `A_B/` -- so the listing for one page
-    // catches the other's objects. The DB rows are keyed by the exact page name and never collide,
-    // so this only ever drops a key that came from the S3 listing and belongs to another page.
-    val heldByOtherPages = Attachment.selectObjectKeysHeldByOtherPages(siteSeq, pageName, objectKeys).toSet
-    val objectKeysToDelete = objectKeys.filterNot(heldByOtherPages.contains)
+    deleteObjects(pageName, objectKeysToDelete).map { _ =>
+      Attachment.markTrashed(siteSeq, pageName, deletedPage)
+    }
+  }
 
+  /**
+   * The keys of `objectKeys` that belong to something else and must be left alone: a live row of
+   * another page, or a kept (deleted, restorable) page.
+   *
+   * listPageObjectKeys lists S3 by the sanitized page prefix, and sanitizing collapses distinct
+   * names onto one prefix -- `A B` and `A_B` both become `A_B/` -- so the listing for one page
+   * catches the other's objects. And a kept page's objects stay under its prefix, so a new page of
+   * the same name lists them too.
+   */
+  def heldElsewhere(siteSeq: Long, pageName: String, objectKeys: Seq[String])(implicit connection: Connection): Set[String] =
+    (Attachment.selectObjectKeysHeldByOtherPages(siteSeq, pageName, objectKeys) ++
+      Attachment.selectTrashedObjectKeysAmong(siteSeq, objectKeys)).toSet
+
+  /** Deletes a kept page's attachment objects for good, then marks their rows Deleted. */
+  def purgeTrashedAttachments(deletedPage: Long, pageName: String)
+                             (implicit connection: Connection, applicationConf: ApplicationConf): Either[String, Int] = {
+    val objectKeys = Attachment.selectTrashedObjectKeys(deletedPage)
+    deleteObjects(pageName, objectKeys).map(_ => objectKeys.map(Attachment.markDeleted).sum)
+  }
+
+  private def deleteObjects(pageName: String, objectKeys: Seq[String])(implicit applicationConf: ApplicationConf): Either[String, Unit] = {
     val failedObjectKeys =
       if (!S3Logic.isConfigured(applicationConf)) {
         Seq.empty
       } else {
-        objectKeysToDelete.flatMap { objectKey =>
+        objectKeys.flatMap { objectKey =>
           Try(S3Logic.deleteObject(applicationConf, objectKey)) match {
             case Success(_) => None
             case Failure(error) =>
-              logger.error(s"deletePageAttachments failed. pageName=$pageName objectKey=$objectKey", error)
+              logger.error(s"Attachment object delete failed. pageName=$pageName objectKey=$objectKey", error)
               Some(objectKey)
           }
         }
       }
-    if (failedObjectKeys.nonEmpty) {
-      Left(s"Attachment delete failed. pageName=$pageName failedObjectKeys=${failedObjectKeys.mkString(",")}")
-    } else {
-      objectKeysToDelete.foreach(Attachment.markDeleted)
-      Right(())
-    }
+    if (failedObjectKeys.nonEmpty) Left(s"Attachment delete failed. pageName=$pageName failedObjectKeys=${failedObjectKeys.mkString(",")}")
+    else Right(())
   }
 }

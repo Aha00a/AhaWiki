@@ -215,9 +215,9 @@ curl -X DELETE https://ahawiki.net/api/v1/page/OldPage \
   }'
 ]]]
 
-삭제는 되돌리기 어려운 작업이므로 `confirm: true`가 필요합니다.
+실수로 지우지 않도록 `confirm: true`가 필요합니다.
 요청 revision이 최신 revision과 다르면 `409 Conflict`를 반환합니다.
-삭제 성공 시 페이지에 연결된 첨부파일도 웹 삭제와 같은 정책으로 삭제 처리합니다.
+지운 페이지는 웹에서 지운 것과 같이 모든 리비전과 첨부파일까지 보관되고, 사이트 관리자가 관리 화면의 Deleted Pages 에서 되살리거나 영구 삭제합니다([Dev Page] «지운 페이지 보관»). 보관된 페이지는 API 로 읽을 수 없습니다.
 
 == 최근 변경 조회
 

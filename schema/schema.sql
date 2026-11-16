@@ -73,15 +73,18 @@ CREATE TABLE `Attachment` (
   `fileSize` bigint(20) NOT NULL,
   `sha256` char(64) DEFAULT NULL,
   `etag` varchar(255) DEFAULT NULL,
-  `status` enum('Initiated','Uploaded','Verified','Deleted','Failed') NOT NULL,
+  `status` enum('Initiated','Uploaded','Verified','Deleted','Failed','Trashed') NOT NULL,
   `imageWidth` int(11) DEFAULT NULL,
   `imageHeight` int(11) DEFAULT NULL,
+  `deletedPage` bigint(20) DEFAULT NULL,
   PRIMARY KEY (`seq`),
   UNIQUE KEY `Attachment_objectKey_uindex` (`objectKey`),
   KEY `Attachment_site_pageName_dateInserted_index` (`site`,`pageName`,`dateInserted`),
   KEY `Attachment_site_status_dateInserted_index` (`site`,`status`,`dateInserted`),
   KEY `Attachment_user_dateInserted_index` (`user`,`dateInserted`),
   KEY `Attachment_dateDeleted_index` (`dateDeleted`),
+  KEY `Attachment_DeletedPage_seq_fk` (`deletedPage`),
+  CONSTRAINT `Attachment_DeletedPage_seq_fk` FOREIGN KEY (`deletedPage`) REFERENCES `DeletedPage` (`seq`) ON DELETE SET NULL,
   CONSTRAINT `Attachment_Site_seq_fk` FOREIGN KEY (`site`) REFERENCES `Site` (`seq`),
   CONSTRAINT `Attachment_User_seq_fk` FOREIGN KEY (`user`) REFERENCES `User` (`seq`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
@@ -235,6 +238,57 @@ CREATE TABLE `Config` (
   `updated` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`site`,`k`),
   CONSTRAINT `fkConfigSiteSiteSeq` FOREIGN KEY (`site`) REFERENCES `Site` (`seq`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `DeletedPage`
+--
+
+DROP TABLE IF EXISTS `DeletedPage`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `DeletedPage` (
+  `seq` bigint(20) NOT NULL AUTO_INCREMENT,
+  `site` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `dateDeleted` datetime(6) NOT NULL,
+  `deletedBy` int(11) DEFAULT NULL,
+  `viaApi` tinyint(1) NOT NULL DEFAULT 0,
+  `lastRevision` int(11) NOT NULL,
+  `revisionCount` int(11) NOT NULL,
+  PRIMARY KEY (`seq`),
+  KEY `DeletedPage_site_dateDeleted_index` (`site`,`dateDeleted`),
+  KEY `DeletedPage_User_seq_fk` (`deletedBy`),
+  CONSTRAINT `DeletedPage_Site_seq_fk` FOREIGN KEY (`site`) REFERENCES `Site` (`seq`),
+  CONSTRAINT `DeletedPage_User_seq_fk` FOREIGN KEY (`deletedBy`) REFERENCES `User` (`seq`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `DeletedPageRevision`
+--
+
+DROP TABLE IF EXISTS `DeletedPageRevision`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `DeletedPageRevision` (
+  `deletedPage` bigint(20) NOT NULL,
+  `revision` int(11) NOT NULL,
+  `dateTime` datetime(6) NOT NULL,
+  `user` int(11) NOT NULL,
+  `remoteAddress` text DEFAULT NULL,
+  `comment` text NOT NULL,
+  `isMinorEdit` tinyint(1) NOT NULL DEFAULT 0,
+  `viaApi` tinyint(1) NOT NULL DEFAULT 0,
+  `userApiKey` bigint(20) DEFAULT NULL,
+  `content` longtext DEFAULT NULL,
+  PRIMARY KEY (`deletedPage`,`revision`),
+  KEY `DeletedPageRevision_User_seq_fk` (`user`),
+  KEY `DeletedPageRevision_UserApiKey_seq_fk` (`userApiKey`),
+  CONSTRAINT `DeletedPageRevision_DeletedPage_seq_fk` FOREIGN KEY (`deletedPage`) REFERENCES `DeletedPage` (`seq`) ON DELETE CASCADE,
+  CONSTRAINT `DeletedPageRevision_UserApiKey_seq_fk` FOREIGN KEY (`userApiKey`) REFERENCES `UserApiKey` (`seq`) ON DELETE SET NULL,
+  CONSTRAINT `DeletedPageRevision_User_seq_fk` FOREIGN KEY (`user`) REFERENCES `User` (`seq`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

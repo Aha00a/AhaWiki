@@ -21,6 +21,7 @@
       Page
       Cache
       Permission
+      Deleted Pages
       AccessLog    ← 전체Admin만 표시
       SiteAdmins   ← 전체Admin만 표시
   ▶ OtherSite (#2) ← 전체Admin만 표시 (접힌 상태)

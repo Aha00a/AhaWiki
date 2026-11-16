@@ -97,6 +97,10 @@ PUT           /api/Admin/Site/:seq/Telegram          controllers.ApiAdminSite.ad
 GET           /api/Admin/PermissionAudit             controllers.ApiAdminSite.adminPermissionAudit
 GET           /api/Admin/Site/:seq/PageNames         controllers.ApiAdminSite.adminSitePageNames(seq: Long)
 GET           /api/Admin/Site/:seq/PageMetaList      controllers.ApiAdminSite.adminPageMetaList(seq: Long, page: Int ?= 1, pageSize: Int ?= 20, search: String ?= "", sortBy: String ?= "dateUpdated", sortOrder: String ?= "desc")
+GET           /api/Admin/Site/:seq/DeletedPages      controllers.ApiAdminSite.adminDeletedPages(seq: Long)
+GET           /api/Admin/Site/:seq/DeletedPages/:deletedPage  controllers.ApiAdminSite.adminDeletedPage(seq: Long, deletedPage: Long)
+POST          /api/Admin/Site/:seq/DeletedPages/:deletedPage/restore  controllers.ApiAdminSite.adminRestoreDeletedPage(seq: Long, deletedPage: Long)
+DELETE        /api/Admin/Site/:seq/DeletedPages/:deletedPage  controllers.ApiAdminSite.adminPurgeDeletedPage(seq: Long, deletedPage: Long)
 GET           /api/Admin/Site/:seq/Admins            controllers.ApiAdminSite.adminSiteAdmins(seq: Long)
 POST          /api/Admin/Site/:seq/Admins            controllers.ApiAdminSite.adminInsertSiteAdmin(seq: Long)
 DELETE        /api/Admin/Site/:seq/Admins/:userSeq   controllers.ApiAdminSite.adminDeleteSiteAdmin(seq: Long, userSeq: Long)

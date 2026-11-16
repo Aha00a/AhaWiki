@@ -649,17 +649,7 @@ controllerComponents: ControllerComponents,
       Page.selectLastRevision(name) match {
         case Some(_) =>
           if (WikiPermission().isDeletable(name)) {
-            implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-            ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
-            AttachmentLogic.deletePageAttachments(site.seq, name) match {
-              case Left(error) =>
-                logger.error(error)
-                throw new RuntimeException(error)
-              case Right(_) =>
-                Page.deleteWithRelatedData(name)
-                telegramLogic.notifyPageDeleted(request.host, name, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())
-                Ok("")
-            }
+            trashPage(name)
           } else {
             Forbidden("")
           }
@@ -669,12 +659,30 @@ controllerComponents: ControllerComponents,
     }
   }}
 
+  /** Keeps the page for a site admin to restore (PageTrashLogic). The caller has checked isDeletable. */
+  private def trashPage(name: String)(implicit request: Request[AnyContent], connection: java.sql.Connection, site: Site, provider: RequestWrapper): Result = {
+    implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+    ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
+    PageTrashLogic.trash(name, provider.getUser.map(_.seq), viaApi = false) match {
+      case Left(failure) =>
+        logger.error(s"Page delete failed: host=${request.host}, name=$name, $failure")
+        throw new RuntimeException(failure.toString)
+      case Right(_) =>
+        telegramLogic.notifyPageDeleted(request.host, name, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())
+        Ok("")
+    }
+  }
+
   def deleteLastRevision(): Action[AnyContent] = Action { implicit request => withForm(Form("name" -> text)) { name =>
     database.withTransaction { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       Page.selectLastRevision(name) match {
+        case Some(page) if page.revision <= 1 && WikiPermission().isDeletable(name) =>
+          // The only revision: deleting it deletes the page, so the page is kept like any other
+          // deleted page. Before 2026-11-16 this path removed the row and left the attachments.
+          trashPage(name)
         case Some(page) =>
           if (WikiPermission().isDeletable(name)) {
             implicit val tupleDatabaseSite: (Database, Site) = (database, site)

@@ -16,6 +16,9 @@ class AdminLogicSpec extends AnyFreeSpec {
     val dbName = s"adminlogic_${java.util.UUID.randomUUID().toString.replace("-", "")}"
     val connection = DriverManager.getConnection(s"jdbc:h2:mem:$dbName;MODE=MySQL;DB_CLOSE_DELAY=-1")
     setupSchema(connection)
+    // Each test has a database of its own, but the site-admin cache is one per JVM and keyed by
+    // site seq: another suite that asked about site 1 leaves its answer here (2026-11-16).
+    logics.AhaWikiCacheMemorySiteAdmin.clear()
 
     val db = new Database {
       override def name: String = dbName

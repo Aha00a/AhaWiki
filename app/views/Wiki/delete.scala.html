@@ -5,7 +5,7 @@
         $(function(){
             var $form = $(".form");
             $form.on("submit", function(e){
-                if (!window.confirm("Completely delete this page? This cannot be undone.")) {
+                if (!window.confirm("Delete this page? A site admin can restore it from Admin > Deleted Pages.")) {
                     e.preventDefault();
                     e.stopImmediatePropagation();
                 }
@@ -24,8 +24,8 @@
     <div class="wikiContent">
         <div class="limitWidth">
             <h1>Delete - <a href="?">@page.name</a></h1>
-            <p><b>This is an irreversible operation!</b></p>
-            <p>Are you sure you want to completely delete this page?</p>
+            <p>Are you sure you want to delete this page?</p>
+            <p>Every revision and attachment is kept, and a site admin can restore the page from <b>Admin &gt; Deleted Pages</b> until they delete it for good.</p>
 
             @form(routes.Wiki.delete(), Symbol("class") -> "form") {
                 @CSRF.formField

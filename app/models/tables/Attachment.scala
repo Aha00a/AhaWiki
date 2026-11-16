@@ -143,6 +143,69 @@ object Attachment {
     """.executeUpdate()
   }
 
+  /**
+   * The page's live rows become Trashed and point at the kept page. The objects stay in S3, so a
+   * restore only has to undo this. dateDeleted is set as well, so every reader of live rows
+   * (dateDeleted IS NULL) leaves them out without knowing about Trashed.
+   */
+  def markTrashed(siteSeq: Long, pageName: String, deletedPage: Long)(implicit connection: Connection): Int = {
+    SQL"""
+      UPDATE Attachment
+      SET
+        status = 'Trashed',
+        deletedPage = $deletedPage,
+        dateDeleted = NOW(),
+        dateUpdated = NOW()
+      WHERE site = $siteSeq
+        AND pageName = $pageName
+        AND dateDeleted IS NULL
+    """.executeUpdate()
+  }
+
+  /** Undoes [[markTrashed]]. A restored row reads Uploaded whatever it read before. */
+  def restoreTrashed(deletedPage: Long)(implicit connection: Connection): Int = {
+    SQL"""
+      UPDATE Attachment
+      SET
+        status = 'Uploaded',
+        deletedPage = NULL,
+        dateDeleted = NULL,
+        dateUpdated = NOW()
+      WHERE deletedPage = $deletedPage
+        AND status = 'Trashed'
+    """.executeUpdate()
+  }
+
+  def selectTrashedObjectKeys(deletedPage: Long)(implicit connection: Connection): Seq[String] = {
+    SQL"""
+      SELECT objectKey
+      FROM Attachment
+      WHERE deletedPage = $deletedPage
+        AND status = 'Trashed'
+    """.as(str("objectKey").*)
+  }
+
+  /**
+   * Of the given keys, the ones a kept (deleted, restorable) page still holds on this site.
+   *
+   * A kept page's objects stay under the page's S3 prefix, so a new page of the same name lists
+   * them as its own. Its attachment list must not show them as S3_ONLY, and its delete must not
+   * remove them.
+   */
+  def selectTrashedObjectKeysAmong(siteSeq: Long, objectKeys: Seq[String])(implicit connection: Connection): Seq[String] = {
+    if (objectKeys.isEmpty) {
+      Seq.empty
+    } else {
+      SQL"""
+        SELECT objectKey
+        FROM Attachment
+        WHERE site = $siteSeq
+          AND status = 'Trashed'
+          AND objectKey IN ($objectKeys)
+      """.as(str("objectKey").*)
+    }
+  }
+
   def selectObjectKeysByPage(siteSeq: Long, pageName: String)(implicit connection: Connection): Seq[String] = {
     SQL"""
       SELECT objectKey

@@ -4,7 +4,7 @@ import {Badge, Divider, Group, NavLink, Paper, Skeleton, Stack, Text} from "@man
 import {fetchJson} from "./api.js";
 
 function parseSiteSeqFromPathname(pathname) {
-    const matched = pathname.match(/^\/Admin\/(?:Site\/)?(\d+)(?:\/(?:Page|Detail|Config|Cache|Permission|AccessLog|Admins))?$/);
+    const matched = pathname.match(/^\/Admin\/(?:Site\/)?(\d+)(?:\/(?:Page|Detail|Config|Cache|Permission|AccessLog|Admins|DeletedPages))?$/);
     if (!matched) return "";
     const siteSeq = Number.parseInt(matched[1], 10);
     return Number.isFinite(siteSeq) && siteSeq > 0 ? String(siteSeq) : "";
@@ -24,6 +24,7 @@ function SiteNavItem({site, currentPathname, currentSiteSeq, isAdmin}) {
             <NavLink href={`/Admin/Site/${site.seq}/Page`} label="Page" leftSection={<i className="fas fa-list" aria-hidden="true"/>} active={currentPathname === `/Admin/Site/${site.seq}/Page` || currentPathname === `/Admin/Site/${site.seq}/Detail`} variant={currentPathname === `/Admin/Site/${site.seq}/Page` || currentPathname === `/Admin/Site/${site.seq}/Detail` ? "filled" : "subtle"} onClick={navTo(`/Admin/Site/${site.seq}/Page`)}/>
             <NavLink href={`/Admin/Site/${site.seq}/Cache`} label="Cache" leftSection={<i className="fas fa-database" aria-hidden="true"/>} active={currentPathname === `/Admin/Site/${site.seq}/Cache`} variant={currentPathname === `/Admin/Site/${site.seq}/Cache` ? "filled" : "subtle"} onClick={navTo(`/Admin/Site/${site.seq}/Cache`)}/>
             <NavLink href={`/Admin/Site/${site.seq}/Permission`} label="Permission" leftSection={<i className="fas fa-key" aria-hidden="true"/>} active={currentPathname === `/Admin/Site/${site.seq}/Permission`} variant={currentPathname === `/Admin/Site/${site.seq}/Permission` ? "filled" : "subtle"} onClick={navTo(`/Admin/Site/${site.seq}/Permission`)}/>
+            <NavLink href={`/Admin/Site/${site.seq}/DeletedPages`} label="Deleted Pages" leftSection={<i className="fas fa-trash-restore" aria-hidden="true"/>} active={currentPathname === `/Admin/Site/${site.seq}/DeletedPages`} variant={currentPathname === `/Admin/Site/${site.seq}/DeletedPages` ? "filled" : "subtle"} onClick={navTo(`/Admin/Site/${site.seq}/DeletedPages`)}/>
             {isAdmin && <NavLink href={`/Admin/${site.seq}/AccessLog`} label="AccessLog" leftSection={<i className="fas fa-network-wired" aria-hidden="true"/>} active={currentPathname === `/Admin/${site.seq}/AccessLog`} variant={currentPathname === `/Admin/${site.seq}/AccessLog` ? "filled" : "subtle"} onClick={navTo(`/Admin/${site.seq}/AccessLog`)}/>}
             {isAdmin && <NavLink href={`/Admin/Site/${site.seq}/Admins`} label="SiteAdmins" leftSection={<i className="fas fa-user-shield" aria-hidden="true"/>} active={currentPathname === `/Admin/Site/${site.seq}/Admins`} variant={currentPathname === `/Admin/Site/${site.seq}/Admins` ? "filled" : "subtle"} onClick={navTo(`/Admin/Site/${site.seq}/Admins`)}/>}
         </NavLink>

@@ -412,7 +412,7 @@ class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll
   }
 
   "DELETE /api/v1/page/:name" should {
-    "delete a page and mark related attachments deleted when revision and confirm are provided" in {
+    "delete a page, keeping it and its attachments for a site admin to restore, when revision and confirm are provided" in {
       val created = createApiKey()
       insertPage("ApiDelete", 1, "= ApiDelete\nold")
       db.withConnection { implicit connection =>
@@ -437,9 +437,12 @@ class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll
 
       db.withConnection { implicit connection =>
         Page.selectLastRevision("ApiDelete") mustBe None
-        val deletedCount = SQL"SELECT COUNT(*) cnt FROM Attachment WHERE pageName = 'ApiDelete' AND status = 'Deleted' AND dateDeleted IS NOT NULL"
+        val trashedCount = SQL"SELECT COUNT(*) cnt FROM Attachment WHERE pageName = 'ApiDelete' AND status = 'Trashed' AND dateDeleted IS NOT NULL"
           .as(anorm.SqlParser.long("cnt").single)
-        deletedCount mustBe 1
+        trashedCount mustBe 1
+        val keptViaApi = SQL"SELECT COUNT(*) cnt FROM DeletedPage WHERE name = 'ApiDelete' AND viaApi = TRUE AND deletedBy = 1"
+          .as(anorm.SqlParser.long("cnt").single)
+        keptViaApi mustBe 1
       }
     }
 

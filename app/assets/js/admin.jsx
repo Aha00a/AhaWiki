@@ -14,6 +14,7 @@ import SiteConfigPage from "./admin/pages/SiteConfigPage.jsx";
 import SiteCachePage from "./admin/pages/SiteCachePage.jsx";
 import SitePermissionPage from "./admin/pages/SitePermissionPage.jsx";
 import SiteAdminsPage from "./admin/pages/SiteAdminsPage.jsx";
+import SiteDeletedPagesPage from "./admin/pages/SiteDeletedPagesPage.jsx";
 import RecentChangesPage from "./admin/pages/RecentChangesPage.jsx";
 import AccessLogsPage from "./admin/pages/AccessLogsPage.jsx";
 import S3BrowserPage from "./admin/pages/S3BrowserPage.jsx";
@@ -44,6 +45,7 @@ const router = createBrowserRouter([
                     {path: "Cache", element: <SiteCachePage/>},
                     {path: "Permission", element: <SitePermissionPage/>},
                     {path: "Admins", element: <SiteAdminsPage/>},
+                    {path: "DeletedPages", element: <SiteDeletedPagesPage/>},
                 ],
             },
             {path: "User", element: <AllUsersPage/>},

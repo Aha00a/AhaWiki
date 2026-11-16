@@ -13,6 +13,7 @@ import logics.AhaWikiCacheMemoryPermission
 import logics.AhaWikiConfig
 import logics.ApplicationConf
 import logics.AttachmentLogic
+import logics.PageTrashLogic
 import logics.PermissionLogic
 import logics.S3Logic
 import logics.SiteLogic
@@ -635,5 +636,68 @@ class ApiAdminSite @Inject()(
           }
       }
     }
+  }
+
+  // Deleted pages, kept until a site admin restores them or deletes them for good (PageTrashLogic).
+
+  def adminDeletedPages(seq: Long): Action[AnyContent] = Action { implicit request =>
+    withSiteAdmin(seq) { site =>
+      database.withConnection { implicit connection =>
+        implicit val implicitSite: Site = site
+        Ok(models.tables.DeletedPage.selectBySite().asJson)
+      }
+    }
+  }
+
+  /** One kept page with the text of its last revision, for deciding whether to restore it. */
+  def adminDeletedPage(seq: Long, deletedPage: Long): Action[AnyContent] = Action { implicit request =>
+    withSiteAdmin(seq) { site =>
+      database.withConnection { implicit connection =>
+        implicit val implicitSite: Site = site
+        models.tables.DeletedPage.select(deletedPage) match {
+          case None => JsonError(NotFound, s"deleted page not found: $deletedPage")
+          case Some(kept) =>
+            Ok(kept.asJson.deepMerge(Json.obj(
+              "content" -> Json.fromString(models.tables.DeletedPage.selectLastContent(deletedPage).getOrElse("")),
+            )))
+        }
+      }
+    }
+  }
+
+  def adminRestoreDeletedPage(seq: Long, deletedPage: Long): Action[AnyContent] = Action { implicit request =>
+    withSiteAdmin(seq) { site =>
+      database.withConnection { implicit connection =>
+        implicit val implicitSite: Site = site
+        PageTrashLogic.restore(deletedPage) match {
+          case Left(failure) => deletedPageFailure(deletedPage, failure)
+          case Right(name) =>
+            implicit val tupleDatabaseSite: (Database, Site) = (database, site)
+            ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
+            wikiActors.pageCalculation ! actors.ActorPageCalculator.Calculate(site, name)
+            Ok(Json.obj("ok" -> Json.fromBoolean(true), "name" -> Json.fromString(name)))
+        }
+      }
+    }
+  }
+
+  def adminPurgeDeletedPage(seq: Long, deletedPage: Long): Action[AnyContent] = Action { implicit request =>
+    withSiteAdmin(seq) { site =>
+      database.withConnection { implicit connection =>
+        implicit val implicitSite: Site = site
+        PageTrashLogic.purge(deletedPage) match {
+          case Left(failure) => deletedPageFailure(deletedPage, failure)
+          case Right(name) => Ok(Json.obj("ok" -> Json.fromBoolean(true), "name" -> Json.fromString(name)))
+        }
+      }
+    }
+  }
+
+  private def deletedPageFailure(deletedPage: Long, failure: PageTrashLogic.Failure): Result = failure match {
+    case PageTrashLogic.NotFound => JsonError(NotFound, s"deleted page not found: $deletedPage")
+    case PageTrashLogic.NameTaken => JsonError(Conflict, "A page of that name exists now. Rename or delete it first.")
+    case PageTrashLogic.AttachmentFailure(message) =>
+      logger.error(message)
+      JsonError(InternalServerError, "Attachment delete failed.")
   }
 }
