@@ -167,7 +167,6 @@ object InterpreterSchema extends TraitInterpreter {
     baseUrl: Option[String] = None,
     pageUrl: Option[String] = None,
     pageName: Option[String] = None,
-    language: Option[String] = None
   ): Option[JsObject] = {
     if (!parseResult.hasClass) {
       None
@@ -183,11 +182,9 @@ object InterpreterSchema extends TraitInterpreter {
         pageUrl.map("mainEntityOfPage" -> JsString(_)),
         pageUrl.map("@id" -> JsString(_)),
         pageName.filter(_ => !fields.contains("name")).map("name" -> JsString(_)),
-        // Only where schema.org allows it: a Person or a Place has no inLanguage, and saying one
-        // anyway is a property validators reject.
-        language
-          .filter(_ => parseResult.schemaClasses.exists(c => logics.CalculatedSchemaOrg.isPropertyOf("inLanguage", c)))
-          .map("inLanguage" -> JsString(_)),
+        // No inLanguage default. This object describes the thing the block is about, so its
+        // inLanguage is that thing's language: a Japanese drama described in Korean is still ja.
+        // The page's own language is <html lang> and the page-level JSON-LD in view.scala.html.
       ).flatten
 
       // JSON-LD takes @type as a string or as an array. Keep the string for the ordinary single
@@ -360,9 +357,6 @@ object InterpreterSchema extends TraitInterpreter {
       baseUrl = baseUrl,
       pageUrl = pageUrl,
       pageName = Some(wikiContext.name),
-      // The language the page is written in, not the reader's: until 2026-11-16 this was the
-      // request's Accept-Language, so a crawler asking in English was told a Korean page was en-US.
-      language = Some(logics.AhaWikiConfig.ContentLanguage),
     ).map(json =>
       <script type="application/ld+json">{scala.xml.Unparsed(logics.HtmlJson.stringify(json))}</script>
     )
