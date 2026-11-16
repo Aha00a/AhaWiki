@@ -360,7 +360,19 @@ object InterpreterSchema extends TraitInterpreter {
     ).map(json =>
       <script type="application/ld+json">{scala.xml.Unparsed(logics.HtmlJson.stringify(json))}</script>
     )
-    val pageColor: Option[String] = logics.PageColor.fromFields(parseResult.seqSeqField)
+    // Read from the block being drawn, not from this page's stored rows, so a preview shows the
+    // colour a save would give; the parents' own colours are what is stored.
+    val pageColor: Option[String] = logics.PageColor.fromFields(parseResult.seqSeqField).orElse {
+      val parents = logics.PageColor.parentsFromFields(parseResult.seqSeqField)
+      if (parents.isEmpty) {
+        None
+      } else {
+        val parentColour = wikiContext.withConnection { implicit connection =>
+          models.tables.CalculatedSchemaOrg.selectOwnPageColorMap(parents)
+        }
+        logics.PageColor.inherited(parents, parentColour.get)
+      }
+    }
     val wrapperClass: String = "schema InterpreterSchema" + pageColor.fold("")(_ => " hasPageColor")
     // The colour as written goes in the style, which is what shows without scripts; with them,
     // AhaWiki.Color.js reads data-page-color and sets the style to a shade that stands on the

@@ -116,7 +116,25 @@ themeColor	#e60012
 
 '''schema.org 의 속성이 아닙니다.''' schema.org 에는 주제 일반의 색 속성이 없고, `color` 는 Product 의 «제품 색»(빨강) 이라 제품 페이지에서 뜻이 겹칩니다. 그래서 위키가 직접 아는 키로 두었습니다 — 취소선 없이 보이지만 schema.org 로 가는 링크가 없고, JSON-LD 에는 내보내지 않으며, 인접 페이지 그래프에서 값(`#e60012`)이 노드가 되지도 않습니다. 같은 이유로 `public/schema.org/custom.jsonld` 에도 넣지 않았습니다 — 그 파일은 schema.org 에 없는 '''클래스'''를 채우는 곳이고 속성은 받지 않습니다([Dev SchemaOrgVocabulary]).
 
-구현은 `logics.PageColor` 입니다. 따로 열을 두지 않고, 페이지 계산이 다른 속성처럼 `CalculatedSchemaOrg` 에 쓴 행을 `selectPageColorMap` 이 한 번에 읽습니다. 그래서 색을 적은 페이지는 저장하는 순간부터 쓰이고, 적지 않은 페이지를 다시 계산할 일이 없습니다. 검사는 `PageColorSpec`.
+구현은 `logics.PageColor` 입니다. 따로 열을 두지 않고, 페이지 계산이 다른 속성처럼 `CalculatedSchemaOrg` 에 쓴 행을 `selectOwnPageColorMap` 이 한 번에 읽고, 물려받은 색까지 더한 답은 `selectPageColorMap` 이 줍니다. 그래서 색을 적은 페이지는 저장하는 순간부터 쓰이고, 적지 않은 페이지를 다시 계산할 일이 없습니다. 검사는 `PageColorSpec`.
+
+=== 물려받기 (isPartOf)
+
+자기 `themeColor` 가 없는 페이지는 `isPartOf`(또는 `partOfSeries`)로 가리킨 페이지의 색을 씁니다. 나무위키에서 한 주제의 문서들이 같은 틀을 불러 같은 색이 되는 것과 같은 효과를, 색을 주제 페이지 한 곳에만 적어서 얻습니다 — Marvel Cinematic Universe 에 한 줄 적으면 그것을 `isPartOf` 로 가리키는 영화·드라마가 모두 그 색이 됩니다.
+
+[[[#!WikiSyntaxPreview Schema Movie
+name	예시 영화
+isPartOf	예시 시리즈
+]]]
+
+ * 자기 색이 있으면 자기 색이 이깁니다.
+ * '''한 단계만''' 물려받습니다. 가리킨 페이지가 '''직접 적은''' 색만 쓰고, 그 페이지가 물려받은 색은 다시 물려주지 않습니다. 그래서 색이 어디서 왔는지는 언제나 정보 상자의 `isPartOf` 줄 하나로 보이고, 두 페이지가 서로를 가리켜도 돌지 않습니다.
+ * 색 있는 부모가 둘 이상이면 '''이름 순으로 첫''' 부모의 색입니다. 적은 순서를 따르고 싶었지만 `CalculatedSchemaOrg` 에는 순서가 남지 않고, 정보 상자와 API 가 같은 답을 내야 해서 이름 순으로 정했습니다.
+ * 정보 상자는 저장된 행이 아니라 그리는 블록의 `isPartOf` 를 읽습니다. 그래서 편집 미리보기에서도 저장 뒤의 색이 보입니다. 부모의 색은 저장된 값을 씁니다.
+ * 페이지 HTML 도 색 조회도 요청마다 하므로, 주제 페이지의 색을 바꾸면 다음 요청부터 그 주제의 모든 페이지가 바뀝니다.
+ * 규칙은 `logics.PageColor`(`InheritedThrough`, `inherited`) 한 곳에 있고, 정보 상자(`InterpreterSchema`)와 미리보기·그래프(`selectPageColorMap`)가 그것을 씁니다.
+ * `programmingLanguage` 로는 물려받지 않습니다. «무엇으로 만들었나» 는 «무엇의 일부인가» 와 뜻이 다르고, 색 있는 언어가 둘 이상인 페이지가 많습니다.
+ * 여러 단계는 지금 데이터에 필요한 곳이 없습니다(에피소드·시즌도 MCU 를 직접 가리킵니다).
 
 === 알아낸 것 (2026-11-16)
 
@@ -156,7 +174,7 @@ PHP	#4f5d95	6.30	2.74
  * `partOfSeries` 를 쓴 페이지는 3개(모두 Marvel 시리즈물)뿐입니다.
  * `isPartOf` 는 64개가 다른 스키마 페이지를 가리키고, 그중 40개가 Marvel Cinematic Universe 입니다. 시리즈의 색을 물려받는다면 이 속성이 주인공입니다.
  * `programmingLanguage` 는 50개 페이지가 언어 페이지를 가리킵니다. 지금 색이 있는 11개 언어만으로도 33개 페이지가 색을 얻습니다 — GitHub 저장소 목록의 언어 점과 같은 모양입니다. 다만 그중 10개는 색 있는 언어가 둘 이상이라 어느 것을 쓸지 정해야 하고, «무엇으로 만들었나» 는 «무엇의 일부인가» 와 뜻이 다릅니다.
- * 규칙을 정한다면: 한 단계만(가리킨 페이지의 '''직접 적은''' 색만, 물려받은 색은 다시 물려주지 않음), 자기 색이 있으면 자기 색, `isPartOf`·`partOfSeries` 만. `programmingLanguage` 는 따로 정합니다.
+ * 이 숫자로 정한 규칙이 위 «물려받기» 입니다.
 
 '''하지 않기로 한 것'''
 

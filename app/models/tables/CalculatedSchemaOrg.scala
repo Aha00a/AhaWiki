@@ -102,12 +102,34 @@ object CalculatedSchemaOrg {
   }
 
   /**
-   * Each named page's colour (logics.PageColor), in one query: the graph and the link preview ask
-   * for many pages at once. Read from the rows the page calculation already writes for every
-   * `#!Schema` field, so the colour needs no column of its own and no recalculation of pages that
-   * never set one. A page declaring several classes has a row per class; the first valid wins.
+   * Each named page's colour (logics.PageColor): its own, or else the one it inherits from a page
+   * it is part of. Three queries at most for any number of pages -- the graph and the link
+   * preview ask for many at once.
    */
   def selectPageColorMap(pages: Seq[String])(implicit connection: Connection, site: Site): Map[String, String] = {
+    val own = selectOwnPageColorMap(pages)
+    val without = pages.distinct.filterNot(own.contains)
+    if (without.isEmpty) {
+      own
+    } else {
+      val parents: Seq[(String, String)] = SQL"""
+        SELECT DISTINCT page, value FROM CalculatedSchemaOrg
+        WHERE site = ${site.seq} AND prop IN (${logics.PageColor.InheritedThrough}) AND page IN ($without)
+      """.as((str("page") ~ str("value")).map { case page ~ value => page -> value }.*)
+      val parentColour = selectOwnPageColorMap(parents.map(_._2))
+      own ++ parents.groupMap(_._1)(_._2).flatMap { case (page, names) =>
+        logics.PageColor.inherited(names, parentColour.get).map(page -> _)
+      }
+    }
+  }
+
+  /**
+   * Each named page's own colour, as its `#!Schema` block wrote it. Read from the rows the page
+   * calculation already writes for every field, so the colour needs no column of its own and no
+   * recalculation of pages that never set one. A page declaring several classes has a row per
+   * class; the first valid wins.
+   */
+  def selectOwnPageColorMap(pages: Seq[String])(implicit connection: Connection, site: Site): Map[String, String] = {
     val distinctPages = pages.distinct
     if (distinctPages.isEmpty) {
       Map.empty
