@@ -264,6 +264,10 @@
 .AhaWiki .crawlerPreview > div:not(.circle).noPreviewImage {
   grid-template-columns: minmax(0, 1fr);
 }
+.AhaWiki .crawlerPreview > div:not(.circle).hasPageColor {
+  border-top: 3px solid var(--page-color);
+  padding-top: 8px;
+}
 .AhaWiki .crawlerPreview img.preview {
   grid-row: 1 / span 2;
   width: 112px;

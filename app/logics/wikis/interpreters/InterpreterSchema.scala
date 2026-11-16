@@ -172,8 +172,9 @@ object InterpreterSchema extends TraitInterpreter {
     if (!parseResult.hasClass) {
       None
     } else {
+      // themeColor is the wiki's display hint, not a statement schema.org has a word for.
       val fields = parseResult.seqSeqField
-        .collect { case key +: values if values.nonEmpty => key -> values }
+        .collect { case key +: values if values.nonEmpty && key != logics.PageColor.Key => key -> values }
         .groupMap(_._1)(_._2)
         .map { case (key, groupedValues) => key -> groupedValues.flatten }
       val properties: Seq[(String, JsValue)] = fields.toSeq.map { case (key, values) => key -> toJsonFieldValue(key, values, baseUrl) }
@@ -205,6 +206,8 @@ object InterpreterSchema extends TraitInterpreter {
 
   private def renderPropertyTitle(key: String, pairKey: Option[String]): scala.xml.NodeSeq = {
     (logics.CalculatedSchemaOrg.mapProperty.get(key), pairKey.flatMap(logics.CalculatedSchemaOrg.mapProperty.get)) match {
+      case (None, None) if key == logics.PageColor.Key =>
+        <span class="wikiProperty" title="This page's colour, for the wiki only: not a schema.org property, and left out of the JSON-LD.">{EnglishCaseConverter.camelCase2TitleCase(key)}</span>
       case (Some(keySchema), Some(pairSchema)) =>
         <span>{keySchema.toXmlSpan()} / {pairSchema.toXmlSpan()}</span>
       case (Some(keySchema), None) =>
@@ -289,6 +292,13 @@ object InterpreterSchema extends TraitInterpreter {
                       }
                     case None =>
                       tail.map {
+                        case v if key == logics.PageColor.Key =>
+                          logics.PageColor.parse(v) match {
+                            case Some(color) =>
+                              <dd class="schemaFieldValue schemaFieldColor"><span class="colorSwatch" style={s"background-color: $color"}></span>{color}</dd>
+                            case None =>
+                              <dd class="schemaFieldValue"><span class="error">{s"$v — #rgb or #rrggbb"}</span></dd>
+                          }
                         case v if isAttachmentMacroValue(v) =>
                           val className = if (imageKeys.contains(key)) "schemaFieldValue schemaFieldImage schemaFieldAttachment" else "schemaFieldValue schemaFieldAttachment"
                           <dd class={className} property={key}>{renderAttachmentMacro(v)}</dd>
@@ -356,9 +366,12 @@ object InterpreterSchema extends TraitInterpreter {
     ).map(json =>
       <script type="application/ld+json">{scala.xml.Unparsed(logics.HtmlJson.stringify(json))}</script>
     )
+    val pageColor: Option[String] = logics.PageColor.fromFields(parseResult.seqSeqField)
+    val wrapperClass: String = "schema InterpreterSchema" + pageColor.fold("")(_ => " hasPageColor")
+    val wrapperStyle: Option[scala.xml.Text] = pageColor.map(c => scala.xml.Text(s"--page-color: $c; --page-hue: ${logics.PageColor.hue(c)}"))
     wikiContext.renderingMode match {
       case RenderingMode.Normal =>
-        val r = <div class="schema InterpreterSchema">{dl}{jsonLdScript.getOrElse(scala.xml.NodeSeq.Empty)}</div>
+        val r = <div class={wrapperClass} style={wrapperStyle}>{dl}{jsonLdScript.getOrElse(scala.xml.NodeSeq.Empty)}</div>
         r.toString()
       case RenderingMode.Preview =>
         // Recommendations come from every declared class, deduplicated: a page typed as both a
@@ -379,7 +392,7 @@ object InterpreterSchema extends TraitInterpreter {
           ""
         }
         val r =
-          <div class="schema InterpreterSchema">
+          <div class={wrapperClass} style={wrapperStyle}>
             {dl}
             {jsonLdScript.getOrElse(scala.xml.NodeSeq.Empty)}
             <div class="preview info">

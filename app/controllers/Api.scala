@@ -413,11 +413,13 @@ class Api @Inject()(
               .map(target => s"Redirect: $target")
               .getOrElse(compactPreviewText(renderedText))
             val image = models.tables.PageMeta.select(name).flatMap(_.image).map(image => pageImageUrl(image)).getOrElse("")
+            val color = models.tables.CalculatedSchemaOrg.selectPageColorMap(Seq(name)).getOrElse(name, "")
 
             Ok(Json.obj(
               "success" -> Json.fromBoolean(true),
               "title" -> Json.fromString(name),
               "image" -> Json.fromString(image),
+              "color" -> Json.fromString(color),
               "description" -> Json.fromString(description),
               "revision" -> Json.fromLong(page.revision),
             ))
@@ -465,7 +467,7 @@ class Api @Inject()(
     }
   }
 
-  private case class AdjacentLinkPayload(src: String, dst: String, alias: String, imageUrl: String, srcImageUrl: String, dstImageUrl: String)
+  private case class AdjacentLinkPayload(src: String, dst: String, alias: String, imageUrl: String, srcImageUrl: String, dstImageUrl: String, srcColor: String, dstColor: String)
 
   def links(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
     val name = PageNameUrl.decode(nameEncoded)
@@ -482,6 +484,9 @@ class Api @Inject()(
         .view
         .mapValues(image => pageImageUrl(image))
         .toMap
+      // Each page's own colour (logics.PageColor), looked up per request like the images: the
+      // cached links above know nothing about either.
+      val colorByPageName = models.tables.CalculatedSchemaOrg.selectPageColorMap(pageNamesForImages)
 
       val linksWithImage = links.map { link =>
         val adjacentName = if (link.src == name) link.dst else link.src
@@ -492,6 +497,8 @@ class Api @Inject()(
           imageUrl = imageUrlByPageName.getOrElse(adjacentName, ""),
           srcImageUrl = imageUrlByPageName.getOrElse(link.src, ""),
           dstImageUrl = imageUrlByPageName.getOrElse(link.dst, ""),
+          srcColor = colorByPageName.getOrElse(link.src, ""),
+          dstColor = colorByPageName.getOrElse(link.dst, ""),
         )
       }
       Ok(linksWithImage.asJson)

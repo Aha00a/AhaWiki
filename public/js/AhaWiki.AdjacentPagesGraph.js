@@ -73,6 +73,24 @@ window.AhaWikiAdjacentPagesGraph = {
                 return value || fallback;
             }
 
+            // A page's own colour (its #!Schema themeColor, logics.PageColor), as a node can show it:
+            // the hue and saturation kept, the lightness held between 35% and 65% so a near-white or
+            // near-black choice still shows as a dot on either theme's background. The server has
+            // already accepted only #rrggbb.
+            function displayColor(hex) {
+                var m = /^#([0-9a-f]{6})$/i.exec(hex || '');
+                if(!m) return '';
+                var v = parseInt(m[1], 16);
+                var r = ((v >> 16) & 255) / 255, g = ((v >> 8) & 255) / 255, b = (v & 255) / 255;
+                var max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+                var l = (max + min) / 2;
+                var s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+                var h = d === 0 ? 0 : (max === r ? ((g - b) / d) % 6 : (max === g ? (b - r) / d + 2 : (r - g) / d + 4)) * 60;
+                if(h < 0) h += 360;
+                l = Math.min(0.65, Math.max(0.35, l));
+                return 'hsl(' + Math.round(h) + ', ' + Math.round(s * 100) + '%, ' + Math.round(l * 100) + '%)';
+            }
+
             function graphPalette() {
                 return {
                     bgStart: cssVar('--color-surface-alt', '#eef'),
@@ -392,7 +410,9 @@ window.AhaWikiAdjacentPagesGraph = {
 
                     ctx.beginPath();
                     ctx.globalAlpha = nodeAlpha;
-                    ctx.fillStyle = isRoot ? palette.root : (isHover ? palette.hover : (isNeighbor ? palette.neighbor : (depth <= 1 ? palette.hop1 : (depth <= 2 ? palette.hop2 : palette.distant))));
+                    // A page's own colour wins over the distance colours, the root's included (the
+                    // root keeps its ring). Hover and its neighbours keep their highlight.
+                    ctx.fillStyle = isRoot ? (n.color || palette.root) : (isHover ? palette.hover : (isNeighbor ? palette.neighbor : (n.color ? n.color : (depth <= 1 ? palette.hop1 : (depth <= 2 ? palette.hop2 : palette.distant)))));
                     ctx.arc(p.x, p.y, rScreen, 0, Math.PI * 2);
                     ctx.fill();
 
@@ -414,6 +434,13 @@ window.AhaWikiAdjacentPagesGraph = {
                     if(isRoot) {
                         ctx.strokeStyle = palette.rootRing;
                         ctx.lineWidth = 2.5;
+                        ctx.stroke();
+                    } else if(n.color && state.showThumbnails && n.imageUrl) {
+                        // The thumbnail covers the fill, so the colour shows as the ring instead.
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, rScreen, 0, Math.PI * 2);
+                        ctx.strokeStyle = n.color;
+                        ctx.lineWidth = 2;
                         ctx.stroke();
                     } else {
                         var ring = glow.ringColor(n);
@@ -522,6 +549,8 @@ window.AhaWikiAdjacentPagesGraph = {
                     var dstNode = ensureNode(v.dst);
                     if(v.srcImageUrl && !srcNode.imageUrl) srcNode.imageUrl = v.srcImageUrl;
                     if(v.dstImageUrl && !dstNode.imageUrl) dstNode.imageUrl = v.dstImageUrl;
+                    if(v.srcColor && !srcNode.color) srcNode.color = displayColor(v.srcColor);
+                    if(v.dstColor && !dstNode.color) dstNode.color = displayColor(v.dstColor);
                     changed = addLink(v.src, v.dst) || changed;
                     consumed++;
                 }

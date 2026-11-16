@@ -438,6 +438,26 @@
 				margin-left: 0;
 			}
 
+			// The page's own colour (themeColor, logics.PageColor) as a stripe along the top. Only the
+			// stripe takes the colour as written: the box behind the text keeps the site's tokens, so
+			// whatever colour was chosen the text still reads in both themes.
+			&.hasPageColor {
+				border-top: 4px solid var(--page-color);
+			}
+			.colorSwatch {
+				display: inline-block;
+				width: 1em;
+				height: 1em;
+				margin-right: 0.35em;
+				vertical-align: -0.15em;
+				border: 1px solid var(--color-border);
+				border-radius: 3px;
+			}
+			// A key the wiki knows that is not schema.org's: not struck through like .unknown.
+			.wikiProperty {
+				color: var(--color-muted-strong);
+			}
+
 			.schemaFields {
 				.schemaFieldRow {
 					padding: 6px 0;

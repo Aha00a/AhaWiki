@@ -298,6 +298,11 @@
 			&.noPreviewImage {
 				grid-template-columns: minmax(0, 1fr);
 			}
+			// The page's own colour (themeColor), as a stripe above the card's text.
+			&.hasPageColor {
+				border-top: 3px solid var(--page-color);
+				padding-top: 8px;
+			}
 		}
 
 		img.preview {

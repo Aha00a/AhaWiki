@@ -101,6 +101,26 @@ object CalculatedSchemaOrg {
       .map(tables.CalculatedSchemaOrg.tupled)
   }
 
+  /**
+   * Each named page's colour (logics.PageColor), in one query: the graph and the link preview ask
+   * for many pages at once. Read from the rows the page calculation already writes for every
+   * `#!Schema` field, so the colour needs no column of its own and no recalculation of pages that
+   * never set one. A page declaring several classes has a row per class; the first valid wins.
+   */
+  def selectPageColorMap(pages: Seq[String])(implicit connection: Connection, site: Site): Map[String, String] = {
+    val distinctPages = pages.distinct
+    if (distinctPages.isEmpty) {
+      Map.empty
+    } else {
+      SQL"""
+        SELECT page, value FROM CalculatedSchemaOrg
+        WHERE site = ${site.seq} AND prop = ${logics.PageColor.Key} AND page IN ($distinctPages)
+      """.as((str("page") ~ str("value")).map { case page ~ value => page -> value }.*)
+        .flatMap { case (page, value) => logics.PageColor.parse(value).map(page -> _) }
+        .groupMapReduce(_._1)(_._2)((first, _) => first)
+    }
+  }
+
   def selectWhereValue(value: String)(implicit connection: Connection, site: Site): List[CalculatedSchemaOrg] = {
     SQL"SELECT page, cls, prop, value FROM CalculatedSchemaOrg WHERE site = ${site.seq} AND prop <> '' AND value = $value"
       .as(str("page") ~ str("cls") ~ str("prop") ~ str("value") *).map(flatten)

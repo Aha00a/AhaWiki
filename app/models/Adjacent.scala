@@ -14,7 +14,8 @@ object Adjacent {
     import models.tables.CalculatedSchemaOrg
     implicit val site: Site = contextSite.site
     val seqLink: Seq[CalculatedLink] = CalculatedLink.select(name)
-    val seqSchemaOrg = CalculatedSchemaOrg.selectWherePageOrValue(name)
+    // A page's colour is not something it is related to: drawn as a link, `#e60012` became a node.
+    val seqSchemaOrg = CalculatedSchemaOrg.selectWherePageOrValue(name).filterNot(_.prop == logics.PageColor.Key)
     val seqLinkSchemaOrgPageOrValue: Seq[CalculatedLink] = seqSchemaOrg.map(s => CalculatedLink(s.page, s.value, ""))
 
 //    val seqLinkSchemaOrgPageOrValue: Seq[CalculatedLink] =

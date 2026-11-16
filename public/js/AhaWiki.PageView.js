@@ -396,6 +396,10 @@
                 } else {
                     $inner.addClass('noPreviewImage');
                 }
+                // The page's own colour (/api/pagePreview's color, already #rrggbb), as a stripe.
+                if (/^#[0-9a-f]{6}$/i.test(data.color || "")) {
+                    $inner.addClass('hasPageColor').css('--page-color', data.color);
+                }
                 $inner
                     .append($('<h5/>').text(data.title || ""))
                     .append($('<p/>').text(data.description || ""));
