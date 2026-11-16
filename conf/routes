@@ -94,8 +94,6 @@ GET           /api/Admin/SiteTheme                   controllers.ApiAdminSite.ad
 PUT           /api/Admin/SiteTheme                   controllers.ApiAdminSite.adminUpdateSiteTheme
 GET           /api/Admin/Site/:seq/Telegram          controllers.ApiAdminSite.adminSiteTelegram(seq: Long)
 PUT           /api/Admin/Site/:seq/Telegram          controllers.ApiAdminSite.adminUpdateSiteTelegram(seq: Long)
-GET           /api/Admin/Site/:seq/SchemaColors      controllers.ApiAdminSite.adminSchemaColors(seq: Long)
-PUT           /api/Admin/Site/:seq/SchemaColors      controllers.ApiAdminSite.adminUpdateSchemaColor(seq: Long)
 GET           /api/Admin/PermissionAudit             controllers.ApiAdminSite.adminPermissionAudit
 GET           /api/Admin/Site/:seq/PageNames         controllers.ApiAdminSite.adminSitePageNames(seq: Long)
 GET           /api/Admin/Site/:seq/PageMetaList      controllers.ApiAdminSite.adminPageMetaList(seq: Long, page: Int ?= 1, pageSize: Int ?= 20, search: String ?= "", sortBy: String ?= "dateUpdated", sortOrder: String ?= "desc")

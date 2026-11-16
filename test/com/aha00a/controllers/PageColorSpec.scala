@@ -51,7 +51,7 @@ class PageColorSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfte
       Seq(
         "Somewhere" -> "[[[#!Schema Movie\nname\tSomewhere\nisPartOf\tRed\n]]]",
         "Nowhere" -> "[[[#!Schema Movie\nname\tNowhere\nisPartOf\tPlain\n]]]",
-        "Uncoloured" -> "[[[#!Schema Book\nname\tUncoloured\nisPartOf\tPlain\n]]]",
+        "Uncoloured" -> "[[[#!Schema Thing\nname\tUncoloured\nisPartOf\tPlain\n]]]",
       ).foreach { case (name, content) =>
         SQL("INSERT INTO Page (site, name, revision, dateTime, `user`, remoteAddress, comment, content) VALUES (63, {name}, 1, NOW(), 63, '127.0.0.1', '', {content})")
           .on("name" -> name, "content" -> content).execute()
@@ -88,15 +88,13 @@ class PageColorSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfte
         SQL("INSERT INTO CalculatedSchemaOrg (site, page, cls, prop, value) VALUES (63, {page}, 'Movie', {prop}, {value})")
           .on("page" -> page, "prop" -> prop, "value" -> value).execute()
       }
-      // The class layer: Movie has a colour on this site, Book's is not a colour. Classy is only a
-      // Movie, ClassyPart is a Movie that is part of Red (the topic wins), Booky is a Book.
-      Seq(("Classy", "Movie"), ("ClassyPart", "Movie"), ("Booky", "Book")).foreach { case (page, cls) =>
+      // The class layer: Movie has a colour (PageColor.ClassColours), Thing has none. Classy is
+      // only a Movie, ClassyPart is a Movie that is part of Red (the topic wins), Booky is a Thing.
+      Seq(("Classy", "Movie"), ("ClassyPart", "Movie"), ("Booky", "Thing")).foreach { case (page, cls) =>
         SQL("INSERT INTO CalculatedSchemaOrg (site, page, cls, prop, value) VALUES (63, {page}, {cls}, '', {value})")
           .on("page" -> page, "cls" -> cls, "value" -> s"schema:$cls").execute()
       }
       SQL("INSERT INTO CalculatedSchemaOrg (site, page, cls, prop, value) VALUES (63, 'ClassyPart', 'Movie', 'isPartOf', 'Red')").execute()
-      SQL("INSERT INTO Config (site, k, v) VALUES (63, 'site.schema.color.Movie', '#0000ff')").execute()
-      SQL("INSERT INTO Config (site, k, v) VALUES (63, 'site.schema.color.Book', 'not a colour')").execute()
     }
     TestApplication.resetMemoryCaches()
     logics.AhaWikiCacheMemoryDomainSite.refresh()(app.injector.instanceOf[play.api.db.Database])
@@ -115,6 +113,11 @@ class PageColorSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfte
       PageColor.parse("#e60012; background: url(x)") mustBe None
       PageColor.parse("#e6001") mustBe None
       PageColor.parse("rgb(1,2,3)") mustBe None
+    }
+
+    "give colours only to classes the vocabulary has, as valid colours" in {
+      PageColor.ClassColours.keys.filterNot(logics.CalculatedSchemaOrg.mapClass.isDefinedAt).toSeq.sorted mustBe Seq()
+      PageColor.ClassColours.values.filterNot(c => PageColor.parse(c).contains(c)).toSeq mustBe Seq()
     }
 
     "take the first valid themeColor of a block" in {
@@ -165,7 +168,7 @@ class PageColorSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfte
     "give a page that has no colour and inherits none its class's colour" in {
       def colour(page: String) =
         (contentAsJson(route(app, FakeRequest(GET, s"/api/pagePreview/$page").withHeaders("Host" -> host)).get) \ "color").as[String]
-      colour("Classy") mustBe "#0000ff"
+      colour("Classy") mustBe PageColor.ClassColours("Movie")
       colour("ClassyPart") mustBe "#e60012"
       colour("Booky") mustBe ""
     }
@@ -175,8 +178,8 @@ class PageColorSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfte
     "draw the colour inherited through the block's own isPartOf, else its class's" in {
       def page(name: String) = contentAsString(route(app, FakeRequest(GET, s"/w/$name").withHeaders("Host" -> host)).get)
       page("Somewhere") must include ("""data-page-color="#e60012"""")
-      // Its parent has no colour, so its class's; a Book has none.
-      page("Nowhere") must include ("""data-page-color="#0000ff"""")
+      // Its parent has no colour, so its class's; a Thing has none.
+      page("Nowhere") must include (s"""data-page-color="${PageColor.ClassColours("Movie")}"""")
       page("Uncoloured") must not include ("data-page-color")
     }
   }

@@ -363,21 +363,19 @@ object InterpreterSchema extends TraitInterpreter {
       <script type="application/ld+json">{scala.xml.Unparsed(logics.HtmlJson.stringify(json))}</script>
     )
     // Read from the block being drawn, not from this page's stored rows, so a preview shows the
-    // colour a save would give; the parents' own colours and the class colours are what is stored.
+    // colour a save would give; the parents' own colours are what is stored.
     // The same three layers, in the same order, as CalculatedSchemaOrg.selectPageColorMap.
     val pageColor: Option[String] = logics.PageColor.fromFields(parseResult.seqSeqField).orElse {
       val parents = logics.PageColor.parentsFromFields(parseResult.seqSeqField)
-      wikiContext.withConnection { implicit connection =>
-        val inherited = if (parents.isEmpty) {
-          None
-        } else {
-          logics.PageColor.firstByName(parents, models.tables.CalculatedSchemaOrg.selectOwnPageColorMap(parents).get)
+      if (parents.isEmpty) {
+        None
+      } else {
+        val parentColour = wikiContext.withConnection { implicit connection =>
+          models.tables.CalculatedSchemaOrg.selectOwnPageColorMap(parents)
         }
-        inherited.orElse {
-          logics.PageColor.firstByName(parseResult.schemaClasses, models.tables.CalculatedSchemaOrg.selectClassColourMap().get)
-        }
+        logics.PageColor.firstByName(parents, parentColour.get)
       }
-    }
+    }.orElse(logics.PageColor.firstByName(parseResult.schemaClasses, logics.PageColor.ClassColours.get))
     val wrapperClass: String = "schema InterpreterSchema" + pageColor.fold("")(_ => " hasPageColor")
     // The colour as written goes in the style, which is what shows without scripts; with them,
     // AhaWiki.Color.js reads data-page-color and sets the style to a shade that stands on the

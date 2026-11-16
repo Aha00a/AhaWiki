@@ -26,13 +26,6 @@ object Config extends Logging{
       .map(tupled)
   }
 
-  /** (key, value) of every row whose key starts with `prefix`, which must not hold `%` or `_`. */
-  def selectByPrefix(prefix: String)(implicit connection: Connection, site: Site): Seq[(String, String)] = {
-    require(!prefix.exists(c => c == '%' || c == '_'), s"LIKE would read $prefix as a pattern")
-    SQL"SELECT k, v FROM Config WHERE site = ${site.seq} AND k LIKE ${prefix + "%"}"
-      .as((str("k") ~ str("v")).map { case k ~ v => k -> v }.*)
-  }
-
   def getOrElse(k: String, default: String)(implicit connection: Connection, site: Site): String = select(k).map(_.v).getOrElse(default)
   def getOrElse(k: String, default: Boolean)(implicit connection: Connection, site: Site): Boolean = getOrElse(k, default.toString).toBoolGenerously
   def upsert(k: String, v: String)(implicit connection: Connection, site: Site): Int = {

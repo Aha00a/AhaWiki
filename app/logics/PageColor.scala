@@ -56,21 +56,37 @@ object PageColor {
     names.distinct.sorted.flatMap(colour(_)).headOption
 
   /**
-   * The last layer (2026-11-16): a page that neither wrote a colour nor inherits one takes the
-   * colour its site's admin chose for its schema class, stored as a Config row per class. A
-   * topic's colour says «this series», a class's says «a film»; the topic wins where both apply.
+   * The last layer (2026-11-16): a page that neither wrote a colour nor inherits one takes its
+   * schema class's colour. A topic's colour says «this series», a class's says «a film»; the topic
+   * wins where both apply.
+   *
+   * Fixed here, the same on every site. A first version let each site's admin choose them on the
+   * admin screen; the owner preferred one set that needs no choosing.
+   *
+   * Thirteen groups of related classes, their hues evenly spaced around OKLCH's circle from 25
+   * degrees (25 + i * 360 / 13), all at lightness 65% and chroma 0.15 -- a lightness that stands at
+   * about 3:1 on both themes' backgrounds, so AhaWiki.Color.js draws them nearly as written.
+   * Neighbouring groups are related kinds (film beside television), so the colours that sit close
+   * on the circle are the ones that may.
    *
    * The class exactly as declared. Movie's colour does not fall back to CreativeWork's: many
    * classes have several parents (Hospital sits under three), and the class at the top of the
-   * infobox should be the whole answer to where a colour came from.
+   * infobox should be the whole answer to where a colour came from. The broadest classes (Thing,
+   * CreativeWork, Intangible, Rating) have none: a colour shared by half the wiki tells nothing.
    */
-  val ClassKeyPrefix: String = "site.schema.color."
-
-  def classKey(schemaClass: String): String = ClassKeyPrefix + schemaClass
-
-  /** Class -> colour, from Config rows (key, value); rows that are not a valid colour are left out. */
-  def classColours(rows: Seq[(String, String)]): Map[String, String] =
-    rows.collect { case (key, value) if key.startsWith(ClassKeyPrefix) => key.stripPrefix(ClassKeyPrefix) -> parse(value) }
-      .collect { case (schemaClass, Some(colour)) => schemaClass -> colour }
-      .toMap
+  val ClassColours: Map[String, String] = Seq(
+    "#dc655f" -> Seq("Movie", "MovieSeries"),
+    "#d47125" -> Seq("TVSeries", "TVSeason", "TVEpisode", "Episode", "CreativeWorkSeason"),
+    "#be8200" -> Seq("ComicSeries"),
+    "#999500" -> Seq("Book", "BookSeries", "Periodical"),
+    "#63a33e" -> Seq("Article", "TechArticle", "BlogPosting", "NewsArticle", "SocialMediaPosting", "HowTo", "Recipe"),
+    "#00ab75" -> Seq("SoftwareApplication", "WebApplication", "SoftwareSourceCode", "WebSite", "ComputerLanguage"),
+    "#00aaa5" -> Seq("Game", "VideoGame"),
+    "#00a3cc" -> Seq("Person"),
+    "#2d95e4" -> Seq("Organization", "Corporation", "NGO", "EducationalOrganization", "CollegeOrUniversity", "GovernmentOffice", "PoliticalParty", "PerformingGroup", "MusicGroup"),
+    "#7485e9" -> Seq("Place", "City", "Country", "AdministrativeArea", "CivicStructure", "StadiumOrArena", "PerformingArtsTheater"),
+    "#a176da" -> Seq("LocalBusiness", "FoodEstablishment", "Restaurant", "CafeOrCoffeeShop", "FinancialService"),
+    "#c06abb" -> Seq("MedicalEntity", "MedicalCondition", "AnatomicalStructure", "Drug", "Substance", "Hospital", "MedicalOrganization"),
+    "#d56390" -> Seq("Product"),
+  ).flatMap { case (colour, classes) => classes.map(_ -> colour) }.toMap
 }

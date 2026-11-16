@@ -534,65 +534,6 @@ class ApiAdminSite @Inject()(
     }
   }
 
-  /**
-   * The colour each schema class gives a page that has none of its own and inherits none
-   * (logics.PageColor.ClassKeyPrefix). Every class the site's pages declare, most used first, and
-   * any class still holding a colour after its pages have gone; with them, the colours pages wrote
-   * themselves, so a class colour can be chosen apart from the topics already coloured.
-   */
-  private def schemaColorsJson()(implicit connection: java.sql.Connection, site: Site): Json = {
-    val classColour = models.tables.CalculatedSchemaOrg.selectClassColourMap()
-    val counts = models.tables.CalculatedSchemaOrg.selectPageCountByClass()
-    val unused = classColour.keys.filterNot(c => counts.exists(_.cls == c)).toSeq.sorted.map(models.tables.CalculatedSchemaOrg.ClsCnt(_, 0))
-    val pageColours = models.tables.CalculatedSchemaOrg.selectOwnPageColorMap(
-      models.tables.CalculatedSchemaOrg.selectWhereProp(logics.PageColor.Key).map(_.page)
-    ).toSeq.sortBy(_._1)
-    Json.obj(
-      "siteSeq" -> Json.fromLong(site.seq),
-      "classes" -> Json.arr((counts ++ unused).map(c => Json.obj(
-        "cls" -> Json.fromString(c.cls),
-        "pages" -> Json.fromInt(c.cnt),
-        "color" -> Json.fromString(classColour.getOrElse(c.cls, "")),
-      )): _*),
-      "pageColors" -> Json.arr(pageColours.map { case (page, colour) =>
-        Json.obj("page" -> Json.fromString(page), "color" -> Json.fromString(colour))
-      }: _*),
-    )
-  }
-
-  def adminSchemaColors(seq: Long): Action[AnyContent] = Action { implicit request =>
-    withSiteAdmin(seq) { siteValue =>
-      database.withConnection { implicit connection =>
-        implicit val site: Site = siteValue
-        Ok(schemaColorsJson())
-      }
-    }
-  }
-
-  /** Sets one class's colour (`cls`, `color`); an empty colour removes it. */
-  def adminUpdateSchemaColor(seq: Long): Action[AnyContent] = Action { implicit request =>
-    withSiteAdmin(seq) { siteValue =>
-      val body = request.body.asFormUrlEncoded.getOrElse(Map.empty)
-      def field(name: String): String = body.get(name).flatMap(_.headOption).map(_.trim).getOrElse("")
-      val schemaClass = field("cls")
-      val colourValue = field("color")
-      if (!logics.CalculatedSchemaOrg.mapClass.isDefinedAt(schemaClass)) {
-        JsonError(BadRequest, s"not a schema class: $schemaClass")
-      } else if (colourValue.nonEmpty && logics.PageColor.parse(colourValue).isEmpty) {
-        JsonError(BadRequest, s"not #rgb or #rrggbb: $colourValue")
-      } else {
-        database.withConnection { implicit connection =>
-          implicit val site: Site = siteValue
-          logics.PageColor.parse(colourValue) match {
-            case Some(colour) => Config.upsert(logics.PageColor.classKey(schemaClass), colour)
-            case None => Config.delete(logics.PageColor.classKey(schemaClass))
-          }
-          Ok(schemaColorsJson())
-        }
-      }
-    }
-  }
-
   def adminUpdateSiteTheme: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       val body = request.body.asFormUrlEncoded.getOrElse(Map.empty)

@@ -1,5 +1,5 @@
 // app/assets/js/admin.jsx
-import React28 from "react";
+import React27 from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
@@ -790,9 +790,9 @@ function SiteDetailPage() {
 }
 
 // app/assets/js/admin/pages/SiteConfigPage.jsx
-import React16, { useEffect as useEffect10, useState as useState14 } from "react";
+import React15, { useEffect as useEffect9, useState as useState13 } from "react";
 import { useNavigate as useNavigate7, useOutletContext as useOutletContext3 } from "react-router-dom";
-import { Anchor as Anchor4, Badge as Badge11, Button as Button7, Card as Card8, Group as Group12, Paper as Paper2, SimpleGrid as SimpleGrid2, Stack as Stack8, Text as Text12, TextInput as TextInput3, Title as Title9 } from "@mantine/core";
+import { Anchor as Anchor4, Badge as Badge10, Button as Button6, Card as Card7, Group as Group11, Paper as Paper2, SimpleGrid as SimpleGrid2, Stack as Stack7, Text as Text11, TextInput as TextInput2, Title as Title8 } from "@mantine/core";
 
 // app/assets/js/admin/hooks/useSiteConfigData.js
 import { useCallback as useCallback6, useState as useState12 } from "react";
@@ -910,70 +910,12 @@ function useSiteConfigData(siteSeq) {
   return { faviconUrl, faviconObjectKey, uploadingFavicon, deletingFavicon, siteTheme, setSiteTheme, savingTheme, telegram, setTelegram, savingTelegram, error, loadFavicon, uploadFavicon, resetFavicon, loadTheme, saveTheme, loadTelegram, saveTelegram };
 }
 
-// app/assets/js/admin/components/SchemaColorsCard.jsx
-import React15, { useCallback as useCallback7, useEffect as useEffect9, useState as useState13 } from "react";
-import { Badge as Badge10, Button as Button6, Card as Card7, Group as Group11, Stack as Stack7, Table as Table3, Text as Text11, TextInput as TextInput2, Title as Title8 } from "@mantine/core";
-var validColour = (v) => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v.trim());
-var longColour = (v) => v.trim().length === 4 ? "#" + v.trim().slice(1).split("").map((c) => c + c).join("") : v.trim();
-function shownOnTheme(colour) {
-  const color = window.AhaWiki?.Color;
-  if (!color || !validColour(colour)) return "";
-  const bg = color.resolveColor(getComputedStyle(document.documentElement).getPropertyValue("--color-bg").trim());
-  return color.forBackgrounds(longColour(colour).toLowerCase(), bg ? [bg] : []);
-}
-function Swatch({ colour, title }) {
-  return /* @__PURE__ */ React15.createElement("span", { title, style: { display: "inline-block", width: 18, height: 18, borderRadius: 4, verticalAlign: "middle", background: colour || "transparent", border: "1px solid rgba(127,127,127,0.4)" } });
-}
-function SchemaColorsCard({ siteSeq }) {
-  const [classes, setClasses] = useState13([]);
-  const [pageColors, setPageColors] = useState13([]);
-  const [drafts, setDrafts] = useState13({});
-  const [saving, setSaving] = useState13("");
-  const [error, setError] = useState13("");
-  const apply = (data) => {
-    setClasses(data?.classes ?? []);
-    setPageColors(data?.pageColors ?? []);
-    setDrafts(Object.fromEntries((data?.classes ?? []).map((c) => [c.cls, c.color])));
-  };
-  const load = useCallback7(async () => {
-    if (!siteSeq) return;
-    setError("");
-    try {
-      apply(await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/SchemaColors`));
-    } catch (err) {
-      logError("schema-colors:load:error", err);
-      setError(err.message);
-    }
-  }, [siteSeq]);
-  useEffect9(() => {
-    load();
-  }, [load]);
-  const save = async (cls, color) => {
-    setSaving(cls);
-    setError("");
-    try {
-      apply(await sendForm(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/SchemaColors`, "PUT", { cls, color }));
-    } catch (err) {
-      logError("schema-colors:save:error", err);
-      setError(err.message);
-    } finally {
-      setSaving("");
-    }
-  };
-  return /* @__PURE__ */ React15.createElement(Card7, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group11, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React15.createElement(Title8, { order: 3 }, "Schema \uD074\uB798\uC2A4 \uC0C9"), /* @__PURE__ */ React15.createElement(Badge10, { color: "grape", variant: "light" }, "\uB514\uC790\uC778")), /* @__PURE__ */ React15.createElement(Text11, { size: "sm", c: "dimmed", mb: "xs" }, "\uC790\uAE30 ", /* @__PURE__ */ React15.createElement("code", null, "themeColor"), " \uB3C4, ", /* @__PURE__ */ React15.createElement("code", null, "isPartOf"), " \uB85C \uBB3C\uB824\uBC1B\uB294 \uC0C9\uB3C4 \uC5C6\uB294 \uD398\uC774\uC9C0\uAC00 \uADF8 \uD074\uB798\uC2A4\uC758 \uC0C9\uC744 \uC501\uB2C8\uB2E4. \uC815\uBCF4 \uC0C1\uC790\uC758 \uB760, \uB9C1\uD06C \uBBF8\uB9AC\uBCF4\uAE30, \uC778\uC811 \uD398\uC774\uC9C0 \uADF8\uB798\uD504\uC758 \uC810\uC5D0 \uC4F0\uC785\uB2C8\uB2E4. \uD074\uB798\uC2A4\uB294 \uC801\uD78C \uADF8\uB300\uB85C\uB9CC \uBD05\uB2C8\uB2E4 \u2014 Movie \uC5D0 \uC0C9\uC774 \uC5C6\uB2E4\uACE0 CreativeWork \uC758 \uC0C9\uC744 \uC4F0\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4."), pageColors.length ? /* @__PURE__ */ React15.createElement(Stack7, { gap: 4, mb: "md" }, /* @__PURE__ */ React15.createElement(Text11, { size: "xs", c: "dimmed" }, "\uD398\uC774\uC9C0\uAC00 \uC9C1\uC811 \uC801\uC740 \uC0C9 \u2014 \uC8FC\uC81C \uC0C9\uACFC \uACB9\uCE58\uC9C0 \uC54A\uAC8C \uACE0\uB974\uC138\uC694"), /* @__PURE__ */ React15.createElement(Group11, { gap: 10 }, pageColors.map((p) => /* @__PURE__ */ React15.createElement(Group11, { key: p.page, gap: 4 }, /* @__PURE__ */ React15.createElement(Swatch, { colour: p.color, title: p.color }), /* @__PURE__ */ React15.createElement(Text11, { size: "xs" }, p.page))))) : null, error ? /* @__PURE__ */ React15.createElement(Text11, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React15.createElement(Table3, { striped: true, withTableBorder: true, verticalSpacing: 4 }, /* @__PURE__ */ React15.createElement(Table3.Thead, null, /* @__PURE__ */ React15.createElement(Table3.Tr, null, /* @__PURE__ */ React15.createElement(Table3.Th, null, "\uD074\uB798\uC2A4"), /* @__PURE__ */ React15.createElement(Table3.Th, null, "\uD398\uC774\uC9C0"), /* @__PURE__ */ React15.createElement(Table3.Th, null, "\uC0C9"), /* @__PURE__ */ React15.createElement(Table3.Th, null, "\uC774 \uD14C\uB9C8\uC5D0\uC11C"), /* @__PURE__ */ React15.createElement(Table3.Th, null))), /* @__PURE__ */ React15.createElement(Table3.Tbody, null, classes.map((c) => {
-    const draft = drafts[c.cls] ?? "";
-    const invalid = draft.trim() !== "" && !validColour(draft);
-    const shown = shownOnTheme(draft);
-    return /* @__PURE__ */ React15.createElement(Table3.Tr, { key: c.cls }, /* @__PURE__ */ React15.createElement(Table3.Td, null, /* @__PURE__ */ React15.createElement("a", { href: `/w/schema:${encodeURIComponent(c.cls)}`, target: "_blank", rel: "noopener" }, c.cls)), /* @__PURE__ */ React15.createElement(Table3.Td, null, c.pages), /* @__PURE__ */ React15.createElement(Table3.Td, null, /* @__PURE__ */ React15.createElement(Group11, { gap: 6, wrap: "nowrap" }, /* @__PURE__ */ React15.createElement("input", { type: "color", value: validColour(draft) ? longColour(draft) : "#000000", onChange: (e) => setDrafts({ ...drafts, [c.cls]: e.target.value }), style: { width: 32, height: 26, padding: 0, border: "none", background: "none" } }), /* @__PURE__ */ React15.createElement(TextInput2, { size: "xs", w: 100, placeholder: "#rrggbb", value: draft, error: invalid, onChange: (e) => setDrafts({ ...drafts, [c.cls]: e.currentTarget.value }) }))), /* @__PURE__ */ React15.createElement(Table3.Td, null, shown ? /* @__PURE__ */ React15.createElement(Group11, { gap: 4, wrap: "nowrap" }, /* @__PURE__ */ React15.createElement(Swatch, { colour: shown, title: shown }), /* @__PURE__ */ React15.createElement(Text11, { size: "xs", c: "dimmed" }, shown)) : null), /* @__PURE__ */ React15.createElement(Table3.Td, null, /* @__PURE__ */ React15.createElement(Group11, { gap: 4, wrap: "nowrap" }, /* @__PURE__ */ React15.createElement(Button6, { size: "compact-xs", variant: "light", color: "grape", loading: saving === c.cls, disabled: invalid || draft.trim() === c.color, onClick: () => save(c.cls, draft.trim()) }, "\uC800\uC7A5"), /* @__PURE__ */ React15.createElement(Button6, { size: "compact-xs", variant: "subtle", color: "gray", disabled: !c.color, onClick: () => save(c.cls, "") }, "\uC9C0\uC6B0\uAE30"))));
-  }))));
-}
-
 // app/assets/js/admin/pages/SiteConfigPage.jsx
 function SiteConfigPage() {
   const { site, siteSeq, saveSiteMeta, savingSiteMeta, error: siteMetaError } = useOutletContext3();
   const navigate = useNavigate7();
-  const [siteMetaForm, setSiteMetaForm] = useState14({ abbr: "", mainDomain: "", publicListedOrder: "" });
-  useEffect10(() => {
+  const [siteMetaForm, setSiteMetaForm] = useState13({ abbr: "", mainDomain: "", publicListedOrder: "" });
+  useEffect9(() => {
     setSiteMetaForm({
       abbr: site?.abbr ?? "",
       mainDomain: site?.mainDomain ?? "",
@@ -981,24 +923,24 @@ function SiteConfigPage() {
     });
   }, [site]);
   const { faviconUrl, faviconObjectKey, uploadingFavicon, deletingFavicon, siteTheme, setSiteTheme, savingTheme, telegram, setTelegram, savingTelegram, error, loadFavicon, uploadFavicon, resetFavicon, loadTheme, saveTheme, loadTelegram, saveTelegram } = useSiteConfigData(siteSeq);
-  const [faviconFile, setFaviconFile] = useState14(null);
-  useEffect10(() => {
+  const [faviconFile, setFaviconFile] = useState13(null);
+  useEffect9(() => {
     if (!siteSeq) return;
     loadFavicon();
     loadTheme();
     loadTelegram();
   }, [siteSeq]);
   const selectedSiteDomainsText = (site?.domains ?? []).join(", ") || "-";
-  return /* @__PURE__ */ React16.createElement(React16.Fragment, null, /* @__PURE__ */ React16.createElement(Card8, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React16.createElement(Group12, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React16.createElement(Title9, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React16.createElement(Badge11, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React16.createElement(Stack8, { gap: "sm" }, /* @__PURE__ */ React16.createElement(Group12, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React16.createElement(Stack8, { gap: 2 }, /* @__PURE__ */ React16.createElement(Text12, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React16.createElement(Text12, { fw: 700 }, site ? `${site.name} (#${site.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C"), /* @__PURE__ */ React16.createElement(Text12, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", selectedSiteDomainsText)), /* @__PURE__ */ React16.createElement(Button7, { variant: "light", size: "xs", onClick: () => navigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React16.createElement(Group12, { align: "end", mt: "sm" }, /* @__PURE__ */ React16.createElement(TextInput3, { label: "Abbr", value: siteMetaForm.abbr, onChange: (e) => setSiteMetaForm({ ...siteMetaForm, abbr: e.currentTarget.value }), disabled: !site }), /* @__PURE__ */ React16.createElement(TextInput3, { label: "Main Domain", value: siteMetaForm.mainDomain, onChange: (e) => setSiteMetaForm({ ...siteMetaForm, mainDomain: e.currentTarget.value }), disabled: !site }), /* @__PURE__ */ React16.createElement(TextInput3, { label: "Public Listed Order", type: "number", min: "0", step: "0.01", placeholder: "empty means hidden", value: siteMetaForm.publicListedOrder, onChange: (e) => setSiteMetaForm({ ...siteMetaForm, publicListedOrder: e.currentTarget.value }), disabled: !site }), /* @__PURE__ */ React16.createElement(Button7, { variant: "light", disabled: !site || !siteMetaForm.abbr.trim(), loading: savingSiteMeta, onClick: () => saveSiteMeta(siteMetaForm) }, "Save site meta")), siteMetaError ? /* @__PURE__ */ React16.createElement(Text12, { size: "sm", c: "red" }, siteMetaError) : null)), /* @__PURE__ */ React16.createElement(SimpleGrid2, { cols: { base: 1, xl: 2 }, spacing: "lg" }, /* @__PURE__ */ React16.createElement(Card8, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React16.createElement(Group12, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React16.createElement(Title9, { order: 3 }, "Favicon"), /* @__PURE__ */ React16.createElement(Badge11, { color: "blue", variant: "light" }, "\uBE0C\uB79C\uB529")), /* @__PURE__ */ React16.createElement(Text12, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4."), error ? /* @__PURE__ */ React16.createElement(Text12, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React16.createElement(Group12, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React16.createElement(Stack8, { gap: 6 }, /* @__PURE__ */ React16.createElement(Text12, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React16.createElement("img", { src: faviconUrl, alt: "Current favicon", style: { width: 32, height: 32, borderRadius: 6, border: "1px solid #e5e7eb" } }), /* @__PURE__ */ React16.createElement(Text12, { size: "xs", c: "dimmed", style: { wordBreak: "break-all" } }, faviconObjectKey || "/public/favicon.png"), /* @__PURE__ */ React16.createElement(Anchor4, { size: "xs", href: faviconUrl, target: "_blank", rel: "noopener" }, "\uC0C8 \uD0ED\uC73C\uB85C \uBCF4\uAE30")), /* @__PURE__ */ React16.createElement(Stack8, { gap: 8 }, /* @__PURE__ */ React16.createElement(Text12, { size: "sm", fw: 600 }, "\uC0C8 favicon \uC5C5\uB85C\uB4DC"), /* @__PURE__ */ React16.createElement("input", { type: "file", accept: "image/*,.ico", onChange: (e) => setFaviconFile(e.currentTarget.files?.[0] ?? null) }), /* @__PURE__ */ React16.createElement(Group12, null, /* @__PURE__ */ React16.createElement(Button7, { variant: "filled", loading: uploadingFavicon, disabled: !faviconFile || !siteSeq, onClick: async () => {
+  return /* @__PURE__ */ React15.createElement(React15.Fragment, null, /* @__PURE__ */ React15.createElement(Card7, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group11, { justify: "space-between", mb: "xs" }, /* @__PURE__ */ React15.createElement(Title8, { order: 4 }, "\uC0AC\uC774\uD2B8 \uC0C1\uC138"), /* @__PURE__ */ React15.createElement(Badge10, { color: "blue", variant: "light" }, "Site Detail")), /* @__PURE__ */ React15.createElement(Stack7, { gap: "sm" }, /* @__PURE__ */ React15.createElement(Group11, { justify: "space-between", align: "flex-start", wrap: "wrap" }, /* @__PURE__ */ React15.createElement(Stack7, { gap: 2 }, /* @__PURE__ */ React15.createElement(Text11, { size: "xs", c: "dimmed" }, "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React15.createElement(Text11, { fw: 700 }, site ? `${site.name} (#${site.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C"), /* @__PURE__ */ React15.createElement(Text11, { size: "sm", c: "dimmed" }, "\uB3C4\uBA54\uC778: ", selectedSiteDomainsText)), /* @__PURE__ */ React15.createElement(Button6, { variant: "light", size: "xs", onClick: () => navigate("/Admin/Site") }, "\u2190 \uC0AC\uC774\uD2B8 \uBAA9\uB85D")), /* @__PURE__ */ React15.createElement(Group11, { align: "end", mt: "sm" }, /* @__PURE__ */ React15.createElement(TextInput2, { label: "Abbr", value: siteMetaForm.abbr, onChange: (e) => setSiteMetaForm({ ...siteMetaForm, abbr: e.currentTarget.value }), disabled: !site }), /* @__PURE__ */ React15.createElement(TextInput2, { label: "Main Domain", value: siteMetaForm.mainDomain, onChange: (e) => setSiteMetaForm({ ...siteMetaForm, mainDomain: e.currentTarget.value }), disabled: !site }), /* @__PURE__ */ React15.createElement(TextInput2, { label: "Public Listed Order", type: "number", min: "0", step: "0.01", placeholder: "empty means hidden", value: siteMetaForm.publicListedOrder, onChange: (e) => setSiteMetaForm({ ...siteMetaForm, publicListedOrder: e.currentTarget.value }), disabled: !site }), /* @__PURE__ */ React15.createElement(Button6, { variant: "light", disabled: !site || !siteMetaForm.abbr.trim(), loading: savingSiteMeta, onClick: () => saveSiteMeta(siteMetaForm) }, "Save site meta")), siteMetaError ? /* @__PURE__ */ React15.createElement(Text11, { size: "sm", c: "red" }, siteMetaError) : null)), /* @__PURE__ */ React15.createElement(SimpleGrid2, { cols: { base: 1, xl: 2 }, spacing: "lg" }, /* @__PURE__ */ React15.createElement(Card7, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group11, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React15.createElement(Title8, { order: 3 }, "Favicon"), /* @__PURE__ */ React15.createElement(Badge10, { color: "blue", variant: "light" }, "\uBE0C\uB79C\uB529")), /* @__PURE__ */ React15.createElement(Text11, { size: "sm", c: "dimmed", mb: "md" }, "\uC120\uD0DD\uD55C \uC0AC\uC774\uD2B8\uC758 favicon\uC744 \uAD00\uB9AC\uC790 \uC5C5\uB85C\uB4DC\uB85C \uAD50\uCCB4\uD569\uB2C8\uB2E4."), error ? /* @__PURE__ */ React15.createElement(Text11, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React15.createElement(Group11, { align: "flex-start", grow: true, mb: "md" }, /* @__PURE__ */ React15.createElement(Stack7, { gap: 6 }, /* @__PURE__ */ React15.createElement(Text11, { size: "sm", fw: 600 }, "\uD604\uC7AC favicon"), /* @__PURE__ */ React15.createElement("img", { src: faviconUrl, alt: "Current favicon", style: { width: 32, height: 32, borderRadius: 6, border: "1px solid #e5e7eb" } }), /* @__PURE__ */ React15.createElement(Text11, { size: "xs", c: "dimmed", style: { wordBreak: "break-all" } }, faviconObjectKey || "/public/favicon.png"), /* @__PURE__ */ React15.createElement(Anchor4, { size: "xs", href: faviconUrl, target: "_blank", rel: "noopener" }, "\uC0C8 \uD0ED\uC73C\uB85C \uBCF4\uAE30")), /* @__PURE__ */ React15.createElement(Stack7, { gap: 8 }, /* @__PURE__ */ React15.createElement(Text11, { size: "sm", fw: 600 }, "\uC0C8 favicon \uC5C5\uB85C\uB4DC"), /* @__PURE__ */ React15.createElement("input", { type: "file", accept: "image/*,.ico", onChange: (e) => setFaviconFile(e.currentTarget.files?.[0] ?? null) }), /* @__PURE__ */ React15.createElement(Group11, null, /* @__PURE__ */ React15.createElement(Button6, { variant: "filled", loading: uploadingFavicon, disabled: !faviconFile || !siteSeq, onClick: async () => {
     await uploadFavicon(faviconFile);
     await loadFavicon();
-  } }, "Upload favicon"), /* @__PURE__ */ React16.createElement(Button7, { variant: "light", disabled: !siteSeq, onClick: () => loadFavicon() }, "Refresh"), /* @__PURE__ */ React16.createElement(Button7, { color: "red", variant: "light", loading: deletingFavicon, disabled: !siteSeq, onClick: async () => {
+  } }, "Upload favicon"), /* @__PURE__ */ React15.createElement(Button6, { variant: "light", disabled: !siteSeq, onClick: () => loadFavicon() }, "Refresh"), /* @__PURE__ */ React15.createElement(Button6, { color: "red", variant: "light", loading: deletingFavicon, disabled: !siteSeq, onClick: async () => {
     await resetFavicon();
     await loadFavicon();
     setFaviconFile(null);
-  } }, "Reset to default")), /* @__PURE__ */ React16.createElement(Text12, { size: "xs", c: "dimmed" }, "\uAD8C\uC7A5: 32x32 \uB610\uB294 48x48 PNG/ICO"))))), /* @__PURE__ */ React16.createElement(Card8, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React16.createElement(Group12, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React16.createElement(Title9, { order: 3 }, "Theme"), /* @__PURE__ */ React16.createElement(Badge11, { color: "grape", variant: "light" }, "\uB514\uC790\uC778")), /* @__PURE__ */ React16.createElement(Text12, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uAE30\uBCF8 \uC0C9\uC870(Hue)\uB97C \uC9C0\uC815\uD569\uB2C8\uB2E4."), (() => {
+  } }, "Reset to default")), /* @__PURE__ */ React15.createElement(Text11, { size: "xs", c: "dimmed" }, "\uAD8C\uC7A5: 32x32 \uB610\uB294 48x48 PNG/ICO"))))), /* @__PURE__ */ React15.createElement(Card7, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group11, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React15.createElement(Title8, { order: 3 }, "Theme"), /* @__PURE__ */ React15.createElement(Badge10, { color: "grape", variant: "light" }, "\uB514\uC790\uC778")), /* @__PURE__ */ React15.createElement(Text11, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8\uBCC4 \uAE30\uBCF8 \uC0C9\uC870(Hue)\uB97C \uC9C0\uC815\uD569\uB2C8\uB2E4."), (() => {
     const hue = siteTheme.defaultHue === "" ? siteTheme.fallbackHue ?? 0 : Number(siteTheme.defaultHue);
-    return /* @__PURE__ */ React16.createElement(SimpleGrid2, { cols: { base: 1, sm: 2 }, spacing: "md", mb: "md" }, /* @__PURE__ */ React16.createElement(Stack8, { gap: 4 }, /* @__PURE__ */ React16.createElement(Text12, { size: "sm", fw: 500 }, "\uAE30\uBCF8 \uC0C9\uC870 (Default Hue) ", /* @__PURE__ */ React16.createElement(Text12, { span: true, size: "xs", c: "dimmed" }, "\u2014 \uC0AC\uC6A9\uC790 \uBBF8\uC124\uC815 \uC2DC \uCD08\uAE30\uAC12, \uBBF8\uC9C0\uC815 \uC2DC ", siteTheme.fallbackHue ?? "\uAE30\uBCF8\uAC12")), /* @__PURE__ */ React16.createElement(Group12, { gap: "sm", align: "center" }, /* @__PURE__ */ React16.createElement(
+    return /* @__PURE__ */ React15.createElement(SimpleGrid2, { cols: { base: 1, sm: 2 }, spacing: "md", mb: "md" }, /* @__PURE__ */ React15.createElement(Stack7, { gap: 4 }, /* @__PURE__ */ React15.createElement(Text11, { size: "sm", fw: 500 }, "\uAE30\uBCF8 \uC0C9\uC870 (Default Hue) ", /* @__PURE__ */ React15.createElement(Text11, { span: true, size: "xs", c: "dimmed" }, "\u2014 \uC0AC\uC6A9\uC790 \uBBF8\uC124\uC815 \uC2DC \uCD08\uAE30\uAC12, \uBBF8\uC9C0\uC815 \uC2DC ", siteTheme.fallbackHue ?? "\uAE30\uBCF8\uAC12")), /* @__PURE__ */ React15.createElement(Group11, { gap: "sm", align: "center" }, /* @__PURE__ */ React15.createElement(
       "input",
       {
         type: "range",
@@ -1009,17 +951,17 @@ function SiteConfigPage() {
         className: "hueTrack",
         style: { flex: 1, height: 8, borderRadius: 4, appearance: "none", WebkitAppearance: "none", cursor: "pointer", outline: "none", border: "none" }
       }
-    ), /* @__PURE__ */ React16.createElement("div", { className: "hueScope", style: { "--hue": hue, width: 24, height: 24, borderRadius: 6, backgroundColor: "var(--color-kanban-primary)", border: "1px solid rgba(0,0,0,0.15)", flexShrink: 0 } }), /* @__PURE__ */ React16.createElement(Text12, { size: "sm", style: { width: 32, textAlign: "right" } }, hue))), /* @__PURE__ */ React16.createElement(Paper2, { withBorder: true, radius: "md", p: "md" }, /* @__PURE__ */ React16.createElement(Text12, { size: "sm", fw: 600, mb: 8 }, "\uBBF8\uB9AC\uBCF4\uAE30"), /* @__PURE__ */ React16.createElement("div", { className: "hueScope", style: { "--hue": hue, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React16.createElement("span", { style: { color: "var(--color-link)", textDecoration: "underline", fontSize: 13, cursor: "pointer" } }, "\uB9C1\uD06C"), /* @__PURE__ */ React16.createElement("span", { style: { padding: "1px 6px", borderRadius: 4, backgroundColor: "var(--color-code-bg)", color: "var(--color-code-link)", fontFamily: "monospace", fontSize: 12 } }, "code"), /* @__PURE__ */ React16.createElement("span", { style: { padding: "2px 10px", borderRadius: 5, backgroundColor: "var(--color-adjacent-hud-action-active-bg)", color: "var(--color-adjacent-hud-action-active-text)", fontSize: 12, fontWeight: 600 } }, "\uBC84\uD2BC"), /* @__PURE__ */ React16.createElement("span", { style: { display: "block", width: "100%", height: 6, borderRadius: 3, background: "linear-gradient(to right, var(--color-link-hover-bg), var(--color-kanban-primary))", marginTop: 4 } }))));
-  })(), /* @__PURE__ */ React16.createElement(Group12, { mt: "md" }, /* @__PURE__ */ React16.createElement(Button7, { variant: "filled", color: "grape", loading: savingTheme, disabled: !siteSeq, onClick: async () => {
+    ), /* @__PURE__ */ React15.createElement("div", { className: "hueScope", style: { "--hue": hue, width: 24, height: 24, borderRadius: 6, backgroundColor: "var(--color-kanban-primary)", border: "1px solid rgba(0,0,0,0.15)", flexShrink: 0 } }), /* @__PURE__ */ React15.createElement(Text11, { size: "sm", style: { width: 32, textAlign: "right" } }, hue))), /* @__PURE__ */ React15.createElement(Paper2, { withBorder: true, radius: "md", p: "md" }, /* @__PURE__ */ React15.createElement(Text11, { size: "sm", fw: 600, mb: 8 }, "\uBBF8\uB9AC\uBCF4\uAE30"), /* @__PURE__ */ React15.createElement("div", { className: "hueScope", style: { "--hue": hue, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" } }, /* @__PURE__ */ React15.createElement("span", { style: { color: "var(--color-link)", textDecoration: "underline", fontSize: 13, cursor: "pointer" } }, "\uB9C1\uD06C"), /* @__PURE__ */ React15.createElement("span", { style: { padding: "1px 6px", borderRadius: 4, backgroundColor: "var(--color-code-bg)", color: "var(--color-code-link)", fontFamily: "monospace", fontSize: 12 } }, "code"), /* @__PURE__ */ React15.createElement("span", { style: { padding: "2px 10px", borderRadius: 5, backgroundColor: "var(--color-adjacent-hud-action-active-bg)", color: "var(--color-adjacent-hud-action-active-text)", fontSize: 12, fontWeight: 600 } }, "\uBC84\uD2BC"), /* @__PURE__ */ React15.createElement("span", { style: { display: "block", width: "100%", height: 6, borderRadius: 3, background: "linear-gradient(to right, var(--color-link-hover-bg), var(--color-kanban-primary))", marginTop: 4 } }))));
+  })(), /* @__PURE__ */ React15.createElement(Group11, { mt: "md" }, /* @__PURE__ */ React15.createElement(Button6, { variant: "filled", color: "grape", loading: savingTheme, disabled: !siteSeq, onClick: async () => {
     await saveTheme(siteTheme);
     await loadTheme();
-  } }, "Save theme"), /* @__PURE__ */ React16.createElement(Button7, { variant: "light", disabled: !siteSeq, onClick: () => loadTheme() }, "Refresh"), /* @__PURE__ */ React16.createElement(Button7, { color: "gray", variant: "light", disabled: !siteSeq, onClick: async () => {
+  } }, "Save theme"), /* @__PURE__ */ React15.createElement(Button6, { variant: "light", disabled: !siteSeq, onClick: () => loadTheme() }, "Refresh"), /* @__PURE__ */ React15.createElement(Button6, { color: "gray", variant: "light", disabled: !siteSeq, onClick: async () => {
     const empty = { defaultHue: "" };
     setSiteTheme(empty);
     await saveTheme(empty);
     await loadTheme();
-  } }, "Reset"))), /* @__PURE__ */ React16.createElement(SchemaColorsCard, { siteSeq }), /* @__PURE__ */ React16.createElement(Card8, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React16.createElement(Group12, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React16.createElement(Title9, { order: 3 }, "Telegram"), /* @__PURE__ */ React16.createElement(Badge11, { color: "cyan", variant: "light" }, "\uC54C\uB9BC")), /* @__PURE__ */ React16.createElement(Text12, { size: "sm", c: "dimmed", mb: "md" }, "\uD398\uC774\uC9C0 \uC0DD\uC131\xB7\uC218\uC815\xB7\uC0AD\uC81C\xB7\uCCA8\uBD80 \uB4F1 \uBCC0\uACBD \uC774\uBCA4\uD2B8\uB97C \uC218\uC2E0\uD560 Telegram Chat ID\uB97C \uC124\uC815\uD569\uB2C8\uB2E4. Bot Token\uC740 \uC11C\uBC84 \uC804\uC5ED \uC124\uC815(", /* @__PURE__ */ React16.createElement("code", null, "application.conf"), ")\uC5D0\uC11C \uAD00\uB9AC\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React16.createElement(Stack8, { gap: "sm" }, /* @__PURE__ */ React16.createElement(
-    TextInput3,
+  } }, "Reset"))), /* @__PURE__ */ React15.createElement(Card7, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React15.createElement(Group11, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React15.createElement(Title8, { order: 3 }, "Telegram"), /* @__PURE__ */ React15.createElement(Badge10, { color: "cyan", variant: "light" }, "\uC54C\uB9BC")), /* @__PURE__ */ React15.createElement(Text11, { size: "sm", c: "dimmed", mb: "md" }, "\uD398\uC774\uC9C0 \uC0DD\uC131\xB7\uC218\uC815\xB7\uC0AD\uC81C\xB7\uCCA8\uBD80 \uB4F1 \uBCC0\uACBD \uC774\uBCA4\uD2B8\uB97C \uC218\uC2E0\uD560 Telegram Chat ID\uB97C \uC124\uC815\uD569\uB2C8\uB2E4. Bot Token\uC740 \uC11C\uBC84 \uC804\uC5ED \uC124\uC815(", /* @__PURE__ */ React15.createElement("code", null, "application.conf"), ")\uC5D0\uC11C \uAD00\uB9AC\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React15.createElement(Stack7, { gap: "sm" }, /* @__PURE__ */ React15.createElement(
+    TextInput2,
     {
       label: "Chat ID",
       placeholder: "-100xxxxxxxxxx",
@@ -1029,27 +971,27 @@ function SiteConfigPage() {
       disabled: !siteSeq,
       style: { maxWidth: 320 }
     }
-  ), /* @__PURE__ */ React16.createElement(Group12, null, /* @__PURE__ */ React16.createElement(Button7, { variant: "filled", color: "cyan", loading: savingTelegram, disabled: !siteSeq, onClick: async () => {
+  ), /* @__PURE__ */ React15.createElement(Group11, null, /* @__PURE__ */ React15.createElement(Button6, { variant: "filled", color: "cyan", loading: savingTelegram, disabled: !siteSeq, onClick: async () => {
     await saveTelegram(telegram);
     await loadTelegram();
-  } }, "Save"), /* @__PURE__ */ React16.createElement(Button7, { variant: "light", disabled: !siteSeq, onClick: () => loadTelegram() }, "Refresh"), /* @__PURE__ */ React16.createElement(Button7, { color: "red", variant: "light", loading: savingTelegram, disabled: !siteSeq || !telegram.chatId, onClick: async () => {
+  } }, "Save"), /* @__PURE__ */ React15.createElement(Button6, { variant: "light", disabled: !siteSeq, onClick: () => loadTelegram() }, "Refresh"), /* @__PURE__ */ React15.createElement(Button6, { color: "red", variant: "light", loading: savingTelegram, disabled: !siteSeq || !telegram.chatId, onClick: async () => {
     await saveTelegram({ chatId: "" });
     await loadTelegram();
   } }, "Clear")))));
 }
 
 // app/assets/js/admin/pages/SiteCachePage.jsx
-import React17, { useEffect as useEffect11 } from "react";
+import React16, { useEffect as useEffect10 } from "react";
 import { useOutletContext as useOutletContext4 } from "react-router-dom";
-import { Badge as Badge12, Button as Button8, Card as Card9, Group as Group13, Stack as Stack9, Table as Table4, Text as Text13, Title as Title10 } from "@mantine/core";
+import { Badge as Badge11, Button as Button7, Card as Card8, Group as Group12, Stack as Stack8, Table as Table3, Text as Text12, Title as Title9 } from "@mantine/core";
 
 // app/assets/js/admin/hooks/useSiteCacheData.js
-import { useCallback as useCallback8, useState as useState15 } from "react";
+import { useCallback as useCallback7, useState as useState14 } from "react";
 function useSiteCacheData(siteSeq) {
-  const [clearing, setClearing] = useState15(false);
-  const [memoryCacheStats, setMemoryCacheStats] = useState15([]);
-  const [error, setError] = useState15("");
-  const clearSiteCache = useCallback8(async () => {
+  const [clearing, setClearing] = useState14(false);
+  const [memoryCacheStats, setMemoryCacheStats] = useState14([]);
+  const [error, setError] = useState14("");
+  const clearSiteCache = useCallback7(async () => {
     if (!siteSeq) return;
     setClearing(true);
     setError("");
@@ -1062,7 +1004,7 @@ function useSiteCacheData(siteSeq) {
       setClearing(false);
     }
   }, [siteSeq]);
-  const loadMemoryCacheStats = useCallback8(async () => {
+  const loadMemoryCacheStats = useCallback7(async () => {
     try {
       const data = await fetchJson("/api/Admin/MemoryCacheStats");
       setMemoryCacheStats(Array.isArray(data) ? data : []);
@@ -1077,29 +1019,29 @@ function useSiteCacheData(siteSeq) {
 function SiteCachePage() {
   const { site, siteSeq } = useOutletContext4();
   const { clearing, memoryCacheStats, error, clearSiteCache, loadMemoryCacheStats } = useSiteCacheData(siteSeq);
-  useEffect11(() => {
+  useEffect10(() => {
     loadMemoryCacheStats();
   }, [siteSeq]);
-  return /* @__PURE__ */ React17.createElement(React17.Fragment, null, /* @__PURE__ */ React17.createElement(Card9, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React17.createElement(Group13, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React17.createElement(Title10, { order: 3 }, "Operation \xB7 Site Cache Operation"), /* @__PURE__ */ React17.createElement(Badge12, { color: "orange", variant: "light" }, "\uC720\uC9C0\uBCF4\uC218")), /* @__PURE__ */ React17.createElement(Text13, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uBCF4\uACE0 \uC788\uB294 \uC0AC\uC774\uD2B8\uC758 \uCE90\uC2DC\uB97C \uC989\uC2DC \uCD08\uAE30\uD654\uD569\uB2C8\uB2E4."), error ? /* @__PURE__ */ React17.createElement(Text13, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React17.createElement(Group13, { justify: "space-between", align: "center" }, /* @__PURE__ */ React17.createElement(Stack9, { gap: 2 }, /* @__PURE__ */ React17.createElement(Text13, { size: "xs", c: "dimmed" }, "\uB300\uC0C1 \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React17.createElement(Text13, { fw: 700 }, site ? `${site.name} (#${site.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C")), /* @__PURE__ */ React17.createElement(Button8, { color: "orange", variant: "filled", disabled: !site, loading: clearing, onClick: () => clearSiteCache() }, "Clear current site cache"))), /* @__PURE__ */ React17.createElement(Card9, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React17.createElement(Group13, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React17.createElement(Title10, { order: 3 }, "Memory Cache Status (All Instances)"), /* @__PURE__ */ React17.createElement(Button8, { variant: "light", onClick: loadMemoryCacheStats }, "Refresh")), /* @__PURE__ */ React17.createElement(Table4, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React17.createElement(Table4.Thead, null, /* @__PURE__ */ React17.createElement(Table4.Tr, null, /* @__PURE__ */ React17.createElement(Table4.Th, null, "Port"), /* @__PURE__ */ React17.createElement(Table4.Th, null, "Key Count"), /* @__PURE__ */ React17.createElement(Table4.Th, null, "Value Count"), /* @__PURE__ */ React17.createElement(Table4.Th, null, "Captured At"))), /* @__PURE__ */ React17.createElement(Table4.Tbody, null, memoryCacheStats.map((row) => /* @__PURE__ */ React17.createElement(Table4.Tr, { key: String(row.instancePort) }, /* @__PURE__ */ React17.createElement(Table4.Td, null, row.instancePort), /* @__PURE__ */ React17.createElement(Table4.Td, null, row.stats?.linksCacheKeyCount ?? 0), /* @__PURE__ */ React17.createElement(Table4.Td, null, row.stats?.linksCacheValueCount ?? 0), /* @__PURE__ */ React17.createElement(Table4.Td, null, row.stats?.capturedAtIso8601 ?? "-")))))));
+  return /* @__PURE__ */ React16.createElement(React16.Fragment, null, /* @__PURE__ */ React16.createElement(Card8, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React16.createElement(Group12, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React16.createElement(Title9, { order: 3 }, "Operation \xB7 Site Cache Operation"), /* @__PURE__ */ React16.createElement(Badge11, { color: "orange", variant: "light" }, "\uC720\uC9C0\uBCF4\uC218")), /* @__PURE__ */ React16.createElement(Text12, { size: "sm", c: "dimmed", mb: "md" }, "\uD604\uC7AC \uBCF4\uACE0 \uC788\uB294 \uC0AC\uC774\uD2B8\uC758 \uCE90\uC2DC\uB97C \uC989\uC2DC \uCD08\uAE30\uD654\uD569\uB2C8\uB2E4."), error ? /* @__PURE__ */ React16.createElement(Text12, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React16.createElement(Group12, { justify: "space-between", align: "center" }, /* @__PURE__ */ React16.createElement(Stack8, { gap: 2 }, /* @__PURE__ */ React16.createElement(Text12, { size: "xs", c: "dimmed" }, "\uB300\uC0C1 \uC0AC\uC774\uD2B8"), /* @__PURE__ */ React16.createElement(Text12, { fw: 700 }, site ? `${site.name} (#${site.seq})` : "\uC120\uD0DD\uB41C \uC0AC\uC774\uD2B8 \uC5C6\uC74C")), /* @__PURE__ */ React16.createElement(Button7, { color: "orange", variant: "filled", disabled: !site, loading: clearing, onClick: () => clearSiteCache() }, "Clear current site cache"))), /* @__PURE__ */ React16.createElement(Card8, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React16.createElement(Group12, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React16.createElement(Title9, { order: 3 }, "Memory Cache Status (All Instances)"), /* @__PURE__ */ React16.createElement(Button7, { variant: "light", onClick: loadMemoryCacheStats }, "Refresh")), /* @__PURE__ */ React16.createElement(Table3, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React16.createElement(Table3.Thead, null, /* @__PURE__ */ React16.createElement(Table3.Tr, null, /* @__PURE__ */ React16.createElement(Table3.Th, null, "Port"), /* @__PURE__ */ React16.createElement(Table3.Th, null, "Key Count"), /* @__PURE__ */ React16.createElement(Table3.Th, null, "Value Count"), /* @__PURE__ */ React16.createElement(Table3.Th, null, "Captured At"))), /* @__PURE__ */ React16.createElement(Table3.Tbody, null, memoryCacheStats.map((row) => /* @__PURE__ */ React16.createElement(Table3.Tr, { key: String(row.instancePort) }, /* @__PURE__ */ React16.createElement(Table3.Td, null, row.instancePort), /* @__PURE__ */ React16.createElement(Table3.Td, null, row.stats?.linksCacheKeyCount ?? 0), /* @__PURE__ */ React16.createElement(Table3.Td, null, row.stats?.linksCacheValueCount ?? 0), /* @__PURE__ */ React16.createElement(Table3.Td, null, row.stats?.capturedAtIso8601 ?? "-")))))));
 }
 
 // app/assets/js/admin/pages/SitePermissionPage.jsx
-import React18, { useEffect as useEffect12, useMemo as useMemo4, useState as useState17 } from "react";
+import React17, { useEffect as useEffect11, useMemo as useMemo4, useState as useState16 } from "react";
 import { useOutletContext as useOutletContext5 } from "react-router-dom";
-import { Autocomplete, Badge as Badge13, Button as Button9, Group as Group14, Paper as Paper3, Select, SimpleGrid as SimpleGrid3, Text as Text14, TextInput as TextInput4 } from "@mantine/core";
+import { Autocomplete, Badge as Badge12, Button as Button8, Group as Group13, Paper as Paper3, Select, SimpleGrid as SimpleGrid3, Text as Text13, TextInput as TextInput3 } from "@mantine/core";
 import { DataTable as DataTable3 } from "mantine-datatable";
 
 // app/assets/js/admin/hooks/usePermissionData.js
-import { useCallback as useCallback9, useState as useState16 } from "react";
+import { useCallback as useCallback8, useState as useState15 } from "react";
 var emptyVocabulary = { targetTypes: [], actorTypes: [], actions: [] };
 function usePermissionData(siteSeq) {
-  const [permissionRows, setPermissionRows] = useState16([]);
-  const [permissionVocabulary, setPermissionVocabulary] = useState16(emptyVocabulary);
-  const [permissionDiagnose, setPermissionDiagnose] = useState16(null);
-  const [saving, setSaving] = useState16(false);
-  const [deletingKey, setDeletingKey] = useState16("");
-  const [error, setError] = useState16("");
-  const loadPermissions = useCallback9(async () => {
+  const [permissionRows, setPermissionRows] = useState15([]);
+  const [permissionVocabulary, setPermissionVocabulary] = useState15(emptyVocabulary);
+  const [permissionDiagnose, setPermissionDiagnose] = useState15(null);
+  const [saving, setSaving] = useState15(false);
+  const [deletingKey, setDeletingKey] = useState15("");
+  const [error, setError] = useState15("");
+  const loadPermissions = useCallback8(async () => {
     if (!siteSeq) {
       setPermissionRows([]);
       setPermissionVocabulary(emptyVocabulary);
@@ -1117,7 +1059,7 @@ function usePermissionData(siteSeq) {
       logError("permission:load:error", err);
     }
   }, [siteSeq]);
-  const savePermission = useCallback9(async (permission) => {
+  const savePermission = useCallback8(async (permission) => {
     if (!siteSeq) return false;
     setSaving(true);
     try {
@@ -1135,7 +1077,7 @@ function usePermissionData(siteSeq) {
       setSaving(false);
     }
   }, [siteSeq, loadPermissions]);
-  const deletePermission = useCallback9(async (permission) => {
+  const deletePermission = useCallback8(async (permission) => {
     if (!siteSeq || !permission) return;
     const key = `${permission.targetType}:${permission.target}:${permission.actorType}:${permission.actor}`;
     setDeletingKey(key);
@@ -1150,7 +1092,7 @@ function usePermissionData(siteSeq) {
       setDeletingKey("");
     }
   }, [siteSeq, loadPermissions]);
-  const diagnosePermission = useCallback9(async (pageName, actor, action) => {
+  const diagnosePermission = useCallback8(async (pageName, actor, action) => {
     if (!siteSeq) return;
     const params = new URLSearchParams({ pageName: pageName ?? "", actor: actor ?? "", action: action || "Read" });
     const data = await fetchJson(`/api/Admin/Site/${encodeURIComponent(siteSeq)}/PermissionDiagnose?${params.toString()}`);
@@ -1164,11 +1106,11 @@ function SitePermissionPage() {
   const { siteSeq, sitePageNames } = useOutletContext5();
   const { permissionRows, permissionVocabulary, permissionDiagnose, saving, deletingKey, error, loadPermissions, savePermission, deletePermission, diagnosePermission } = usePermissionData(siteSeq);
   const actionOptions = useMemo4(() => toPermissionActionOptions(permissionVocabulary.actions), [permissionVocabulary.actions]);
-  const [form, setForm] = useState17({ targetType: "All", target: "", actorType: "All", actor: "", action: "Read" });
-  const [diagnoseForm, setDiagnoseForm] = useState17({ pageName: "", actor: "", action: "Read" });
-  const [sortBy, setSortBy] = useState17("specificity");
-  const [sortOrder, setSortOrder] = useState17("desc");
-  useEffect12(() => {
+  const [form, setForm] = useState16({ targetType: "All", target: "", actorType: "All", actor: "", action: "Read" });
+  const [diagnoseForm, setDiagnoseForm] = useState16({ pageName: "", actor: "", action: "Read" });
+  const [sortBy, setSortBy] = useState16("specificity");
+  const [sortOrder, setSortOrder] = useState16("desc");
+  useEffect11(() => {
     if (siteSeq) loadPermissions();
   }, [siteSeq]);
   const sortedRows = useMemo4(() => [...permissionRows].sort((a, b) => {
@@ -1176,17 +1118,17 @@ function SitePermissionPage() {
     const rightValue = sortBy === "actionLabel" ? formatPermissionAction(b.actionName, b.action) : b[sortBy];
     return compareValuesForSort(leftValue, rightValue, sortOrder);
   }), [permissionRows, sortBy, sortOrder]);
-  return /* @__PURE__ */ React18.createElement(React18.Fragment, null, /* @__PURE__ */ React18.createElement(Group14, { justify: "flex-end", mb: "md" }, /* @__PURE__ */ React18.createElement(Badge13, { color: "grape", variant: "light" }, permissionRows.length, " rows")), error ? /* @__PURE__ */ React18.createElement(Text14, { c: "red", size: "sm", mb: "sm" }, error) : null, /* @__PURE__ */ React18.createElement(SimpleGrid3, { cols: { base: 1, md: 5 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React18.createElement(Select, { label: "targetType", data: permissionVocabulary.targetTypes, value: form.targetType, onChange: (v) => setForm({ ...form, targetType: v ?? "All", target: v === "All" ? "" : form.target }) }), /* @__PURE__ */ React18.createElement(Autocomplete, { label: "target", data: sitePageNames, value: form.target, onChange: (v) => setForm({ ...form, target: v }), placeholder: "page name or prefix", disabled: form.targetType === "All" }), /* @__PURE__ */ React18.createElement(Select, { label: "actorType", data: permissionVocabulary.actorTypes, value: form.actorType, onChange: (v) => setForm({ ...form, actorType: v ?? "All", actor: v === "All" || v === "Login" ? "" : form.actor }) }), /* @__PURE__ */ React18.createElement(TextInput4, { label: "actor", value: form.actor, onChange: (e) => setForm({ ...form, actor: e.currentTarget.value }), placeholder: "email or @domain" }), /* @__PURE__ */ React18.createElement(Select, { label: "action", data: actionOptions, value: form.action, onChange: (v) => setForm({ ...form, action: v ?? "Read" }) })), /* @__PURE__ */ React18.createElement(Group14, { mb: "md" }, /* @__PURE__ */ React18.createElement(Button9, { size: "xs", loading: saving, onClick: async () => {
+  return /* @__PURE__ */ React17.createElement(React17.Fragment, null, /* @__PURE__ */ React17.createElement(Group13, { justify: "flex-end", mb: "md" }, /* @__PURE__ */ React17.createElement(Badge12, { color: "grape", variant: "light" }, permissionRows.length, " rows")), error ? /* @__PURE__ */ React17.createElement(Text13, { c: "red", size: "sm", mb: "sm" }, error) : null, /* @__PURE__ */ React17.createElement(SimpleGrid3, { cols: { base: 1, md: 5 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React17.createElement(Select, { label: "targetType", data: permissionVocabulary.targetTypes, value: form.targetType, onChange: (v) => setForm({ ...form, targetType: v ?? "All", target: v === "All" ? "" : form.target }) }), /* @__PURE__ */ React17.createElement(Autocomplete, { label: "target", data: sitePageNames, value: form.target, onChange: (v) => setForm({ ...form, target: v }), placeholder: "page name or prefix", disabled: form.targetType === "All" }), /* @__PURE__ */ React17.createElement(Select, { label: "actorType", data: permissionVocabulary.actorTypes, value: form.actorType, onChange: (v) => setForm({ ...form, actorType: v ?? "All", actor: v === "All" || v === "Login" ? "" : form.actor }) }), /* @__PURE__ */ React17.createElement(TextInput3, { label: "actor", value: form.actor, onChange: (e) => setForm({ ...form, actor: e.currentTarget.value }), placeholder: "email or @domain" }), /* @__PURE__ */ React17.createElement(Select, { label: "action", data: actionOptions, value: form.action, onChange: (v) => setForm({ ...form, action: v ?? "Read" }) })), /* @__PURE__ */ React17.createElement(Group13, { mb: "md" }, /* @__PURE__ */ React17.createElement(Button8, { size: "xs", loading: saving, onClick: async () => {
     const saved = await savePermission(form);
     if (saved) setForm({ targetType: "All", target: "", actorType: "All", actor: "", action: "Read" });
-  } }, "Save")), /* @__PURE__ */ React18.createElement(SimpleGrid3, { cols: { base: 1, md: 4 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React18.createElement(Autocomplete, { label: "pageName", data: sitePageNames, value: diagnoseForm.pageName, onChange: (v) => setDiagnoseForm({ ...diagnoseForm, pageName: v }) }), /* @__PURE__ */ React18.createElement(TextInput4, { label: "actor", value: diagnoseForm.actor, onChange: (e) => setDiagnoseForm({ ...diagnoseForm, actor: e.currentTarget.value }), placeholder: "empty means anonymous" }), /* @__PURE__ */ React18.createElement(Select, { label: "action", data: actionOptions, value: diagnoseForm.action, onChange: (v) => setDiagnoseForm({ ...diagnoseForm, action: v ?? "Read" }) }), /* @__PURE__ */ React18.createElement(Button9, { mt: 22, variant: "light", onClick: () => diagnosePermission(diagnoseForm.pageName, diagnoseForm.actor, diagnoseForm.action) }, "Diagnose")), permissionDiagnose ? /* @__PURE__ */ React18.createElement(Paper3, { withBorder: true, radius: "sm", p: "sm", mb: "md" }, /* @__PURE__ */ React18.createElement(Group14, { gap: "xs" }, /* @__PURE__ */ React18.createElement(Badge13, { color: permissionDiagnose.permitted ? "green" : "red", variant: "light" }, permissionDiagnose.permitted ? "allowed" : "denied"), /* @__PURE__ */ React18.createElement(Text14, { size: "sm" }, permissionDiagnose.matchedPermission ? `${permissionDiagnose.matchedPermission.targetType}/${permissionDiagnose.matchedPermission.actorType}/${formatPermissionAction(permissionDiagnose.matchedPermission.actionName, permissionDiagnose.matchedPermission.action)}` : "No matching row"))) : null, /* @__PURE__ */ React18.createElement(
+  } }, "Save")), /* @__PURE__ */ React17.createElement(SimpleGrid3, { cols: { base: 1, md: 4 }, spacing: "sm", mb: "sm" }, /* @__PURE__ */ React17.createElement(Autocomplete, { label: "pageName", data: sitePageNames, value: diagnoseForm.pageName, onChange: (v) => setDiagnoseForm({ ...diagnoseForm, pageName: v }) }), /* @__PURE__ */ React17.createElement(TextInput3, { label: "actor", value: diagnoseForm.actor, onChange: (e) => setDiagnoseForm({ ...diagnoseForm, actor: e.currentTarget.value }), placeholder: "empty means anonymous" }), /* @__PURE__ */ React17.createElement(Select, { label: "action", data: actionOptions, value: diagnoseForm.action, onChange: (v) => setDiagnoseForm({ ...diagnoseForm, action: v ?? "Read" }) }), /* @__PURE__ */ React17.createElement(Button8, { mt: 22, variant: "light", onClick: () => diagnosePermission(diagnoseForm.pageName, diagnoseForm.actor, diagnoseForm.action) }, "Diagnose")), permissionDiagnose ? /* @__PURE__ */ React17.createElement(Paper3, { withBorder: true, radius: "sm", p: "sm", mb: "md" }, /* @__PURE__ */ React17.createElement(Group13, { gap: "xs" }, /* @__PURE__ */ React17.createElement(Badge12, { color: permissionDiagnose.permitted ? "green" : "red", variant: "light" }, permissionDiagnose.permitted ? "allowed" : "denied"), /* @__PURE__ */ React17.createElement(Text13, { size: "sm" }, permissionDiagnose.matchedPermission ? `${permissionDiagnose.matchedPermission.targetType}/${permissionDiagnose.matchedPermission.actorType}/${formatPermissionAction(permissionDiagnose.matchedPermission.actionName, permissionDiagnose.matchedPermission.action)}` : "No matching row"))) : null, /* @__PURE__ */ React17.createElement(
     DataTable3,
     {
       withTableBorder: true,
       borderRadius: "md",
       striped: true,
       highlightOnHover: true,
-      sortIcons: { sorted: /* @__PURE__ */ React18.createElement(IconChevronUp, { size: 14 }), unsorted: /* @__PURE__ */ React18.createElement(IconSelector, { size: 14 }) },
+      sortIcons: { sorted: /* @__PURE__ */ React17.createElement(IconChevronUp, { size: 14 }), unsorted: /* @__PURE__ */ React17.createElement(IconSelector, { size: 14 }) },
       records: sortedRows,
       columns: [
         { accessor: "targetType", title: "Target Type", sortable: true },
@@ -1197,7 +1139,7 @@ function SitePermissionPage() {
         { accessor: "specificity", title: "Specificity", sortable: true },
         { accessor: "actions", title: "Actions", render: (row) => {
           const key = `${row.targetType}:${row.target}:${row.actorType}:${row.actor}`;
-          return /* @__PURE__ */ React18.createElement(Group14, { gap: 6 }, /* @__PURE__ */ React18.createElement(Button9, { size: "xs", variant: "light", onClick: () => setForm({ targetType: row.targetType, target: row.target, actorType: row.actorType, actor: row.actor, action: row.actionName }) }, "Edit"), /* @__PURE__ */ React18.createElement(Button9, { size: "xs", variant: "light", color: "red", loading: deletingKey === key, onClick: () => deletePermission(row) }, "Delete"));
+          return /* @__PURE__ */ React17.createElement(Group13, { gap: 6 }, /* @__PURE__ */ React17.createElement(Button8, { size: "xs", variant: "light", onClick: () => setForm({ targetType: row.targetType, target: row.target, actorType: row.actorType, actor: row.actor, action: row.actionName }) }, "Edit"), /* @__PURE__ */ React17.createElement(Button8, { size: "xs", variant: "light", color: "red", loading: deletingKey === key, onClick: () => deletePermission(row) }, "Delete"));
         } }
       ],
       sortStatus: { columnAccessor: sortBy, direction: sortOrder },
@@ -1211,19 +1153,19 @@ function SitePermissionPage() {
 }
 
 // app/assets/js/admin/pages/SiteAdminsPage.jsx
-import React19, { useEffect as useEffect13, useState as useState19 } from "react";
+import React18, { useEffect as useEffect12, useState as useState18 } from "react";
 import { useOutletContext as useOutletContext6, useNavigate as useNavigate8 } from "react-router-dom";
-import { Badge as Badge14, Button as Button10, Group as Group15, Stack as Stack10, Text as Text15, TextInput as TextInput5 } from "@mantine/core";
+import { Badge as Badge13, Button as Button9, Group as Group14, Stack as Stack9, Text as Text14, TextInput as TextInput4 } from "@mantine/core";
 import { DataTable as DataTable4 } from "mantine-datatable";
 
 // app/assets/js/admin/hooks/useSiteAdminsData.js
-import { useCallback as useCallback10, useState as useState18 } from "react";
+import { useCallback as useCallback9, useState as useState17 } from "react";
 function useSiteAdminsData(siteSeq) {
-  const [siteAdmins, setSiteAdmins] = useState18([]);
-  const [adding, setAdding] = useState18(false);
-  const [deletingUserSeq, setDeletingUserSeq] = useState18(0);
-  const [error, setError] = useState18("");
-  const loadSiteAdmins = useCallback10(async () => {
+  const [siteAdmins, setSiteAdmins] = useState17([]);
+  const [adding, setAdding] = useState17(false);
+  const [deletingUserSeq, setDeletingUserSeq] = useState17(0);
+  const [error, setError] = useState17("");
+  const loadSiteAdmins = useCallback9(async () => {
     if (!siteSeq) {
       setSiteAdmins([]);
       return;
@@ -1235,7 +1177,7 @@ function useSiteAdminsData(siteSeq) {
       logError("site-admins:load:error", err);
     }
   }, [siteSeq]);
-  const insertSiteAdmin = useCallback10(async (userSeq) => {
+  const insertSiteAdmin = useCallback9(async (userSeq) => {
     if (!siteSeq || !userSeq) return false;
     setAdding(true);
     try {
@@ -1250,7 +1192,7 @@ function useSiteAdminsData(siteSeq) {
       setAdding(false);
     }
   }, [siteSeq, loadSiteAdmins]);
-  const deleteSiteAdmin = useCallback10(async (userSeq) => {
+  const deleteSiteAdmin = useCallback9(async (userSeq) => {
     if (!siteSeq || !userSeq) return;
     setDeletingUserSeq(userSeq);
     try {
@@ -1271,16 +1213,16 @@ function SiteAdminsPage() {
   const { site, siteSeq } = useOutletContext6();
   const navigate = useNavigate8();
   const { siteAdmins, adding, deletingUserSeq, error, loadSiteAdmins, insertSiteAdmin, deleteSiteAdmin } = useSiteAdminsData(siteSeq);
-  const [userSeqInput, setUserSeqInput] = useState19("");
-  useEffect13(() => {
+  const [userSeqInput, setUserSeqInput] = useState18("");
+  useEffect12(() => {
     if (siteSeq) loadSiteAdmins();
   }, [siteSeq]);
-  return /* @__PURE__ */ React19.createElement(React19.Fragment, null, /* @__PURE__ */ React19.createElement(Group15, { justify: "flex-end", mb: "md" }, /* @__PURE__ */ React19.createElement(Badge14, { color: "orange", variant: "light" }, siteAdmins.length, " admins")), /* @__PURE__ */ React19.createElement(Text15, { size: "sm", c: "dimmed", mb: "md" }, "\uC774 \uC0AC\uC774\uD2B8\uC758 \uAD00\uB9AC\uC790 \uBAA9\uB85D\uC785\uB2C8\uB2E4. Site Admin\uC740 \uD574\uB2F9 \uC0AC\uC774\uD2B8\uC758 Permission, \uD398\uC774\uC9C0 \uB4F1\uC744 \uAD00\uB9AC\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), error ? /* @__PURE__ */ React19.createElement(Text15, { c: "red", size: "sm", mb: "sm" }, error) : null, /* @__PURE__ */ React19.createElement(Group15, { mb: "md", align: "end" }, /* @__PURE__ */ React19.createElement(TextInput5, { label: "User Seq", placeholder: "\uCD94\uAC00\uD560 \uC720\uC800\uC758 seq (\uC22B\uC790)", value: userSeqInput, onChange: (e) => setUserSeqInput(e.currentTarget.value), type: "number", min: "1" }), /* @__PURE__ */ React19.createElement(Button10, { variant: "filled", loading: adding, disabled: !siteSeq || !userSeqInput.trim(), onClick: async () => {
+  return /* @__PURE__ */ React18.createElement(React18.Fragment, null, /* @__PURE__ */ React18.createElement(Group14, { justify: "flex-end", mb: "md" }, /* @__PURE__ */ React18.createElement(Badge13, { color: "orange", variant: "light" }, siteAdmins.length, " admins")), /* @__PURE__ */ React18.createElement(Text14, { size: "sm", c: "dimmed", mb: "md" }, "\uC774 \uC0AC\uC774\uD2B8\uC758 \uAD00\uB9AC\uC790 \uBAA9\uB85D\uC785\uB2C8\uB2E4. Site Admin\uC740 \uD574\uB2F9 \uC0AC\uC774\uD2B8\uC758 Permission, \uD398\uC774\uC9C0 \uB4F1\uC744 \uAD00\uB9AC\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), error ? /* @__PURE__ */ React18.createElement(Text14, { c: "red", size: "sm", mb: "sm" }, error) : null, /* @__PURE__ */ React18.createElement(Group14, { mb: "md", align: "end" }, /* @__PURE__ */ React18.createElement(TextInput4, { label: "User Seq", placeholder: "\uCD94\uAC00\uD560 \uC720\uC800\uC758 seq (\uC22B\uC790)", value: userSeqInput, onChange: (e) => setUserSeqInput(e.currentTarget.value), type: "number", min: "1" }), /* @__PURE__ */ React18.createElement(Button9, { variant: "filled", loading: adding, disabled: !siteSeq || !userSeqInput.trim(), onClick: async () => {
     const userSeq = Number.parseInt(userSeqInput, 10);
     if (!Number.isFinite(userSeq) || userSeq <= 0) return;
     const ok = await insertSiteAdmin(userSeq);
     if (ok) setUserSeqInput("");
-  } }, "\uCD94\uAC00")), /* @__PURE__ */ React19.createElement(
+  } }, "\uCD94\uAC00")), /* @__PURE__ */ React18.createElement(
     DataTable4,
     {
       withTableBorder: true,
@@ -1291,7 +1233,7 @@ function SiteAdminsPage() {
       columns: [
         { accessor: "user", title: "User Seq" },
         { accessor: "dateInserted", title: "Date Inserted", render: (row) => formatDateTimeInClientTimezone(row.dateInserted) },
-        { accessor: "actions", title: "Actions", render: (row) => /* @__PURE__ */ React19.createElement(Button10, { size: "xs", variant: "light", color: "red", loading: deletingUserSeq === row.user, onClick: () => deleteSiteAdmin(row.user) }, "\uC0AD\uC81C") }
+        { accessor: "actions", title: "Actions", render: (row) => /* @__PURE__ */ React18.createElement(Button9, { size: "xs", variant: "light", color: "red", loading: deletingUserSeq === row.user, onClick: () => deleteSiteAdmin(row.user) }, "\uC0AD\uC81C") }
       ],
       minHeight: 160
     }
@@ -1299,18 +1241,18 @@ function SiteAdminsPage() {
 }
 
 // app/assets/js/admin/pages/SiteDeletedPagesPage.jsx
-import React20, { useEffect as useEffect14, useState as useState20 } from "react";
+import React19, { useEffect as useEffect13, useState as useState19 } from "react";
 import { useOutletContext as useOutletContext7 } from "react-router-dom";
-import { Badge as Badge15, Button as Button11, Code, Group as Group16, Modal, ScrollArea, Text as Text16 } from "@mantine/core";
+import { Badge as Badge14, Button as Button10, Code, Group as Group15, Modal, ScrollArea, Text as Text15 } from "@mantine/core";
 import { DataTable as DataTable5 } from "mantine-datatable";
 function SiteDeletedPagesPage() {
   const { siteSeq } = useOutletContext7();
-  const [rows, setRows] = useState20([]);
-  const [loading, setLoading] = useState20(false);
-  const [busySeq, setBusySeq] = useState20(null);
-  const [error, setError] = useState20("");
-  const [message, setMessage] = useState20("");
-  const [preview, setPreview] = useState20(null);
+  const [rows, setRows] = useState19([]);
+  const [loading, setLoading] = useState19(false);
+  const [busySeq, setBusySeq] = useState19(null);
+  const [error, setError] = useState19("");
+  const [message, setMessage] = useState19("");
+  const [preview, setPreview] = useState19(null);
   const base = `/api/Admin/Site/${siteSeq}/DeletedPages`;
   const load = async () => {
     setLoading(true);
@@ -1325,7 +1267,7 @@ function SiteDeletedPagesPage() {
       setLoading(false);
     }
   };
-  useEffect14(() => {
+  useEffect13(() => {
     if (siteSeq) load();
   }, [siteSeq]);
   const act = async (row, label, run) => {
@@ -1356,7 +1298,7 @@ function SiteDeletedPagesPage() {
       setError(String(err?.message ?? err));
     }
   };
-  return /* @__PURE__ */ React20.createElement(React20.Fragment, null, /* @__PURE__ */ React20.createElement(Group16, { justify: "flex-end", mb: "md" }, /* @__PURE__ */ React20.createElement(Badge15, { color: "gray", variant: "light" }, rows.length, " deleted")), /* @__PURE__ */ React20.createElement(Text16, { size: "sm", c: "dimmed", mb: "md" }, "\uC9C0\uC6B4 \uD398\uC774\uC9C0\uB294 \uB9AC\uBE44\uC804\uACFC \uCCA8\uBD80\uAE4C\uC9C0 \uC5EC\uAE30 \uBCF4\uAD00\uB429\uB2C8\uB2E4. \uB418\uC0B4\uB9AC\uBA74 \uAC19\uC740 \uC774\uB984\uC73C\uB85C \uBAA8\uB4E0 \uB9AC\uBE44\uC804\uACFC \uCCA8\uBD80\uAC00 \uB3CC\uC544\uC624\uACE0, \uAC19\uC740 \uC774\uB984\uC758 \uD398\uC774\uC9C0\uAC00 \uC774\uBBF8 \uC788\uC73C\uBA74 \uB418\uC0B4\uB9AC\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4. \uC601\uAD6C \uC0AD\uC81C\uB294 \uB418\uB3CC\uB9B4 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4."), error ? /* @__PURE__ */ React20.createElement(Text16, { c: "red", size: "sm", mb: "sm" }, error) : null, message ? /* @__PURE__ */ React20.createElement(Text16, { c: "teal", size: "sm", mb: "sm" }, message) : null, /* @__PURE__ */ React20.createElement(
+  return /* @__PURE__ */ React19.createElement(React19.Fragment, null, /* @__PURE__ */ React19.createElement(Group15, { justify: "flex-end", mb: "md" }, /* @__PURE__ */ React19.createElement(Badge14, { color: "gray", variant: "light" }, rows.length, " deleted")), /* @__PURE__ */ React19.createElement(Text15, { size: "sm", c: "dimmed", mb: "md" }, "\uC9C0\uC6B4 \uD398\uC774\uC9C0\uB294 \uB9AC\uBE44\uC804\uACFC \uCCA8\uBD80\uAE4C\uC9C0 \uC5EC\uAE30 \uBCF4\uAD00\uB429\uB2C8\uB2E4. \uB418\uC0B4\uB9AC\uBA74 \uAC19\uC740 \uC774\uB984\uC73C\uB85C \uBAA8\uB4E0 \uB9AC\uBE44\uC804\uACFC \uCCA8\uBD80\uAC00 \uB3CC\uC544\uC624\uACE0, \uAC19\uC740 \uC774\uB984\uC758 \uD398\uC774\uC9C0\uAC00 \uC774\uBBF8 \uC788\uC73C\uBA74 \uB418\uC0B4\uB9AC\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4. \uC601\uAD6C \uC0AD\uC81C\uB294 \uB418\uB3CC\uB9B4 \uC218 \uC5C6\uC2B5\uB2C8\uB2E4."), error ? /* @__PURE__ */ React19.createElement(Text15, { c: "red", size: "sm", mb: "sm" }, error) : null, message ? /* @__PURE__ */ React19.createElement(Text15, { c: "teal", size: "sm", mb: "sm" }, message) : null, /* @__PURE__ */ React19.createElement(
     DataTable5,
     {
       withTableBorder: true,
@@ -1367,30 +1309,30 @@ function SiteDeletedPagesPage() {
       records: rows,
       idAccessor: "seq",
       columns: [
-        { accessor: "name", title: "Page", render: (row) => /* @__PURE__ */ React20.createElement(Button11, { variant: "subtle", size: "compact-sm", onClick: () => showContent(row) }, row.name) },
+        { accessor: "name", title: "Page", render: (row) => /* @__PURE__ */ React19.createElement(Button10, { variant: "subtle", size: "compact-sm", onClick: () => showContent(row) }, row.name) },
         { accessor: "dateDeleted", title: "Deleted", render: (row) => formatDateTimeInClientTimezone(row.dateDeleted) },
         { accessor: "deletedByNickname", title: "By", render: (row) => `${row.deletedByNickname ?? "-"}${row.viaApi ? " (API)" : ""}` },
         { accessor: "revisionCount", title: "Revisions" },
         { accessor: "attachmentCount", title: "Attachments" },
-        { accessor: "actions", title: "Actions", render: (row) => /* @__PURE__ */ React20.createElement(Group16, { gap: "xs", wrap: "nowrap" }, /* @__PURE__ */ React20.createElement(Button11, { size: "xs", variant: "light", loading: busySeq === row.seq, onClick: () => restore(row) }, "\uB418\uC0B4\uB9AC\uAE30"), /* @__PURE__ */ React20.createElement(Button11, { size: "xs", variant: "light", color: "red", disabled: busySeq === row.seq, onClick: () => purge(row) }, "\uC601\uAD6C \uC0AD\uC81C")) }
+        { accessor: "actions", title: "Actions", render: (row) => /* @__PURE__ */ React19.createElement(Group15, { gap: "xs", wrap: "nowrap" }, /* @__PURE__ */ React19.createElement(Button10, { size: "xs", variant: "light", loading: busySeq === row.seq, onClick: () => restore(row) }, "\uB418\uC0B4\uB9AC\uAE30"), /* @__PURE__ */ React19.createElement(Button10, { size: "xs", variant: "light", color: "red", disabled: busySeq === row.seq, onClick: () => purge(row) }, "\uC601\uAD6C \uC0AD\uC81C")) }
       ],
       minHeight: 160,
       noRecordsText: "\uC9C0\uC6B4 \uD398\uC774\uC9C0\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4"
     }
-  ), /* @__PURE__ */ React20.createElement(Modal, { opened: preview !== null, onClose: () => setPreview(null), title: preview ? `${preview.name} (r${preview.lastRevision})` : "", size: "xl" }, /* @__PURE__ */ React20.createElement(ScrollArea, { h: 480 }, /* @__PURE__ */ React20.createElement(Code, { block: true }, preview?.content ?? ""))));
+  ), /* @__PURE__ */ React19.createElement(Modal, { opened: preview !== null, onClose: () => setPreview(null), title: preview ? `${preview.name} (r${preview.lastRevision})` : "", size: "xl" }, /* @__PURE__ */ React19.createElement(ScrollArea, { h: 480 }, /* @__PURE__ */ React19.createElement(Code, { block: true }, preview?.content ?? ""))));
 }
 
 // app/assets/js/admin/pages/RecentChangesPage.jsx
-import React21, { useEffect as useEffect15, useMemo as useMemo5, useState as useState22 } from "react";
-import { Anchor as Anchor5, Badge as Badge16, Button as Button12, Card as Card10, Group as Group17, Switch, Text as Text17, TextInput as TextInput6, Title as Title11 } from "@mantine/core";
+import React20, { useEffect as useEffect14, useMemo as useMemo5, useState as useState21 } from "react";
+import { Anchor as Anchor5, Badge as Badge15, Button as Button11, Card as Card9, Group as Group16, Switch, Text as Text16, TextInput as TextInput5, Title as Title10 } from "@mantine/core";
 
 // app/assets/js/admin/hooks/useRecentChangesData.js
-import { useCallback as useCallback11, useState as useState21 } from "react";
+import { useCallback as useCallback10, useState as useState20 } from "react";
 function useRecentChangesData() {
-  const [loading, setLoading] = useState21(true);
-  const [recentChanges, setRecentChanges] = useState21([]);
-  const [sites, setSites] = useState21([]);
-  const loadRecentChanges = useCallback11(async (n = 50, includeMinorEdit = false, includeViaApi = false) => {
+  const [loading, setLoading] = useState20(true);
+  const [recentChanges, setRecentChanges] = useState20([]);
+  const [sites, setSites] = useState20([]);
+  const loadRecentChanges = useCallback10(async (n = 50, includeMinorEdit = false, includeViaApi = false) => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -1406,7 +1348,7 @@ function useRecentChangesData() {
       setLoading(false);
     }
   }, []);
-  const loadSites = useCallback11(async () => {
+  const loadSites = useCallback10(async () => {
     try {
       const data = await fetchJson("/api/Admin/Sites");
       setSites(Array.isArray(data) ? data : []);
@@ -1424,10 +1366,10 @@ var recentChangeFlagLegend2 = [
 ];
 function RecentChangesPage() {
   const { loading, recentChanges, sites, loadRecentChanges, loadSites } = useRecentChangesData();
-  const [limitInput, setLimitInput] = useState22("50");
-  const [showMinorEdits, setShowMinorEdits] = useState22(false);
-  const [showViaApiEdits, setShowViaApiEdits] = useState22(false);
-  useEffect15(() => {
+  const [limitInput, setLimitInput] = useState21("50");
+  const [showMinorEdits, setShowMinorEdits] = useState21(false);
+  const [showViaApiEdits, setShowViaApiEdits] = useState21(false);
+  useEffect14(() => {
     loadSites();
     loadRecentChanges(50, false, false);
   }, []);
@@ -1441,40 +1383,40 @@ function RecentChangesPage() {
   const reloadRecentChanges = (includeMinorEdit = showMinorEdits, includeViaApi = showViaApiEdits) => {
     loadRecentChanges(normalizeLimit(), includeMinorEdit, includeViaApi);
   };
-  return /* @__PURE__ */ React21.createElement(Card10, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React21.createElement(Group17, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React21.createElement(Title11, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React21.createElement(Badge16, { color: "violet", variant: "light" }, recentChanges.length, " rows")), /* @__PURE__ */ React21.createElement(Text17, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React21.createElement(Group17, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React21.createElement(TextInput6, { label: "\uC870\uD68C \uAC1C\uC218 n", value: limitInput, onChange: (e) => setLimitInput(e.currentTarget.value), placeholder: "1 ~ 500" }), /* @__PURE__ */ React21.createElement(Switch, { label: "Minor edit \uD3EC\uD568", checked: showMinorEdits, onChange: (e) => {
+  return /* @__PURE__ */ React20.createElement(Card9, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React20.createElement(Group16, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React20.createElement(Title10, { order: 3 }, "Recent Changes (All Sites)"), /* @__PURE__ */ React20.createElement(Badge15, { color: "violet", variant: "light" }, recentChanges.length, " rows")), /* @__PURE__ */ React20.createElement(Text16, { size: "sm", c: "dimmed", mb: "md" }, "\uC0AC\uC774\uD2B8 \uC804\uCCB4 \uCD5C\uADFC \uBCC0\uACBD \uAE30\uB85D\uC744 n\uAC1C \uB2E8\uC704\uB85C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React20.createElement(Group16, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React20.createElement(TextInput5, { label: "\uC870\uD68C \uAC1C\uC218 n", value: limitInput, onChange: (e) => setLimitInput(e.currentTarget.value), placeholder: "1 ~ 500" }), /* @__PURE__ */ React20.createElement(Switch, { label: "Minor edit \uD3EC\uD568", checked: showMinorEdits, onChange: (e) => {
     const next = e.currentTarget.checked;
     setShowMinorEdits(next);
     reloadRecentChanges(next, showViaApiEdits);
-  } }), /* @__PURE__ */ React21.createElement(Switch, { label: "viaApi \uD3EC\uD568", checked: showViaApiEdits, onChange: (e) => {
+  } }), /* @__PURE__ */ React20.createElement(Switch, { label: "viaApi \uD3EC\uD568", checked: showViaApiEdits, onChange: (e) => {
     const next = e.currentTarget.checked;
     setShowViaApiEdits(next);
     reloadRecentChanges(showMinorEdits, next);
-  } }), /* @__PURE__ */ React21.createElement(Button12, { variant: "filled", onClick: () => {
+  } }), /* @__PURE__ */ React20.createElement(Button11, { variant: "filled", onClick: () => {
     reloadRecentChanges();
   } }, "\uC870\uD68C")), makeFlagLegend(recentChangeFlagLegend2), makeTable(["When", "Site", "Page", "Revision", "Editor", makeFlagHeader("Minor edit", "\u270F\uFE0F"), makeFlagHeader("Via API", "\u{1F50C}"), "Comment", "IP"], recentChanges.map((row) => {
     const siteUrl = resolveSiteUrl(row, siteDomainBySeq);
     const pageUrl = siteUrl ? `${siteUrl}/w/${encodeURIComponent(row.name)}` : "";
     const revisionUrl = pageUrl ? `${pageUrl}?rev=${row.revision}` : "";
     const editorUrl = row.nickname ? `/Admin/User?query=${encodeURIComponent(row.nickname)}` : "";
-    return [row.dateTime, siteUrl ? /* @__PURE__ */ React21.createElement(Anchor5, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React21.createElement(Anchor5, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React21.createElement(Anchor5, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, editorUrl ? /* @__PURE__ */ React21.createElement(Anchor5, { href: editorUrl }, row.nickname) : row.nickname ?? "-", makeFlagCell(row.isMinorEdit, "Minor edit", "\u270F\uFE0F"), makeFlagCell(row.viaApi, "Via API", "\u{1F50C}", row.userApiKeyName), row.comment || "-", row.remoteAddress];
+    return [row.dateTime, siteUrl ? /* @__PURE__ */ React20.createElement(Anchor5, { href: siteUrl, target: "_blank" }, row.siteName, " (#", row.siteSeq, ")") : `${row.siteName} (#${row.siteSeq})`, pageUrl ? /* @__PURE__ */ React20.createElement(Anchor5, { href: pageUrl, target: "_blank" }, row.name) : row.name, revisionUrl ? /* @__PURE__ */ React20.createElement(Anchor5, { href: revisionUrl, target: "_blank" }, row.revision) : row.revision, editorUrl ? /* @__PURE__ */ React20.createElement(Anchor5, { href: editorUrl }, row.nickname) : row.nickname ?? "-", makeFlagCell(row.isMinorEdit, "Minor edit", "\u270F\uFE0F"), makeFlagCell(row.viaApi, "Via API", "\u{1F50C}", row.userApiKeyName), row.comment || "-", row.remoteAddress];
   })));
 }
 
 // app/assets/js/admin/pages/AccessLogsPage.jsx
-import React22, { useEffect as useEffect16, useMemo as useMemo6, useState as useState24 } from "react";
+import React21, { useEffect as useEffect15, useMemo as useMemo6, useState as useState23 } from "react";
 import { useParams as useParams2 } from "react-router-dom";
-import { Anchor as Anchor6, Badge as Badge17, Button as Button13, Group as Group18, Pagination, Text as Text18, TextInput as TextInput7 } from "@mantine/core";
+import { Anchor as Anchor6, Badge as Badge16, Button as Button12, Group as Group17, Pagination, Text as Text17, TextInput as TextInput6 } from "@mantine/core";
 import { DataTable as DataTable6 } from "mantine-datatable";
 
 // app/assets/js/admin/hooks/useAccessLogData.js
-import { useCallback as useCallback12, useState as useState23 } from "react";
+import { useCallback as useCallback11, useState as useState22 } from "react";
 function useAccessLogData() {
-  const [loading, setLoading] = useState23(true);
-  const [error, setError] = useState23("");
-  const [accessLogs, setAccessLogs] = useState23([]);
-  const [accessLogCount, setAccessLogCount] = useState23(0);
-  const [sites, setSites] = useState23([]);
-  const loadAccessLogs = useCallback12(async ({ page = 1, pageSize = ACCESS_LOG_PAGE_SIZE, search = "", sortBy = "seq", sortOrder = "desc", siteSeq = "" } = {}) => {
+  const [loading, setLoading] = useState22(true);
+  const [error, setError] = useState22("");
+  const [accessLogs, setAccessLogs] = useState22([]);
+  const [accessLogCount, setAccessLogCount] = useState22(0);
+  const [sites, setSites] = useState22([]);
+  const loadAccessLogs = useCallback11(async ({ page = 1, pageSize = ACCESS_LOG_PAGE_SIZE, search = "", sortBy = "seq", sortOrder = "desc", siteSeq = "" } = {}) => {
     setLoading(true);
     setError("");
     try {
@@ -1491,7 +1433,7 @@ function useAccessLogData() {
       setLoading(false);
     }
   }, []);
-  const loadSites = useCallback12(async () => {
+  const loadSites = useCallback11(async () => {
     try {
       const data = await fetchJson("/api/Admin/Sites");
       setSites(Array.isArray(data) ? data : []);
@@ -1507,23 +1449,23 @@ function AccessLogsPage() {
   const params = useParams2();
   const siteSeq = params.siteSeq ?? "";
   const { loading, accessLogs, accessLogCount, sites, loadAccessLogs, loadSites } = useAccessLogData();
-  const [page, setPage] = useState24(1);
-  const [searchInput, setSearchInput] = useState24("");
-  const [sortBy, setSortBy] = useState24("seq");
-  const [sortOrder, setSortOrder] = useState24("desc");
+  const [page, setPage] = useState23(1);
+  const [searchInput, setSearchInput] = useState23("");
+  const [sortBy, setSortBy] = useState23("seq");
+  const [sortOrder, setSortOrder] = useState23("desc");
   const totalPages = Math.max(1, Math.ceil(accessLogCount / ACCESS_LOG_PAGE_SIZE));
   const selectedSite = useMemo6(() => sites.find((s) => String(s.seq) === siteSeq) ?? null, [sites, siteSeq]);
-  useEffect16(() => {
+  useEffect15(() => {
     loadSites();
     loadAccessLogs({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: "", sortBy: "seq", sortOrder: "desc", siteSeq });
   }, [siteSeq]);
-  return /* @__PURE__ */ React22.createElement(React22.Fragment, null, /* @__PURE__ */ React22.createElement(Group18, { justify: "flex-end", mb: "md" }, /* @__PURE__ */ React22.createElement(Badge17, { color: "cyan", variant: "light" }, accessLogs.length, " / ", accessLogCount, " rows")), /* @__PURE__ */ React22.createElement(Text18, { size: "sm", c: "dimmed", mb: "md" }, "\uAC80\uC0C9\uACFC \uD5E4\uB354 \uC815\uB82C, \uD398\uC774\uC9C0 \uC774\uB3D9\uC73C\uB85C \uC694\uCCAD \uB85C\uADF8\uB97C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React22.createElement(Group18, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React22.createElement(TextInput7, { label: "search", value: searchInput, onChange: (e) => setSearchInput(e.currentTarget.value), placeholder: "site/method/uri/ip/user-agent" }), /* @__PURE__ */ React22.createElement(Button13, { variant: "filled", onClick: () => {
+  return /* @__PURE__ */ React21.createElement(React21.Fragment, null, /* @__PURE__ */ React21.createElement(Group17, { justify: "flex-end", mb: "md" }, /* @__PURE__ */ React21.createElement(Badge16, { color: "cyan", variant: "light" }, accessLogs.length, " / ", accessLogCount, " rows")), /* @__PURE__ */ React21.createElement(Text17, { size: "sm", c: "dimmed", mb: "md" }, "\uAC80\uC0C9\uACFC \uD5E4\uB354 \uC815\uB82C, \uD398\uC774\uC9C0 \uC774\uB3D9\uC73C\uB85C \uC694\uCCAD \uB85C\uADF8\uB97C \uC870\uD68C\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4."), /* @__PURE__ */ React21.createElement(Group17, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React21.createElement(TextInput6, { label: "search", value: searchInput, onChange: (e) => setSearchInput(e.currentTarget.value), placeholder: "site/method/uri/ip/user-agent" }), /* @__PURE__ */ React21.createElement(Button12, { variant: "filled", onClick: () => {
     setPage(1);
     loadAccessLogs({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: searchInput, sortBy, sortOrder, siteSeq });
-  } }, "\uC870\uD68C")), /* @__PURE__ */ React22.createElement(
+  } }, "\uC870\uD68C")), /* @__PURE__ */ React21.createElement(
     DataTable6,
     {
-      sortIcons: { sorted: /* @__PURE__ */ React22.createElement(IconChevronUp, { size: 14 }), unsorted: /* @__PURE__ */ React22.createElement(IconSelector, { size: 14 }) },
+      sortIcons: { sorted: /* @__PURE__ */ React21.createElement(IconChevronUp, { size: 14 }), unsorted: /* @__PURE__ */ React21.createElement(IconSelector, { size: 14 }) },
       withTableBorder: true,
       borderRadius: "sm",
       striped: true,
@@ -1540,7 +1482,7 @@ function AccessLogsPage() {
         { accessor: "method", title: "Method", sortable: true },
         { accessor: "uri", title: "Request URL", sortable: true, render: (row) => {
           const href = `${row.scheme}://${row.host}${row.uri}`;
-          return /* @__PURE__ */ React22.createElement(Anchor6, { href, target: "_blank", rel: "noopener noreferrer" }, href);
+          return /* @__PURE__ */ React21.createElement(Anchor6, { href, target: "_blank", rel: "noopener noreferrer" }, href);
         } },
         { accessor: "status", title: "Status", sortable: true },
         { accessor: "remoteAddress", title: "IP" },
@@ -1556,31 +1498,31 @@ function AccessLogsPage() {
         loadAccessLogs({ page: 1, pageSize: ACCESS_LOG_PAGE_SIZE, search: searchInput, sortBy: next.columnAccessor, sortOrder: dir, siteSeq });
       }
     }
-  ), /* @__PURE__ */ React22.createElement(Group18, { mt: "md", justify: "space-between" }, /* @__PURE__ */ React22.createElement(Text18, { size: "sm", c: "dimmed" }, "Page ", page, " / ", totalPages), /* @__PURE__ */ React22.createElement(Pagination, { value: page, onChange: (nextPage) => {
+  ), /* @__PURE__ */ React21.createElement(Group17, { mt: "md", justify: "space-between" }, /* @__PURE__ */ React21.createElement(Text17, { size: "sm", c: "dimmed" }, "Page ", page, " / ", totalPages), /* @__PURE__ */ React21.createElement(Pagination, { value: page, onChange: (nextPage) => {
     setPage(nextPage);
     loadAccessLogs({ page: nextPage, pageSize: ACCESS_LOG_PAGE_SIZE, search: searchInput, sortBy, sortOrder, siteSeq });
   }, total: totalPages, siblings: 1, boundaries: 1, size: "sm" })));
 }
 
 // app/assets/js/admin/pages/S3BrowserPage.jsx
-import React23, { useEffect as useEffect17, useState as useState26 } from "react";
-import { Badge as Badge18, Button as Button14, Card as Card11, Group as Group19, Table as Table5, Text as Text19, Title as Title12 } from "@mantine/core";
+import React22, { useEffect as useEffect16, useState as useState25 } from "react";
+import { Badge as Badge17, Button as Button13, Card as Card10, Group as Group18, Table as Table4, Text as Text18, Title as Title11 } from "@mantine/core";
 
 // app/assets/js/admin/hooks/useS3Data.js
-import { useCallback as useCallback13, useRef, useState as useState25 } from "react";
+import { useCallback as useCallback12, useRef, useState as useState24 } from "react";
 function useS3Data() {
-  const [loading, setLoading] = useState25(false);
-  const [error, setError] = useState25("");
-  const [itemsByPrefix, setItemsByPrefix] = useState25({});
-  const [selectedS3Keys, setSelectedS3Keys] = useState25([]);
-  const [deletingS3, setDeletingS3] = useState25(false);
-  const [expandedS3Nodes, setExpandedS3Nodes] = useState25({});
-  const [loadingPrefixes, setLoadingPrefixes] = useState25(/* @__PURE__ */ new Set());
-  const [expandingAll, setExpandingAll] = useState25(false);
+  const [loading, setLoading] = useState24(false);
+  const [error, setError] = useState24("");
+  const [itemsByPrefix, setItemsByPrefix] = useState24({});
+  const [selectedS3Keys, setSelectedS3Keys] = useState24([]);
+  const [deletingS3, setDeletingS3] = useState24(false);
+  const [expandedS3Nodes, setExpandedS3Nodes] = useState24({});
+  const [loadingPrefixes, setLoadingPrefixes] = useState24(/* @__PURE__ */ new Set());
+  const [expandingAll, setExpandingAll] = useState24(false);
   const loadedRef = useRef(/* @__PURE__ */ new Set());
   const loadingRef = useRef(/* @__PURE__ */ new Set());
   const itemsByPrefixRef = useRef({});
-  const loadPrefix = useCallback13(async (prefix) => {
+  const loadPrefix = useCallback12(async (prefix) => {
     if (loadedRef.current.has(prefix) || loadingRef.current.has(prefix)) return;
     loadingRef.current.add(prefix);
     setLoadingPrefixes((prev) => {
@@ -1608,7 +1550,7 @@ function useS3Data() {
       });
     }
   }, []);
-  const loadS3Objects = useCallback13(async () => {
+  const loadS3Objects = useCallback12(async () => {
     setLoading(true);
     setError("");
     loadedRef.current = /* @__PURE__ */ new Set();
@@ -1624,14 +1566,14 @@ function useS3Data() {
       setLoading(false);
     }
   }, [loadPrefix]);
-  const toggleS3Node = useCallback13((path) => {
+  const toggleS3Node = useCallback12((path) => {
     setExpandedS3Nodes((prev) => {
       const expanding = !prev[path];
       if (expanding) loadPrefix(path);
       return { ...prev, [path]: expanding };
     });
   }, [loadPrefix]);
-  const expandAllS3Nodes = useCallback13(async () => {
+  const expandAllS3Nodes = useCallback12(async () => {
     setExpandingAll(true);
     try {
       const queue = [];
@@ -1651,7 +1593,7 @@ function useS3Data() {
       setExpandingAll(false);
     }
   }, [loadPrefix]);
-  const deleteS3Selected = useCallback13(async (keys) => {
+  const deleteS3Selected = useCallback12(async (keys) => {
     if (keys.length === 0) return;
     setDeletingS3(true);
     try {
@@ -1667,7 +1609,7 @@ function useS3Data() {
       setDeletingS3(false);
     }
   }, [loadS3Objects]);
-  const downloadS3Object = useCallback13(async (key) => {
+  const downloadS3Object = useCallback12(async (key) => {
     try {
       const params = new URLSearchParams({ key });
       const data = await fetchJson(`/api/Admin/S3DownloadUrl?${params.toString()}`);
@@ -1683,9 +1625,9 @@ function useS3Data() {
 // app/assets/js/admin/pages/S3BrowserPage.jsx
 function S3BrowserPage() {
   const { loading, error, itemsByPrefix, selectedS3Keys, setSelectedS3Keys, deletingS3, expandedS3Nodes, loadingPrefixes, expandingAll, loadS3Objects, toggleS3Node, expandAllS3Nodes, deleteS3Selected, downloadS3Object } = useS3Data();
-  const [sortBy, setSortBy] = useState26("key");
-  const [sortDir, setSortDir] = useState26("asc");
-  useEffect17(() => {
+  const [sortBy, setSortBy] = useState25("key");
+  const [sortDir, setSortDir] = useState25("asc");
+  useEffect16(() => {
     loadS3Objects();
   }, []);
   const handleSort = (col) => {
@@ -1764,42 +1706,42 @@ function S3BrowserPage() {
   const loadedFileRows = rows.filter((r) => r.isFile);
   const rootTotal = computeLoadedSize("");
   const SortIcon = ({ col }) => {
-    if (sortBy !== col) return /* @__PURE__ */ React23.createElement("i", { className: "fas fa-sort", style: { opacity: 0.3, marginLeft: 4 } });
-    return /* @__PURE__ */ React23.createElement("i", { className: `fas fa-sort-${sortDir === "asc" ? "up" : "down"}`, style: { marginLeft: 4 } });
+    if (sortBy !== col) return /* @__PURE__ */ React22.createElement("i", { className: "fas fa-sort", style: { opacity: 0.3, marginLeft: 4 } });
+    return /* @__PURE__ */ React22.createElement("i", { className: `fas fa-sort-${sortDir === "asc" ? "up" : "down"}`, style: { marginLeft: 4 } });
   };
-  return /* @__PURE__ */ React23.createElement(Card11, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React23.createElement(Group19, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React23.createElement(Title12, { order: 3 }, "S3 \uD30C\uC77C \uBE0C\uB77C\uC6B0\uC800"), /* @__PURE__ */ React23.createElement(Badge18, { color: "red", variant: "light" }, "Admin Only")), error ? /* @__PURE__ */ React23.createElement(Text19, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React23.createElement(Group19, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React23.createElement(Button14, { loading, onClick: () => loadS3Objects(), leftSection: /* @__PURE__ */ React23.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "\uC0C8\uB85C\uACE0\uCE68"), /* @__PURE__ */ React23.createElement(Button14, { variant: "light", loading: expandingAll, onClick: () => expandAllS3Nodes(), leftSection: /* @__PURE__ */ React23.createElement("i", { className: "fas fa-angle-double-down", "aria-hidden": "true" }) }, "\uBAA8\uB450 \uD3BC\uCE58\uAE30"), /* @__PURE__ */ React23.createElement(Button14, { color: "red", variant: "light", disabled: selectedS3Keys.length === 0, loading: deletingS3, onClick: () => deleteS3Selected(selectedS3Keys), leftSection: /* @__PURE__ */ React23.createElement("i", { className: "fas fa-trash-alt", "aria-hidden": "true" }) }, "\uC120\uD0DD \uC0AD\uC81C (", selectedS3Keys.length, ")")), /* @__PURE__ */ React23.createElement(Table5, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React23.createElement(Table5.Thead, null, /* @__PURE__ */ React23.createElement(Table5.Tr, null, /* @__PURE__ */ React23.createElement(Table5.Th, { style: { width: 36 } }, /* @__PURE__ */ React23.createElement("input", { type: "checkbox", checked: loadedFileRows.length > 0 && selectedS3Keys.length === loadedFileRows.length, onChange: (e) => {
+  return /* @__PURE__ */ React22.createElement(Card10, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React22.createElement(Group18, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React22.createElement(Title11, { order: 3 }, "S3 \uD30C\uC77C \uBE0C\uB77C\uC6B0\uC800"), /* @__PURE__ */ React22.createElement(Badge17, { color: "red", variant: "light" }, "Admin Only")), error ? /* @__PURE__ */ React22.createElement(Text18, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React22.createElement(Group18, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React22.createElement(Button13, { loading, onClick: () => loadS3Objects(), leftSection: /* @__PURE__ */ React22.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "\uC0C8\uB85C\uACE0\uCE68"), /* @__PURE__ */ React22.createElement(Button13, { variant: "light", loading: expandingAll, onClick: () => expandAllS3Nodes(), leftSection: /* @__PURE__ */ React22.createElement("i", { className: "fas fa-angle-double-down", "aria-hidden": "true" }) }, "\uBAA8\uB450 \uD3BC\uCE58\uAE30"), /* @__PURE__ */ React22.createElement(Button13, { color: "red", variant: "light", disabled: selectedS3Keys.length === 0, loading: deletingS3, onClick: () => deleteS3Selected(selectedS3Keys), leftSection: /* @__PURE__ */ React22.createElement("i", { className: "fas fa-trash-alt", "aria-hidden": "true" }) }, "\uC120\uD0DD \uC0AD\uC81C (", selectedS3Keys.length, ")")), /* @__PURE__ */ React22.createElement(Table4, { striped: true, highlightOnHover: true, withTableBorder: true, withColumnBorders: true }, /* @__PURE__ */ React22.createElement(Table4.Thead, null, /* @__PURE__ */ React22.createElement(Table4.Tr, null, /* @__PURE__ */ React22.createElement(Table4.Th, { style: { width: 36 } }, /* @__PURE__ */ React22.createElement("input", { type: "checkbox", checked: loadedFileRows.length > 0 && selectedS3Keys.length === loadedFileRows.length, onChange: (e) => {
     setSelectedS3Keys(e.currentTarget.checked ? loadedFileRows.map((r) => r.path) : []);
-  } })), /* @__PURE__ */ React23.createElement(Table5.Th, { style: { cursor: "pointer" }, onClick: () => handleSort("key") }, "Key", /* @__PURE__ */ React23.createElement(SortIcon, { col: "key" })), /* @__PURE__ */ React23.createElement(Table5.Th, { style: { width: 140, textAlign: "right", cursor: "pointer" }, onClick: () => handleSort("size") }, "Size(bytes)", /* @__PURE__ */ React23.createElement(SortIcon, { col: "size" })), /* @__PURE__ */ React23.createElement(Table5.Th, { style: { width: 180, textAlign: "center", cursor: "pointer" }, onClick: () => handleSort("lastModified") }, "Last Modified", /* @__PURE__ */ React23.createElement(SortIcon, { col: "lastModified" })))), /* @__PURE__ */ React23.createElement(Table5.Tbody, null, rows.map((row) => {
+  } })), /* @__PURE__ */ React22.createElement(Table4.Th, { style: { cursor: "pointer" }, onClick: () => handleSort("key") }, "Key", /* @__PURE__ */ React22.createElement(SortIcon, { col: "key" })), /* @__PURE__ */ React22.createElement(Table4.Th, { style: { width: 140, textAlign: "right", cursor: "pointer" }, onClick: () => handleSort("size") }, "Size(bytes)", /* @__PURE__ */ React22.createElement(SortIcon, { col: "size" })), /* @__PURE__ */ React22.createElement(Table4.Th, { style: { width: 180, textAlign: "center", cursor: "pointer" }, onClick: () => handleSort("lastModified") }, "Last Modified", /* @__PURE__ */ React22.createElement(SortIcon, { col: "lastModified" })))), /* @__PURE__ */ React22.createElement(Table4.Tbody, null, rows.map((row) => {
     const { depth, name, path, isFile, isDir, isExpanded, isLoadingRow, itemSize, itemLastModified, parentPercent, meta } = row;
     if (isLoadingRow) {
-      return /* @__PURE__ */ React23.createElement(Table5.Tr, { key: path }, /* @__PURE__ */ React23.createElement(Table5.Td, { colSpan: 5 }, /* @__PURE__ */ React23.createElement("div", { style: { paddingLeft: `${depth * 22 + 28}px` } }, /* @__PURE__ */ React23.createElement("i", { className: "fas fa-spinner fa-spin", "aria-hidden": "true" }), " \uB85C\uB529 \uC911...")));
+      return /* @__PURE__ */ React22.createElement(Table4.Tr, { key: path }, /* @__PURE__ */ React22.createElement(Table4.Td, { colSpan: 5 }, /* @__PURE__ */ React22.createElement("div", { style: { paddingLeft: `${depth * 22 + 28}px` } }, /* @__PURE__ */ React22.createElement("i", { className: "fas fa-spinner fa-spin", "aria-hidden": "true" }), " \uB85C\uB529 \uC911...")));
     }
     const checked = selectedS3Keys.includes(path);
     const showSize = isFile || isDir && isExpanded;
     const showLastModified = isFile || isDir && isExpanded;
     const sizeIncomplete = isDir && isExpanded && hasUnloadedSubdirs(path);
     const percent = rootTotal > 0 ? itemSize / rootTotal * 100 : 0;
-    return /* @__PURE__ */ React23.createElement(Table5.Tr, { key: path }, /* @__PURE__ */ React23.createElement(Table5.Td, null, /* @__PURE__ */ React23.createElement("input", { type: "checkbox", disabled: !isFile, checked, onChange: (e) => {
+    return /* @__PURE__ */ React22.createElement(Table4.Tr, { key: path }, /* @__PURE__ */ React22.createElement(Table4.Td, null, /* @__PURE__ */ React22.createElement("input", { type: "checkbox", disabled: !isFile, checked, onChange: (e) => {
       if (e.currentTarget.checked) setSelectedS3Keys((prev) => [...prev, path]);
       else setSelectedS3Keys((prev) => prev.filter((k) => k !== path));
-    } })), /* @__PURE__ */ React23.createElement(Table5.Td, null, /* @__PURE__ */ React23.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px`, cursor: isDir ? "pointer" : void 0 }, onClick: isDir ? () => toggleS3Node(path) : void 0 }, isDir ? /* @__PURE__ */ React23.createElement(Button14, { size: "compact-xs", variant: "subtle", tabIndex: -1 }, /* @__PURE__ */ React23.createElement("i", { className: `fas ${isExpanded ? "fa-chevron-down" : "fa-chevron-right"}`, "aria-hidden": "true" })) : /* @__PURE__ */ React23.createElement("span", { style: { display: "inline-block", width: 20 } }), /* @__PURE__ */ React23.createElement("span", null, /* @__PURE__ */ React23.createElement("i", { className: `fas ${isFile ? "fa-file-alt" : "fa-folder"}`, "aria-hidden": "true" })), /* @__PURE__ */ React23.createElement("span", { style: { flex: 1, background: percent > 0 ? `linear-gradient(to right, rgba(100, 149, 237, 0.25) ${percent}%, transparent ${percent}%)` : void 0, cursor: isFile ? "pointer" : void 0 }, onClick: isFile ? () => downloadS3Object(path) : void 0 }, name))), /* @__PURE__ */ React23.createElement(Table5.Td, { style: { textAlign: "right", opacity: sizeIncomplete ? 0.4 : 1, ...showSize && parentPercent > 0 ? { background: `linear-gradient(to right, rgba(100, 149, 237, 0.25) ${parentPercent}%, transparent ${parentPercent}%)` } : {} } }, showSize ? Number(itemSize).toLocaleString() : "-"), /* @__PURE__ */ React23.createElement(Table5.Td, { style: { textAlign: "center", opacity: sizeIncomplete ? 0.4 : 1 } }, showLastModified ? formatDateTimeInClientTimezone(itemLastModified) : "-"));
+    } })), /* @__PURE__ */ React22.createElement(Table4.Td, null, /* @__PURE__ */ React22.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, paddingLeft: `${depth * 22}px`, cursor: isDir ? "pointer" : void 0 }, onClick: isDir ? () => toggleS3Node(path) : void 0 }, isDir ? /* @__PURE__ */ React22.createElement(Button13, { size: "compact-xs", variant: "subtle", tabIndex: -1 }, /* @__PURE__ */ React22.createElement("i", { className: `fas ${isExpanded ? "fa-chevron-down" : "fa-chevron-right"}`, "aria-hidden": "true" })) : /* @__PURE__ */ React22.createElement("span", { style: { display: "inline-block", width: 20 } }), /* @__PURE__ */ React22.createElement("span", null, /* @__PURE__ */ React22.createElement("i", { className: `fas ${isFile ? "fa-file-alt" : "fa-folder"}`, "aria-hidden": "true" })), /* @__PURE__ */ React22.createElement("span", { style: { flex: 1, background: percent > 0 ? `linear-gradient(to right, rgba(100, 149, 237, 0.25) ${percent}%, transparent ${percent}%)` : void 0, cursor: isFile ? "pointer" : void 0 }, onClick: isFile ? () => downloadS3Object(path) : void 0 }, name))), /* @__PURE__ */ React22.createElement(Table4.Td, { style: { textAlign: "right", opacity: sizeIncomplete ? 0.4 : 1, ...showSize && parentPercent > 0 ? { background: `linear-gradient(to right, rgba(100, 149, 237, 0.25) ${parentPercent}%, transparent ${parentPercent}%)` } : {} } }, showSize ? Number(itemSize).toLocaleString() : "-"), /* @__PURE__ */ React22.createElement(Table4.Td, { style: { textAlign: "center", opacity: sizeIncomplete ? 0.4 : 1 } }, showLastModified ? formatDateTimeInClientTimezone(itemLastModified) : "-"));
   }))));
 }
 
 // app/assets/js/admin/pages/CrawlerCachePage.jsx
-import React24, { useEffect as useEffect18, useState as useState28 } from "react";
-import { Anchor as Anchor7, Badge as Badge19, Button as Button15, Card as Card12, Group as Group20, Image as Image2, Text as Text20, TextInput as TextInput8, Title as Title13 } from "@mantine/core";
+import React23, { useEffect as useEffect17, useState as useState27 } from "react";
+import { Anchor as Anchor7, Badge as Badge18, Button as Button14, Card as Card11, Group as Group19, Image as Image2, Text as Text19, TextInput as TextInput7, Title as Title12 } from "@mantine/core";
 import { DataTable as DataTable7 } from "mantine-datatable";
 
 // app/assets/js/admin/hooks/useCrawlerCacheData.js
-import { useCallback as useCallback14, useState as useState27 } from "react";
+import { useCallback as useCallback13, useState as useState26 } from "react";
 function useCrawlerCacheData() {
-  const [loading, setLoading] = useState27(true);
-  const [crawlerCaches, setCrawlerCaches] = useState27([]);
-  const [crawlerCacheCount, setCrawlerCacheCount] = useState27(0);
-  const [refreshingUrl, setRefreshingUrl] = useState27("");
-  const [deletingUrl, setDeletingUrl] = useState27("");
-  const loadCrawlerCaches = useCallback14(async ({ page = 1, pageSize = CRAWLER_CACHE_PAGE_SIZE, search = "", sortBy = "id", sortOrder = "desc" } = {}) => {
+  const [loading, setLoading] = useState26(true);
+  const [crawlerCaches, setCrawlerCaches] = useState26([]);
+  const [crawlerCacheCount, setCrawlerCacheCount] = useState26(0);
+  const [refreshingUrl, setRefreshingUrl] = useState26("");
+  const [deletingUrl, setDeletingUrl] = useState26("");
+  const loadCrawlerCaches = useCallback13(async ({ page = 1, pageSize = CRAWLER_CACHE_PAGE_SIZE, search = "", sortBy = "id", sortOrder = "desc" } = {}) => {
     setLoading(true);
     try {
       const params = pagedParams({ page, pageSize, search, sortBy, sortOrder });
@@ -1813,7 +1755,7 @@ function useCrawlerCacheData() {
       setLoading(false);
     }
   }, []);
-  const refreshCrawlerCache = useCallback14(async (url, currentParams) => {
+  const refreshCrawlerCache = useCallback13(async (url, currentParams) => {
     setRefreshingUrl(url);
     try {
       await sendForm("/api/Admin/CrawlerCache/Refresh", "POST", { url });
@@ -1822,7 +1764,7 @@ function useCrawlerCacheData() {
       setRefreshingUrl("");
     }
   }, [loadCrawlerCaches]);
-  const deleteCrawlerCache = useCallback14(async (url, currentParams) => {
+  const deleteCrawlerCache = useCallback13(async (url, currentParams) => {
     setDeletingUrl(url);
     try {
       await sendJson(`/api/Admin/CrawlerCache?url=${encodeURIComponent(url)}`, "DELETE");
@@ -1837,41 +1779,41 @@ function useCrawlerCacheData() {
 // app/assets/js/admin/pages/CrawlerCachePage.jsx
 function CrawlerCachePage() {
   const { loading, crawlerCaches, crawlerCacheCount, refreshingUrl, deletingUrl, loadCrawlerCaches, refreshCrawlerCache, deleteCrawlerCache } = useCrawlerCacheData();
-  const [page, setPage] = useState28(1);
-  const [searchInput, setSearchInput] = useState28("");
-  const [search, setSearch] = useState28("");
-  const [sortBy, setSortBy] = useState28("id");
-  const [sortOrder, setSortOrder] = useState28("desc");
+  const [page, setPage] = useState27(1);
+  const [searchInput, setSearchInput] = useState27("");
+  const [search, setSearch] = useState27("");
+  const [sortBy, setSortBy] = useState27("id");
+  const [sortOrder, setSortOrder] = useState27("desc");
   const totalPages = Math.max(1, Math.ceil(crawlerCacheCount / CRAWLER_CACHE_PAGE_SIZE));
   const normalizedPage = Math.min(page, totalPages);
   const currentParams = { page, pageSize: CRAWLER_CACHE_PAGE_SIZE, search, sortBy, sortOrder };
-  useEffect18(() => {
+  useEffect17(() => {
     loadCrawlerCaches();
   }, []);
-  return /* @__PURE__ */ React24.createElement(Card12, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React24.createElement(Group20, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React24.createElement(Title13, { order: 3 }, "Crawler Cache"), /* @__PURE__ */ React24.createElement(Badge19, { color: "lime", variant: "light" }, crawlerCacheCount, " rows")), /* @__PURE__ */ React24.createElement(Text20, { size: "sm", c: "dimmed", mb: "md" }, "URL\uBCC4 \uD06C\uB864\uB9C1 \uCE90\uC2DC \uC870\uD68C/\uC0AD\uC81C/\uAC15\uC81C\uAC31\uC2E0\uC744 \uC218\uD589\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React24.createElement(Group20, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React24.createElement(Button15, { variant: "filled", onClick: () => loadCrawlerCaches(currentParams) }, "\uC870\uD68C")), /* @__PURE__ */ React24.createElement(Group20, { mb: "sm", align: "end" }, /* @__PURE__ */ React24.createElement(TextInput8, { label: "search", value: searchInput, onChange: (e) => setSearchInput(e.currentTarget.value), placeholder: "url, title, image, description" }), /* @__PURE__ */ React24.createElement(Button15, { variant: "light", onClick: () => {
+  return /* @__PURE__ */ React23.createElement(Card11, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React23.createElement(Group19, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React23.createElement(Title12, { order: 3 }, "Crawler Cache"), /* @__PURE__ */ React23.createElement(Badge18, { color: "lime", variant: "light" }, crawlerCacheCount, " rows")), /* @__PURE__ */ React23.createElement(Text19, { size: "sm", c: "dimmed", mb: "md" }, "URL\uBCC4 \uD06C\uB864\uB9C1 \uCE90\uC2DC \uC870\uD68C/\uC0AD\uC81C/\uAC15\uC81C\uAC31\uC2E0\uC744 \uC218\uD589\uD569\uB2C8\uB2E4."), /* @__PURE__ */ React23.createElement(Group19, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React23.createElement(Button14, { variant: "filled", onClick: () => loadCrawlerCaches(currentParams) }, "\uC870\uD68C")), /* @__PURE__ */ React23.createElement(Group19, { mb: "sm", align: "end" }, /* @__PURE__ */ React23.createElement(TextInput7, { label: "search", value: searchInput, onChange: (e) => setSearchInput(e.currentTarget.value), placeholder: "url, title, image, description" }), /* @__PURE__ */ React23.createElement(Button14, { variant: "light", onClick: () => {
     setPage(1);
     setSearch(searchInput);
     loadCrawlerCaches({ page: 1, pageSize: CRAWLER_CACHE_PAGE_SIZE, search: searchInput, sortBy, sortOrder });
-  } }, "\uAC80\uC0C9")), /* @__PURE__ */ React24.createElement(
+  } }, "\uAC80\uC0C9")), /* @__PURE__ */ React23.createElement(
     DataTable7,
     {
-      sortIcons: { sorted: /* @__PURE__ */ React24.createElement(IconChevronUp, { size: 14 }), unsorted: /* @__PURE__ */ React24.createElement(IconSelector, { size: 14 }) },
+      sortIcons: { sorted: /* @__PURE__ */ React23.createElement(IconChevronUp, { size: 14 }), unsorted: /* @__PURE__ */ React23.createElement(IconSelector, { size: 14 }) },
       withTableBorder: true,
       striped: true,
       highlightOnHover: true,
       records: crawlerCaches,
       columns: [
         { accessor: "id", title: "ID", sortable: true },
-        { accessor: "url", title: "URL", sortable: true, render: (row) => /* @__PURE__ */ React24.createElement(Text20, { size: "sm", style: { wordBreak: "break-all" } }, row.url) },
+        { accessor: "url", title: "URL", sortable: true, render: (row) => /* @__PURE__ */ React23.createElement(Text19, { size: "sm", style: { wordBreak: "break-all" } }, row.url) },
         { accessor: "status", title: "Status", sortable: true, render: (row) => formatCrawlerStatus(row.status) },
         { accessor: "title", title: "Title", sortable: true, render: (row) => row.title || "-" },
         { accessor: "image", title: "Image", sortable: true, render: (row) => {
           if (!row.image) return "-";
-          return /* @__PURE__ */ React24.createElement(Anchor7, { href: row.image, target: "_blank", rel: "noreferrer" }, /* @__PURE__ */ React24.createElement(Image2, { src: row.image, alt: row.title || row.url || "crawler image", h: 44, w: 72, fit: "cover", radius: "sm", fallbackSrc: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" }));
+          return /* @__PURE__ */ React23.createElement(Anchor7, { href: row.image, target: "_blank", rel: "noreferrer" }, /* @__PURE__ */ React23.createElement(Image2, { src: row.image, alt: row.title || row.url || "crawler image", h: 44, w: 72, fit: "cover", radius: "sm", fallbackSrc: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" }));
         } },
         { accessor: "description", title: "Description", sortable: true, render: (row) => row.description || "-" },
         { accessor: "dateUpdated", title: "Updated", sortable: true, render: (row) => formatDateTimeInClientTimezone(row.dateUpdated) },
-        { accessor: "action", title: "Action", render: (row) => /* @__PURE__ */ React24.createElement(Group20, { gap: 6 }, /* @__PURE__ */ React24.createElement(Button15, { size: "xs", variant: "light", loading: refreshingUrl === row.url, onClick: () => refreshCrawlerCache(row.url, currentParams) }, "\uAC31\uC2E0"), /* @__PURE__ */ React24.createElement(Button15, { size: "xs", color: "red", variant: "light", loading: deletingUrl === row.url, onClick: () => deleteCrawlerCache(row.url, currentParams) }, "\uC0AD\uC81C")) }
+        { accessor: "action", title: "Action", render: (row) => /* @__PURE__ */ React23.createElement(Group19, { gap: 6 }, /* @__PURE__ */ React23.createElement(Button14, { size: "xs", variant: "light", loading: refreshingUrl === row.url, onClick: () => refreshCrawlerCache(row.url, currentParams) }, "\uAC31\uC2E0"), /* @__PURE__ */ React23.createElement(Button14, { size: "xs", color: "red", variant: "light", loading: deletingUrl === row.url, onClick: () => deleteCrawlerCache(row.url, currentParams) }, "\uC0AD\uC81C")) }
       ],
       sortStatus: { columnAccessor: sortBy, direction: sortOrder },
       onSortStatusChange: (next) => {
@@ -1895,14 +1837,14 @@ function CrawlerCachePage() {
 }
 
 // app/assets/js/admin/pages/ApiKeysPage.jsx
-import React25, { useEffect as useEffect19, useState as useState29 } from "react";
-import { Badge as Badge20, Button as Button16, Card as Card13, Group as Group21, Text as Text21, Title as Title14 } from "@mantine/core";
+import React24, { useEffect as useEffect18, useState as useState28 } from "react";
+import { Badge as Badge19, Button as Button15, Card as Card12, Group as Group20, Text as Text20, Title as Title13 } from "@mantine/core";
 import { DataTable as DataTable8 } from "mantine-datatable";
 function ApiKeysPage() {
-  const [loading, setLoading] = useState29(false);
-  const [revokingSeq, setRevokingSeq] = useState29(null);
-  const [apiKeys, setApiKeys] = useState29([]);
-  const [error, setError] = useState29("");
+  const [loading, setLoading] = useState28(false);
+  const [revokingSeq, setRevokingSeq] = useState28(null);
+  const [apiKeys, setApiKeys] = useState28([]);
+  const [error, setError] = useState28("");
   const loadApiKeys = async () => {
     setLoading(true);
     setError("");
@@ -1929,11 +1871,11 @@ function ApiKeysPage() {
       setRevokingSeq(null);
     }
   };
-  useEffect19(() => {
+  useEffect18(() => {
     loadApiKeys();
   }, []);
   const activeCount = apiKeys.filter((row) => !row.revoked).length;
-  return /* @__PURE__ */ React25.createElement(Card13, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React25.createElement(Group21, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React25.createElement(Title14, { order: 3 }, "API Keys"), /* @__PURE__ */ React25.createElement(Group21, { gap: 8 }, /* @__PURE__ */ React25.createElement(Badge20, { color: "green", variant: "light" }, activeCount, " active"), /* @__PURE__ */ React25.createElement(Badge20, { color: "gray", variant: "light" }, apiKeys.length, " total"))), error ? /* @__PURE__ */ React25.createElement(Text21, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React25.createElement(Group21, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React25.createElement(Button16, { variant: "filled", loading, onClick: loadApiKeys, leftSection: /* @__PURE__ */ React25.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "Refresh")), /* @__PURE__ */ React25.createElement(
+  return /* @__PURE__ */ React24.createElement(Card12, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React24.createElement(Group20, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React24.createElement(Title13, { order: 3 }, "API Keys"), /* @__PURE__ */ React24.createElement(Group20, { gap: 8 }, /* @__PURE__ */ React24.createElement(Badge19, { color: "green", variant: "light" }, activeCount, " active"), /* @__PURE__ */ React24.createElement(Badge19, { color: "gray", variant: "light" }, apiKeys.length, " total"))), error ? /* @__PURE__ */ React24.createElement(Text20, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React24.createElement(Group20, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React24.createElement(Button15, { variant: "filled", loading, onClick: loadApiKeys, leftSection: /* @__PURE__ */ React24.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "Refresh")), /* @__PURE__ */ React24.createElement(
     DataTable8,
     {
       withTableBorder: true,
@@ -1946,28 +1888,28 @@ function ApiKeysPage() {
         { accessor: "seq", title: "ID", width: 80 },
         { accessor: "userNickname", title: "User", render: (row) => row.userNickname ? `${row.userNickname} (#${row.user})` : `#${row.user}` },
         { accessor: "name", title: "Name" },
-        { accessor: "keyPrefix", title: "Key", render: (row) => /* @__PURE__ */ React25.createElement("code", null, row.keyPrefix) },
+        { accessor: "keyPrefix", title: "Key", render: (row) => /* @__PURE__ */ React24.createElement("code", null, row.keyPrefix) },
         { accessor: "dateInserted", title: "Created", render: (row) => formatDateTimeInClientTimezone(row.dateInserted) },
         { accessor: "dateLastUsed", title: "Last Used", render: (row) => row.dateLastUsed ? formatDateTimeInClientTimezone(row.dateLastUsed) : "-" },
-        { accessor: "status", title: "Status", render: (row) => row.revoked ? /* @__PURE__ */ React25.createElement(Badge20, { color: "red", variant: "light" }, "Revoked") : /* @__PURE__ */ React25.createElement(Badge20, { color: "green", variant: "light" }, "Active") },
-        { accessor: "action", title: "Action", render: (row) => row.revoked ? "-" : /* @__PURE__ */ React25.createElement(Button16, { size: "xs", color: "red", variant: "light", loading: revokingSeq === row.seq, onClick: () => revokeApiKey(row.seq) }, "Revoke") }
+        { accessor: "status", title: "Status", render: (row) => row.revoked ? /* @__PURE__ */ React24.createElement(Badge19, { color: "red", variant: "light" }, "Revoked") : /* @__PURE__ */ React24.createElement(Badge19, { color: "green", variant: "light" }, "Active") },
+        { accessor: "action", title: "Action", render: (row) => row.revoked ? "-" : /* @__PURE__ */ React24.createElement(Button15, { size: "xs", color: "red", variant: "light", loading: revokingSeq === row.seq, onClick: () => revokeApiKey(row.seq) }, "Revoke") }
       ]
     }
   ));
 }
 
 // app/assets/js/admin/pages/NicknameRequestsPage.jsx
-import React26, { useCallback as useCallback15, useEffect as useEffect20, useState as useState30 } from "react";
-import { Badge as Badge21, Button as Button17, Card as Card14, Group as Group22, SegmentedControl, Text as Text22, Title as Title15 } from "@mantine/core";
+import React25, { useCallback as useCallback14, useEffect as useEffect19, useState as useState29 } from "react";
+import { Badge as Badge20, Button as Button16, Card as Card13, Group as Group21, SegmentedControl, Text as Text21, Title as Title14 } from "@mantine/core";
 import { DataTable as DataTable9 } from "mantine-datatable";
 var STATUS_FILTERS = ["Pending", "Approved", "Rejected", "Canceled", "All"];
 function NicknameRequestsPage() {
-  const [status, setStatus] = useState30("Pending");
-  const [rows, setRows] = useState30([]);
-  const [loading, setLoading] = useState30(false);
-  const [busySeq, setBusySeq] = useState30(null);
-  const [error, setError] = useState30("");
-  const load = useCallback15(async () => {
+  const [status, setStatus] = useState29("Pending");
+  const [rows, setRows] = useState29([]);
+  const [loading, setLoading] = useState29(false);
+  const [busySeq, setBusySeq] = useState29(null);
+  const [error, setError] = useState29("");
+  const load = useCallback14(async () => {
     setLoading(true);
     setError("");
     try {
@@ -1980,7 +1922,7 @@ function NicknameRequestsPage() {
       setLoading(false);
     }
   }, [status]);
-  useEffect20(() => {
+  useEffect19(() => {
     load();
   }, [load]);
   const review = async (row, decision) => {
@@ -2005,9 +1947,9 @@ function NicknameRequestsPage() {
   };
   const statusBadge = (row) => {
     const color = { Pending: "yellow", Approved: "green", Rejected: "red", Canceled: "gray" }[row.status] ?? "gray";
-    return /* @__PURE__ */ React26.createElement(Badge21, { color, variant: "light" }, row.status);
+    return /* @__PURE__ */ React25.createElement(Badge20, { color, variant: "light" }, row.status);
   };
-  return /* @__PURE__ */ React26.createElement(Card14, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React26.createElement(Group22, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React26.createElement(Title15, { order: 3 }, "Nickname Requests"), /* @__PURE__ */ React26.createElement(Badge21, { color: "grape", variant: "light" }, rows.length, " rows")), error ? /* @__PURE__ */ React26.createElement(Text22, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React26.createElement(Group22, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React26.createElement(SegmentedControl, { value: status, onChange: setStatus, data: STATUS_FILTERS }), /* @__PURE__ */ React26.createElement(Button17, { variant: "filled", loading, onClick: load, leftSection: /* @__PURE__ */ React26.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "Refresh")), /* @__PURE__ */ React26.createElement(
+  return /* @__PURE__ */ React25.createElement(Card13, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React25.createElement(Group21, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React25.createElement(Title14, { order: 3 }, "Nickname Requests"), /* @__PURE__ */ React25.createElement(Badge20, { color: "grape", variant: "light" }, rows.length, " rows")), error ? /* @__PURE__ */ React25.createElement(Text21, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React25.createElement(Group21, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React25.createElement(SegmentedControl, { value: status, onChange: setStatus, data: STATUS_FILTERS }), /* @__PURE__ */ React25.createElement(Button16, { variant: "filled", loading, onClick: load, leftSection: /* @__PURE__ */ React25.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "Refresh")), /* @__PURE__ */ React25.createElement(
     DataTable9,
     {
       withTableBorder: true,
@@ -2029,7 +1971,7 @@ function NicknameRequestsPage() {
         {
           accessor: "action",
           title: "Action",
-          render: (row) => row.status !== "Pending" ? "-" : /* @__PURE__ */ React26.createElement(Group22, { gap: 6 }, /* @__PURE__ */ React26.createElement(Button17, { size: "xs", variant: "light", color: "green", loading: busySeq === row.seq, onClick: () => review(row, "approve") }, "Approve"), /* @__PURE__ */ React26.createElement(Button17, { size: "xs", variant: "light", color: "red", loading: busySeq === row.seq, onClick: () => review(row, "reject") }, "Reject"))
+          render: (row) => row.status !== "Pending" ? "-" : /* @__PURE__ */ React25.createElement(Group21, { gap: 6 }, /* @__PURE__ */ React25.createElement(Button16, { size: "xs", variant: "light", color: "green", loading: busySeq === row.seq, onClick: () => review(row, "approve") }, "Approve"), /* @__PURE__ */ React25.createElement(Button16, { size: "xs", variant: "light", color: "red", loading: busySeq === row.seq, onClick: () => review(row, "reject") }, "Reject"))
         }
       ]
     }
@@ -2037,8 +1979,8 @@ function NicknameRequestsPage() {
 }
 
 // app/assets/js/admin/pages/SiteRequestsPage.jsx
-import React27, { useCallback as useCallback16, useEffect as useEffect21, useState as useState31 } from "react";
-import { Badge as Badge22, Button as Button18, Card as Card15, Group as Group23, SegmentedControl as SegmentedControl2, Text as Text23, Title as Title16 } from "@mantine/core";
+import React26, { useCallback as useCallback15, useEffect as useEffect20, useState as useState30 } from "react";
+import { Badge as Badge21, Button as Button17, Card as Card14, Group as Group22, SegmentedControl as SegmentedControl2, Text as Text22, Title as Title15 } from "@mantine/core";
 import { DataTable as DataTable10 } from "mantine-datatable";
 
 // app/assets/js/admin/siteRequestMail.js
@@ -2084,12 +2026,12 @@ function siteRequestMailto(row) {
 // app/assets/js/admin/pages/SiteRequestsPage.jsx
 var STATUS_FILTERS2 = ["Pending", "Approved", "Rejected", "Canceled", "All"];
 function SiteRequestsPage() {
-  const [status, setStatus] = useState31("Pending");
-  const [rows, setRows] = useState31([]);
-  const [loading, setLoading] = useState31(false);
-  const [busySeq, setBusySeq] = useState31(null);
-  const [error, setError] = useState31("");
-  const load = useCallback16(async () => {
+  const [status, setStatus] = useState30("Pending");
+  const [rows, setRows] = useState30([]);
+  const [loading, setLoading] = useState30(false);
+  const [busySeq, setBusySeq] = useState30(null);
+  const [error, setError] = useState30("");
+  const load = useCallback15(async () => {
     setLoading(true);
     setError("");
     try {
@@ -2102,7 +2044,7 @@ function SiteRequestsPage() {
       setLoading(false);
     }
   }, [status]);
-  useEffect21(() => {
+  useEffect20(() => {
     load();
   }, [load]);
   const review = async (row, decision) => {
@@ -2127,17 +2069,17 @@ function SiteRequestsPage() {
   };
   const statusBadge = (row) => {
     const color = { Pending: "yellow", Approved: "green", Rejected: "red", Canceled: "gray" }[row.status] ?? "gray";
-    return /* @__PURE__ */ React27.createElement(Badge22, { color, variant: "light" }, row.status);
+    return /* @__PURE__ */ React26.createElement(Badge21, { color, variant: "light" }, row.status);
   };
-  const requester = (row) => /* @__PURE__ */ React27.createElement(React27.Fragment, null, row.userNickname ? `${row.userNickname} (#${row.user})` : `#${row.user}`, row.email ? /* @__PURE__ */ React27.createElement(Text23, { size: "xs", c: "dimmed" }, row.email) : null);
+  const requester = (row) => /* @__PURE__ */ React26.createElement(React26.Fragment, null, row.userNickname ? `${row.userNickname} (#${row.user})` : `#${row.user}`, row.email ? /* @__PURE__ */ React26.createElement(Text22, { size: "xs", c: "dimmed" }, row.email) : null);
   const action = (row) => {
     if (row.status === "Pending") {
-      return /* @__PURE__ */ React27.createElement(Group23, { gap: 6 }, /* @__PURE__ */ React27.createElement(Button18, { size: "xs", variant: "light", color: "green", loading: busySeq === row.seq, onClick: () => review(row, "approve") }, "Approve"), /* @__PURE__ */ React27.createElement(Button18, { size: "xs", variant: "light", color: "red", loading: busySeq === row.seq, onClick: () => review(row, "reject") }, "Reject"));
+      return /* @__PURE__ */ React26.createElement(Group22, { gap: 6 }, /* @__PURE__ */ React26.createElement(Button17, { size: "xs", variant: "light", color: "green", loading: busySeq === row.seq, onClick: () => review(row, "approve") }, "Approve"), /* @__PURE__ */ React26.createElement(Button17, { size: "xs", variant: "light", color: "red", loading: busySeq === row.seq, onClick: () => review(row, "reject") }, "Reject"));
     }
     const mailto = siteRequestMailto(row);
-    return mailto ? /* @__PURE__ */ React27.createElement(Button18, { component: "a", href: mailto, size: "xs", variant: "light", title: `Write to ${row.email}`, leftSection: /* @__PURE__ */ React27.createElement("i", { className: "fas fa-envelope", "aria-hidden": "true" }) }, "Email") : "-";
+    return mailto ? /* @__PURE__ */ React26.createElement(Button17, { component: "a", href: mailto, size: "xs", variant: "light", title: `Write to ${row.email}`, leftSection: /* @__PURE__ */ React26.createElement("i", { className: "fas fa-envelope", "aria-hidden": "true" }) }, "Email") : "-";
   };
-  return /* @__PURE__ */ React27.createElement(Card15, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React27.createElement(Group23, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React27.createElement(Title16, { order: 3 }, "Site Requests"), /* @__PURE__ */ React27.createElement(Badge22, { color: "grape", variant: "light" }, rows.length, " rows")), error ? /* @__PURE__ */ React27.createElement(Text23, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React27.createElement(Group23, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React27.createElement(SegmentedControl2, { value: status, onChange: setStatus, data: STATUS_FILTERS2 }), /* @__PURE__ */ React27.createElement(Button18, { variant: "filled", loading, onClick: load, leftSection: /* @__PURE__ */ React27.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "Refresh")), /* @__PURE__ */ React27.createElement(
+  return /* @__PURE__ */ React26.createElement(Card14, { withBorder: true, radius: "md", padding: "lg" }, /* @__PURE__ */ React26.createElement(Group22, { justify: "space-between", mb: "md" }, /* @__PURE__ */ React26.createElement(Title15, { order: 3 }, "Site Requests"), /* @__PURE__ */ React26.createElement(Badge21, { color: "grape", variant: "light" }, rows.length, " rows")), error ? /* @__PURE__ */ React26.createElement(Text22, { c: "red", size: "sm", mb: "md" }, error) : null, /* @__PURE__ */ React26.createElement(Group22, { align: "flex-end", mb: "md" }, /* @__PURE__ */ React26.createElement(SegmentedControl2, { value: status, onChange: setStatus, data: STATUS_FILTERS2 }), /* @__PURE__ */ React26.createElement(Button17, { variant: "filled", loading, onClick: load, leftSection: /* @__PURE__ */ React26.createElement("i", { className: "fas fa-sync-alt", "aria-hidden": "true" }) }, "Refresh")), /* @__PURE__ */ React26.createElement(
     DataTable10,
     {
       withTableBorder: true,
@@ -2210,41 +2152,41 @@ var wikiThemeManager = createWikiThemeManager();
 var router = createBrowserRouter([
   {
     path: "/Admin",
-    element: /* @__PURE__ */ React28.createElement(AdminLayout, null),
+    element: /* @__PURE__ */ React27.createElement(AdminLayout, null),
     children: [
-      { index: true, element: /* @__PURE__ */ React28.createElement(DashboardPage, null) },
-      { path: "Site", element: /* @__PURE__ */ React28.createElement(SitesPage, null) },
-      { path: "Sites", element: /* @__PURE__ */ React28.createElement(SitesPage, null) },
+      { index: true, element: /* @__PURE__ */ React27.createElement(DashboardPage, null) },
+      { path: "Site", element: /* @__PURE__ */ React27.createElement(SitesPage, null) },
+      { path: "Sites", element: /* @__PURE__ */ React27.createElement(SitesPage, null) },
       {
         path: "Site/:siteSeq",
-        element: /* @__PURE__ */ React28.createElement(SiteLayout, null),
+        element: /* @__PURE__ */ React27.createElement(SiteLayout, null),
         children: [
-          { index: true, element: /* @__PURE__ */ React28.createElement(SiteDashboardPage, null) },
-          { path: "Page", element: /* @__PURE__ */ React28.createElement(SiteDetailPage, null) },
-          { path: "Detail", element: /* @__PURE__ */ React28.createElement(SiteDetailPage, null) },
-          { path: "Config", element: /* @__PURE__ */ React28.createElement(SiteConfigPage, null) },
-          { path: "Cache", element: /* @__PURE__ */ React28.createElement(SiteCachePage, null) },
-          { path: "Permission", element: /* @__PURE__ */ React28.createElement(SitePermissionPage, null) },
-          { path: "Admins", element: /* @__PURE__ */ React28.createElement(SiteAdminsPage, null) },
-          { path: "DeletedPages", element: /* @__PURE__ */ React28.createElement(SiteDeletedPagesPage, null) }
+          { index: true, element: /* @__PURE__ */ React27.createElement(SiteDashboardPage, null) },
+          { path: "Page", element: /* @__PURE__ */ React27.createElement(SiteDetailPage, null) },
+          { path: "Detail", element: /* @__PURE__ */ React27.createElement(SiteDetailPage, null) },
+          { path: "Config", element: /* @__PURE__ */ React27.createElement(SiteConfigPage, null) },
+          { path: "Cache", element: /* @__PURE__ */ React27.createElement(SiteCachePage, null) },
+          { path: "Permission", element: /* @__PURE__ */ React27.createElement(SitePermissionPage, null) },
+          { path: "Admins", element: /* @__PURE__ */ React27.createElement(SiteAdminsPage, null) },
+          { path: "DeletedPages", element: /* @__PURE__ */ React27.createElement(SiteDeletedPagesPage, null) }
         ]
       },
-      { path: "User", element: /* @__PURE__ */ React28.createElement(AllUsersPage, null) },
-      { path: "AllUsers", element: /* @__PURE__ */ React28.createElement(AllUsersPage, null) },
-      { path: "User/UserViewHistory", element: /* @__PURE__ */ React28.createElement(UserViewsPage, null) },
-      { path: "UserViews", element: /* @__PURE__ */ React28.createElement(UserViewsPage, null) },
-      { path: "AccessLog", element: /* @__PURE__ */ React28.createElement(AccessLogsPage, null) },
-      { path: "AccessLogs", element: /* @__PURE__ */ React28.createElement(AccessLogsPage, null) },
-      { path: ":siteSeq/AccessLog", element: /* @__PURE__ */ React28.createElement(AccessLogsPage, null) },
-      { path: "RecentChange", element: /* @__PURE__ */ React28.createElement(RecentChangesPage, null) },
-      { path: "RecentChanges", element: /* @__PURE__ */ React28.createElement(RecentChangesPage, null) },
-      { path: "S3", element: /* @__PURE__ */ React28.createElement(S3BrowserPage, null) },
-      { path: "S3Browser", element: /* @__PURE__ */ React28.createElement(S3BrowserPage, null) },
-      { path: "CrawlerCache", element: /* @__PURE__ */ React28.createElement(CrawlerCachePage, null) },
-      { path: "CrawlerCaches", element: /* @__PURE__ */ React28.createElement(CrawlerCachePage, null) },
-      { path: "ApiKeys", element: /* @__PURE__ */ React28.createElement(ApiKeysPage, null) },
-      { path: "NicknameRequests", element: /* @__PURE__ */ React28.createElement(NicknameRequestsPage, null) },
-      { path: "SiteRequests", element: /* @__PURE__ */ React28.createElement(SiteRequestsPage, null) }
+      { path: "User", element: /* @__PURE__ */ React27.createElement(AllUsersPage, null) },
+      { path: "AllUsers", element: /* @__PURE__ */ React27.createElement(AllUsersPage, null) },
+      { path: "User/UserViewHistory", element: /* @__PURE__ */ React27.createElement(UserViewsPage, null) },
+      { path: "UserViews", element: /* @__PURE__ */ React27.createElement(UserViewsPage, null) },
+      { path: "AccessLog", element: /* @__PURE__ */ React27.createElement(AccessLogsPage, null) },
+      { path: "AccessLogs", element: /* @__PURE__ */ React27.createElement(AccessLogsPage, null) },
+      { path: ":siteSeq/AccessLog", element: /* @__PURE__ */ React27.createElement(AccessLogsPage, null) },
+      { path: "RecentChange", element: /* @__PURE__ */ React27.createElement(RecentChangesPage, null) },
+      { path: "RecentChanges", element: /* @__PURE__ */ React27.createElement(RecentChangesPage, null) },
+      { path: "S3", element: /* @__PURE__ */ React27.createElement(S3BrowserPage, null) },
+      { path: "S3Browser", element: /* @__PURE__ */ React27.createElement(S3BrowserPage, null) },
+      { path: "CrawlerCache", element: /* @__PURE__ */ React27.createElement(CrawlerCachePage, null) },
+      { path: "CrawlerCaches", element: /* @__PURE__ */ React27.createElement(CrawlerCachePage, null) },
+      { path: "ApiKeys", element: /* @__PURE__ */ React27.createElement(ApiKeysPage, null) },
+      { path: "NicknameRequests", element: /* @__PURE__ */ React27.createElement(NicknameRequestsPage, null) },
+      { path: "SiteRequests", element: /* @__PURE__ */ React27.createElement(SiteRequestsPage, null) }
     ]
   }
 ]);
@@ -2257,6 +2199,6 @@ window.addEventListener("DOMContentLoaded", () => {
     return;
   }
   createRoot(rootElement).render(
-    /* @__PURE__ */ React28.createElement(MantineProvider, { colorSchemeManager: wikiThemeManager, defaultColorScheme: "light", theme: { primaryColor: "indigo", defaultRadius: "md" } }, /* @__PURE__ */ React28.createElement(RouterProvider, { router }))
+    /* @__PURE__ */ React27.createElement(MantineProvider, { colorSchemeManager: wikiThemeManager, defaultColorScheme: "light", theme: { primaryColor: "indigo", defaultRadius: "md" } }, /* @__PURE__ */ React27.createElement(RouterProvider, { router }))
   );
 });
