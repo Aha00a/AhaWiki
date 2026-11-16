@@ -2,6 +2,7 @@ import React, {useEffect, useState} from "react";
 import {useNavigate, useOutletContext} from "react-router-dom";
 import {Anchor, Badge, Button, Card, Group, Paper, SimpleGrid, Stack, Text, TextInput, Title} from "@mantine/core";
 import {useSiteConfigData} from "../hooks/useSiteConfigData.js";
+import SchemaColorsCard from "../components/SchemaColorsCard.jsx";
 
 export default function SiteConfigPage() {
     const {site, siteSeq, saveSiteMeta, savingSiteMeta, error: siteMetaError} = useOutletContext();
@@ -124,6 +125,7 @@ export default function SiteConfigPage() {
                     }}>Reset</Button>
                 </Group>
             </Card>
+            <SchemaColorsCard siteSeq={siteSeq}/>
             <Card withBorder radius="md" padding="lg">
                 <Group justify="space-between" mb="md">
                     <Title order={3}>Telegram</Title>

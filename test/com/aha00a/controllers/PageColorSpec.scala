@@ -42,7 +42,7 @@ class PageColorSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfte
         "INSERT INTO Permission (site, target, targetType, actor, actorType, action) VALUES (63, '', 'All', '', 'All', 255)",
         "INSERT INTO `User` (seq, nickname) VALUES (63, 'pagecolor')",
       ).foreach(sql => SQL(sql).execute())
-      Seq("Hub", "Red", "Plain", "Broken", "Film", "Episode", "OwnFilm", "Grandchild", "Twin", "Amber", "LoopA", "LoopB").foreach { name =>
+      Seq("Hub", "Red", "Plain", "Broken", "Film", "Episode", "OwnFilm", "Grandchild", "Twin", "Amber", "LoopA", "LoopB", "Classy", "ClassyPart", "Booky").foreach { name =>
         SQL("INSERT INTO Page (site, name, revision, dateTime, `user`, remoteAddress, comment, content) VALUES (63, {name}, 1, NOW(), 63, '127.0.0.1', '', {name})")
           .on("name" -> name).execute()
         SQL("INSERT INTO PageMeta (site, name, revision) VALUES (63, {name}, 1)").on("name" -> name).execute()
@@ -51,6 +51,7 @@ class PageColorSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfte
       Seq(
         "Somewhere" -> "[[[#!Schema Movie\nname\tSomewhere\nisPartOf\tRed\n]]]",
         "Nowhere" -> "[[[#!Schema Movie\nname\tNowhere\nisPartOf\tPlain\n]]]",
+        "Uncoloured" -> "[[[#!Schema Book\nname\tUncoloured\nisPartOf\tPlain\n]]]",
       ).foreach { case (name, content) =>
         SQL("INSERT INTO Page (site, name, revision, dateTime, `user`, remoteAddress, comment, content) VALUES (63, {name}, 1, NOW(), 63, '127.0.0.1', '', {content})")
           .on("name" -> name, "content" -> content).execute()
@@ -87,6 +88,15 @@ class PageColorSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfte
         SQL("INSERT INTO CalculatedSchemaOrg (site, page, cls, prop, value) VALUES (63, {page}, 'Movie', {prop}, {value})")
           .on("page" -> page, "prop" -> prop, "value" -> value).execute()
       }
+      // The class layer: Movie has a colour on this site, Book's is not a colour. Classy is only a
+      // Movie, ClassyPart is a Movie that is part of Red (the topic wins), Booky is a Book.
+      Seq(("Classy", "Movie"), ("ClassyPart", "Movie"), ("Booky", "Book")).foreach { case (page, cls) =>
+        SQL("INSERT INTO CalculatedSchemaOrg (site, page, cls, prop, value) VALUES (63, {page}, {cls}, '', {value})")
+          .on("page" -> page, "cls" -> cls, "value" -> s"schema:$cls").execute()
+      }
+      SQL("INSERT INTO CalculatedSchemaOrg (site, page, cls, prop, value) VALUES (63, 'ClassyPart', 'Movie', 'isPartOf', 'Red')").execute()
+      SQL("INSERT INTO Config (site, k, v) VALUES (63, 'site.schema.color.Movie', '#0000ff')").execute()
+      SQL("INSERT INTO Config (site, k, v) VALUES (63, 'site.schema.color.Book', 'not a colour')").execute()
     }
     TestApplication.resetMemoryCaches()
     logics.AhaWikiCacheMemoryDomainSite.refresh()(app.injector.instanceOf[play.api.db.Database])
@@ -151,13 +161,23 @@ class PageColorSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfte
       colour("Twin") mustBe "#ffbf00"
       colour("LoopA") mustBe ""
     }
+
+    "give a page that has no colour and inherits none its class's colour" in {
+      def colour(page: String) =
+        (contentAsJson(route(app, FakeRequest(GET, s"/api/pagePreview/$page").withHeaders("Host" -> host)).get) \ "color").as[String]
+      colour("Classy") mustBe "#0000ff"
+      colour("ClassyPart") mustBe "#e60012"
+      colour("Booky") mustBe ""
+    }
   }
 
   "The infobox" should {
-    "draw the colour inherited through the block's own isPartOf" in {
+    "draw the colour inherited through the block's own isPartOf, else its class's" in {
       def page(name: String) = contentAsString(route(app, FakeRequest(GET, s"/w/$name").withHeaders("Host" -> host)).get)
       page("Somewhere") must include ("""data-page-color="#e60012"""")
-      page("Nowhere") must not include ("data-page-color")
+      // Its parent has no colour, so its class's; a Book has none.
+      page("Nowhere") must include ("""data-page-color="#0000ff"""")
+      page("Uncoloured") must not include ("data-page-color")
     }
   }
 }

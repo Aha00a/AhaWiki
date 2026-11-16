@@ -48,10 +48,29 @@ object PageColor {
     fields.collect { case key +: values if InheritedThrough.contains(key) => values }.flatten.map(_.trim).filter(_.nonEmpty)
 
   /**
-   * The colour inherited from `parents`, given each one's own colour. With several coloured
-   * parents the first by name wins: the order they were written in is not kept in
-   * CalculatedSchemaOrg, and the infobox and the API have to agree.
+   * The colour of the first of `names` that has one, by name. Both the parents a page inherits
+   * from and the classes it declares are picked this way: the order they were written in is not
+   * kept in CalculatedSchemaOrg, and the infobox and the API have to agree.
    */
-  def inherited(parents: Seq[String], ownColour: String => Option[String]): Option[String] =
-    parents.distinct.sorted.flatMap(ownColour(_)).headOption
+  def firstByName(names: Seq[String], colour: String => Option[String]): Option[String] =
+    names.distinct.sorted.flatMap(colour(_)).headOption
+
+  /**
+   * The last layer (2026-11-16): a page that neither wrote a colour nor inherits one takes the
+   * colour its site's admin chose for its schema class, stored as a Config row per class. A
+   * topic's colour says «this series», a class's says «a film»; the topic wins where both apply.
+   *
+   * The class exactly as declared. Movie's colour does not fall back to CreativeWork's: many
+   * classes have several parents (Hospital sits under three), and the class at the top of the
+   * infobox should be the whole answer to where a colour came from.
+   */
+  val ClassKeyPrefix: String = "site.schema.color."
+
+  def classKey(schemaClass: String): String = ClassKeyPrefix + schemaClass
+
+  /** Class -> colour, from Config rows (key, value); rows that are not a valid colour are left out. */
+  def classColours(rows: Seq[(String, String)]): Map[String, String] =
+    rows.collect { case (key, value) if key.startsWith(ClassKeyPrefix) => key.stripPrefix(ClassKeyPrefix) -> parse(value) }
+      .collect { case (schemaClass, Some(colour)) => schemaClass -> colour }
+      .toMap
 }

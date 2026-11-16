@@ -149,6 +149,34 @@ class ApiSiteAdminSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndA
     }
   }
 
+  "/api/Admin/Site/:seq/SchemaColors" should {
+    // The colour a schema class gives a page without one of its own (logics.PageColor).
+    "answer an outsider 403" in {
+      status(route(app, anonymousRequest(GET, "/api/Admin/Site/1/SchemaColors")).get) mustBe FORBIDDEN
+      status(route(app, anonymousRequest(PUT, "/api/Admin/Site/1/SchemaColors").withFormUrlEncodedBody("cls" -> "Movie", "color" -> "#123")).get) mustBe FORBIDDEN
+    }
+
+    "store a class's colour as #rrggbb, list it, and remove it when emptied" in {
+      val saved = route(app, adminRequest(PUT, "/api/Admin/Site/1/SchemaColors").withFormUrlEncodedBody("cls" -> "Movie", "color" -> "#E60")).get
+      status(saved) mustBe OK
+      val movie = (contentAsJson(saved) \ "classes").as[Seq[play.api.libs.json.JsObject]].find(c => (c \ "cls").as[String] == "Movie").get
+      (movie \ "color").as[String] mustBe "#ee6600"
+      (movie \ "pages").as[Int] mustBe 0
+      db.withConnection { implicit c =>
+        implicit val site: models.tables.Site = models.tables.Site(1, "SiteA", "SiteA", "", None)
+        models.tables.Config.select("site.schema.color.Movie").map(_.v) mustBe Some("#ee6600")
+      }
+      status(route(app, adminRequest(PUT, "/api/Admin/Site/1/SchemaColors").withFormUrlEncodedBody("cls" -> "Movie", "color" -> "")).get) mustBe OK
+      val after = contentAsJson(route(app, adminRequest(GET, "/api/Admin/Site/1/SchemaColors")).get)
+      (after \ "classes").as[Seq[play.api.libs.json.JsObject]].exists(c => (c \ "cls").as[String] == "Movie") mustBe false
+    }
+
+    "refuse what is not a schema class or not a colour" in {
+      status(route(app, adminRequest(PUT, "/api/Admin/Site/1/SchemaColors").withFormUrlEncodedBody("cls" -> "NoSuchClass", "color" -> "#123")).get) mustBe BAD_REQUEST
+      status(route(app, adminRequest(PUT, "/api/Admin/Site/1/SchemaColors").withFormUrlEncodedBody("cls" -> "Movie", "color" -> "red")).get) mustBe BAD_REQUEST
+    }
+  }
+
   "DELETE /api/Admin/Site/:seq/Admins/:userSeq" should {
     "return 403 for anonymous user" in {
       val result = route(app, anonymousRequest(DELETE, "/api/Admin/Site/1/Admins/10")).get
