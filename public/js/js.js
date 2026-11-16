@@ -418,7 +418,17 @@ document.addEventListener('DOMContentLoaded', function () {
             var besideBlock = targetRect.right - wrapperRect.left + 6;
             // h1 counts as a heading here though not for folding: the page title is one, and
             // beside it is the created/modified line, which the button lay across on 예시 모음.
-            if (!content.querySelector('h1, h2, h3, h4, h5, h6') && besideBlock + editLink.offsetWidth <= wrapper.clientWidth) {
+            // The wrapper is a block box, so it runs on under the floating table of contents while
+            // what it holds stops short of it; "room in the wrapper" can be room under the TOC. A
+            // block in a list beside the TOC had its button laid over the TOC (2026-11-16).
+            var besideTop = targetRect.top + 4;
+            var besideLeft = targetRect.right + 6;
+            var besideOverFloat = Array.prototype.some.call(document.querySelectorAll('.wikiContent .toc'), function (toc) {
+                var r = toc.getBoundingClientRect();
+                return r.width > 0 && r.left < besideLeft + editLink.offsetWidth && r.right > besideLeft &&
+                    r.top < besideTop + editLink.offsetHeight && r.bottom > besideTop;
+            });
+            if (!content.querySelector('h1, h2, h3, h4, h5, h6') && besideBlock + editLink.offsetWidth <= wrapper.clientWidth && !besideOverFloat) {
                 left = besideBlock;
             }
             editLink.style.top = top + 'px';
