@@ -120,6 +120,14 @@ class PageColorSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfte
       PageColor.ClassColours.values.filterNot(c => PageColor.parse(c).contains(c)).toSeq mustBe Seq()
     }
 
+    "resolve own, then parents by name, then classes by name, asking for parents only when needed" in {
+      val parentColour = Map("A" -> "#aaaaaa", "B" -> "#bbbbbb")
+      PageColor.resolve(Some("#123456"), Seq("A"), _ => fail("asked for a parent's colour"), Seq("Movie")) mustBe Some("#123456")
+      PageColor.resolve(None, Seq("B", "A"), parentColour.get, Seq("Movie")) mustBe Some("#aaaaaa")
+      PageColor.resolve(None, Seq("C"), parentColour.get, Seq("Thing", "Person", "Movie")) mustBe PageColor.ClassColours.get("Movie")
+      PageColor.resolve(None, Seq(), parentColour.get, Seq("Thing")) mustBe None
+    }
+
     "take the first valid themeColor of a block" in {
       PageColor.fromFields(Seq(Seq("name", "x"), Seq("themeColor", "nope", "#123"), Seq("themeColor", "#456"))) mustBe Some("#112233")
       PageColor.fromFields(Seq(Seq("name", "x"))) mustBe None

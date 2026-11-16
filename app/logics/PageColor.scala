@@ -56,6 +56,14 @@ object PageColor {
     names.distinct.sorted.flatMap(colour(_)).headOption
 
   /**
+   * A page's colour from the three layers, in order: its own, its parents' own, its classes'. The
+   * one place the order is written; the infobox and CalculatedSchemaOrg.selectPageColorMap only
+   * gather what it takes. `parentColour` is not called when the page has its own colour.
+   */
+  def resolve(own: Option[String], parents: Seq[String], parentColour: String => Option[String], classes: Seq[String]): Option[String] =
+    own.orElse(firstByName(parents, parentColour)).orElse(firstByName(classes, ClassColours.get))
+
+  /**
    * The last layer (2026-11-16): a page that neither wrote a colour nor inherits one takes its
    * schema class's colour. A topic's colour says «this series», a class's says «a film»; the topic
    * wins where both apply.

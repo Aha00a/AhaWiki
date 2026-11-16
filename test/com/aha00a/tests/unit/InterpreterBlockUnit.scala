@@ -419,7 +419,7 @@ object InterpreterBlockUnit {
 
         val currentPageUrl = s"https://${request.host}/w/UnitTest"
         val interpreted =
-          s"""<div class="schema InterpreterSchema hasPageColor" style="--page-color: ${logics.PageColor.ClassColours("Person")}" data-page-color="${logics.PageColor.ClassColours("Person")}"><dl vocab="https://schema.org/" typeof="Person">
+          s"""<div class="schema InterpreterSchema" style="--page-color: ${logics.PageColor.ClassColours("Person")}" data-page-color="${logics.PageColor.ClassColours("Person")}"><dl vocab="https://schema.org/" typeof="Person">
              |        <h5 class="schemaClassTitle">
              |          <a href="/w/schema:Person" class="schema schema-link schema-person">Person</a>
              |        </h5>

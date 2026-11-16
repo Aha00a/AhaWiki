@@ -241,18 +241,6 @@ object InterpreterSchema extends TraitInterpreter {
     val pageUrl: Option[String] = baseUrl.map(base => s"$base/w/${logics.wikis.PageNameUrl.encode(wikiContext.name)}")
 
     val seqPropertyUsed: Seq[String] = parseResult.seqSeqField.flatMap(_.headOption)
-//        <h5>
-//          {
-//            logics.CalculatedSchemaOrg.getPathHierarchy(parseResult.schemaClass).map(seqClass => {
-//              scala.xml.XML.loadString(
-//                seqClass.map(c => logics.CalculatedSchemaOrg.mapClass.get(c)
-//                  .map(schemaType => schemaType.toAhaMarkLink.toHtmlString(pageNameSet))
-//                  .getOrElse("")
-//                ).mkString("<div>", " / ", "</div>")
-//              )
-//            })
-//          }
-//        </h5>
 
     val dl =
       <dl vocab="https://schema.org/" typeof={parseResult.typeofValue}>
@@ -363,28 +351,18 @@ object InterpreterSchema extends TraitInterpreter {
       <script type="application/ld+json">{scala.xml.Unparsed(logics.HtmlJson.stringify(json))}</script>
     )
     // Read from the block being drawn, not from this page's stored rows, so a preview shows the
-    // colour a save would give; the parents' own colours are what is stored.
-    // The same three layers, in the same order, as CalculatedSchemaOrg.selectPageColorMap.
-    val pageColor: Option[String] = logics.PageColor.fromFields(parseResult.seqSeqField).orElse {
-      val parents = logics.PageColor.parentsFromFields(parseResult.seqSeqField)
-      if (parents.isEmpty) {
-        None
-      } else {
-        val parentColour = wikiContext.withConnection { implicit connection =>
-          models.tables.CalculatedSchemaOrg.selectOwnPageColorMap(parents)
-        }
-        logics.PageColor.firstByName(parents, parentColour.get)
-      }
-    }.orElse(logics.PageColor.firstByName(parseResult.schemaClasses, logics.PageColor.ClassColours.get))
-    val wrapperClass: String = "schema InterpreterSchema" + pageColor.fold("")(_ => " hasPageColor")
-    // The colour as written goes in the style, which is what shows without scripts; with them,
-    // AhaWiki.Color.js reads data-page-color and sets the style to a shade that stands on the
-    // theme's background (InterpreterSchema «페이지 색»).
-    val wrapperStyle: Option[scala.xml.Text] = pageColor.map(c => scala.xml.Text(s"--page-color: $c"))
-    wikiContext.renderingMode match {
+    // colour a save would give; the parents' own colours are what is stored. Asked only when the
+    // block has no colour of its own and names a parent.
+    val parents = logics.PageColor.parentsFromFields(parseResult.seqSeqField)
+    lazy val parentColour = wikiContext.withConnection { implicit connection =>
+      models.tables.CalculatedSchemaOrg.selectOwnPageColorMap(parents)
+    }
+    val pageColor: Option[String] = logics.PageColor.resolve(
+      logics.PageColor.fromFields(parseResult.seqSeqField), parents, name => parentColour.get(name), parseResult.schemaClasses
+    )
+    val preview: scala.xml.NodeSeq = wikiContext.renderingMode match {
       case RenderingMode.Normal =>
-        val r = <div class={wrapperClass} style={wrapperStyle} data-page-color={pageColor.map(scala.xml.Text(_))}>{dl}{jsonLdScript.getOrElse(scala.xml.NodeSeq.Empty)}</div>
-        r.toString()
+        scala.xml.NodeSeq.Empty
       case RenderingMode.Preview =>
         // Recommendations come from every declared class, deduplicated: a page typed as both a
         // program and its source should be offered the properties of both.
@@ -403,30 +381,29 @@ object InterpreterSchema extends TraitInterpreter {
         } else {
           ""
         }
-        val r =
-          <div class={wrapperClass} style={wrapperStyle} data-page-color={pageColor.map(scala.xml.Text(_))}>
-            {dl}
-            {jsonLdScript.getOrElse(scala.xml.NodeSeq.Empty)}
-            <div class="preview info">
-              <h6>Recommended Properties</h6>
-              {recommendedProperties}
-              <h6>Hierarchical Search</h6>
-              {parseResult.schemaClasses.map(schemaClass =>
-                <div>
-                  {logics.CalculatedSchemaOrg.getHtmlTree(schemaClass)}
-                  {
-                    if(logics.CalculatedSchemaOrg.mapClass.isDefinedAt(schemaClass)) {
-                      <div>{logics.CalculatedSchemaOrg.getHtmlProperties(schemaClass, seqPropertyUsed)}</div>
-                    } else {
+        <div class="preview info">
+          <h6>Recommended Properties</h6>
+          {recommendedProperties}
+          <h6>Hierarchical Search</h6>
+          {parseResult.schemaClasses.map(schemaClass =>
+            <div>
+              {logics.CalculatedSchemaOrg.getHtmlTree(schemaClass)}
+              {
+                if(logics.CalculatedSchemaOrg.mapClass.isDefinedAt(schemaClass)) {
+                  <div>{logics.CalculatedSchemaOrg.getHtmlProperties(schemaClass, seqPropertyUsed)}</div>
+                } else {
 
-                    }
-                  }
-                </div>
-              )}
+                }
+              }
             </div>
-          </div>
-        r.toString()
+          )}
+        </div>
     }
+    // The colour as written goes in the style, which is what shows without scripts; with them,
+    // AhaWiki.Color.js reads data-page-color and sets the style to a shade that stands on the
+    // theme's background (InterpreterSchema «페이지 색»). The attribute is also what the
+    // stylesheet draws the stripe by.
+    <div class="schema InterpreterSchema" style={pageColor.map(c => scala.xml.Text(s"--page-color: $c"))} data-page-color={pageColor.map(scala.xml.Text(_))}>{dl}{jsonLdScript.getOrElse(scala.xml.NodeSeq.Empty)}{preview}</div>.toString()
   }
 
   def expandAddress(v: String): Seq[Seq[String]] = {

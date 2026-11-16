@@ -264,7 +264,7 @@
 .AhaWiki .crawlerPreview > div:not(.circle).noPreviewImage {
   grid-template-columns: minmax(0, 1fr);
 }
-.AhaWiki .crawlerPreview > div:not(.circle).hasPageColor {
+.AhaWiki .crawlerPreview > div:not(.circle)[data-page-color] {
   border-top: 3px solid var(--page-color);
   padding-top: 8px;
 }

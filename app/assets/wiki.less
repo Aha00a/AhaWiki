@@ -441,7 +441,7 @@
 			// The page's own colour (themeColor, logics.PageColor) as a stripe along the top. Only the
 			// stripe takes the colour as written: the box behind the text keeps the site's tokens, so
 			// whatever colour was chosen the text still reads in both themes.
-			&.hasPageColor {
+			&[data-page-color] {
 				border-top: 4px solid var(--page-color);
 			}
 			.colorSwatch {

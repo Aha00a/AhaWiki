@@ -397,15 +397,16 @@
                     $inner.addClass('noPreviewImage');
                 }
                 // The page's own colour (/api/pagePreview's color, already #rrggbb), as a stripe, in
-                // the shade AhaWiki.Color.js finds for the card's background once it is shown.
-                if (/^#[0-9a-f]{6}$/i.test(data.color || "")) {
-                    $inner.addClass('hasPageColor').attr('data-page-color', data.color).css('--page-color', data.color);
+                // the shade AhaWiki.Color.js (loaded on every page by _baseSkeleton) finds for the
+                // card's background once it is shown. Empty when the page has none.
+                if (data.color) {
+                    $inner.attr('data-page-color', data.color);
                 }
                 $inner
                     .append($('<h5/>').text(data.title || ""))
                     .append($('<p/>').text(data.description || ""));
                 div.html('').append($inner);
-                if ($inner.attr('data-page-color') && window.AhaWiki && window.AhaWiki.Color) {
+                if (data.color) {
                     window.AhaWiki.Color.applyPageColor($inner[0]);
                 }
                 positionPreview($link, div);

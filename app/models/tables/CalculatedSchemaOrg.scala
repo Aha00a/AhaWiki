@@ -103,34 +103,31 @@ object CalculatedSchemaOrg {
 
   /**
    * Each named page's colour (logics.PageColor): its own, else the one it inherits from a page it
-   * is part of, else its class's. Four queries at most for any number of pages -- the graph and
-   * the link preview ask for many at once -- and fewer as each layer answers.
+   * is part of, else its class's (logics.PageColor.resolve). Four queries for any number of pages
+   * -- the graph and the link preview ask for many at once.
    */
   def selectPageColorMap(pages: Seq[String])(implicit connection: Connection, site: Site): Map[String, String] = {
-    def layer(found: Map[String, String])(next: Seq[String] => Map[String, String]): Map[String, String] = {
-      val without = pages.distinct.filterNot(found.contains)
-      if (without.isEmpty) found else found ++ next(without)
-    }
-    val own = selectOwnPageColorMap(pages)
-    val inherited = layer(own) { without =>
-      val parents = selectPageValues(without, logics.PageColor.InheritedThrough)
-      val parentColour = selectOwnPageColorMap(parents.map(_._2))
-      parents.groupMap(_._1)(_._2).flatMap { case (page, names) => logics.PageColor.firstByName(names, parentColour.get).map(page -> _) }
-    }
-    layer(inherited) { without =>
-      SQL"SELECT DISTINCT page, cls FROM CalculatedSchemaOrg WHERE site = ${site.seq} AND prop = '' AND page IN ($without)"
-        .as((str("page") ~ str("cls")).map { case page ~ cls => page -> cls }.*)
-        .groupMap(_._1)(_._2)
-        .flatMap { case (page, classes) => logics.PageColor.firstByName(classes, logics.PageColor.ClassColours.get).map(page -> _) }
+    val distinctPages = pages.distinct
+    if (distinctPages.isEmpty) {
+      Map.empty
+    } else {
+      def pageAnd(column: String) = (str("page") ~ str(column)).map { case page ~ value => page -> value }
+      val own = selectOwnPageColorMap(distinctPages)
+      val parents = SQL"""
+        SELECT DISTINCT page, value FROM CalculatedSchemaOrg
+        WHERE site = ${site.seq} AND prop IN (${logics.PageColor.InheritedThrough}) AND page IN ($distinctPages)
+      """.as(pageAnd("value").*).groupMap(_._1)(_._2)
+      val parentColour = selectOwnPageColorMap(parents.values.flatten.toSeq)
+      val classes = SQL"""
+        SELECT DISTINCT page, cls FROM CalculatedSchemaOrg
+        WHERE site = ${site.seq} AND prop = '' AND page IN ($distinctPages)
+      """.as(pageAnd("cls").*).groupMap(_._1)(_._2)
+      distinctPages.flatMap { page =>
+        logics.PageColor.resolve(own.get(page), parents.getOrElse(page, Seq()), parentColour.get, classes.getOrElse(page, Seq())).map(page -> _)
+      }.toMap
     }
   }
 
-  /** (page, value) of these properties of these pages. */
-  private def selectPageValues(pages: Seq[String], props: Seq[String])(implicit connection: Connection, site: Site): Seq[(String, String)] =
-    SQL"""
-      SELECT DISTINCT page, value FROM CalculatedSchemaOrg
-      WHERE site = ${site.seq} AND prop IN ($props) AND page IN ($pages)
-    """.as((str("page") ~ str("value")).map { case page ~ value => page -> value }.*)
   /**
    * Each named page's own colour, as its `#!Schema` block wrote it. Read from the rows the page
    * calculation already writes for every field, so the colour needs no column of its own and no

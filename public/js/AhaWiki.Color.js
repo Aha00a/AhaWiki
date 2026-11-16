@@ -105,6 +105,11 @@
             linear = oklchToLinear(L, lo, h);
         }
         // Rounded here, so what is checked against 3:1 is the colour that will be drawn.
+        return toRgb(linear);
+    }
+
+    // Linear sRGB as [r, g, b] 0..255, each channel clipped and rounded.
+    function toRgb(linear) {
         return linear.map(function (c) {
             return Math.round(fromLinear(Math.min(1, Math.max(0, c))));
         });
@@ -131,9 +136,7 @@
      * hue whose chroma they overshoot; test/theme.oklch-contrast.test.mjs reads them through this.
      */
     function cssOklch(L, C, hueDegrees) {
-        return oklchToLinear(L, C, hueDegrees * Math.PI / 180).map(function (c) {
-            return Math.round(fromLinear(Math.min(1, Math.max(0, c))));
-        });
+        return toRgb(oklchToLinear(L, C, hueDegrees * Math.PI / 180));
     }
 
     function standsOnAll(rgb, backgrounds) {
