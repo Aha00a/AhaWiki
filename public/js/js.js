@@ -98,6 +98,20 @@ function frameText(key) {
 document.addEventListener('DOMContentLoaded', function () {
     var wrappers = document.querySelectorAll('.InterpreterRenderMetaWrapper');
     var foldControllers = [];
+    // Everything floating in the page body: the table of contents, a #!Schema box, a date box.
+    // Read from the computed style rather than from a list of selectors, which wiki.less already
+    // holds and a second copy here would drift from -- the first version listed only the TOC and
+    // laid a code block's button over the Schema box on aha00a.com's Scala (2026-11-16). Found on
+    // first use, after the stylesheet has applied.
+    var floatingBoxes = null;
+    var getFloatingBoxes = function () {
+        if (!floatingBoxes) {
+            floatingBoxes = Array.prototype.filter.call(document.querySelectorAll('.wikiContent div'), function (element) {
+                return window.getComputedStyle(element).float !== 'none';
+            });
+        }
+        return floatingBoxes;
+    };
 
     wrappers.forEach(function (wrapper) {
         var content = wrapper.querySelector('.InterpreterRenderContent');
@@ -418,13 +432,17 @@ document.addEventListener('DOMContentLoaded', function () {
             var besideBlock = targetRect.right - wrapperRect.left + 6;
             // h1 counts as a heading here though not for folding: the page title is one, and
             // beside it is the created/modified line, which the button lay across on 예시 모음.
-            // The wrapper is a block box, so it runs on under the floating table of contents while
-            // what it holds stops short of it; "room in the wrapper" can be room under the TOC. A
-            // block in a list beside the TOC had its button laid over the TOC (2026-11-16).
+            // The wrapper is a block box, so it runs on under a floating box -- the table of
+            // contents, a #!Schema box -- while what it holds stops short of it; "room in the
+            // wrapper" can be room under the float. A block in a list beside the TOC had its button
+            // laid over the TOC, and a code block beside a Schema box over that (2026-11-16).
             var besideTop = targetRect.top + 4;
             var besideLeft = targetRect.right + 6;
-            var besideOverFloat = Array.prototype.some.call(document.querySelectorAll('.wikiContent .toc'), function (toc) {
-                var r = toc.getBoundingClientRect();
+            var besideOverFloat = getFloatingBoxes().some(function (box) {
+                if (box.contains(wrapper)) {
+                    return false;
+                }
+                var r = box.getBoundingClientRect();
                 return r.width > 0 && r.left < besideLeft + editLink.offsetWidth && r.right > besideLeft &&
                     r.top < besideTop + editLink.offsetHeight && r.bottom > besideTop;
             });
