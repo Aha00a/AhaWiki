@@ -536,6 +536,16 @@ object InterpreterWiki extends TraitInterpreterOfPageContent {
     }
   }
 
+  /**
+   * The page's `[[[...]]]` blocks as the renderer finds them -- after the backquotes and the
+   * variables, so a block quoted in backquotes is not one -- each with its #! line.
+   */
+  def blocks(pageContent: PageContent)(implicit wikiContext: ContextWikiPage): Seq[String] = {
+    new Handler[Seq[String]](pageContent) {
+      override def process(): Seq[String] = extractConvertInjectInterpreter.blocks
+    }.process()
+  }
+
   override def toSeqSchemaOrg(pageContent: PageContent)(implicit wikiContext: ContextWikiPage): Seq[CalculatedSchemaOrg] = {
     pageContent.redirect match {
       case Some(_) => Seq()

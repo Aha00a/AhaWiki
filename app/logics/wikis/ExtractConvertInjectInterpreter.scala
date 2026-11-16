@@ -94,6 +94,9 @@ class ExtractConvertInjectInterpreter() extends ExtractConvertInject {
   // usage line was stored as a link to a page called "options...", and the wrapper was classed Wiki.
   private def withInterpreter(body: String): String = ShebangUtil.addWhenNotExist(body, "text")
 
+  /** The blocks `extract` took out, in page order, each with its #! line. */
+  def blocks: Seq[String] = arrayBuffer.map { case (_, body) => withInterpreter(body) }.toSeq
+
   override def convert(s: String)(implicit wikiContext: ContextWikiPage): String = Interpreters.toHtmlString(withInterpreter(s))
 
   override def inject(s: String)(implicit wikiContext: ContextWikiPage): String = {

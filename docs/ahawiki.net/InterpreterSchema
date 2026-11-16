@@ -99,6 +99,12 @@ JSON-LD에는 다음 기본 값이 자동으로 들어갑니다.
 
 `address`는 `PostalAddress`, `location`과 `foundingLocation`은 `Place`, `geo`의 `lat,lng` 값은 `GeoCoordinates`로 변환합니다.
 
+=== Article 블록
+`Article` 과 그 하위 클래스(`TechArticle`, `BlogPosting` …) 블록은 자기 JSON-LD 를 따로 내보내지 않습니다. 이 블록이 설명하는 것은 페이지 자신이고, 모든 페이지에는 이미 페이지 단위 JSON-LD 의 Article(`…#article`, `view.scala.html`)이 있기 때문입니다. 대신 블록에 쓴 값이 그 Article 에 합쳐지고, 겹치면 블록 값이 이깁니다 — `@type`, `datePublished`, `author` 등(`PageArticle`).
+ * 2026-11-16 전에는 둘 다 나갔습니다. `@id` 가 서로 달라(`…#article` 과 페이지 주소) 검색엔진에는 한 페이지에 글이 둘로 보였습니다.
+ * 한 페이지에서 첫 Article 블록만 읽습니다. 두 번째는 화면에는 보이지만 JSON-LD 에는 나가지 않습니다. 한 페이지는 글 하나입니다.
+ * 위 기본값(`url`·`@id`·`name`)은 Article 블록에는 쓰이지 않습니다. 페이지 단위 Article 의 `@id`·`headline`·`mainEntityOfPage` 가 그 자리를 합니다.
+
 == 페이지 색 (themeColor)
 
 나무위키처럼 주제마다 색을 정할 수 있습니다. 블록에 `themeColor` 를 `#rgb` 나 `#rrggbb` 로 적습니다.

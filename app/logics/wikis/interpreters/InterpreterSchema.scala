@@ -352,12 +352,14 @@ object InterpreterSchema extends TraitInterpreter {
           }
         </div>
       </dl>
+    // An Article block is the page's own Article, which view.scala.html writes with the block's
+    // properties folded in (PageArticle). Written here as well, it was a second article.
     val jsonLdScript = toJsonLdObject(
       parseResult = parseResult,
       baseUrl = baseUrl,
       pageUrl = pageUrl,
       pageName = Some(wikiContext.name),
-    ).map(json =>
+    ).filterNot(_ => logics.wikis.PageArticle.describesThePage(parseResult)).map(json =>
       <script type="application/ld+json">{scala.xml.Unparsed(logics.HtmlJson.stringify(json))}</script>
     )
     // Read from the block being drawn, not from this page's stored rows, so a preview shows the

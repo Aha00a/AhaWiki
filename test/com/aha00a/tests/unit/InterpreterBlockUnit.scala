@@ -387,6 +387,24 @@ object InterpreterBlockUnit {
 
       assertEquals(InterpreterSchema.name, "Schema")
 
+      // A page's Article block is the page's own Article: view.scala.html folds what it writes into
+      // the page-level Article (PageArticle), and the block writes no JSON-LD of its own. Until
+      // 2026-11-16 both were written, under two @ids: two articles on one page.
+      {
+        import logics.wikis.PageArticle
+        val page = "= T\n[[[#!Schema Article\nauthor\tAha00a\ndatePublished\t2019-12-28\n]]]\n[[[#!Schema Movie\nname\tX\n]]]\n"
+        val properties = PageArticle.properties(page).get
+        assertEquals((properties \ "@type").as[String], "Article")
+        assertEquals((properties \ "datePublished").as[String], "2019-12-28")
+        assertEquals((properties \ "@context").toOption, None)
+        assertEquals((properties \ "@id").toOption, None)
+        // A subclass is an Article too; another class is not.
+        assertEquals(PageArticle.properties("[[[#!Schema TechArticle\nname\tT\n]]]").flatMap(p => (p \ "@type").asOpt[String]), Some("TechArticle"))
+        assertEquals(PageArticle.properties("[[[#!Schema Movie\nname\tX\n]]]"), None)
+        // Only the Movie writes its own JSON-LD.
+        assertEquals("application/ld\\+json".r.findAllIn(InterpreterWiki.toHtmlString(page)).size, 1)
+      }
+
       {
         import models.tables.CalculatedSchemaOrg
         val schemaMarkup =
