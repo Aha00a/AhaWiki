@@ -1,4 +1,4 @@
-// The theme's colours at every hue the slider can reach. They are OKLCH turned by --hue-ok
+// The theme's colours at every hue the slider can reach. They are OKLCH turned by --hue
 // (less.less has why): until 2026-11-16 they were HSL, and with the slider between yellow and cyan
 // the light theme's links stood at 1.5:1 on white. This reads the tokens out of less.less, draws
 // each pair the way a browser does -- an oklch() sRGB cannot hold has its channels clipped -- and

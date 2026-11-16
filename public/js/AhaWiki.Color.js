@@ -2,8 +2,8 @@
 // the two things the wiki does with it (2026-11-16). Plain ES5 maths that hands the browser
 // ordinary #rrggbb or a number, so it asks nothing of the browser's own CSS colour support.
 //
-// 1. The theme's hue. The stored hue (slider, site default) is an HSL hue; the theme's tokens in
-//    less.less are OKLCH and turn by --hue-ok, the same hue on OKLCH's circle. hueFromHsl gives it.
+// 1. The theme's hue. The slider and the site default hold an OKLCH hue, which less.less's tokens
+//    turn by as --hue. hueFromHsl converts a hue stored before 2026-11-16, when it was HSL's.
 //
 // 2. A page's own colour (its #!Schema themeColor, logics.PageColor) as it can be drawn on the
 //    background it lands on. The colour as written is kept for its hue; the lightness moves until
