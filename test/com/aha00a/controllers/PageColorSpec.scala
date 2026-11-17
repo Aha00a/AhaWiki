@@ -191,4 +191,13 @@ class PageColorSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfte
       page("Uncoloured") must not include ("data-page-color")
     }
   }
+
+  "A page view" should {
+    "name the page's colour as the browser's theme colour, and none when it has none" in {
+      def page(name: String) = contentAsString(route(app, FakeRequest(GET, s"/w/$name").withHeaders("Host" -> host)).get)
+      page("Red") must include ("""<meta name="theme-color" content="#e60012">""")
+      page("Film") must include ("""<meta name="theme-color" content="#e60012">""")
+      page("Plain") must not include ("theme-color")
+    }
+  }
 }

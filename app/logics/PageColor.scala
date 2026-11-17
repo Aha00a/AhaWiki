@@ -2,8 +2,8 @@ package logics
 
 /**
  * A page's own colour, written in its `#!Schema` block as `themeColor` (2026-11-16) -- what
- * Namuwiki does with a colour per topic. The infobox, the adjacent-pages graph and the link preview
- * use it.
+ * Namuwiki does with a colour per topic. The infobox, the adjacent-pages graph, the link preview
+ * and a mobile browser's address bar (`<meta name="theme-color">`) use it.
  *
  * Not a schema.org property: schema.org has no colour for a Thing, and `color` is a Product's colour
  * ("red"), which on a product page would mean something else. So it is a key the wiki knows, like

@@ -1,4 +1,4 @@
-@(title:String, description: String, interpreter:String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.tables.PageWithoutContent], wikiLast:Option[models.tables.Page], hasReadPermissionRestriction:Boolean = false, permissionDetail:Option[logics.wikis.WikiPermissionDetail] = None, wikiShown:Option[models.tables.Page] = None, socialImageUrl:Option[String] = None)(implicit wikiContext:ContextWikiPage)
+@(title:String, description: String, interpreter:String, contentInterpreted:String, isWritable:Boolean, wikiFirst:Option[models.tables.PageWithoutContent], wikiLast:Option[models.tables.Page], hasReadPermissionRestriction:Boolean = false, permissionDetail:Option[logics.wikis.WikiPermissionDetail] = None, wikiShown:Option[models.tables.Page] = None, socialImageUrl:Option[String] = None, pageColor:Option[String] = None)(implicit wikiContext:ContextWikiPage)
 @encodedTitle = @{ logics.wikis.PageNameUrl.encode(title) }
 @* The revision on screen and the latest, when they differ -- a page opened at ?revision=N.
    Everything else here (revisionInfo, the menus) describes the latest, so this is the only
@@ -126,6 +126,11 @@
 }
 @_base(title, description, canonicalUrl, "article", socialImageUrl) {
     <script type="application/ld+json">@Html(logics.HtmlJson.stringify(jsonLdWebPage))</script>
+    @* The page's colour (logics.PageColor) for a mobile browser's address bar, as written: the
+       browser picks the bar's text colour to suit it, so there is no background to fit it to. *@
+    @for(color <- pageColor) {
+    <meta name="theme-color" content="@color">
+    }
     <script defer src="@logics.PublicAsset.url("js/AhaWiki.PageView.js")" data-page-name="@title" data-old-revision="@oldRevision.isDefined"></script>
 } {
     @if(showPermissionFlash) {
