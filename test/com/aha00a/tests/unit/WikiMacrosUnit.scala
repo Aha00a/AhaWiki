@@ -31,6 +31,15 @@ object WikiMacrosUnit {
     val swatch = (color: String) => s"""<span class="MacroColorCodeSwatch"><span style="background: $color"></span></span>"""
     assertEquals(MacroColorCode.toHtmlString("#000000ff").contains(swatch("#000000ff")), true)
     assertEquals(MacroColorCode.toHtmlString("000000ff").contains(swatch("#000000ff")), true)
+    // CSS's colour functions, both syntaxes, lower-cased name and one space between values.
+    assertEquals(MacroColorCode.toHtmlString("rgb(255 119 0)").contains(swatch("rgb(255 119 0)")), true)
+    assertEquals(MacroColorCode.toHtmlString("RGBA(255, 119,  0, 0.5)").contains(swatch("rgba(255, 119, 0, 0.5)")), true)
+    assertEquals(MacroColorCode.toHtmlString("hsl(28deg 100% 50% / 50%)").contains(swatch("hsl(28deg 100% 50% / 50%)")), true)
+    assertEquals(MacroColorCode.toHtmlString("oklch(71.9% 0.192 49.4)").contains(swatch("oklch(71.9% 0.192 49.4)")), true)
+    assertEquals(MacroColorCode.toHtmlString("oklch(0.5 none -1.5e1)").contains(swatch("oklch(0.5 none -1.5e1)")), true)
+    // The value is written into a style attribute: anything but numbers and separators is refused.
+    Seq("rgb(1 2 3); background: url(x)", "rgb(var(--x))", "rgb(1 2 3", "rgb(\"1\" 2 3)", "color(srgb 1 0 0)", "rgb()", "red")
+      .foreach(bad => assertEquals(MacroColorCode.toHtmlString(bad).startsWith("""<div class="error">"""), true))
     // Attachment's width: the unit was appended twice until 2026-09-12 (`200pxpx`).
     assertEquals(MacroAttachment.parseArgument("a.png, 200px"), ("a.png", Some("200px")))
     assertEquals(MacroAttachment.parseArgument("a.png, 50%"), ("a.png", Some("50%")))
