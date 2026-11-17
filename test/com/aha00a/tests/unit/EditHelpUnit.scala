@@ -57,6 +57,11 @@ object EditHelpUnit {
         for (part <- byKind(ex.kind))
           assertEquals(s"$name draws $part: ${row.html.contains(part)}", s"$name draws $part: true")
         assertEquals(s"$name has no error box: ${!row.html.contains("class=\"error\"")}", s"$name has no error box: true")
+        // The drawn rows sit inside the edit form, ahead of Save. A <button> with no type is a
+        // submit button, and Enter in the comment box clicks the form's first one: until
+        // 2026-11-18 that was Fold's, and the click inserted the Fold example into the page.
+        val typeless = """<button(?![^>]*\btype=)""".r.findAllIn(row.html).size
+        assertEquals(s"$name has no typeless button: $typeless", s"$name has no typeless button: 0")
       } else {
         assertEquals(s"$name says what it draws: ${ex.description(language).nonEmpty && ex.page.nonEmpty}", s"$name says what it draws: true")
       }

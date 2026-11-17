@@ -1,5 +1,7 @@
 @(buttonText: String, html: String)(implicit wikiContext: ContextWikiPage)
 <div class="fold">
-    <button onclick="$(this).parent().find('.content').slideToggle()">@buttonText</button>
+    @* type="button": with none it is a submit button, and inside a form -- the editor's help draws
+       this example there -- Enter in any text box clicks it (EditHelpUnit). *@
+    <button type="button" onclick="$(this).parent().find('.content').slideToggle()">@buttonText</button>
     <div class="content" style="display: none">@Html(html)</div>
 </div>
