@@ -12,11 +12,13 @@
  *    already written.
  *
  * `options` has to name every key InterpreterTable.parseRules reads; test/editor.table-options
- * fails when the two drift apart.
+ * fails when the two drift apart. `tag=` is offered with nothing after it: it has no `all`, and
+ * which column holds the statuses is the author's to say. An option is not offered again once its
+ * key is written with any value, case aside -- `Bar=2` already says what `bar=all` would.
  */
 (function (root) {
     const presets = ['tsv', 'csv', 'tsv 1', 'tsv 1 1', 'tsv 1 bar=all', 'tsv 1 1 heat=all', 'tsv 1 compact'];
-    const options = ['bar=all', 'heat=all', 'compact'];
+    const options = ['bar=all', 'heat=all', 'tag=', 'compact'];
 
     /**
      * `left` is the text before the cursor. Returns null outside a table shebang, otherwise where
@@ -36,8 +38,9 @@
         } else {
             const countsSoFar = written.slice(1);
             const anotherCount = countsSoFar.length < 2 && countsSoFar.every(word => /^\d+$/.test(word)) ? ['1'] : [];
-            const writtenLower = written.map(word => word.toLowerCase());
-            names = anotherCount.concat(options.filter(option => !writtenLower.includes(option)));
+            const key = word => word.toLowerCase().split('=')[0];
+            const writtenKeys = written.map(key);
+            names = anotherCount.concat(options.filter(option => !writtenKeys.includes(key(option))));
         }
         return { start: left.length - prefix.length, prefix: prefix, names: names };
     }

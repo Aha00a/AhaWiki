@@ -247,6 +247,25 @@ object InterpreterBlockUnit {
           .replace("""dataBar axis" style="--bar-start:33.3%;--bar-end:100.0%"""", """dataBar axis heat" style="--bar-start:33.3%;--bar-end:100.0%;--heat:1.000"""")
           .replace("""dataBar negative axis" style="--bar-start:0.0%;--bar-end:33.3%"""", """dataBar negative axis heat" style="--bar-start:0.0%;--bar-end:33.3%;--heat:0.000"""")
       )
+
+      // tag= names columns as bar= does, and each cell says its tone, or the hue its word gives.
+      // Whole words, case aside: 충족기재 is not 충족. A placeholder gets no chip.
+      val regexTd = """<td( class="[^"]*")?( data-text="")?( style="[^"]*")?>""".r
+      def tds(shebang: String, body: String): Seq[String] =
+        regexTd.findAllMatchIn(Interpreters.toHtmlString(s"#!table tsv 1 $shebang\n$body")).map(_.matched).toSeq
+      val checklist = "No\tItem\tResult\n1\tA\t충족\n2\tB\t보강\n3\tC\t취약\n4\tD\t예외\n5\tE\t운영\n6\tF\t충족기재\n7\tG\tOK\n8\tH\t-"
+      assertEquals(tds("tag=Result", checklist).grouped(3).map(_.last).toSeq, Seq(
+        """<td class="tag good">""", """<td class="tag warn">""", """<td class="tag bad">""", """<td class="tag muted">""",
+        """<td class="tag" style="--tag-hue:240">""", """<td class="tag" style="--tag-hue:195">""", """<td class="tag good">""", "<td>",
+      ))
+      assertEquals(tds("tag=3", checklist), tds("tag=Result", checklist))
+      // all names nothing: it would chip every column of prose.
+      assertEquals(tds("tag=all", checklist).toSet, Set("<td>", """<td class="numeric">"""))
+      // A numeric column keeps its class and its bar, the tag after them.
+      assertEquals(tds("tag=2 bar=2", "Path\tStatus\n/\t200\n/x\t404"), Seq(
+        "<td>", """<td class="numeric dataBar tag" style="--bar-start:0.0%;--bar-end:49.5%;--tag-hue:285">""",
+        "<td>", """<td class="numeric dataBar tag" style="--bar-start:0.0%;--bar-end:100.0%;--tag-hue:195">""",
+      ))
     }; testInterpreterTable()
 
     def testInterpreterWiki(): Unit = {

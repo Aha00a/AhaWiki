@@ -83,6 +83,7 @@
 	--heat-lightness: 52.9%;
 	--heat-chroma: 0.228;
 	--heat-opacity: 0.45;
+	--tag-lightness: 91%;
 	// Under `@media screen` for the same reason less.less keeps every dark token there: a page
 	// printed from the dark theme prints light, and the bar has to come out light with it.
 	@media screen {
@@ -92,6 +93,7 @@
 			--bar-axis-color: ~"oklch(87.4% 0.019 var(--hue) / 0.6)";
 			--heat-lightness: 49%;
 			--heat-chroma: 0.21;
+			--tag-lightness: 36%;
 		}
 	}
 	// The header of a numeric column sits over its digits, right-aligned like them (GOV.UK and
@@ -171,6 +173,25 @@
 		box-shadow: inset 0 0 0 100vmax ~"oklch(var(--heat-lightness) var(--heat-chroma) var(--hue) / calc(var(--heat) * var(--heat-opacity)))";
 		-webkit-print-color-adjust: exact;
 		print-color-adjust: exact;
+	}
+	// `tag=`: the cell's text as a chip whose colour stands for its value (InterpreterTable.Tag).
+	// The server names a tone or writes --tag-hue; the lightness is the theme's, pale under dark
+	// text and deep under light text, so the text keeps the page's own colour and contrast. On the
+	// paragraph the cell's text is in, so the chip is as wide as the word, not the column.
+	td.tag {
+		--tag-chroma: 0.07;
+		&.good { --tag-hue: 150; }
+		&.warn { --tag-hue: 85; }
+		&.bad { --tag-hue: 25; }
+		&.muted { --tag-hue: 0; --tag-chroma: 0; }
+		> div > p {
+			display: inline-block;
+			padding: 0 0.6em;
+			border-radius: 999px;
+			background: ~"oklch(var(--tag-lightness) var(--tag-chroma) var(--tag-hue, 0))";
+			-webkit-print-color-adjust: exact;
+			print-color-adjust: exact;
+		}
 	}
 }
 .revisionFlagColumn {

@@ -2900,6 +2900,7 @@
   --heat-lightness: 52.9%;
   --heat-chroma: 0.228;
   --heat-opacity: 0.45;
+  --tag-lightness: 91%;
 }
 @media screen {
   html.theme-ahawiki-dark .AhaWiki .InterpreterTable {
@@ -2908,6 +2909,7 @@
     --bar-axis-color: oklch(87.4% 0.019 var(--hue) / 0.6);
     --heat-lightness: 49%;
     --heat-chroma: 0.21;
+    --tag-lightness: 36%;
   }
 }
 .AhaWiki .InterpreterTable th.numeric,
@@ -2959,6 +2961,30 @@
 }
 .AhaWiki .InterpreterTable td.heat {
   box-shadow: inset 0 0 0 100vmax oklch(var(--heat-lightness) var(--heat-chroma) var(--hue) / calc(var(--heat) * var(--heat-opacity)));
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.AhaWiki .InterpreterTable td.tag {
+  --tag-chroma: 0.07;
+}
+.AhaWiki .InterpreterTable td.tag.good {
+  --tag-hue: 150;
+}
+.AhaWiki .InterpreterTable td.tag.warn {
+  --tag-hue: 85;
+}
+.AhaWiki .InterpreterTable td.tag.bad {
+  --tag-hue: 25;
+}
+.AhaWiki .InterpreterTable td.tag.muted {
+  --tag-hue: 0;
+  --tag-chroma: 0;
+}
+.AhaWiki .InterpreterTable td.tag > div > p {
+  display: inline-block;
+  padding: 0 0.6em;
+  border-radius: 999px;
+  background: oklch(var(--tag-lightness) var(--tag-chroma) var(--tag-hue, 0));
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }

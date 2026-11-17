@@ -67,6 +67,16 @@ document.documentElement.classList.add(new URLSearchParams(location.search).get(
 <tr><td><div><p>C</p></div></td><td class="numeric heat" style="--heat:0.000"><div><p>90</p></div></td><td class="numeric heat" style="--heat:1.000"><div><p>99</p></div></td><td class="numeric dataBar heat" style="--bar-start:0.0%;--bar-end:91.0%;--heat:0.910"><div><p>91%</p></div></td></tr>
 <tr><td><div><p>D</p></div></td><td class="numeric" data-text=""><div><p>-</p></div></td><td class="numeric heat" style="--heat:0.667"><div><p>96</p></div></td><td class="numeric dataBar heat" style="--bar-start:0.0%;--bar-end:10.0%;--heat:0.100"><div><p>10%</p></div></td></tr></tbody></table>
 
+<h2>tag=3</h2>
+<p>A status column as chips: the four tones, two words that are no tone (each its own hue), and a placeholder with no chip.</p>
+<table id="tag" class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th class="numeric sorter-digit"><div><p>No</p></div></th><th><div><p>Item</p></div></th><th><div><p>Result</p></div></th></tr></thead><tbody><tr><td class="numeric"><div><p>1</p></div></td><td><div><p>Password length of at least eight characters</p></div></td><td class="tag good"><div><p>충족</p></div></td></tr>
+<tr><td class="numeric"><div><p>2</p></div></td><td><div><p>B</p></div></td><td class="tag warn"><div><p>보강</p></div></td></tr>
+<tr><td class="numeric"><div><p>3</p></div></td><td><div><p>C</p></div></td><td class="tag bad"><div><p>취약</p></div></td></tr>
+<tr><td class="numeric"><div><p>4</p></div></td><td><div><p>D</p></div></td><td class="tag muted"><div><p>예외</p></div></td></tr>
+<tr><td class="numeric"><div><p>5</p></div></td><td><div><p>E</p></div></td><td class="tag" style="--tag-hue:240"><div><p>운영</p></div></td></tr>
+<tr><td class="numeric"><div><p>6</p></div></td><td><div><p>F</p></div></td><td class="tag" style="--tag-hue:195"><div><p>충족기재</p></div></td></tr>
+<tr><td class="numeric"><div><p>7</p></div></td><td><div><p>G</p></div></td><td><div><p>-</p></div></td></tr></tbody></table>
+
 </div>
 </div>
 </div>
@@ -153,8 +163,17 @@ async function check() {
     // heat=: the colour is an inset shadow whose opacity is --heat times the cap, on every row --
     // the even rows' background shorthand does not reach a shadow -- and under a bar.
     const heat = document.getElementById('heat');
-    const rgba = s => { const m = s.match(/rgba?\(([^)]+)\)/); return m ? m[1].split(',').map(Number) : null; };
-    const shadowAlpha = td => { const c = rgba(getComputedStyle(td).boxShadow); return c ? +(c[3] ?? 1).toFixed(3) : 0; };
+    // A computed colour, rgb() or -- since the theme went OKLCH (2026-11-16) -- oklch(), as
+    // [r, g, b, alpha]: a canvas gives the channels, the text the alpha unrounded. Until then this
+    // read rgb() only, and every check below it stopped at a null.
+    const toRgb = c => { const x = document.createElement('canvas').getContext('2d'); x.fillStyle = '#000'; x.fillStyle = c; x.fillRect(0, 0, 1, 1); return [...x.getImageData(0, 0, 1, 1).data]; };
+    const rgba = s => {
+        const m = s.match(/(?:oklch|oklab|rgba?|hsla?)\([^)]*\)/);
+        if (!m) return null;
+        const a = m[0].match(/\/\s*([\d.]+)\s*\)$/) || m[0].match(/^rgba\([^,]+,[^,]+,[^,]+,\s*([\d.]+)\)$/);
+        return [...toRgb(m[0]).slice(0, 3), a ? Number(a[1]) : 1];
+    };
+    const shadowAlpha = td => { const c = rgba(getComputedStyle(td).boxShadow); return c ? +c[3].toFixed(3) : 0; };
     const cap = parseFloat(getComputedStyle(heat).getPropertyValue('--heat-opacity'));
     const heatCells = [...heat.tBodies[0].rows].map(tr => tr.cells[2]);
     expect('heat: opacity follows --heat on every row', heatCells.map(shadowAlpha), heatCells.map(td => +(parseFloat(td.style.getPropertyValue('--heat')) * cap).toFixed(3)));
@@ -168,9 +187,25 @@ async function check() {
     const contrast = (a, b) => { const [x, y] = [luminance(a), luminance(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
     const strongest = heat.tBodies[0].rows[2].cells[2];
     const shadow = rgba(getComputedStyle(strongest).boxShadow);
-    const ratio = contrast(rgba(getComputedStyle(strongest).color), over([shadow[0], shadow[1], shadow[2], shadow[3] ?? 1], background(strongest)));
+    const ratio = contrast(rgba(getComputedStyle(strongest).color).slice(0, 3), over([shadow[0], shadow[1], shadow[2], shadow[3] ?? 1], background(strongest)));
     expect('heat: text on the strongest cell reaches 4.5:1', ratio >= 4.5, true);
     out.push(`     (contrast ${ratio.toFixed(2)}:1)`);
+
+    // tag=: a chip on the paragraph, as wide as the word; each tone and hue its own colour; the
+    // text, in the page's colour, at 4.5:1 or better on every chip in the theme drawn.
+    const tag = document.getElementById('tag');
+    const chips = [...tag.tBodies[0].rows].map(tr => tr.cells[2].querySelector('p'));
+    const fill = p => toRgb(getComputedStyle(p).backgroundColor);
+    const tagged = chips.slice(0, 6);
+    expect('tag: six chips in six colours', new Set(tagged.map(p => fill(p).join())).size, 6);
+    expect('tag: no chip on a placeholder', fill(chips[6])[3], 0);
+    // The column is as wide as its longest word, so the longest chip fills it; a shorter word's
+    // chip is narrower -- it follows the word, not the column.
+    const width = p => p.getBoundingClientRect().width;
+    expect('tag: the chip is as wide as its word', width(chips[0]) < width(chips[5]), true);
+    const tagRatios = tagged.map(p => contrast(toRgb(getComputedStyle(p).color).slice(0, 3), fill(p).slice(0, 3)));
+    expect('tag: text on every chip reaches 4.5:1', tagRatios.every(r => r >= 4.5), true);
+    out.push(`     (contrast ${tagRatios.map(r => r.toFixed(2)).join(' ')})`);
 
     document.getElementById('result').textContent = out.join('\n');
     console.log(out.join('\n'));

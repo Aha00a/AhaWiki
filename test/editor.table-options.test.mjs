@@ -35,7 +35,7 @@ test('after the format: another header count, then the options', () => {
     assert.deepEqual(names('[[[#!table tsv '), ['1', ...options]);
     assert.deepEqual(names('[[[#!table tsv 1 '), ['1', ...options]);
     assert.deepEqual(names('[[[#!table tsv 1 1 '), [...options], 'two counts at most');
-    assert.deepEqual(names('[[[#!table csv compact '), ['bar=all', 'heat=all'], 'no count after an option');
+    assert.deepEqual(names('[[[#!table csv compact '), ['bar=all', 'heat=all', 'tag='], 'no count after an option');
 });
 
 test('the format is never offered again after the first word', () => {
@@ -47,7 +47,8 @@ test('the format is never offered again after the first word', () => {
 });
 
 test('what is already written is not offered again, case aside', () => {
-    assert.deepEqual(names('[[[#!table tsv 1 Bar=all '), ['heat=all', 'compact']);
+    assert.deepEqual(names('[[[#!table tsv 1 Bar=all '), ['heat=all', 'tag=', 'compact']);
+    assert.deepEqual(names('[[[#!table tsv 1 tag=5 heat=2 '), ['bar=all', 'compact'], 'by key, whatever the value');
 });
 
 test('the word being typed is replaced from where it starts', () => {

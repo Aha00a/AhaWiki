@@ -18,6 +18,8 @@ argued from tablesorter's minified source when the numeric columns went in, by r
  * **`heat=`:** the colour's opacity follows `--heat` on every row -- the even rows' background
    does not cover it -- none on a placeholder, a bar and a colour in one cell, and the text on the
    strongest cell at 4.5:1 or better in the theme drawn.
+ * **`tag=`:** a chip as wide as its word, the four tones and two worked-out hues in six colours,
+   no chip on a placeholder, and the text at 4.5:1 or better on every chip in the theme drawn.
  * **`compact`:** closer cells, type at 0.92, a thinner bar inset -- while the header keeps its
    room for the sort arrow and the filter row its own padding. Those two are what setting the
    padding with a selector instead of `--table-cell-padding` would take away.

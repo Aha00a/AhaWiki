@@ -103,9 +103,10 @@ object InterpreterTable extends TraitInterpreter {
    * bar and `heat=` those that get a colour scale: `all` for every numeric column, or `2,3` by
    * 1-based column number, or `Revenue` by header text, `2-4` for columns sharing one scale, and
    * any of those with `:lo:hi` for a range of the author's. A header with a space in it cannot be
-   * named -- the shebang is split on whitespace -- so the number is the general form.
+   * named -- the shebang is split on whitespace -- so the number is the general form. `tag=` names
+   * columns the same way, without `all` and without a range: see [[Tag]].
    */
-  case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int, classes:Option[String], bars:Seq[ScaleRule], heats:Seq[ScaleRule]) {
+  case class Shebang(csvPreference:CsvPreference, thRow:Int, thColumn:Int, classes:Option[String], bars:Seq[ScaleRule], heats:Seq[ScaleRule], tags:Seq[ScaleColumns] = Seq.empty) {
     def getClasses: String =
       (Seq("wikiTableSimple", "tablesorter") ++ classes.toSeq.flatMap(_.split("""\s+""")).map(normalizeClassToken))
         .distinct
@@ -227,6 +228,57 @@ object InterpreterTable extends TraitInterpreter {
     def explicit(lo: Double, hi: Double): Option[HeatScale] = finite(lo, hi)
   }
 
+  /**
+   * `tag=` (2026-11-18): each cell of the column drawn as a chip whose colour stands for its value,
+   * as Notion draws a select column. For a status column -- 충족, 보강, 예외 in a checklist -- that a
+   * colour scale cannot help with, since its values are words.
+   *
+   * The colour is chosen here, the same on every site and in every table: words whose meaning is
+   * plain get a tone (good, warn, bad, muted), and any other value a hue worked out from the word
+   * itself, so the same word is the same colour wherever it appears -- which is what lets a second
+   * table listing the values serve as their legend. There is no way to choose: the owner prefers one
+   * fixed set to a setting (as with the class colours, logics.PageColor).
+   *
+   * The words match whole, case aside. 충족기재 is not 충족: a prefix rule would also have read
+   * 완료예정 as done. A worked-out hue can land near a tone's; it means nothing there. N/A and "-"
+   * get no chip rather than a muted one: they are the placeholders a numeric column skips.
+   *
+   * `all` names nothing: a chip is for a column of a few repeated values, and `all` would chip every
+   * column of prose. A column of numbers can be tagged -- 200, 404 -- and keeps its alignment.
+   */
+  private[interpreters] object Tag {
+    val tones: Map[String, Seq[String]] = Map(
+      "good" -> Seq("충족", "양호", "완료", "통과", "정상", "적합", "성공", "ok", "pass", "passed", "done", "yes"),
+      "warn" -> Seq("보강", "주의", "미흡", "진행", "진행중", "진행 중", "부분", "검토", "warning", "partial", "wip", "in progress"),
+      "bad" -> Seq("취약", "실패", "부적합", "미충족", "위험", "불가", "fail", "failed", "error", "no"),
+      "muted" -> Seq("예외", "제외", "해당없음", "해당 없음", "보류", "skip", "skipped"),
+    )
+    private val toneOf: Map[String, String] = tones.toSeq.flatMap { case (tone, words) => words.map(_ -> tone) }.toMap
+
+    /**
+     * The hues a word that is no tone may get: four, 45 degrees apart, between cyan and magenta.
+     * Not the whole circle: a word that means nothing must not look like a warning, and the tones
+     * sit at 25 (bad), 85 (warn) and 150 (good) in _wiki_table.less -- the first version spread
+     * twelve hues around and gave 운영 an orange between 보강 and 취약. Six in the same span put
+     * neighbours 30 degrees apart, too close to tell on a pale chip.
+     */
+    val hues: Seq[Int] = Seq(195, 240, 285, 330)
+
+    /**
+     * The classes and the style of a tagged cell, or None for one with nothing to tag. The hue is
+     * picked by the word's String.hashCode, which Java fixes, so a word keeps its colour from one
+     * release to the next.
+     */
+    def of(cell: String): Option[(String, Option[String])] = {
+      val key = normalizeCell(cell).trim.toLowerCase(java.util.Locale.ROOT)
+      if (key.isEmpty || isPlaceholder(key)) None
+      else toneOf.get(key) match {
+        case Some(tone) => Some((s"tag $tone", None))
+        case None => Some(("tag", Some(s"--tag-hue:${hues(Math.floorMod(key.hashCode, hues.size))}")))
+      }
+    }
+  }
+
   // A number from 0 to 1 with three decimals, for the stylesheet to multiply an opacity by.
   private def fraction(ratio: Double): String =
     JBigDecimal.valueOf(math.max(0, math.min(1, ratio))).setScale(3, RoundingMode.HALF_UP).toPlainString
@@ -241,7 +293,7 @@ object InterpreterTable extends TraitInterpreter {
    * for those named by `bar=` and `heat=`, the scales their bars and colours are drawn on. Header
    * rows and header columns take no part; a header column of years stays a header.
    */
-  private case class Columns(numeric: Set[Int], barScales: Map[Int, BarScale], heatScales: Map[Int, HeatScale]) {
+  private case class Columns(numeric: Set[Int], barScales: Map[Int, BarScale], heatScales: Map[Int, HeatScale], tagged: Set[Int]) {
     // The header of a numeric column is right-aligned over its digits (`numeric`) and names
     // tablesorter's parser (`sorter-digit`). Left to guess, tablesorter reads the first body cell
     // whose text is not empty and sorts the column as text when that cell is "-", "₩1,200" or
@@ -253,23 +305,31 @@ object InterpreterTable extends TraitInterpreter {
       if (numeric.contains(columnIndex)) """<th class="numeric sorter-digit">""" else "<th>"
 
     def tdOpen(columnIndex: Int, cell: String): String = {
-      if (!numeric.contains(columnIndex)) return "<td>"
-      parseNumber(cell) match {
-        // A placeholder in a numeric column. tablesorter reads data-text before the cell's text,
-        // an empty one included, so the empty attribute makes it skip the cell when it looks for
-        // a parser and sort the cell last with the other empties, ascending or descending. Number
-        // cells carry no data-text: the filter widget matches typed text against the same
-        // attribute, and "65,438" has to find the cell that shows it.
-        case None => """<td class="numeric" data-text="">"""
-        case Some(value) =>
-          val bar = barScales.get(columnIndex)
-          val heat = heatScales.get(columnIndex)
-          val classes = "numeric" +
-            bar.fold("")(scale => " dataBar" + (if (value < 0) " negative" else "") + (if (scale.diverging) " axis" else "")) +
-            heat.fold("")(_ => " heat")
-          val styles = bar.map(_.style(value)) ++ heat.map(_.style(value))
-          if (styles.isEmpty) s"""<td class="$classes">""" else s"""<td class="$classes" style="${styles.mkString(";")}">"""
-      }
+      val (classes, dataText, styles): (Seq[String], Boolean, Seq[String]) =
+        if (!numeric.contains(columnIndex)) (Seq.empty, false, Seq.empty)
+        else parseNumber(cell) match {
+          // A placeholder in a numeric column. tablesorter reads data-text before the cell's text,
+          // an empty one included, so the empty attribute makes it skip the cell when it looks for
+          // a parser and sort the cell last with the other empties, ascending or descending. Number
+          // cells carry no data-text: the filter widget matches typed text against the same
+          // attribute, and "65,438" has to find the cell that shows it.
+          case None => (Seq("numeric"), true, Seq.empty)
+          case Some(value) =>
+            val bar = barScales.get(columnIndex)
+            val heat = heatScales.get(columnIndex)
+            val classes = "numeric" +:
+              (bar.toSeq.flatMap(scale => "dataBar" +: (Seq("negative").filter(_ => value < 0) ++ Seq("axis").filter(_ => scale.diverging))) ++
+                heat.map(_ => "heat"))
+            (classes, false, bar.map(_.style(value)).toSeq ++ heat.map(_.style(value)))
+        }
+      val tag = if (tagged.contains(columnIndex)) Tag.of(cell) else None
+      val allClasses = classes ++ tag.map(_._1)
+      val allStyles = styles ++ tag.flatMap(_._2)
+      "<td" +
+        (if (allClasses.isEmpty) "" else s""" class="${allClasses.mkString(" ")}"""") +
+        (if (dataText) """ data-text=""""" else "") +
+        (if (allStyles.isEmpty) "" else s""" style="${allStyles.mkString(";")}"""") +
+        ">"
     }
   }
 
@@ -316,7 +376,10 @@ object InterpreterTable extends TraitInterpreter {
           }
         }.collect { case (columnIndex, Some(scale)) => columnIndex -> scale }
 
-      Columns(numericSet, scales(shebang.bars)(BarScale.of, BarScale.explicit), scales(shebang.heats)(HeatScale.of, HeatScale.explicit))
+      // `tag=` names columns as the other two do, header cells aside; `all` names none (Tag).
+      val tagged = shebang.tags.filterNot(_ == ScaleColumns.All).flatMap(groups).flatten.filter(_ >= shebang.thColumn).toSet
+
+      Columns(numericSet, scales(shebang.bars)(BarScale.of, BarScale.explicit), scales(shebang.heats)(HeatScale.of, HeatScale.explicit), tagged)
     }
   }
 
@@ -358,7 +421,7 @@ object InterpreterTable extends TraitInterpreter {
       // Split once; the classes and the options are read from the same words.
       val tokens: Seq[String] = Option(trailing).toSeq.flatMap(_.trim.split("""\s+""")).filter(_.nonEmpty)
       csvPreferenceFrom(format).map(csvPreference =>
-        Shebang(csvPreference, thRow.toIntOrZero, thColumn.toIntOrZero, sanitizeClasses(tokens), parseRules(tokens, "bar"), parseRules(tokens, "heat"))
+        Shebang(csvPreference, thRow.toIntOrZero, thColumn.toIntOrZero, sanitizeClasses(tokens), parseRules(tokens, "bar"), parseRules(tokens, "heat"), parseRules(tokens, "tag").map(_.columns))
       )
     case _ => None
   }
