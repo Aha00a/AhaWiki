@@ -29,6 +29,24 @@ import scala.util.Try
 object AttachmentLogic extends Logging {
   val Root: String = "Attachment"
 
+  /**
+   * The largest request body the two upload routes accept: the whole multipart body, so the file
+   * itself has to be a few hundred bytes smaller. A larger body is answered with 413 before the
+   * action runs.
+   *
+   * Without it the routes took Play's `play.http.parser.maxDiskBuffer`, 10MB, and a 15MB PDF got
+   * 413. That setting is not raised instead because it is every route's limit for a body parsed
+   * to disk; only these two have a reason to take a large one.
+   *
+   * The clipboard route shares it rather than keeping 10MB: the same users, under the same
+   * permission, can already put any file of this size in the same bucket through the other
+   * route, so a lower limit there would protect nothing and only refuse a large screenshot.
+   *
+   * The reverse proxy in front has a body limit of its own and must allow at least this much.
+   * Where it is set is the operations side's fact; the wiki page Dev Attachment points to it.
+   */
+  val MaxUploadRequestBytes: Long = 50L * 1024 * 1024
+
   private val pathSegmentSanitizerRegex: String =
     "[^\\p{IsHangul}\\p{IsHan}\\p{IsHiragana}\\p{IsKatakana}a-zA-Z0-9._-]"
 

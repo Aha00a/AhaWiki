@@ -103,7 +103,11 @@ class WikiAttachment @Inject()(
     )
   }
 
-  def uploadAttachment(): Action[MultipartFormData[TemporaryFile]] = Action(parse.multipartFormData) { implicit request =>
+  /** Both upload routes parse with this; the limit and why the two share it are on the constant. */
+  private def uploadBodyParser: BodyParser[MultipartFormData[TemporaryFile]] =
+    parse.multipartFormData(AttachmentLogic.MaxUploadRequestBytes)
+
+  def uploadAttachment(): Action[MultipartFormData[TemporaryFile]] = Action(uploadBodyParser) { implicit request =>
     import logics.wikis.macros.S3AttachmentUrlLogic
     import play.api.libs.json.Json
 
@@ -263,7 +267,7 @@ class WikiAttachment @Inject()(
     })
   }
 
-  def uploadClipboardImage(): Action[MultipartFormData[TemporaryFile]] = Action(parse.multipartFormData) { implicit request =>
+  def uploadClipboardImage(): Action[MultipartFormData[TemporaryFile]] = Action(uploadBodyParser) { implicit request =>
     import logics.wikis.macros.S3AttachmentUrlLogic
     import play.api.libs.json.Json
 
