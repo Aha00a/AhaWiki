@@ -12,7 +12,8 @@ proportions, the label on its title, the line between the title and the picture 
 title, muted, one line -- and headings without a number, an underline or a fold button. And the
 filmstrip rail when it holds more slides than it is tall: the page cuts the rail short, since its
 few slides would fit, and checks that the rail scrolls and the thumbnails stay 16:9 rather than
-squeezed flat, which is how the EWS deck's 83 drew.
+squeezed flat, which is how the EWS deck's 83 drew -- and that moving to the last slide and back
+scrolls the rail to keep the current thumbnail in view, without scrolling the page.
 
 Under it, a `keynote` deck of seven, with the Pretendard stylesheet `InterpreterSlide` links for
 one: a cover with a picture behind it (`backdrop`), cards with arrows, three `big` slides -- a

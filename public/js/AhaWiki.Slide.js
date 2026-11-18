@@ -277,6 +277,7 @@
                 for (var j = 0; j < items.length; j++) {
                     items[j].classList.toggle('current', j === index);
                 }
+                railFollow();
             }
             if (notesBody) {
                 var aside = slides[index].querySelector('.slideNotes');
@@ -295,6 +296,28 @@
             setPressed(overBtn, deck.classList.contains('overview'));
             setPressed(notesBtn, deck.classList.contains('notes'));
             setPressed(fullBtn, document.fullscreenElement === deck);
+        }
+
+        // Scroll the filmstrip rail, and only the rail, so the current slide's thumbnail is in view.
+        // Every move, not only when the rail opens: in a deck longer than the rail the current one
+        // went out of sight (slide 64 of 83, 2026-11-18). Not scrollIntoView, which scrolls the page
+        // as well when the deck is not wholly on screen.
+        function railFollow() {
+            if (!thumbs || !deck.classList.contains('filmstrip')) {
+                return;
+            }
+            var item = thumbs.children[index];
+            if (!item) {
+                return;
+            }
+            var rail = thumbs.getBoundingClientRect();
+            var box = item.getBoundingClientRect();
+            var pad = parseFloat(getComputedStyle(thumbs).paddingTop) || 0;
+            if (box.top < rail.top + pad) {
+                thumbs.scrollTop += box.top - rail.top - pad;
+            } else if (box.bottom > rail.bottom - pad) {
+                thumbs.scrollTop += box.bottom - rail.bottom + pad;
+            }
         }
 
         function to(i, fromChannel) {
@@ -413,10 +436,8 @@
             deck.classList.add('filmstrip');
             paint();
             layout();
-            var current = thumbs.querySelector('.slideThumbItem.current');
-            if (current) {
-                current.scrollIntoView({ block: 'nearest' });
-            }
+            // Again now that layout() has given the rail its height.
+            railFollow();
         }
 
         function handleKey(e) {

@@ -402,6 +402,21 @@ window.addEventListener('load', async function () {
         const ratios = [...rail.querySelectorAll('.slideThumbItem')].map((item) => rect(item).width / rect(item).height);
         check('filmstrip: a full rail keeps its thumbnails 16:9', ratios.every((r) => near(r, 16 / 9, 0.1)), ratios.map((r) => r.toFixed(2)).join(','));
         check('filmstrip: a full rail scrolls', rail.scrollHeight > rail.clientHeight);
+        // Moving through the deck keeps the current slide's thumbnail in the rail's view -- the rail
+        // scrolled once, when the filmstrip opened, and slide 64 of 83 sat out of sight -- and
+        // scrolls only the rail, not the page.
+        const pageY = window.scrollY;
+        const inView = () => {
+            const r = rect(rail);
+            const c = rect(rail.querySelector('.slideThumbItem.current'));
+            return c.top >= r.top - 1 && c.bottom <= r.bottom + 1;
+        };
+        const last = slides.length - 1;
+        show(last);
+        const atLast = inView();
+        show(0);
+        check('filmstrip: the current thumbnail stays in the rail\'s view', atLast && inView());
+        check('filmstrip: following it leaves the page where it was', window.scrollY === pageY, pageY + ' -> ' + window.scrollY);
         rail.style.maxHeight = '';
         deck.querySelector('.slideFilmstrip').click();
         show(0);

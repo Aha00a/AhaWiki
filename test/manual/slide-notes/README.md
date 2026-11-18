@@ -19,4 +19,6 @@ deck. `?keep` leaves the presenter window open to look at.
 
 The presenter checks need a browser that opens popups. The Claude desktop app's browser pane does
 not -- `window.open` there replaces the page -- so run it in Chrome, or headless with
-`--disable-popup-blocking`.
+`--disable-popup-blocking` driven over the DevTools protocol. Not with `--dump-dom
+--virtual-time-budget`: the two windows' messages do not cross under virtual time, and «the
+presenter follows the deck» and «the deck follows the presenter» fail there with nothing wrong.
