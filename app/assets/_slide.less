@@ -139,6 +139,19 @@
 			color: var(--slide-accent);
 		}
 
+		// `cards`: the paragraphs around the row -- a line under the title, a closing line under the
+		// cards -- caption the cards rather than being the slide's body, so they are smaller than a
+		// card's title and muted, with what is in bold kept bright (2026-11-18: in the EWS deck they
+		// were the slide's full type and outsized the cards they explain). Paragraphs straight under
+		// a block only: not the label over the title, and not anything inside a card.
+		&.cards .slideContent div > p:not(.slideKicker) {
+			font-size: 0.5em;
+			line-height: 1.5;
+			color: var(--slide-muted);
+
+			b, strong { color: var(--color-text); }
+		}
+
 		// `stats`: the card's title is a figure, drawn large -- but no wider than its card, so five
 		// cards of «1,240 대» stay one line each rather than breaking before the unit.
 		&.stats .slideCards {

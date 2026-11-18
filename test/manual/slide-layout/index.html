@@ -46,6 +46,7 @@ if (!params.has('stacked')) {
 <section class="slide dark cards flow" data-index="1">
   <div class="slideNumber">2 / 6</div>
   <div class="slideContent"><div><div></div><div class="HeadingWrapper경보-흐름"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-edit-link="/w/Harness?action=edit&amp;revision=1&amp;lineStart=7&amp;lineEnd=16" data-line-start="7" data-line-end="16" data-edit-title="Edit section (r1, L7-L15)"><div class="InterpreterRenderContent"><h2 id="경보-흐름" class=""><a href="#경보-흐름" aria-label="Link to this heading" class="headingNumber">1.</a> 경보 흐름</h2></div></div>
+<p>각 단계가 어느 메뉴에 있는지</p>
 <ul class="slideCards">
 <li class="slideCard"><div class="slideCardTitle">수집</div><ul class="slideCardBody">
 <li>센서·영상</li>
@@ -60,7 +61,8 @@ if (!params.has('stacked')) {
 <li class="slideCard"><div class="slideCardTitle">확인</div><ul class="slideCardBody">
 <li>통화 결과 정산</li>
 </ul></li>
-</ul></div></div></div>
+</ul>
+<p><b>운영 기반</b> — 담당자 통보 · 장애 이력 · 감사 로그 · 권한</p></div></div></div>
 </section>
 <section class="slide dark cards stats" data-index="2">
   <div class="slideNumber">3 / 6</div>
@@ -81,7 +83,9 @@ if (!params.has('stacked')) {
 <li class="slideCard"><div class="slideCardTitle">24 시간</div><ul class="slideCardBody">
 <li>무중단 감시</li>
 </ul></li>
-</ul></div></div></div>
+</ul>
+<p><b>현장 장비 연동 후 즉시 운영 가능</b></p>
+<p>감사합니다</p></div></div></div>
 </section>
 <section class="slide slideHasPicture" data-index="3">
   <div class="slideNumber">4 / 6</div>
@@ -186,6 +190,15 @@ window.addEventListener('load', function () {
         }
         // offsetHeight, in the slide's own pixels: on a wide screen the stage is scaled up, and a
         // measured box would be read as more lines than it holds.
+        // The paragraphs around the row caption it: smaller than a card's title, muted, bold kept
+        // bright, and all of it still on the slide.
+        const captions = [...s.querySelectorAll('.slideContent div > p')];
+        check(name + ': captions smaller than a card title', captions.length > 0 && captions.every((p) => parseFloat(css(p, 'font-size')) < titleSize), captions.map((p) => css(p, 'font-size')).join(','));
+        check(name + ': captions muted, #9AA6B4', captions.every((p) => css(p, 'color') === 'rgb(154, 166, 180)'));
+        check(name + ': bold in a caption bright, #E8EDF3', [...s.querySelectorAll('.slideContent div > p b')].every((b) => css(b, 'color') === 'rgb(232, 237, 243)'));
+        const last = captions[captions.length - 1];
+        check(name + ': the last caption is on the slide', last.offsetTop + last.offsetHeight <= s.clientHeight - parseFloat(css(s, 'padding-bottom')) + 1,
+            (last.offsetTop + last.offsetHeight) + ' of ' + s.clientHeight);
         const lines = cards.map((c) => Math.round(c.querySelector('.slideCardTitle').offsetHeight / parseFloat(css(c.querySelector('.slideCardTitle'), 'line-height'))));
         check(name + ': every title fits on one line', lines.every((n) => n === 1), lines.join(','));
     }
@@ -254,6 +267,10 @@ window.addEventListener('load', function () {
         deck.querySelector('.slideOverview').click();
         show(0);
     }
+
+    // ?at=3 stays on the third slide afterwards, for a screenshot (--screenshot takes the page as
+    // the checks leave it).
+    if (!stacked && Number(params.get('at'))) show(Number(params.get('at')) - 1);
 
     const failed = out.filter((line) => line.startsWith('FAIL')).length;
     out.push(failed ? failed + ' FAILED' : 'ALL PASSED');

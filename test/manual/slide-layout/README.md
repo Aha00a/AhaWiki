@@ -32,6 +32,10 @@ and read the `<pre id="result">` in what it prints. Run it at more than one wind
 1920 and 3840 at least. Until 2026-11-18 a slide's padding followed the window, and a 1280px window
 is the one width at which that looked right; the page prints the padding and type size it measured.
 
+A run in which both pictures measure about 60px high and three times as wide is one in which
+`http.server` dropped the pictures' requests; they drew as broken images. Run it again -- two in
+about thirty runs did that on 2026-11-18, and the same page passed each time it was repeated.
+
 Give each run a new, empty `--user-data-dir`: `http.server` sends no cache headers, so a profile
 kept between runs can go on running yesterday's
 `js.js` against today's edit -- a fix that had already worked once read as failing that way.
