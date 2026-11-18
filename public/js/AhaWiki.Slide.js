@@ -29,6 +29,30 @@
         },
         hashForIndex: function (index) {
             return '#/' + (index + 1);
+        },
+        // The presenter window and the deck it follows talk on one BroadcastChannel per deck: the
+        // page and the deck's position on it, so two decks on a page, or two pages, never cross.
+        channelName: function (pathname, deckIndex) {
+            return 'AhaWiki.Slide:' + pathname + ':' + deckIndex;
+        },
+        // A window opened with this name is a presenter window: notes, next slide and a timer.
+        presenterWindowName: function (deckIndex) {
+            return 'AhaWikiSlidePresenter:' + deckIndex;
+        },
+        isPresenterWindowName: function (name, deckIndex) {
+            return name === Slide.presenterWindowName(deckIndex);
+        },
+        // Elapsed time as m:ss, or h:mm:ss past the hour.
+        formatElapsed: function (ms) {
+            var total = Math.max(0, Math.floor(ms / 1000));
+            var h = Math.floor(total / 3600);
+            var m = Math.floor((total % 3600) / 60);
+            var s = total % 60;
+            var ss = (s < 10 ? '0' : '') + s;
+            if (h > 0) {
+                return h + ':' + (m < 10 ? '0' : '') + m + ':' + ss;
+            }
+            return m + ':' + ss;
         }
     };
 
@@ -41,12 +65,14 @@
     var DESIGN_W = 1280;
     var DESIGN_H = 720;
 
-    function initDeck(deck) {
+    function initDeck(deck, deckIndex) {
         var slides = Array.prototype.slice.call(deck.querySelectorAll('.slide'));
         var total = slides.length;
         if (total === 0) {
             return;
         }
+        var hasNotes = !!deck.querySelector('.slideNotes');
+        var isPresenter = hasNotes && Slide.isPresenterWindowName(window.name, deckIndex);
 
         // Wrap the real slides in a stage; it is the 16:9 box the current slide is scaled into.
         var stageEl = document.createElement('div');
@@ -58,11 +84,42 @@
         var filmBtn = deck.querySelector('.slideFilmstrip');
         var overBtn = deck.querySelector('.slideOverview');
         var fullBtn = deck.querySelector('.slideFullscreen');
+        var notesBtn = deck.querySelector('.slideNotesToggle');
+        var presenterBtn = deck.querySelector('.slidePresenter');
+        var timerEl = deck.querySelector('.slideTimer');
         var lone = document.querySelectorAll('.slideDeck').length === 1;
         var index = 0;
         var thumbs = null; // thumbnail container (clones), built lazily and shared by both modes
 
+        // The speaker-notes panel under the stage. The notes themselves stay in each slide's
+        // <aside>, hidden; the panel shows a copy of the current one, and the next slide's title.
+        var notesPanel = null;
+        var notesBody = null;
+        var notesNext = null;
+        if (hasNotes) {
+            notesPanel = document.createElement('div');
+            notesPanel.className = 'slideNotesPanel';
+            notesNext = document.createElement('div');
+            notesNext.className = 'slideNotesNext';
+            notesBody = document.createElement('div');
+            notesBody.className = 'slideNotesBody';
+            notesPanel.appendChild(notesNext);
+            notesPanel.appendChild(notesBody);
+            deck.insertBefore(notesPanel, deck.querySelector('.slideChrome'));
+        }
+
+        // Keeps a presenter window and the deck it was opened from on the same slide. Either side
+        // may move; a window that has just opened asks where the other is.
+        var channel = null;
+        if (hasNotes && typeof BroadcastChannel !== 'undefined') {
+            channel = new BroadcastChannel(Slide.channelName(location.pathname, deckIndex));
+        }
+
         deck.classList.add('presenting');
+        if (isPresenter) {
+            deck.classList.add('notes');
+            deck.classList.add('presenterView');
+        }
 
         function setPressed(btn, on) {
             if (btn) {
@@ -110,14 +167,29 @@
                     items[j].classList.toggle('current', j === index);
                 }
             }
+            if (notesBody) {
+                var aside = slides[index].querySelector('.slideNotes');
+                notesBody.innerHTML = aside ? aside.innerHTML : '';
+                notesBody.classList.toggle('empty', !aside);
+                notesBody.scrollTop = 0;
+                var nextSlide = slides[index + 1];
+                var heading = nextSlide && nextSlide.querySelector('.slideContent h1, .slideContent h2, .slideContent h3');
+                notesNext.textContent = nextSlide
+                    ? '→ ' + (index + 2) + '. ' + (heading ? heading.textContent.trim() : '')
+                    : '→ (end)';
+            }
             setPressed(filmBtn, deck.classList.contains('filmstrip'));
             setPressed(overBtn, deck.classList.contains('overview'));
+            setPressed(notesBtn, deck.classList.contains('notes'));
             setPressed(fullBtn, document.fullscreenElement === deck);
         }
 
-        function to(i) {
+        function to(i, fromChannel) {
             index = Slide.clampIndex(i, total);
             paint();
+            if (channel && !fromChannel) {
+                channel.postMessage({ type: 'index', index: index });
+            }
             if (lone) {
                 try {
                     history.replaceState(null, '', Slide.hashForIndex(index));
@@ -177,11 +249,37 @@
             deck.insertBefore(thumbs, deck.firstChild);
         }
 
+        // The notes panel, the overview and the filmstrip each lay the deck out differently, so only
+        // one is on at a time.
+        function toggleNotes() {
+            if (!notesPanel) {
+                return;
+            }
+            if (deck.classList.contains('notes')) {
+                deck.classList.remove('notes');
+            } else {
+                deck.classList.remove('overview');
+                deck.classList.remove('filmstrip');
+                deck.classList.add('notes');
+            }
+            paint();
+            layout();
+        }
+
+        function openPresenter() {
+            if (!hasNotes) {
+                return;
+            }
+            var url = location.href.split('#')[0] + Slide.hashForIndex(index);
+            window.open(url, Slide.presenterWindowName(deckIndex), 'width=1100,height=800');
+        }
+
         function toggleOverview() {
             if (deck.classList.contains('overview')) {
                 deck.classList.remove('overview');
             } else {
                 deck.classList.remove('filmstrip');
+                deck.classList.remove('notes');
                 buildThumbs();
                 deck.classList.add('overview');
             }
@@ -197,6 +295,7 @@
                 return;
             }
             deck.classList.remove('overview');
+            deck.classList.remove('notes');
             buildThumbs();
             deck.classList.add('filmstrip');
             paint();
@@ -230,6 +329,14 @@
                 case 'l':
                 case 'L':
                     toggleFilmstrip(); e.preventDefault(); break;
+                case 'n':
+                case 'N':
+                    if (hasNotes) { toggleNotes(); e.preventDefault(); }
+                    break;
+                case 'p':
+                case 'P':
+                    if (hasNotes) { openPresenter(); e.preventDefault(); }
+                    break;
                 default:
                     break;
             }
@@ -245,11 +352,42 @@
         layout();
 
         deck.addEventListener('click', function (e) {
-            if (e.target.closest && (e.target.closest('.slideChrome') || e.target.closest('.slideThumbs'))) {
+            if (e.target.closest && (e.target.closest('.slideChrome') || e.target.closest('.slideThumbs') || e.target.closest('.slideNotesPanel'))) {
                 return;
             }
             go(1);
         });
+
+        if (notesBtn) { notesBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleNotes(); }); }
+        if (presenterBtn) { presenterBtn.addEventListener('click', function (e) { e.stopPropagation(); openPresenter(); }); }
+
+        if (channel) {
+            channel.addEventListener('message', function (e) {
+                var data = e.data || {};
+                if (data.type === 'index' && typeof data.index === 'number') {
+                    to(data.index, true);
+                } else if (data.type === 'hello') {
+                    channel.postMessage({ type: 'index', index: index });
+                }
+            });
+            if (isPresenter) {
+                channel.postMessage({ type: 'hello' });
+            }
+        }
+
+        // The presenter's clock: time since the window opened; clicking it starts it again.
+        if (isPresenter && timerEl) {
+            var started = Date.now();
+            timerEl.hidden = false;
+            timerEl.title = 'Elapsed (click to reset)';
+            var tick = function () { timerEl.textContent = Slide.formatElapsed(Date.now() - started); };
+            tick();
+            setInterval(tick, 1000);
+            timerEl.addEventListener('click', function (e) { e.stopPropagation(); started = Date.now(); tick(); });
+        }
+        if (isPresenter) {
+            deck.focus();
+        }
 
         if (filmBtn) { filmBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleFilmstrip(); }); }
         if (overBtn) { overBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleOverview(); }); }
@@ -277,6 +415,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        Array.prototype.slice.call(document.querySelectorAll('.slideDeck')).forEach(initDeck);
+        Array.prototype.slice.call(document.querySelectorAll('.slideDeck')).forEach(function (deck, i) {
+            initDeck(deck, i);
+        });
     });
 })();

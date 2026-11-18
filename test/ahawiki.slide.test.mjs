@@ -46,3 +46,23 @@ test('hashForIndex is the inverse of parseHashIndex', () => {
     assert.equal(Slide.hashForIndex(2), '#/3');
     assert.equal(Slide.parseHashIndex(Slide.hashForIndex(4), 10), 4);
 });
+
+test('channelName keeps decks and pages apart', () => {
+    assert.equal(Slide.channelName('/w/A', 0), 'AhaWiki.Slide:/w/A:0');
+    assert.notEqual(Slide.channelName('/w/A', 0), Slide.channelName('/w/A', 1));
+    assert.notEqual(Slide.channelName('/w/A', 0), Slide.channelName('/w/B', 0));
+});
+
+test('a presenter window is recognised by its name, and only for its own deck', () => {
+    assert.equal(Slide.isPresenterWindowName(Slide.presenterWindowName(0), 0), true);
+    assert.equal(Slide.isPresenterWindowName(Slide.presenterWindowName(0), 1), false);
+    assert.equal(Slide.isPresenterWindowName('', 0), false);
+});
+
+test('formatElapsed reads m:ss, and h:mm:ss past the hour', () => {
+    assert.equal(Slide.formatElapsed(0), '0:00');
+    assert.equal(Slide.formatElapsed(9500), '0:09');
+    assert.equal(Slide.formatElapsed(61000), '1:01');
+    assert.equal(Slide.formatElapsed(3600000 + 5 * 60000 + 7000), '1:05:07');
+    assert.equal(Slide.formatElapsed(-5), '0:00');
+});

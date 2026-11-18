@@ -2631,6 +2631,10 @@
 .AhaWiki .slideDeck .slideChrome {
   display: none;
 }
+.AhaWiki .slideDeck .slideNotes,
+.AhaWiki .slideDeck .slideNotesPanel {
+  display: none;
+}
 @media screen {
   .AhaWiki .slideDeck {
     background-color: var(--color-surface-alt);
@@ -2737,6 +2741,62 @@
   .AhaWiki .slideDeck.presenting .slideChrome .slideCounter {
     color: var(--color-text);
     font-size: 14px;
+  }
+  .AhaWiki .slideDeck.presenting .slideChrome .slideTimer {
+    cursor: pointer;
+    color: var(--color-text);
+    font-size: 16px;
+    font-variant-numeric: tabular-nums;
+  }
+  .AhaWiki .slideDeck.presenting.notes {
+    display: flex;
+    flex-direction: column;
+    aspect-ratio: auto;
+    height: auto;
+  }
+  .AhaWiki .slideDeck.presenting.notes .slideStage {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    max-height: 55vh;
+  }
+  .AhaWiki .slideDeck.presenting.notes .slideNotesPanel {
+    display: block;
+    box-sizing: border-box;
+    max-height: 40vh;
+    overflow-y: auto;
+    padding: 10px 16px;
+    border-top: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-size: 18px;
+    line-height: 1.6;
+  }
+  .AhaWiki .slideDeck.presenting.notes .slideNotesNext {
+    font-size: 14px;
+    opacity: 0.7;
+    margin-bottom: 6px;
+  }
+  .AhaWiki .slideDeck.presenting.notes .slideNotesBody.empty::before {
+    content: "—";
+    opacity: 0.5;
+  }
+  .AhaWiki .slideDeck.presenting.notes > .slideChrome {
+    position: static;
+  }
+  .AhaWiki .slideDeck.presenting.notes.presenterView {
+    max-width: none;
+  }
+  .AhaWiki .slideDeck.presenting.notes.presenterView .slideStage {
+    max-height: 42vh;
+  }
+  .AhaWiki .slideDeck.presenting.notes.presenterView .slideNotesPanel {
+    max-height: none;
+    font-size: 22px;
+  }
+  .AhaWiki .slideDeck.presenting.notes.presenterView .slideTimer {
+    font-size: 20px;
   }
   .AhaWiki .slideDeck.presenting.overview {
     aspect-ratio: auto;

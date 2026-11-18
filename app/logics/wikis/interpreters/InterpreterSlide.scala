@@ -9,13 +9,17 @@ import models.{ContextWikiPage, PageContent}
 // falls back to a static handout -- every slide shown, one per page -- which is what a slide deck
 // printed to PDF is anyway. Animation and fragments are screen-only, so the printed handout is
 // always the fully-revealed static form.
+//
+// Below a `???` line a slide holds its speaker notes (2026-11-18). They go in an <aside> the audience
+// never sees: on screen the script shows them in a panel under the slide (N) or in a presenter
+// window that follows the deck (P); the stacked no-script fallback and print leave them out.
 object InterpreterSlide extends TraitInterpreter {
 
   import models.tables.CalculatedLink
 
   override def toHtmlString(content: String)(implicit wikiContext: ContextWikiPage): String = {
     val pageContent: PageContent = PageContent(content)
-    val (eciv, chunks) = PaperSlideCore.render(content)
+    val (eciv, chunks) = PaperSlideCore.render(content, notes = true)
 
     val cssClass = pageContent.argument.lift(0).filter(_.nonEmpty)
       .getOrElse(eciv.variables.getOrElse("class", ""))
@@ -25,9 +29,17 @@ object InterpreterSlide extends TraitInterpreter {
       val orient = if (c.isLandscape) " landscape" else if (c.isPortrait) " portrait" else ""
       s"""<section class="slide$orient" data-index="${c.index}">
          |  <div class="slideNumber">${c.pageNo} / ${c.pageTotal}</div>
-         |  <div class="slideContent"><div>${c.html}</div></div>
+         |  <div class="slideContent"><div>${c.html}</div></div>${c.notesHtml.map(n => "\n  <aside class=\"slideNotes\">" + n + "</aside>").getOrElse("")}
          |</section>""".stripMargin
     }
+
+    // The notes and presenter-window buttons only where a slide has notes to read.
+    val notesButtons =
+      if (!chunks.exists(_.notesHtml.isDefined)) ""
+      else
+        """
+          |      <button type="button" class="slideNotesToggle" title="Speaker notes (N)" aria-label="Speaker notes" aria-pressed="false">&#9998;</button>
+          |      <button type="button" class="slidePresenter" title="Presenter window (P)" aria-label="Presenter window">&#9707;</button>""".stripMargin
 
     // tabindex makes the deck focusable so keyboard navigation is scoped to it (a click focuses it),
     // rather than hijacking the arrow keys of the whole page. Without JS the deck degrades to the
@@ -46,6 +58,7 @@ object InterpreterSlide extends TraitInterpreter {
        |      <button type="button" class="slideNext" title="Next slide (&#8594;)" aria-label="Next slide">&#8250;</button>
        |    </div>
        |    <div class="slideChromeGroup">
+       |      <span class="slideTimer" hidden></span>$notesButtons
        |      <button type="button" class="slideFullscreen" title="Fullscreen (F)" aria-label="Fullscreen" aria-pressed="false">&#9974;</button>
        |    </div>
        |  </div>

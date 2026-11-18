@@ -63,6 +63,36 @@ object SlideUnit {
       assertEquals(chunks(1).html.contains("b"), true)
     }
 
+    // Speaker notes: below a `???` line, kept out of the slide's content in an <aside>, and the
+    // notes buttons appear only on a deck that has some.
+    {
+      val html = Interpreters.toHtmlString("#!Slide\n= Title\nshown-marker\n???\nnotes-marker\n----\nplain")
+      assertEquals(count(html, "<aside class=\"slideNotes\">"), 1)
+      val aside = html.substring(html.indexOf("<aside class=\"slideNotes\">"))
+      assertEquals(aside.contains("notes-marker"), true)
+      val content = html.substring(html.indexOf("slideContent"), html.indexOf("<aside"))
+      assertEquals(content.contains("shown-marker"), true)
+      assertEquals(content.contains("notes-marker"), false)
+      assertEquals(html.contains("???"), false)
+      assertEquals(html.contains("slideNotesToggle"), true)
+      assertEquals(html.contains("slidePresenter"), true)
+      assertEquals(count(html, "<section class=\"slide"), 2)
+
+      val without = Interpreters.toHtmlString("#!Slide\none\n----\ntwo")
+      assertEquals(without.contains("slideNotes"), false)
+      assertEquals(without.contains("slidePresenter"), false)
+    }
+
+    // Notes are Slide's alone: in Paper the `???` line is text, and the core leaves it unless asked.
+    {
+      val (_, chunks) = PaperSlideCore.render("#!Paper\na\n???\nb")
+      assertEquals(chunks.head.notesHtml, None)
+      assertEquals(chunks.head.html.contains("b"), true)
+      val (_, slideChunks) = PaperSlideCore.render("#!Slide\na\n???\nb", notes = true)
+      assertEquals(slideChunks.head.notesHtml.exists(_.contains("b")), true)
+      assertEquals(slideChunks.head.html.contains("b"), false)
+    }
+
     // Guard: moving the split into PaperSlideCore left InterpreterPaper unchanged -- still an A4
     // .paperContent of .page divs with the default footer.
     {

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<title>slide notes harness</title>
+<link rel="stylesheet" href="../../../app/assets/wiki.css">
+<style>
+    body { font: 14px/1.5 system-ui, sans-serif; margin: 24px; }
+    #result { white-space: pre-wrap; }
+</style>
+</head>
+<body class="AhaWiki">
+<!-- What InterpreterSlide writes for three slides, the first two with notes (SlideUnit pins the
+     server side). The checks below drive the real AhaWiki.Slide.js against the real wiki.css. -->
+<div class="slideDeck " tabindex="0" data-total="3">
+<section class="slide" data-index="0">
+  <div class="slideNumber">1 / 3</div>
+  <div class="slideContent"><div><h1>첫 장</h1><p>audience-one</p></div></div>
+  <aside class="slideNotes"><p>notes-one 첫 장에서 할 말</p></aside>
+</section>
+<section class="slide" data-index="1">
+  <div class="slideNumber">2 / 3</div>
+  <div class="slideContent"><div><h1>둘째 장</h1><p>audience-two</p></div></div>
+  <aside class="slideNotes"><p>notes-two</p></aside>
+</section>
+<section class="slide" data-index="2">
+  <div class="slideNumber">3 / 3</div>
+  <div class="slideContent"><div><h1>셋째 장</h1><p>audience-three</p></div></div>
+</section>
+  <div class="slideChrome">
+    <div class="slideChromeGroup">
+      <button type="button" class="slideFilmstrip" title="Filmstrip (L)" aria-label="Filmstrip" aria-pressed="false">&#9636;</button>
+      <button type="button" class="slideOverview" title="Overview (O)" aria-label="Overview" aria-pressed="false">&#9638;</button>
+    </div>
+    <div class="slideChromeGroup">
+      <button type="button" class="slidePrev" title="Previous slide (&#8592;)" aria-label="Previous slide">&#8249;</button>
+      <span class="slideCounter"><span class="slideCurrent">1</span> / 3</span>
+      <button type="button" class="slideNext" title="Next slide (&#8594;)" aria-label="Next slide">&#8250;</button>
+    </div>
+    <div class="slideChromeGroup">
+      <span class="slideTimer" hidden></span>
+      <button type="button" class="slideNotesToggle" title="Speaker notes (N)" aria-label="Speaker notes" aria-pressed="false">&#9998;</button>
+      <button type="button" class="slidePresenter" title="Presenter window (P)" aria-label="Presenter window">&#9707;</button>
+      <button type="button" class="slideFullscreen" title="Fullscreen (F)" aria-label="Fullscreen" aria-pressed="false">&#9974;</button>
+    </div>
+  </div>
+</div>
+<pre id="result">running…</pre>
+<script src="../../../public/js/AhaWiki.Slide.js"></script>
+<script>
+// In the presenter window this page is opened again; it only shows itself there.
+if (!/^AhaWikiSlidePresenter/.test(window.name)) {
+    window.addEventListener('load', async function () {
+        const out = [];
+        const check = (name, ok) => out.push((ok ? 'PASS ' : 'FAIL ') + name);
+        const deck = document.querySelector('.slideDeck');
+        const visible = (el) => !!el && getComputedStyle(el).display !== 'none' && el.getClientRects().length > 0;
+        const asides = [...deck.querySelectorAll('.slideStage .slideNotes')];
+        const panel = deck.querySelector('.slideNotesPanel');
+
+        check('notes are hidden on the stage', asides.length === 2 && asides.every((a) => !visible(a)));
+        check('the panel is hidden until asked', !!panel && !visible(panel));
+
+        deck.querySelector('.slideNotesToggle').click();
+        check('N shows the panel', visible(panel));
+        check('the panel shows the current slide\'s notes', panel.textContent.includes('notes-one'));
+        check('the panel names the next slide', panel.textContent.includes('2. 둘째 장'));
+        check('the stage still shows the slide', visible(deck.querySelector('.slide.current .slideContent')));
+        const stage = deck.querySelector('.slideStage').getBoundingClientRect();
+        check('the panel sits under the stage', panel.getBoundingClientRect().top >= stage.bottom - 1);
+
+        deck.querySelector('.slideNext').click();
+        check('moving on changes the notes', panel.textContent.includes('notes-two') && !panel.textContent.includes('notes-one'));
+        deck.querySelector('.slideNext').click();
+        check('a slide without notes shows none', !panel.textContent.includes('notes-'));
+        deck.querySelector('.slidePrev').click();
+        deck.querySelector('.slidePrev').click();
+
+        deck.querySelector('.slideOverview').click();
+        check('the overview turns the notes off', !deck.classList.contains('notes'));
+        const thumbsNotes = [...deck.querySelectorAll('.slideThumbs .slideNotes')];
+        check('thumbnails do not show notes', thumbsNotes.length === 2 && thumbsNotes.every((a) => !visible(a)));
+        deck.querySelector('.slideOverview').click();
+
+        // The presenter window: opened on the same page, it follows this deck and this deck follows it.
+        const w = window.open(location.href.split('#')[0], AhaWiki.Slide.presenterWindowName(0), 'width=900,height=700');
+        if (!w) {
+            check('presenter window opened (popup blocked?)', false);
+        } else {
+            await new Promise((r) => setTimeout(r, 1500));
+            const pdeck = w.document.querySelector('.slideDeck');
+            check('the presenter window shows notes', pdeck && pdeck.classList.contains('presenterView') && pdeck.classList.contains('notes'));
+            check('the presenter window runs its clock', pdeck && !pdeck.querySelector('.slideTimer').hidden);
+            deck.querySelector('.slideNext').click();
+            await new Promise((r) => setTimeout(r, 300));
+            check('the presenter follows the deck', pdeck && pdeck.querySelector('.slideCurrent').textContent === '2');
+            pdeck.querySelector('.slideNext').click();
+            await new Promise((r) => setTimeout(r, 300));
+            check('the deck follows the presenter', deck.querySelector('.slideCurrent').textContent === '3');
+            if (!new URLSearchParams(location.search).has('keep')) w.close();
+        }
+        document.getElementById('result').textContent = out.join('\n');
+    });
+}
+</script>
+</body>
+</html>

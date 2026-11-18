@@ -15,10 +15,14 @@ object PaperSlideCore {
 
   private val landscapeMarkerRe = """(?m)^\s*#!landscape[ \t]*$""".r
   private val portraitMarkerRe  = """(?m)^\s*#!portrait[ \t]*$""".r
+  // The speaker-notes separator: a line of exactly `???` (remark.js's spelling). Only Slide asks for
+  // it; for Paper the line is text like any other.
+  private val notesMarkerRe     = """(?m)^\?\?\?[ \t]*$""".r
 
   // One rendered page/slide: its zero-based index, its 1-based number and the total (the same
   // {{pageNo}} / {{pageTotal}} Paper exposes as variables), the orientation its per-chunk marker
-  // asked for, and the chunk already rendered to HTML by InterpreterWiki.
+  // asked for, the chunk already rendered to HTML by InterpreterWiki, and -- when the caller asked
+  // for notes and the chunk has a `???` line -- what follows that line, rendered the same way.
   final case class Chunk(
     index: Int,
     pageNo: Int,
@@ -26,6 +30,7 @@ object PaperSlideCore {
     isLandscape: Boolean,
     isPortrait: Boolean,
     html: String,
+    notesHtml: Option[String] = None,
   )
 
   // Returns the variable holder (so the caller can read class / docId / header-footer variables and
@@ -33,7 +38,7 @@ object PaperSlideCore {
   // left at the last chunk's number; a caller that resolves {{pageNo}} per chunk must set it again
   // before each applyVariables -- InterpreterPaper does exactly that for its header and footer.
   //noinspection ZeroIndexToHead
-  def render(content: String)(implicit wikiContext: ContextWikiPage): (ExtractConvertInjectVariable, Seq[Chunk]) = {
+  def render(content: String, notes: Boolean = false)(implicit wikiContext: ContextWikiPage): (ExtractConvertInjectVariable, Seq[Chunk]) = {
     val pageContent: PageContent = PageContent(content)
 
     // #!var directive variables seed the holder; extract also pulls [[[#!Variable]]] blocks. Both run
@@ -55,8 +60,20 @@ object PaperSlideCore {
       val isLandscape    = landscapeMarkerRe.findFirstIn(chunk).isDefined
       val isPortrait     = portraitMarkerRe.findFirstIn(chunk).isDefined
       val strippedChunk  = landscapeMarkerRe.replaceAllIn(portraitMarkerRe.replaceAllIn(chunk, ""), "")
-      val paddedResolved = "\n" * offset + eciv.applyVariables(strippedChunk)
-      Chunk(index, index + 1, chunks.length, isLandscape, isPortrait, InterpreterWiki.toHtmlString(paddedResolved))
+      // The first `???` line splits what the audience sees from what the speaker reads. Both halves
+      // are padded to their own raw line numbers, so a partial-edit link in the notes opens the
+      // notes' lines, not the slide's.
+      val (body, notesText) = notesMarkerRe.findFirstMatchIn(strippedChunk).filter(_ => notes) match {
+        case Some(m) =>
+          val linesBefore = strippedChunk.substring(0, m.end).count(_ == '\n')
+          (strippedChunk.substring(0, m.start), Some((linesBefore, strippedChunk.substring(m.end))))
+        case None => (strippedChunk, None)
+      }
+      val paddedResolved = "\n" * offset + eciv.applyVariables(body)
+      val notesHtml = notesText.map { case (linesBefore, text) =>
+        InterpreterWiki.toHtmlString("\n" * (offset + linesBefore) + eciv.applyVariables(text))
+      }
+      Chunk(index, index + 1, chunks.length, isLandscape, isPortrait, InterpreterWiki.toHtmlString(paddedResolved), notesHtml)
     }
 
     (eciv, rendered)
