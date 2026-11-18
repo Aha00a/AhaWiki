@@ -90,6 +90,17 @@
     var FIT_MIN = 16;
     var FIT_MAX = 480;
 
+    // A heading's words, without the number the wiki puts in front of it -- hidden in a deck, but
+    // still in its text: «→ 7. 1. 통합 대시보드» (2026-11-18).
+    function headingText(heading) {
+        var copy = heading.cloneNode(true);
+        var numbers = copy.querySelectorAll('.headingNumber');
+        for (var i = 0; i < numbers.length; i++) {
+            numbers[i].parentNode.removeChild(numbers[i]);
+        }
+        return copy.textContent.trim();
+    }
+
     function fitTitles(slide) {
         var content = slide.querySelector('.slideContent');
         var titles = content ? content.querySelectorAll('h1, h2') : [];
@@ -277,7 +288,7 @@
                 var heading = nextSlide && (nextSlide.querySelector('.slideContent h1, .slideContent h2, .slideContent h3')
                     || nextSlide.querySelector('.slideNotes h1, .slideNotes h2, .slideNotes h3'));
                 notesNext.textContent = nextSlide
-                    ? '→ ' + (index + 2) + '. ' + (heading ? heading.textContent.trim() : '')
+                    ? '→ ' + (index + 2) + '. ' + (heading ? headingText(heading) : '')
                     : '→ (end)';
             }
             setPressed(filmBtn, deck.classList.contains('filmstrip'));

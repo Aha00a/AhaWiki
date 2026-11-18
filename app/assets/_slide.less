@@ -49,17 +49,7 @@
 			h2 { font-size: 1.5em; line-height: 1.15; }
 			img { max-width: 100%; }
 
-			// A heading on a slide is its title, not a section of a document (2026-11-18): no
-			// number, no underline or shadow, no indent by level, and no link to itself -- the
-			// number's anchor is that link, and following it would also take over the #/n the deck
-			// keeps in the address. js.js leaves out the fold button in a deck for the same reason.
-			h1, h2, h3, h4, h5, h6 {
-				margin-left: 0;
-				padding: 0;
-				border-bottom: none;
-				text-shadow: none;
-			}
-			.headingNumber { display: none; }
+			.slidePlainHeadings();
 
 			// The paragraph alone above the first heading: a small label over the title
 			// (InterpreterSlide marks it).
@@ -455,6 +445,26 @@
 	.slideNotes,
 	.slideNotesPanel {
 		display: none;
+	}
+
+	// The notes' headings are a script's, as a slide's are its title (2026-11-18: AhaMark notes drew
+	// `0.1.` before an `===` and an underline under it).
+	.slideNotesPanel {
+		.slidePlainHeadings();
+	}
+
+	// A heading on a slide is its title, not a section of a document (2026-11-18): no number, no
+	// underline or shadow, no indent by level, and no link to itself -- the number's anchor is that
+	// link, and following it would also take over the #/n the deck keeps in the address. js.js
+	// leaves out the fold button in a deck for the same reason.
+	.slidePlainHeadings() {
+		h1, h2, h3, h4, h5, h6 {
+			margin-left: 0;
+			padding: 0;
+			border-bottom: none;
+			text-shadow: none;
+		}
+		.headingNumber { display: none; }
 	}
 
 	@media screen {

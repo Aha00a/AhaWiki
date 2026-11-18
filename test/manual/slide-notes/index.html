@@ -12,7 +12,12 @@
 <body class="AhaWiki">
 <!-- What InterpreterSlide writes for four slides, all but the third with notes, the last a picture
      whose title is only in its notes (SlideUnit pins the
-     server side). The checks below drive the real AhaWiki.Slide.js against the real wiki.css. -->
+     server side). The checks below drive the real AhaWiki.Slide.js against the real wiki.css. The
+     second slide's title and the last slide's notes are headings as the wiki writes them, with a
+     number in front, inside the page's content, where the wiki draws a heading as a section of a
+     document: in the notes that drew `0.1.` and an underline, and the line naming the next slide
+     read the hidden number out (2026-11-18). -->
+<div role="main" class="wikiContent"><div class="limitWidth">
 <div class="slideDeck " tabindex="0" data-total="4">
 <section class="slide" data-index="0">
   <div class="slideNumber">1 / 4</div>
@@ -21,7 +26,8 @@
 </section>
 <section class="slide" data-index="1">
   <div class="slideNumber">2 / 4</div>
-  <div class="slideContent"><div><h1>둘째 장</h1><p>audience-two</p></div></div>
+  <div class="slideContent"><div><div></div><div class="HeadingWrapper둘째-장"><div class="InterpreterRenderMetaWrapper" style="position: relative;"><div class="InterpreterRenderContent"><h1 id="둘째-장" class=""><a href="#둘째-장" aria-label="Link to this heading" class="headingNumber">1.</a> 둘째 장</h1></div></div>
+<p>audience-two</p></div></div></div>
   <aside class="slideNotes"><p>notes-two</p></aside>
 </section>
 <section class="slide" data-index="2">
@@ -31,7 +37,8 @@
 <section class="slide" data-index="3">
   <div class="slideNumber">4 / 4</div>
   <div class="slideContent"><div><p>(only a picture)</p></div></div>
-  <aside class="slideNotes"><h3>그림 장</h3><p>notes-four</p></aside>
+  <aside class="slideNotes"><div></div><div class="HeadingWrapper그림-장"><div class="InterpreterRenderMetaWrapper" style="position: relative;"><div class="InterpreterRenderContent"><h3 id="그림-장" class=""><a href="#그림-장" aria-label="Link to this heading" class="headingNumber">0.1.</a> 그림 장</h3></div></div>
+<p>notes-four</p></div></aside>
 </section>
   <div class="slideChrome">
     <div class="slideChromeGroup">
@@ -51,6 +58,7 @@
     </div>
   </div>
 </div>
+</div></div>
 <pre id="result">running…</pre>
 <script src="../../../public/js/AhaWiki.Slide.js"></script>
 <script>
@@ -70,7 +78,8 @@ if (!/^AhaWikiSlidePresenter/.test(window.name)) {
         deck.querySelector('.slideNotesToggle').click();
         check('N shows the panel', visible(panel));
         check('the panel shows the current slide\'s notes', panel.textContent.includes('notes-one'));
-        check('the panel names the next slide', panel.textContent.includes('2. 둘째 장'));
+        // Its title, without the number the wiki puts in front of a heading.
+        check('the panel names the next slide', panel.querySelector('.slideNotesNext').textContent === '→ 2. 둘째 장');
         check('the stage still shows the slide', visible(deck.querySelector('.slide.current .slideContent')));
         const stage = deck.querySelector('.slideStage').getBoundingClientRect();
         check('the panel sits under the stage', panel.getBoundingClientRect().top >= stage.bottom - 1);
@@ -79,7 +88,14 @@ if (!/^AhaWikiSlidePresenter/.test(window.name)) {
         check('moving on changes the notes', panel.textContent.includes('notes-two') && !panel.textContent.includes('notes-one'));
         deck.querySelector('.slideNext').click();
         check('a slide without notes shows none', !panel.textContent.includes('notes-'));
-        check('a picture slide is named by the heading in its notes', panel.textContent.includes('4. 그림 장'));
+        check('a picture slide is named by the heading in its notes', panel.querySelector('.slideNotesNext').textContent === '→ 4. 그림 장');
+        deck.querySelector('.slideNext').click();
+        const notesHeading = panel.querySelector('h3');
+        const css = (el, prop) => getComputedStyle(el).getPropertyValue(prop).trim();
+        check('a heading in the notes shows no number', !visible(notesHeading.querySelector('.headingNumber')));
+        check('a heading in the notes has no underline, shadow or indent',
+            css(notesHeading, 'border-bottom-style') === 'none' && css(notesHeading, 'text-shadow') === 'none' && css(notesHeading, 'margin-left') === '0px');
+        deck.querySelector('.slidePrev').click();
         deck.querySelector('.slidePrev').click();
         deck.querySelector('.slidePrev').click();
 

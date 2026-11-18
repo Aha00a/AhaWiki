@@ -3,7 +3,10 @@
 Drives the real `public/js/AhaWiki.Slide.js` against the real `app/assets/wiki.css` on a deck shaped
 like what `InterpreterSlide` writes, and checks the speaker notes: hidden on the stage and in
 thumbnails, the panel `N` opens under the slide, and the presenter window `P` opens, which follows
-the deck and which the deck follows.
+the deck and which the deck follows. Inside the page's content, as on a wiki page, a heading in the
+notes is drawn as a slide's is -- no number, no underline -- and the line naming the next slide
+leaves out the number the wiki puts in front of a heading; until 2026-11-18 the notes drew `0.1.`
+and the line read «→ 2. 1. 둘째 장».
 
 Serve the repository root and open the page:
 

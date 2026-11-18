@@ -2917,6 +2917,20 @@
 .AhaWiki .slideDeck .slideNotesPanel {
   display: none;
 }
+.AhaWiki .slideDeck .slideNotesPanel h1,
+.AhaWiki .slideDeck .slideNotesPanel h2,
+.AhaWiki .slideDeck .slideNotesPanel h3,
+.AhaWiki .slideDeck .slideNotesPanel h4,
+.AhaWiki .slideDeck .slideNotesPanel h5,
+.AhaWiki .slideDeck .slideNotesPanel h6 {
+  margin-left: 0;
+  padding: 0;
+  border-bottom: none;
+  text-shadow: none;
+}
+.AhaWiki .slideDeck .slideNotesPanel .headingNumber {
+  display: none;
+}
 @media screen {
   .AhaWiki .slideDeck {
     background-color: var(--color-surface-alt);
