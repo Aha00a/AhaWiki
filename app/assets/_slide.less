@@ -11,6 +11,13 @@
 
 .slideDeck {
 	@slideRatio: ~"16 / 9";
+	// The padding of a slide drawn at its fixed design size, 1280x720: 5% and 7% of its width, in px
+	// (2026-11-18). It was 5cqw 7cqw, but cqw in the slide's own padding is read against a query
+	// container above the slide -- an element is never its own -- and with none above it that is the
+	// window: on a 3840px screen a 1280px slide got 192px by 268.8px of padding, its type shrank
+	// with the box inside, and a screenshot took a third of its height. Only a 1280px window drew it
+	// as designed. cqw inside the slide is the slide's and stays.
+	@slideDesignPadding: 64px 89.6px;
 
 	.slide {
 		container-type: inline-size;
@@ -236,7 +243,9 @@
 			aspect-ratio: @slideRatio;
 			width: 100%;
 			margin: 10px auto;
-			padding: 4cqw 6cqw;
+			// 4% and 6% of the slide's width: a percentage padding is of the containing block's width,
+			// which the slide fills. Not cqw, for the reason at @slideDesignPadding.
+			padding: 4% 6%;
 			border: 1px solid var(--color-border);
 			.boxShadow(10px 10px 50px 5px var(--color-shadow-soft));
 		}
@@ -310,7 +319,7 @@
 					margin: 0;
 					border: none;
 					box-shadow: none;
-					padding: 5cqw 7cqw;
+					padding: @slideDesignPadding;
 					transform-origin: center;
 					transform: translate(-50%, -50%) scale(var(--slide-scale, 1));
 					display: none;
@@ -333,7 +342,7 @@
 				margin: 0;
 				border: none;
 				box-shadow: none;
-				padding: 5cqw 7cqw;
+				padding: @slideDesignPadding;
 				transform-origin: top left;
 				transform: scale(var(--thumb-scale, 1));
 				pointer-events: none;
@@ -524,7 +533,7 @@
 					margin: 0;
 					border: none;
 					box-shadow: none;
-					padding: 5cqw 7cqw;
+					padding: @slideDesignPadding;
 					transform-origin: center;
 					transform: translate(-50%, -50%) scale(var(--slide-scale, 1));
 					display: none;

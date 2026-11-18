@@ -184,12 +184,15 @@ window.addEventListener('load', function () {
             check('stats: the figure is well over the body', titleSize >= bodySize * 1.7, titleSize + ' / ' + bodySize);
             check('stats: no arrows', css(cards[1], 'content', '::before') === 'none' || css(cards[1], 'content', '::before') === 'normal');
         }
-        const lines = cards.map((c) => Math.round(rect(c.querySelector('.slideCardTitle')).height / parseFloat(css(c.querySelector('.slideCardTitle'), 'line-height'))));
+        // offsetHeight, in the slide's own pixels: on a wide screen the stage is scaled up, and a
+        // measured box would be read as more lines than it holds.
+        const lines = cards.map((c) => Math.round(c.querySelector('.slideCardTitle').offsetHeight / parseFloat(css(c.querySelector('.slideCardTitle'), 'line-height'))));
         check(name + ': every title fits on one line', lines.every((n) => n === 1), lines.join(','));
     }
 
     // A picture fills the height under the title, inside the slide, in its own proportions.
-    for (const [i, name, ratio] of [[3, '16:9 picture', 1920 / 1080], [4, 'tall picture in a link', 1080 / 1920]]) {
+    // share: the most of the paragraph's width the picture may take -- the 16:9 one was given 93%.
+    for (const [i, name, ratio, share] of [[3, '16:9 picture', 1920 / 1080, 0.93], [4, 'tall picture in a link', 1080 / 1920, 1]]) {
         const s = show(i);
         const img = s.querySelector('.slidePicture img');
         const box = rect(img);
@@ -201,9 +204,33 @@ window.addEventListener('load', function () {
         check(name + ': its proportions kept', near(box.width / box.height, ratio, ratio * 0.02), (box.width / box.height).toFixed(3));
         const content = rect(s.querySelector('.slideContent'));
         check(name + ': centred', near(box.left + box.width / 2, content.left + content.width / 2, 2));
-        check(name + ': fills the height left under the title', box.bottom >= slideBox.bottom - padBottom - 4 || near(box.width, content.width, 2),
+        const widest = rect(img.closest('.slidePicture')).width * share;
+        // A picture is not stretched past its own size, which on a wide stacked slide comes first.
+        const atOwnSize = near(img.offsetWidth, img.naturalWidth, 2);
+        check(name + ': fills the height left under the title, or the width it may take', box.bottom >= slideBox.bottom - padBottom - 4 || near(box.width, widest, 2) || atOwnSize,
             'gap ' + Math.round(slideBox.bottom - padBottom - box.bottom));
         check(name + ': has a border', css(img, 'border-top-style') === 'solid');
+        // In the slide's own pixels, before any scaling: the same on any screen.
+        check(name + ': at least half the slide high', img.offsetHeight >= s.clientHeight * 0.5 || near(box.width, widest, 2) || atOwnSize,
+            img.offsetHeight + ' of ' + s.clientHeight);
+    }
+
+    // The slide's margins and type are the slide's, not the window's (2026-11-18): on a 3840px
+    // screen the padding came to 192px by 268.8px on a 1280x720 slide -- cqw on the slide's own
+    // padding is read against the window, since an element cannot be its own query container --
+    // and a screenshot took a third of the slide. Run this at several window widths.
+    {
+        const s = show(3);
+        const padTop = parseFloat(css(s, 'padding-top'));
+        const padLeft = parseFloat(css(s, 'padding-left'));
+        const fontSize = parseFloat(css(s.querySelector('.slideContent'), 'font-size'));
+        out.push('window ' + innerWidth + 'px: slide ' + s.offsetWidth + 'x' + s.offsetHeight + ', padding ' + padTop + ' ' + padLeft + ', type ' + fontSize.toFixed(2));
+        if (stacked) {
+            check('stacked: the padding is a share of the slide', near(padTop / s.offsetWidth, 0.04, 0.002) && near(padLeft / s.offsetWidth, 0.06, 0.002));
+        } else {
+            check('stage: the padding is 5% and 7% of the 1280px slide', near(padTop, 64, 0.5) && near(padLeft, 89.6, 0.5));
+            check('stage: the type is the slide\'s', near(fontSize, (1280 - 2 * 89.6) * 0.042, 0.5));
+        }
     }
 
     // The label over a title.
@@ -221,6 +248,9 @@ window.addEventListener('load', function () {
         const thumb = deck.querySelectorAll('.slideThumbItem')[3];
         const img = thumb.querySelector('.slidePicture img');
         check('overview: the picture stays inside its thumbnail', rect(img).bottom <= rect(thumb).bottom + 1 && rect(img).right <= rect(thumb).right + 1);
+        const clone = thumb.querySelector('.slide');
+        check('overview: a thumbnail has the stage\'s padding', near(parseFloat(css(clone, 'padding-top')), 64, 0.5) && near(parseFloat(css(clone, 'padding-left')), 89.6, 0.5),
+            css(clone, 'padding'));
         deck.querySelector('.slideOverview').click();
         show(0);
     }

@@ -28,8 +28,12 @@ Headless, the three of them:
 chrome --headless=new --window-size=1400,1000 --virtual-time-budget=5000 --dump-dom "http://localhost:9997/test/manual/slide-layout/index.html?theme=dark"
 ```
 
-and read the `<pre id="result">` in what it prints. Give each run a new, empty `--user-data-dir`:
-`http.server` sends no cache headers, so a profile kept between runs can go on running yesterday's
+and read the `<pre id="result">` in what it prints. Run it at more than one window width -- 1280,
+1920 and 3840 at least. Until 2026-11-18 a slide's padding followed the window, and a 1280px window
+is the one width at which that looked right; the page prints the padding and type size it measured.
+
+Give each run a new, empty `--user-data-dir`: `http.server` sends no cache headers, so a profile
+kept between runs can go on running yesterday's
 `js.js` against today's edit -- a fix that had already worked once read as failing that way.
 
 The deck sits in the wrapper a `[[[#!Slide]]]` block gets on a page. The first deck on the
