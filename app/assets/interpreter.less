@@ -311,7 +311,10 @@
 					// A stuck cell needs a background of its own, or the cells passing under it show
 					// through the header's translucent colour: the page's colour under the header's.
 					// A collapsed border is painted by the table and stays behind when the cell moves,
-					// so the edge it leaves on is drawn again with an inset shadow.
+					// so the edge it leaves on is drawn again with an inset shadow. The table's own
+					// left border is such a border too: a column stuck at left 0 left its 1px empty,
+					// and the scrolled cells showed through it, so the column sticks 1px further left
+					// and its background covers that pixel. The top edge has no such gap.
 					--sticky-bg: ~"linear-gradient(var(--color-table-header-bg), var(--color-table-header-bg)), var(--color-bg)";
 					> thead > tr > * {
 						position: sticky;
@@ -322,13 +325,13 @@
 					}
 					> tbody > tr > th:first-child {
 						position: sticky;
-						left: 0;
+						left: -1px;
 						z-index: 1;
 						background: var(--sticky-bg);
 						box-shadow: inset -1px 0 var(--color-table-border);
 					}
 					&:has(> tbody > tr > th) > thead > tr > :first-child {
-						left: 0;
+						left: -1px;
 						z-index: 3;
 						box-shadow: inset -1px -1px var(--color-table-border);
 					}

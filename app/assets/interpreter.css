@@ -261,13 +261,13 @@
 }
 .AhaWiki .InterpreterRenderMetaWrapper.Table .InterpreterRenderContent .InterpreterTable > tbody > tr > th:first-child {
   position: sticky;
-  left: 0;
+  left: -1px;
   z-index: 1;
   background: var(--sticky-bg);
   box-shadow: inset -1px 0 var(--color-table-border);
 }
 .AhaWiki .InterpreterRenderMetaWrapper.Table .InterpreterRenderContent .InterpreterTable:has(> tbody > tr > th) > thead > tr > :first-child {
-  left: 0;
+  left: -1px;
   z-index: 3;
   box-shadow: inset -1px -1px var(--color-table-border);
 }
