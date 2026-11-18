@@ -90,7 +90,8 @@ object InterpreterSlide extends TraitInterpreter {
    *    label over a title -- and `slideAfterKicker` on that heading.
    *  - `slidePicture` on a paragraph that holds one picture and nothing else, `slideFill` on each
    *    block between it and the slide, and `slideHasPicture` for the section: the blocks become a
-   *    column the picture fills, so it shrinks to the height left under the title.
+   *    column the picture fills, so it shrinks to the height left under the title. A width given
+   *    to the picture becomes its max-width.
    *  - On a `cards` slide, the first list that is not inside another becomes the cards: `slideCards`
    *    on it, `slideCard` on each item, its own text in a `slideCardTitle`, and the sub-list under
    *    it -- which AhaMark writes as the next sibling of the item, not inside it -- moved inside as
@@ -167,9 +168,22 @@ object InterpreterSlide extends TraitInterpreter {
     pictures.foreach { p =>
       p.addClass("slidePicture")
       blocksBetween(p, root).foreach(_.addClass("slideFill"))
+      pictureIn(p).foreach(widthAsLimit)
     }
     pictures.nonEmpty
   }
+
+  // The width a picture was given (`[[Attachment(x.webp, 93%)]]` writes `style="width: 93%"`)
+  // becomes the most it may take. Held to that width and, by the slide, to the height left, its box
+  // lost its proportions: the picture sat inside a frame wider than itself (2026-11-18, the EWS deck,
+  // whose screenshots all carry 93%). A style with anything else in it is left as written.
+  private val widthOnlyStyleRe = """^\s*width:\s*([^;]+?)\s*;?\s*$""".r
+
+  private def widthAsLimit(img: Element): Unit =
+    img.attr("style") match {
+      case widthOnlyStyleRe(width) => img.attr("style", s"max-width: min(100%, $width)")
+      case _ =>
+    }
 
   private def markCards(root: Element): Boolean = {
     val lists = Set("ul", "ol")

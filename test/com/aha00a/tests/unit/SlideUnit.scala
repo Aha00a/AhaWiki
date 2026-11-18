@@ -150,6 +150,12 @@ object SlideUnit {
       val captioned = Interpreters.toHtmlString("#!Slide\n== 상황판\n[[Image(/a.webp)]] 설명")
       assertEquals(captioned.contains("slidePicture"), false)
       assertEquals(sections(captioned), Seq("slide"))
+      // A width given to the picture becomes the most it may take, so the height can still hold it
+      // to its proportions; a picture that is not fitted keeps the width as written.
+      val sized = Interpreters.toHtmlString("#!Slide\n== 상황판\n[[Image(/a.webp, 93%)]]")
+      assertEquals(sized.contains("style=\"max-width: min(100%, 93%)\""), true)
+      assertEquals(sized.contains("style=\"width: 93%\""), false)
+      assertEquals(Interpreters.toHtmlString("#!Slide\n== 상황판\n[[Image(/a.webp, 93%)]] 설명").contains("style=\"width: 93%\""), true)
     }
 
     // `cards`: the first list becomes cards, each item's sub-list moved inside it as the body.

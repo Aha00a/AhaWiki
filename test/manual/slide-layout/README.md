@@ -1,7 +1,9 @@
 # slide-layout
 
 Draws the slide layouts `InterpreterSlide` marks up -- a `dark cover`, `dark cards flow`,
-`dark cards stats`, a screen slide with a label over its title and a 16:9 picture, a tall picture
+`dark cards stats`, a screen slide with a label over its title and a 16:9 picture given a width (as
+`[[Attachment(x.webp, 93%)]]` leaves it once `InterpreterSlide` has made the width a max-width;
+left as `width: 93%`, the picture's box loses its proportions and the check says so), a tall picture
 inside a link, and a plain slide -- with the real `app/assets/wiki.css`, `public/js/js.js` and
 `public/js/AhaWiki.Slide.js`, and checks what the stylesheet is for: the dark colours whatever the
 theme, the cards in one row of equal width with arrows between them, a figure that stays on one
