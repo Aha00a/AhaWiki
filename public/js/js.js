@@ -148,7 +148,9 @@ document.addEventListener('DOMContentLoaded', function () {
         // top of the slide content -- and cover it entirely in the small overview thumbnails -- so
         // a presentation skips them. The page is still edited from the normal view. So does the
         // fold toggle below (2026-11-18): it put a faint button before every `==` title on a slide,
-        // and folding a slide's only section would leave it empty.
+        // and folding a slide's only section would leave it empty. For that one it is the heading
+        // that must not be in a deck, not only the wrapper: the wrapper of a [[[#!Slide]]] block
+        // holds the deck, and its heading lookup reached the deck's first `==` title.
         var insideSlideDeck = wrapper.closest && wrapper.closest('.slideDeck');
         var editLink = null;
         var copyButton = null;
@@ -258,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         var foldToggle = null;
-        if (heading && !wrapper.closest('.paperContent') && !insideSlideDeck) {
+        if (heading && !wrapper.closest('.paperContent') && !heading.closest('.slideDeck')) {
             foldToggle = wrapper.querySelector('.InterpreterRenderFoldToggle');
             if (!foldToggle) {
                 foldToggle = document.createElement('button');

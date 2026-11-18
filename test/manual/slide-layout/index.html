@@ -30,9 +30,12 @@ if (!params.has('stacked')) {
      side): a dark cover, dark cards with arrows, dark figures, a screen with a label over its title
      and a 16:9 picture, a tall picture inside a link, and a plain slide. Change InterpreterSlide's
      output and these are to be changed with it. The checks below run the real wiki.css, js.js and
-     AhaWiki.Slide.js over them. -->
+     AhaWiki.Slide.js over them. The deck sits in the wrapper a [[[#!Slide]]] block on a page gets,
+     as on the InterpreterSlide page: js.js's fold button once reached through that wrapper into
+     the deck's first `==` title. -->
 <div role="main" class="wikiContent">
 <div class="limitWidth">
+<div class="InterpreterRenderMetaWrapper Slide" style="position: relative;" data-edit-link="/w/Harness?action=edit&amp;revision=1&amp;lineStart=1&amp;lineEnd=44" data-line-start="1" data-line-end="44" data-edit-title="Edit section (r1, L1-L43)"><div class="InterpreterRenderContent">
 <div class="slideDeck " tabindex="0" data-total="6">
 <section class="slide dark cover" data-index="0">
   <div class="slideNumber">1 / 6</div>
@@ -115,6 +118,7 @@ if (!params.has('stacked')) {
     </div>
   </div>
 </div>
+</div></div>
 </div>
 </div>
 <pre id="result">running…</pre>
