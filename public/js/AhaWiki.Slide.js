@@ -174,10 +174,16 @@
         }
 
         deck.classList.add('presenting');
-        if (isPresenter) {
+        // A deck with notes opens with the panel under the slide (owner's call, 2026-11-19): on a
+        // page the reader is usually the speaker rehearsing. Fullscreen is the audience's view, so
+        // it folds the panel away and gives it back on the way out -- see toggleFullscreen().
+        if (hasNotes) {
             deck.classList.add('notes');
+        }
+        if (isPresenter) {
             deck.classList.add('presenterView');
         }
+        var notesBeforeFullscreen = false;
 
         function setPressed(btn, on) {
             if (btn) {
@@ -345,7 +351,23 @@
                     document.exitFullscreen();
                 }
             } else if (deck.requestFullscreen) {
-                deck.requestFullscreen();
+                notesBeforeFullscreen = !isPresenter && deck.classList.contains('notes');
+                if (notesBeforeFullscreen) {
+                    deck.classList.remove('notes');
+                    paint();
+                }
+                var asked = deck.requestFullscreen();
+                // Refused (no user gesture, a frame that forbids it): no change event follows.
+                if (asked && asked.catch) {
+                    asked.catch(function () {
+                        if (notesBeforeFullscreen) {
+                            notesBeforeFullscreen = false;
+                            deck.classList.add('notes');
+                            paint();
+                            layout();
+                        }
+                    });
+                }
             }
         }
 
@@ -547,6 +569,14 @@
             new ResizeObserver(function () { layout(); }).observe(stageEl);
         }
         document.addEventListener('fullscreenchange', function () {
+            if (document.fullscreenElement !== deck && notesBeforeFullscreen
+                    && !deck.classList.contains('overview') && !deck.classList.contains('filmstrip')) {
+                deck.classList.add('notes');
+                paint();
+            }
+            if (document.fullscreenElement !== deck) {
+                notesBeforeFullscreen = false;
+            }
             setPressed(fullBtn, document.fullscreenElement === deck);
             layout();
         });
