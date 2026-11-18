@@ -125,8 +125,8 @@ if (!params.has('stacked')) {
 </div></div>
 <!-- A `#!Slide keynote` deck, with the stylesheet InterpreterSlide links for one: a cover with a
      picture behind it (`backdrop`), cards with arrows, two `big` slides -- a short title and a long
-     one that has to wrap between words -- a screen with a label over its title, figures with a
-     closing line, and a `big` slide that is one word in an h1. -->
+     one that has to wrap between words -- a screen with a label over its title, figures with
+     arrows and a closing line, and a `big` slide that is one word in an h1. -->
 <div class="InterpreterRenderMetaWrapper Slide" style="position: relative;" data-edit-link="/w/Harness?action=edit&amp;revision=1&amp;lineStart=46&amp;lineEnd=90" data-line-start="46" data-line-end="90" data-edit-title="Edit section (r1, L46-L89)"><div class="InterpreterRenderContent">
 <link rel="stylesheet" href="../../../public/vendor/pretendard/pretendardvariable-dynamic-subset.css">
 <div class="slideDeck keynote" tabindex="0" data-total="7">
@@ -173,7 +173,7 @@ if (!params.has('stacked')) {
 </div><div class="HeadingWrapper통합-대시보드 slideFill"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-edit-link="/w/Harness?action=edit&amp;revision=1&amp;lineStart=75&amp;lineEnd=77" data-line-start="75" data-line-end="77" data-edit-title="Edit section (r1, L75-L76)"><div class="InterpreterRenderContent"><h2 id="통합-대시보드" class="slideAfterKicker"><a href="#통합-대시보드" aria-label="Link to this heading" class="headingNumber">1.</a> 통합 대시보드</h2></div></div>
 <p class="slidePicture"><span class="Macro InlineMacro Image"><img src="screen.svg" alt="screen.svg" onerror="this.onerror=null;this.src='/assets/img/attachmentFallback.svg';" style="max-width: min(100%, 93%)"></span></p></div></div></div>
 </section>
-<section class="slide cards stats" data-index="5">
+<section class="slide cards stats flow" data-index="5">
   <div class="slideNumber">6 / 7</div>
   <div class="slideContent"><div><div></div><div class="HeadingWrapper구축-현황"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-edit-link="/w/Harness?action=edit&amp;revision=1&amp;lineStart=79&amp;lineEnd=87" data-line-start="79" data-line-end="87" data-edit-title="Edit section (r1, L79-L86)"><div class="InterpreterRenderContent"><h2 id="구축-현황" class=""><a href="#구축-현황" aria-label="Link to this heading" class="headingNumber">1.</a> 구축 현황</h2></div></div>
 <ul class="slideCards">
@@ -287,6 +287,8 @@ window.addEventListener('load', async function () {
         if (name === 'flow') {
             check('flow: no arrow before the first card', css(cards[0], 'content', '::before') === 'none' || css(cards[0], 'content', '::before') === 'normal');
             check('flow: an arrow before the others', cards.slice(1).every((c) => css(c, 'content', '::before') === '"▶"'));
+            // In a box, halfway down it -- what keynote moves to the title's line.
+            check('flow: an arrow halfway down its card', cards.slice(1).every((c) => near(parseFloat(css(c, 'top', '::before')), c.clientHeight / 2, 1)));
         } else {
             // Five cards of «1,240 대» is the narrowest case: the figure gives way to its card there.
             check('stats: the figure is well over the body', titleSize >= bodySize * 1.7, titleSize + ' / ' + bodySize);
@@ -408,6 +410,14 @@ window.addEventListener('load', async function () {
         check('backdrop: not a picture the slide fits', !s.classList.contains('slideHasPicture'));
     }
 
+    // Where a `flow` arrow sits down its card, against where the card's title line is: both in the
+    // card's own pixels, from its padding edge -- the arrow's `top`, which its translate centres it
+    // on, and the middle of the title's box.
+    const arrowAndTitle = (card) => {
+        const title = card.querySelector('.slideCardTitle');
+        return [parseFloat(css(card, 'top', '::before')), title.offsetTop + title.offsetHeight / 2];
+    };
+
     // Cards as a line over each; figures in the gradient.
     {
         const s = showK(1);
@@ -417,6 +427,9 @@ window.addEventListener('load', async function () {
         check('keynote cards: one row of equal cards', boxes.every((b) => near(b.top, boxes[0].top, 1) && near(b.width, boxes[0].width, 1)));
         check('keynote cards: the words start at the left', css(cards[0], 'text-align') === 'left');
         check('keynote flow: an arrow before all but the first', cards.slice(1).every((c) => css(c, 'content', '::before') === '"▶"'));
+        // With no box round a card, an arrow halfway down it pointed at one line of the card before.
+        const at = cards.slice(1).map(arrowAndTitle);
+        check("keynote flow: the arrows on the titles' line",at.every(([arrow, title]) => near(arrow, title, 1.5)), at.map((a) => a.map(Math.round).join('/')).join(' '));
     }
     {
         const s = showK(5);
@@ -427,6 +440,8 @@ window.addEventListener('load', async function () {
         check('keynote stats: the figure is well over the body', parseFloat(css(title, 'font-size')) >= parseFloat(css(cards[0].querySelector('.slideCardBody'), 'font-size')) * 1.7);
         const lines = cards.map((c) => Math.round(c.querySelector('.slideCardTitle').offsetHeight / parseFloat(css(c.querySelector('.slideCardTitle'), 'line-height'))));
         check('keynote stats: every figure on one line', lines.every((n) => n === 1), lines.join(','));
+        const at = cards.slice(1).map(arrowAndTitle);
+        check("keynote stats flow: the arrows on the figures' line",at.every(([arrow, title]) => near(arrow, title, 1.5)), at.map((a) => a.map(Math.round).join('/')).join(' '));
         const closing = s.querySelector('.slideContent div > p');
         check('keynote stats: the closing line is on the slide', closing.offsetTop + closing.offsetHeight <= s.clientHeight - parseFloat(css(s, 'padding-bottom')) + 1);
     }
