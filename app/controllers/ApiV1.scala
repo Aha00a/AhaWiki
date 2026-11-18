@@ -8,6 +8,7 @@ import com.aha00a.play.Implicits.RichRequest
 import com.aha00a.play.AnormSqlParser.{localDateTime, optionLong, optionStr}
 import io.circe.Json
 import io.circe.syntax._
+import logics.AfterCommit
 import logics.AhaWikiCache
 import logics.ApplicationConf
 import logics.PageTrashLogic
@@ -123,7 +124,7 @@ class ApiV1 @Inject()(
       database.withConnection { implicit connection =>
         implicit val site: Site = SiteLogic.get(request.host)
         implicit val requestWrapper: RequestWrapper = RequestWrapper.forUser(user)
-        implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(""), RenderingMode.Normal)
+        implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(""), RenderingMode.Normal).holding(connection)
         val wikiPermission = WikiPermission()
 
         val readablePages = selectLatestPages(prefix, limit)
@@ -151,7 +152,7 @@ class ApiV1 @Inject()(
         database.withConnection { implicit connection =>
           implicit val site: Site = SiteLogic.get(request.host)
           implicit val requestWrapper: RequestWrapper = RequestWrapper.forUser(user)
-          implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(""), RenderingMode.Normal)
+          implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(""), RenderingMode.Normal).holding(connection)
           val wikiPermission = WikiPermission()
           val bounded = limit.max(1).min(100)
 
@@ -186,7 +187,7 @@ class ApiV1 @Inject()(
           database.withConnection { implicit connection =>
             implicit val site: Site = SiteLogic.get(request.host)
             implicit val requestWrapper: RequestWrapper = RequestWrapper.forUser(user)
-            implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(""), RenderingMode.Normal)
+            implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(""), RenderingMode.Normal).holding(connection)
             val wikiPermission = WikiPermission()
             val pages = if (names.isEmpty) Seq.empty else Page.selectLastRevision(names)
             val pageByName = pages.map(page => page.name -> page).toMap
@@ -213,7 +214,7 @@ class ApiV1 @Inject()(
       database.withConnection { implicit connection =>
         implicit val site: Site = SiteLogic.get(request.host)
         implicit val requestWrapper: RequestWrapper = RequestWrapper.forUser(user)
-        implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(""), RenderingMode.Normal)
+        implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(""), RenderingMode.Normal).holding(connection)
         val wikiPermission = WikiPermission()
         val nameTrimmed = name.trim
         val prefixTrimmed = prefix.trim
@@ -288,7 +289,7 @@ class ApiV1 @Inject()(
       database.withConnection { implicit connection =>
         implicit val site: Site = SiteLogic.get(request.host)
         implicit val requestWrapper: RequestWrapper = RequestWrapper.forUser(user)
-        implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(name), RenderingMode.Normal)
+        implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(name), RenderingMode.Normal).holding(connection)
 
         Page.selectLastRevision(name) match {
           case None =>
@@ -333,7 +334,7 @@ class ApiV1 @Inject()(
               database.withConnection { implicit connection =>
                 implicit val site: Site = SiteLogic.get(request.host)
                 implicit val requestWrapper: RequestWrapper = RequestWrapper.forUser(user)
-                implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(name), RenderingMode.Normal)
+                implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(name), RenderingMode.Normal).holding(connection)
 
                 val latestPage = Page.selectLastRevision(name)
                 val (latestText, latestRevision) = latestPage.map(page => (page.content, page.revision)).getOrElse(("", 0L))
@@ -384,10 +385,10 @@ class ApiV1 @Inject()(
           if (name.isEmpty || newName.isEmpty) {
             JsonError(BadRequest, "name and newName are required.")
           } else {
-            database.withTransaction { implicit connection =>
+            AfterCommit.withTransaction(database) { implicit after => implicit connection =>
               implicit val site: Site = SiteLogic.get(request.host)
               implicit val requestWrapper: RequestWrapper = RequestWrapper.forUser(user)
-              implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(name), RenderingMode.Normal)
+              implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(name), RenderingMode.Normal).holding(connection)
 
               (Page.selectLastRevision(name), Page.selectLastRevision(newName), revisionOpt) match {
                 case (_, _, None) =>
@@ -401,19 +402,7 @@ class ApiV1 @Inject()(
                 case (Some(page), None, Some(_)) if !WikiPermission().isRenamable(name) =>
                   JsonError(Forbidden, "Permission denied.")
                 case (Some(page), None, Some(_)) =>
-                  implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-                  ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
-
-                  Page.rename(name, newName)
-                  PageLogic.insert(name, 1, LocalDateTime.now(), comment, isMinorEdit = false, body = s"#!redirect $newName", viaApi = true, userApiKey = Some(apiKey.seq))
-                  wikiActors.pageCalculation ! Calculate(site, newName)
-                  // The old name is a page too now — it holds the redirect. Without this it has no
-                  // PageMeta row, and everything reading the page list off that table cannot see
-                  // it: PageList, and with it the script that mirrors the wiki into docs/. The
-                  // scheduled repair in ApplicationLifecycleHook picks it up within the hour, but
-                  // there is no reason to leave a page the rename itself created for it to find.
-                  wikiActors.pageCalculation ! Calculate(site, name)
-
+                  PageLogic.rename(name, newName, comment, viaApi = true, userApiKey = Some(apiKey.seq))
                   Ok(Json.obj(
                     "name" -> Json.fromString(name),
                     "newName" -> Json.fromString(newName),
@@ -440,10 +429,10 @@ class ApiV1 @Inject()(
           if (!confirm) {
             JsonError(BadRequest, "confirm must be true.")
           } else {
-            database.withTransaction { implicit connection =>
+            AfterCommit.withTransaction(database) { implicit after => implicit connection =>
               implicit val site: Site = SiteLogic.get(request.host)
               implicit val requestWrapper: RequestWrapper = RequestWrapper.forUser(user)
-              implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(name), RenderingMode.Normal)
+              implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(name), RenderingMode.Normal).holding(connection)
 
               (Page.selectLastRevision(name), revisionOpt) match {
                 case (_, None) =>
@@ -455,14 +444,13 @@ class ApiV1 @Inject()(
                 case (Some(_), Some(_)) if !WikiPermission().isDeletable(name) =>
                   JsonError(Forbidden, "Permission denied.")
                 case (Some(page), Some(_)) =>
-                  implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-                  ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
+                  after.always(ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()((database, site)))
                   PageTrashLogic.trash(name, Some(user.seq), viaApi = true) match {
                     case Left(failure) =>
                       logger.error(s"API page delete failed: host=${request.host}, name=$name, $failure")
                       JsonError(InternalServerError, "Attachment delete failed.")
                     case Right(_) =>
-                      wikiActors.pageCalculation ! Calculate(site, name)
+                      after(wikiActors.pageCalculation ! Calculate(site, name))
 
                       Ok(Json.obj(
                         "ok" -> Json.fromBoolean(true),

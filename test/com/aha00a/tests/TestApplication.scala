@@ -55,6 +55,13 @@ object TestApplication {
    * Configuration shared by every spec: H2 instead of MySQL, no evolutions, and the modules
    * that reach outside the JVM disabled. Add to it or override a key to say how one spec
    * differs.
+   *
+   * And a pool of one connection that gives up after a second. A request that opens a second
+   * connection while it holds one waits for itself and fails here, where a pool of ten in
+   * production waits only when ten requests do it at once -- the deadlock of 2026-10-03. With
+   * this, every spec that serves a request checks for it, not only SingleConnectionRenderSpec.
+   * Turning it on first, on 2026-11-18, failed 36 tests in 11 specs; what they found is in the
+   * wiki page Dev Database.
    */
   def baseConfiguration(dbName: String): Map[String, Any] = Map(
     "db.default.driver" -> "org.h2.Driver",
@@ -69,6 +76,9 @@ object TestApplication {
     "play.http.filters" -> "play.api.http.NoHttpFilters",
     "play.http.secret.key" -> "test-secret-key-for-testing-only",
     "AhaWiki.accessLog.sampleRate" -> 0,
+    "db.default.hikaricp.maximumPoolSize" -> 1,
+    "db.default.hikaricp.minimumIdle" -> 1,
+    "db.default.hikaricp.connectionTimeout" -> 1000,
   )
   /**
    * The JVM-wide memory singletons survive across suites in one test JVM. A suite that

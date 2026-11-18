@@ -318,8 +318,9 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
     }
   }
 
-  // The five that write. Each opens a connection -- delete and deleteLastRevision a transaction --
-  // and builds a context under it, which reads permissions and the user through the caches.
+  // The five that write. Each opens a connection -- delete, deleteLastRevision and rename a
+  // transaction -- and builds a context holding it, which reads permissions and the user through
+  // the caches.
   "the requests that write" should {
     def post(path: String, form: (String, String)*) =
       route(app, FakeRequest(POST, path).withHeaders(HOST -> host)

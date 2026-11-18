@@ -21,12 +21,13 @@
 
 그래서 요청이 쥔 커넥션을 컨텍스트가 넘겨받는다.
 
- * 커넥션을 쥔 쪽이 컨텍스트를 만들 때 `holding(connection)` 으로 알린다. 읽기만 하는 진입점은 다 그렇게 한다 — `Wiki.view`(보기·히스토리·diff·blame·편집 화면이 모두 여기를 지난다), `Wiki.preview`, `Search.index`, `Api` 의 `pagePreview`·`statistics`·`change`, 그리고 `PageLogic.calculate`.
+ * 커넥션을 쥔 쪽이 컨텍스트를 만들 때 `holding(connection)` 으로 알린다. 커넥션 안에서 컨텍스트를 만드는 컨트롤러는 모두 그렇게 한다 — 쓰는 진입점과 트랜잭션 안도. 트랜잭션 안에서는 그 컨텍스트가 채운 캐시가 아직 커밋되지 않은 행을 담을 수 있어서, 그런 경로는 캐시 비우기를 트랜잭션이 끝난 뒤로 미룬다(아래 «커밋 뒤에 할 일»).
+ * 커넥션 없이 만든 컨텍스트는 `withConnection` 에서 연 커넥션을 그 블록이 끝날 때까지 쥔다. 2026-11-18 전에는 쥐지 않아, 그 안에서 캐시가 컨텍스트에 다시 커넥션을 달라고 하면 하나를 더 열었다 — `Home.random`, 그리고 `/api/renderAhaMark` 안의 `[[Include]]`.
  * 렌더링 중에 도는 코드는 `wikiContext.withConnection { … }` 을 쓴다. 쥔 것이 있으면 그것을, 없으면 새것을 준다. `wikiContext.database.withConnection` 을 쓰지 않는다.
- * `Database` 를 받는 쪽 — 캐시 로더, `AhaWikiCacheMemoryDomainSite`, `AdminLogic` — 에는 `wikiContext.databaseHeldFirst` 를 넘긴다. 그것의 `withConnection` 이 위와 같다. `tupleDatabaseSite` 가 이미 그것을 담고 있다.
- * 쓰는 진입점 다섯 — `Wiki.save`, `Diary.write`, `Wiki.delete`, `Wiki.deleteLastRevision`, `Wiki.rename` — 은 `holding` 을 하지 않는다. 그 안에서는 렌더링이 돌지 않고 컨텍스트에 커넥션을 달라는 코드도 없어서, 풀이 1 개여도 막히지 않는다(2026-11-18 에 스펙으로 확인, 캐시를 비운 상태에서도). 일부러 붙이지 않은 이유가 하나 더 있다: `delete` 와 `deleteLastRevision` 은 트랜잭션 안이라, 쥔 커넥션을 넘기면 그 뒤로 붙는 코드가 커밋 전 상태를 읽고 캐시에 담을 수 있다. 대신 아래 스펙이 다섯을 지킨다 — 어느 하나가 두 번째 커넥션을 달라고 하면 그때 실패하고, 그때 `holding` 을 붙일지(트랜잭션 쪽은 그 위험까지) 정하면 된다.
+ * `Database` 를 받는 쪽 — 캐시 로더, `AdminLogic` — 에는 `wikiContext.databaseHeldFirst` 를 넘긴다. 그것의 `withConnection` 이 위와 같다. `tupleDatabaseSite` 가 이미 그것을 담고 있다.
+ * 사이트 조회(`SiteLogic.get`, 그 뒤의 `AhaWikiCacheMemoryDomainSite`)는 부르는 쪽에 암묵 `Connection` 이 있으면 그것으로 캐시를 채운다. 거의 모든 컨트롤러가 커넥션을 연 직후에 사이트를 묻기 때문이다. 운영에서는 접근 로그 필터가 액션보다 먼저, 커넥션 없이 채워 두므로 겹치는 일이 드물다 — 관리 화면의 사이트 수정이 캐시를 비우고 같은 커넥션 안에서 다시 읽던 것 하나만 매번 겹쳤다. 스펙은 필터를 끄고 돌아서 거의 모든 요청에서 겹쳤다.
 
-`SingleConnectionRenderSpec` 이 지킨다 — '''풀을 1 개로''' 줄여 페이지를 그린다. 쥔 채로 하나 더 달라는 곳이 하나라도 있으면 반드시 타임아웃이 난다. 고치는 동안 이 스펙이 빠진 곳을 차례로 짚어 줬다: 매크로 열 곳 다음에 캐시 로더, 사용자 프로필 이미지, 그리고 로그인한 독자의 화면마다 돌던 사이트 관리자 확인(`_base.scala.html`). 그 뒤 같은 스펙을 페이지의 다른 화면과 그 둘레의 요청(`/api/links`·`/api/pagePreview`·`/sitemap.xml`·`/preview` …)으로 넓혔고, 거기서 `pagePreview`·`statistics`·`preview` 가 더 나왔다. 2026-11-18 에는 쓰는 다섯도 넣었다 — 한 번은 캐시를 다 비우고 보낸다. rename 에 두 번째 커넥션을 일부러 넣어 보면 이 경우가 실패한다. `/search`·`/api/change`·`/api/statistics` 는 SQL 이 MySQL 문법이라 H2 에서 못 돌려, 스펙이 아니라 눈으로 확인한 것이다([Dev Testing]).
+'''스펙 전체가 지킨다.''' 2026-11-18 부터 모든 Scala 스펙이 '''풀 1 개, 대기 1초'''로 돈다(`TestApplication.baseConfiguration`). 요청을 보내는 스펙은 모두 이 검사를 겸한다. 처음 켰을 때 11개 스펙의 36개 테스트가 실패했고, 원인은 위의 셋 — 컨텍스트가 연 커넥션, `holding` 이 빠진 컨트롤러, 사이트 조회 — 이었다. 그 전에는 `SingleConnectionRenderSpec` 혼자 지켰다 — '''풀을 1 개로''' 줄여 페이지를 그린다. 쥔 채로 하나 더 달라는 곳이 하나라도 있으면 반드시 타임아웃이 난다. 고치는 동안 이 스펙이 빠진 곳을 차례로 짚어 줬다: 매크로 열 곳 다음에 캐시 로더, 사용자 프로필 이미지, 그리고 로그인한 독자의 화면마다 돌던 사이트 관리자 확인(`_base.scala.html`). 그 뒤 같은 스펙을 페이지의 다른 화면과 그 둘레의 요청(`/api/links`·`/api/pagePreview`·`/sitemap.xml`·`/preview` …)으로 넓혔고, 거기서 `pagePreview`·`statistics`·`preview` 가 더 나왔다. 2026-11-18 에는 쓰는 다섯도 넣었다 — 한 번은 캐시를 다 비우고 보낸다. rename 에 두 번째 커넥션을 일부러 넣어 보면 이 경우가 실패한다. `/search`·`/api/change`·`/api/statistics` 는 SQL 이 MySQL 문법이라 H2 에서 못 돌려, 스펙이 아니라 눈으로 확인한 것이다([Dev Testing]).
 
 `Connection is not available` 이 이 문제만 뜻하지는 않는다 — DB 가 멈춰도 같은 메시지가 난다. 2026-10-04 06:02~06:05 의 것은 데이터베이스가 메모리에 눌려 멈췄고 RDS 가 스스로 재시작한 것이었다. 2026-10-11 에 인스턴스 클래스를 키워 그 메모리 압박은 풀렸다 — 그 뒤 `FreeableMemory` 는 약 680MB 로 안정이고(전에는 60~150MB), 그 변경의 재시작이 [Dev Logs] «2026-10-31 에 나온 것» 의 세 번째 덩어리다. 구별은 그 바로 앞 줄로 한다: 그때는 `HikariPool-default - Failed to validate connection ... (No operations allowed after connection closed.)` — DB 가 커넥션을 끊었다는 말 — 가 두 인스턴스에 같은 초로 찍혔다. `/hc` 는 풀에서 커넥션을 얻어 `SELECT 1` 을 하므로(`Health.hc`) 어느 쪽이든 500 이라 구별에 쓰지 못한다. DB 가 돌아오자 앱은 재시작 없이 다시 붙었다. 경위와 근거는 운영 저장소의 `server/README.md`. 같은 꼴은 그 뒤에도 나왔다: 2026-11-01 12:26~12:28 에 풀의 연결들이 한꺼번에 끊긴 뒤 2분 동안 페이지 열람(GET) 38건이 실패했다. RDS 이벤트는 14일만 남아 원인은 더 볼 수 없었다. 10-26 의 1건은 요청이 아니라 접근 로그를 쓰는 `ActorAccessLog` 였다. 2026-10-03 부터 11-17 까지 이 메시지는 모두 이런 DB 쪽 사건 안에 있었고, 쓰는 요청에서는 한 건도 없었다.
 
@@ -50,9 +51,18 @@ dispatcher 까지 준 릴리스 (06:17)	전부 200·303	3.1초	0	0
 
 남긴 것:
 
- * 쓰는 진입점(저장, Diary, 삭제, 마지막 리비전 삭제, rename)은 `holding` 을 하지 않았고 전처럼 새 커넥션을 얻는다. 요청이 적은 경로이고, 그중 둘은 트랜잭션 안이라 — 안쪽 읽기가 그 트랜잭션에 들어가게 된다 — 따로 봐야 해서 손대지 않았다. `/api/renderAhaMark` 는 커넥션을 쥐지 않고 그리므로 해당이 없다.
- * 사이트 조회 캐시(`AhaWikiCacheMemoryDomainSite`)가 비어 있을 때의 첫 채움은 컨텍스트가 생기기 전이라 새 커넥션을 쓴다. 운영에서는 필터가 액션보다 먼저 채운다.
  * 고르지 않은 것: `Database` 바인딩 자체를 «같은 스레드면 쥔 커넥션을 다시 준다» 로 바꾸는 방법. 한 번에 모든 곳이 고쳐지지만 트랜잭션 안의 코드까지 앱 전체의 동작이 소리 없이 바뀐다. 풀을 키우는 것도 답이 아니다 — 동시에 그리는 수가 풀 크기에 닿으면 같은 일이 난다.
+
+== 커밋 뒤에 할 일
+
+페이지를 지우거나 이름을 바꾸는 경로 — `Wiki.delete`·`deleteLastRevision`·`rename`, API v1 의 `deletePage`·`renamePage` — 는 트랜잭션 안에서 돈다. 2026-11-18 전에는 페이지 계산 요청(`Calculate`), 페이지 목록 캐시 비우기, 텔레그램 알림을 그 안에서 했다.
+
+ * 계산은 다른 커넥션에서 돈다. 커밋 전에 읽으면 rename 의 새 이름에서 아무것도 못 찾고 끝나, 매시간 도는 복구가 잡을 때까지 그 페이지가 페이지 목록 테이블에서 빠질 수 있었다. 운영 로그로 실제로 일어났는지는 보지 않았다.
+ * 비운 캐시를 다른 요청이 커밋 전의 행으로 다시 채우면 5~30분 그대로 남는다.
+
+그래서 `AfterCommit.withTransaction` 으로 감싼다. `after(…)` 에 맡긴 일은 커밋한 뒤에만 돌고, `after.always(…)` 에 맡긴 일(캐시 비우기)은 롤백돼도 돈다 — 롤백된 블록이 커밋되지 않은 행으로 캐시를 채웠을 수 있어서다.
+
+rename 은 웹과 API 가 따로 갖고 있었고, 웹 쪽에는 트랜잭션이 없었다 — 리다이렉트 저장이 실패하면 페이지만 옮겨지고 옛 주소는 아무것도 아니게 됐다. 이제 둘 다 `PageLogic.rename` 하나를 트랜잭션 안에서 부른다. 검사(리비전, 권한, 대상 이름)와 응답 모양은 각자의 것이라 컨트롤러에 남았다.
 
 == 로그 테이블은 자기 행을 만료시킨다
 

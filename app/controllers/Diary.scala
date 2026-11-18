@@ -42,7 +42,7 @@ class Diary @Inject()(implicit val
       import models.RequestWrapper
       import models.tables.Site
       implicit val site: Site = SiteLogic.get(request.host)
-      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name).holding(connection)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       val latestPage = models.tables.Page.selectLastRevision(name)
       val (latestText: String, latestRevision: Long) = latestPage.map(w => (w.content, w.revision)).getOrElse(("", 0L))

@@ -43,7 +43,7 @@ class ApiSiteRequest @Inject()(
   def page: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      implicit val contextSite: ContextSite = ContextSite()
+      implicit val contextSite: ContextSite = ContextSite().holding(connection)
       val user = SessionLogic.getUser(request)
       val rows = user.map(u => SiteRequest.selectByUser(u.seq, SiteRequestLogic.RecentRequestsPerUser)).getOrElse(Seq.empty)
       Ok(views.html.Account.siteRequest(user.isDefined, parentDomain, rows)).withHeaders("X-Robots-Tag" -> "noindex, nofollow")

@@ -520,7 +520,7 @@ controllerComponents: ControllerComponents,
     def doSave() = {
       database.withConnection { implicit connection =>
         implicit val site: Site = SiteLogic.get(request.host)
-        implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
+        implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name).holding(connection)
         implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
         val latestPage = Page.selectLastRevision(name)
         val (latestText, latestRevision, latestTime) = latestPage.map(w => (w.content, w.revision, w.dateTime)).getOrElse(("", 0, LocalDateTime.now()))
@@ -643,9 +643,9 @@ controllerComponents: ControllerComponents,
 
 
   def delete(): Action[AnyContent] = Action { implicit request => withForm(Form("name" -> text)) { name =>
-    database.withTransaction { implicit connection =>
+    AfterCommit.withTransaction(database) { implicit after => implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name).holding(connection)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       Page.selectLastRevision(name) match {
         case Some(_) =>
@@ -661,23 +661,23 @@ controllerComponents: ControllerComponents,
   }}
 
   /** Keeps the page for a site admin to restore (PageTrashLogic). The caller has checked isDeletable. */
-  private def trashPage(name: String)(implicit request: Request[AnyContent], connection: java.sql.Connection, site: Site, provider: RequestWrapper): Result = {
-    implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-    ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
+  private def trashPage(name: String)(implicit request: Request[AnyContent], connection: java.sql.Connection, site: Site, provider: RequestWrapper, after: AfterCommit): Result = {
+    after.always(ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()((database, site)))
     PageTrashLogic.trash(name, provider.getUser.map(_.seq), viaApi = false) match {
       case Left(failure) =>
         logger.error(s"Page delete failed: host=${request.host}, name=$name, $failure")
         throw new RuntimeException(failure.toString)
       case Right(_) =>
-        telegramLogic.notifyPageDeleted(request.host, name, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())
+        val chatId = Config.Query.Telegram.chatId()
+        after(telegramLogic.notifyPageDeleted(request.host, name, provider.getUser.map(_.nickname).getOrElse("Guest"), chatId))
         Ok("")
     }
   }
 
   def deleteLastRevision(): Action[AnyContent] = Action { implicit request => withForm(Form("name" -> text)) { name =>
-    database.withTransaction { implicit connection =>
+    AfterCommit.withTransaction(database) { implicit after => implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name).holding(connection)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       Page.selectLastRevision(name) match {
         case Some(page) if page.revision <= 1 && WikiPermission().isDeletable(name) =>
@@ -686,12 +686,13 @@ controllerComponents: ControllerComponents,
           trashPage(name)
         case Some(page) =>
           if (WikiPermission().isDeletable(name)) {
-            implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-            ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
-
+            after.always(ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()((database, site)))
             Page.deleteSpecificRevisionWithRelatedData(name, page.revision)
-            wikiActors.pageCalculation ! Calculate(site, name)
-            telegramLogic.notifyLastRevisionDeleted(request.host, name, page.revision, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())
+            val chatId = Config.Query.Telegram.chatId()
+            after {
+              wikiActors.pageCalculation ! Calculate(site, name)
+              telegramLogic.notifyLastRevisionDeleted(request.host, name, page.revision, provider.getUser.map(_.nickname).getOrElse("Guest"), chatId)
+            }
             Ok("")
           } else {
             logger.warn(s"deleteLastRevision forbidden: host=${request.host}, name=$name, user=${provider.getUser.map(u => s"${u.nickname}(${u.loginEmail.getOrElse("no-email")})").getOrElse("anonymous")}, remote=${request.remoteAddress}")
@@ -704,20 +705,16 @@ controllerComponents: ControllerComponents,
   }}
 
   def rename(): Action[AnyContent] = Action { implicit request => withForm(Form(tuple("name" -> text, "newName" -> text))) { case (name, newName) =>
-    database.withConnection { implicit connection =>
+    AfterCommit.withTransaction(database) { implicit after => implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name)
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(name).holding(connection)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       (Page.selectLastRevision(name), Page.selectLastRevision(newName)) match {
         case (Some(_), None) =>
           if (WikiPermission().isRenamable(name)) {
-            implicit val tupleDatabaseSite: (Database, Site) = (database, site)
-            ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()
-
-            Page.rename(name, newName)
-            PageLogic.insert(name, 1, LocalDateTime.now(), "redirect", isMinorEdit = false, s"#!redirect $newName")
-            wikiActors.pageCalculation ! Calculate(site, newName)
-            telegramLogic.notifyPageRenamed(request.host, name, newName, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())
+            PageLogic.rename(name, newName, "redirect", viaApi = false, userApiKey = None)
+            val chatId = Config.Query.Telegram.chatId()
+            after(telegramLogic.notifyPageRenamed(request.host, name, newName, provider.getUser.map(_.nickname).getOrElse("Guest"), chatId))
             Ok("")
           } else {
             Forbidden("")

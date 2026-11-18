@@ -265,7 +265,7 @@ class Api @Inject()(
   def pageRevision(pageName: String): Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
+      implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName).holding(connection)
       implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
       // A page the caller cannot read answers as a missing one does. Until 2026-09-12 this
       // skipped the check, and the number told anyone which private pages exist and how
@@ -307,7 +307,7 @@ class Api @Inject()(
   def pageNames: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      implicit val contextSite: ContextSite = ContextSite()
+      implicit val contextSite: ContextSite = ContextSite().holding(connection)
       implicit val requestWrapper: RequestWrapper = RequestWrapper()
       Ok(PageLogic.getListPageByPermission().map(_.name).asJson)
     }
@@ -473,7 +473,7 @@ class Api @Inject()(
     val name = PageNameUrl.decode(nameEncoded)
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      implicit val contextSite: ContextSite = ContextSite()
+      implicit val contextSite: ContextSite = ContextSite().holding(connection)
 
       val links = ahaWikiCacheMemoryApiLinks.getOrElseUpdate(site.seq, name) {
         Adjacent.getSeqLinkFiltered(name)
@@ -551,7 +551,7 @@ class Api @Inject()(
     } else {
       ahaWikiCacheMemoryApiLinks.clear()
       AhaWikiCacheMemoryPermission.clear()
-      SiteLogic.get(siteSeq) foreach { implicit site =>
+      SiteLogic.getBySeq(siteSeq) foreach { implicit site =>
         implicit val tupleDatabaseSite: (Database, Site) = (database, site)
         implicit val contextSite: ContextSite = ContextSite()
         ahaWikiCache.invalidateSiteCaches()

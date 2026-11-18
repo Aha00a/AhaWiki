@@ -62,7 +62,7 @@ class WikiRealtime @Inject()(
       }
       val isReadable = database.withConnection { implicit connection =>
         implicit val site: Site = siteForWs
-        val ctxSite = ContextSite.empty()(database, wikiActors, applicationConf, ahaWikiCache, site)
+        val ctxSite = ContextSite.empty()(database, wikiActors, applicationConf, ahaWikiCache, site).holding(connection)
         val permission = WikiPermission()(provider, connection, ctxSite)
         permission.isReadable(name)
       }

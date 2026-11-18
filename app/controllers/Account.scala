@@ -36,7 +36,7 @@ class Account @Inject()(
       case Some(user) =>
         database.withConnection { implicit connection =>
           implicit val site: Site = SiteLogic.get(request.host)
-          implicit val contextSite: ContextSite = ContextSite()
+          implicit val contextSite: ContextSite = ContextSite().holding(connection)
           Ok(views.html.Account.settings(user, UserEmail.selectByUser(user.seq)))
         }
     }
@@ -57,7 +57,7 @@ class Account @Inject()(
                 .flashing("success" -> "Email is already connected.")
             case Some(existing) =>
               implicit val site: Site = SiteLogic.get(request.host)
-              implicit val contextSite: ContextSite = ContextSite()
+              implicit val contextSite: ContextSite = ContextSite().holding(connection)
               Ok(views.html.Account.mergeEmail(email, User.selectBySeq(existing.user)))
             case None =>
               Redirect(routes.Account.settings()).flashing("error" -> "Email is not connected to another account.")

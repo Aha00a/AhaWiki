@@ -126,13 +126,38 @@ object PageLogic {
   import models.tables.Site
 
   def insert(name: String, revision: Long, dateTime: LocalDateTime, comment: String, isMinorEdit: Boolean, body: String, viaApi: Boolean = false, userApiKey: Option[Long] = None)(implicit wikiContext: ContextWikiPage, connection: Connection): Unit = {
+    insertRow(name, revision, dateTime, comment, isMinorEdit, body, viaApi, userApiKey)
+    wikiContext.pageCalculationActor ! Calculate(wikiContext.site, name)
+  }
+
+  private def insertRow(name: String, revision: Long, dateTime: LocalDateTime, comment: String, isMinorEdit: Boolean, body: String, viaApi: Boolean, userApiKey: Option[Long])(implicit wikiContext: ContextWikiPage, connection: Connection): Unit = {
     import models.tables.Page
     import models.tables.Site
     implicit val site: Site = wikiContext.site
     val user = wikiContext.requestWrapper.getUser
-    val page = Page(name, revision, dateTime, None, user.map(_.seq), wikiContext.requestWrapper.remoteAddress, comment, isMinorEdit, body, viaApi, userApiKey)
-    Page.insert(page)
-    wikiContext.pageCalculationActor ! Calculate(site, name)
+    Page.insert(Page(name, revision, dateTime, None, user.map(_.seq), wikiContext.requestWrapper.remoteAddress, comment, isMinorEdit, body, viaApi, userApiKey))
+  }
+
+  /**
+   * Moves a page to `newName` and leaves a redirect under the old one. The web form and API v1 each
+   * did this themselves until 2026-11-18, and the form did it without a transaction: a failed
+   * redirect left the page moved and its old address answering nothing. Call it inside
+   * [[logics.AfterCommit.withTransaction]]; the calculations of both names wait for the commit, or
+   * the one for the new name could read before it and find no page there.
+   *
+   * The old name is calculated too: it is a page now, the redirect, and without a PageMeta row
+   * nothing that lists pages off that table sees it -- the PageList macro and the script that mirrors the
+   * wiki into docs/ among them.
+   */
+  def rename(name: String, newName: String, comment: String, viaApi: Boolean, userApiKey: Option[Long])(implicit wikiContext: ContextWikiPage, connection: Connection, after: logics.AfterCommit, database: Database, ahaWikiCache: AhaWikiCache): Unit = {
+    implicit val site: models.tables.Site = wikiContext.site
+    Page.rename(name, newName)
+    insertRow(name, 1, LocalDateTime.now(), comment, isMinorEdit = false, s"#!redirect $newName", viaApi, userApiKey)
+    after.always(ahaWikiCache.PageMeta.SeqPageLatestSummary.invalidate()((database, site)))
+    after {
+      wikiContext.pageCalculationActor ! Calculate(site, newName)
+      wikiContext.pageCalculationActor ! Calculate(site, name)
+    }
   }
 
   def getListPageByPermission()(implicit provider: RequestWrapper, connection: Connection, contextSite: ContextSite, ahaWikiCache: AhaWikiCache): Seq[PageLatestSummary] = {

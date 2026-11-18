@@ -114,10 +114,18 @@ class ContextSite(parent: Option[ContextSite] = None)(
    * Use this, not `database.withConnection`, in anything that runs during a render. A held
    * connection that has since been closed -- a context that outlived the block it was built in --
    * is not used.
+   *
+   * A new one is held for the length of `f` too. Until 2026-11-18 it was not, so a context built
+   * without [[holding]] opened one here and then, when something inside `f` asked this context
+   * again -- a cache filling itself through [[databaseHeldFirst]] -- a second: `Home.random` and an
+   * `[[Include]]` in `/api/renderAhaMark` did, found by running every spec with a pool of one.
    */
   def withConnection[A](f: Connection => A): A =
     parent.map(_.withConnection(f)).getOrElse(
-      heldConnection.filterNot(_.isClosed).map(f).getOrElse(database.withConnection(f))
+      heldConnection.filterNot(_.isClosed).map(f).getOrElse(database.withConnection { connection =>
+        heldConnection = Some(connection)
+        try f(connection) finally heldConnection = None
+      })
     )
 
   lazy val setPageName: Set[String] =

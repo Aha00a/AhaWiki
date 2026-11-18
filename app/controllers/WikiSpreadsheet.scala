@@ -59,7 +59,7 @@ class WikiSpreadsheet @Inject()(
       implicit val site: Site = SiteLogic.get(request.host)
       Page.selectLastRevision(pageName) match {
         case Some(page) =>
-          implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
+          implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName).holding(connection)
           implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
           val pageContent = PageContent(page.content)
           if (WikiPermission().isWritable(pageName, pageExists = true)) {

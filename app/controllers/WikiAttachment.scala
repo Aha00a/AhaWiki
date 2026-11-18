@@ -72,7 +72,7 @@ class WikiAttachment @Inject()(
   private def getPageContextFor(pageName: String)(permitted: WikiPermission => Boolean)
                                (implicit request: Request[Any], connection: Connection): Either[Result, (Site, ContextWikiPage, RequestWrapper)] = {
     implicit val site: Site = SiteLogic.get(request.host)
-    implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName)
+    implicit val contextWikiPage: ContextWikiPage = ContextWikiPage(pageName).holding(connection)
     implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
     if (!permitted(WikiPermission())) Left(Forbidden("Permission denied."))
     else Right((site, contextWikiPage, provider))

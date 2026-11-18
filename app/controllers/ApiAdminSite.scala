@@ -65,12 +65,12 @@ class ApiAdminSite @Inject()(
    */
   private def withSiteAdmin(seq: Long)(block: Site => Result)(implicit request: RequestHeader): Result =
     if (!isSiteAdmin(seq)) AccessDenied
-    else SiteLogic.get(seq)(database).fold(siteNotFound(seq))(block)
+    else SiteLogic.getBySeq(seq)(database).fold(siteNotFound(seq))(block)
 
   /** Same as [[withSiteAdmin]], but only a global admin passes, not a site admin. */
   private def withAdminSite(seq: Long)(block: Site => Result)(implicit request: RequestHeader): Result =
     if (!isAdmin) AccessDenied
-    else SiteLogic.get(seq)(database).fold(siteNotFound(seq))(block)
+    else SiteLogic.getBySeq(seq)(database).fold(siteNotFound(seq))(block)
 
   private val adminFaviconTimestampFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH-mm-ss")
 
@@ -152,7 +152,7 @@ class ApiAdminSite @Inject()(
     siteSeqValue.flatMap(parseSiteSeq) match {
       case None                           => Left(JsonError(BadRequest, "Valid siteSeq is required."))
       case Some(seq) if !isSiteAdmin(seq) => Left(AccessDenied)
-      case Some(seq)                      => SiteLogic.get(seq)(database).toRight(siteNotFound(seq))
+      case Some(seq)                      => SiteLogic.getBySeq(seq)(database).toRight(siteNotFound(seq))
     }
 
   def adminSites: Action[AnyContent] = Action { implicit request =>
@@ -240,7 +240,8 @@ class ApiAdminSite @Inject()(
                   siteNotFound(seq)
                 } else {
                   AhaWikiCacheMemoryDomainSite.invalidate()
-                  SiteLogic.get(seq)(database) match {
+                  // Reloaded over this connection, not a second one: see AhaWikiCacheMemoryDomainSite.
+                  SiteLogic.getBySeq(seq) match {
                     case Some(site) => Ok(site.asJson)
                     case None => JsonError(NotFound, s"site not found after update: $seq")
                   }
