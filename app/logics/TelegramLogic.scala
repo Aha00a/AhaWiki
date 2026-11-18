@@ -1,12 +1,17 @@
 package logics
 
 import logics.wikis.PageNameUrl
+import org.apache.pekko.actor.ActorSystem
 import play.api.Logging
+import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 
 import java.net.URLEncoder
 import javax.inject._
+import scala.collection.concurrent.TrieMap
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.concurrent.duration._
 import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
@@ -25,12 +30,103 @@ object TelegramLogic {
     case Success((status, body)) => Some(s"TelegramLogic.sendTo chatId=$chatId failed: status=$status body=${body.take(200)}")
     case Failure(error)          => Some(s"TelegramLogic.sendTo chatId=$chatId failed: ${error.getClass.getName}")
   }
+
+  /** Telegram's limit on one message's text. */
+  val messageLimit: Int = 4096
+
+  /**
+   * The next message to send: as many pending messages, oldest first, as fit in `limit` when
+   * joined by a blank line, and what is left. Always takes at least one, so a message longer than
+   * the limit is still tried on its own rather than holding up the queue.
+   */
+  def takeBatch(pending: Vector[String], limit: Int = messageLimit): (String, Vector[String]) = {
+    val separator = "\n\n"
+    var length = pending.head.length
+    var count = 1
+    while (count < pending.size && length + separator.length + pending(count).length <= limit) {
+      length += separator.length + pending(count).length
+      count += 1
+    }
+    (pending.take(count).mkString(separator), pending.drop(count))
+  }
+
+  /** How long Telegram asked us to wait, when it refused a send for coming too fast. */
+  def retryAfterSeconds(status: Int, body: String): Option[Int] =
+    if (status != 429) None
+    else Try((Json.parse(body) \ "parameters" \ "retry_after").as[Int]).toOption.filter(_ > 0)
+}
+
+/**
+ * Sends to one chat, one request at a time, at most one every `interval`.
+ *
+ * Telegram lets a bot post about 20 messages a minute into one group and answers 429 to the rest.
+ * Until 2026-11-18 every event was posted the moment it happened, so someone uploading a folder of
+ * attachments on sst -- 40 to 70 files a minute, three times that evening -- had 180 of the
+ * notifications refused, and they were gone. Now whatever arrives while a send is under way or
+ * while the interval runs is joined into the next message (`TelegramLogic.takeBatch`), and a 429
+ * waits as long as Telegram says and sends the same text again, up to `maxRetries` times.
+ *
+ * `post` and `schedule` are parameters so the spec can drive the queue without a network or a clock.
+ */
+class TelegramChatQueue(
+  chatId: String,
+  post: String => Future[(Int, String)],
+  schedule: (FiniteDuration, () => Unit) => Unit,
+  warn: String => Unit,
+  interval: FiniteDuration = 3.seconds,
+  maxRetries: Int = 5,
+)(implicit executionContext: ExecutionContext) {
+
+  private var pending = Vector.empty[String]
+  private var busy = false
+  private var retries = 0
+
+  def enqueue(message: String): Unit = {
+    val start = synchronized {
+      pending :+= message
+      val idle = !busy
+      busy = true
+      idle
+    }
+    if (start) sendNext()
+  }
+
+  private def sendNext(): Unit = {
+    val batch = synchronized {
+      if (pending.isEmpty) {
+        busy = false
+        None
+      } else {
+        val (text, rest) = TelegramLogic.takeBatch(pending)
+        pending = rest
+        Some(text)
+      }
+    }
+    batch.foreach { text =>
+      post(text).onComplete { outcome =>
+        val retryAfter = outcome.toOption.flatMap { case (status, body) => TelegramLogic.retryAfterSeconds(status, body) }
+        retryAfter match {
+          case Some(seconds) if synchronized(retries) < maxRetries =>
+            synchronized {
+              retries += 1
+              pending = text +: pending
+            }
+            schedule(seconds.seconds + 1.second, () => sendNext())
+          case _ =>
+            synchronized { retries = 0 }
+            TelegramLogic.sendOutcomeWarning(chatId, outcome).foreach(warn)
+            schedule(interval, () => sendNext())
+        }
+      }
+    }
+  }
 }
 
 @Singleton
 class TelegramLogic @Inject()(
   applicationConf: ApplicationConf,
   wsClient: WSClient,
+  actorSystem: ActorSystem,
 )(implicit executionContext: ExecutionContext) extends Logging {
 
   // ── 내부 유틸 ──────────────────────────────────────────────
@@ -49,10 +145,7 @@ class TelegramLogic @Inject()(
   private def commentLine(comment: String): String =
     if (comment.nonEmpty) s"\n${h(comment)}" else ""
 
-  private def sendTo(chatId: String, message: String): Unit = {
-    val botToken = applicationConf.AhaWiki.telegram.botToken()
-    if (botToken.isEmpty) return
-
+  private def post(botToken: String, chatId: String)(message: String): Future[(Int, String)] =
     wsClient
       .url(s"https://api.telegram.org/bot$botToken/sendMessage")
       .post(Map(
@@ -61,10 +154,20 @@ class TelegramLogic @Inject()(
         "parse_mode"           -> "HTML",
         "disable_notification" -> "true",
       ))
-      .onComplete { outcome =>
-        TelegramLogic.sendOutcomeWarning(chatId, outcome.map(response => (response.status, response.body)))
-          .foreach(message => logger.warn(message))
-      }
+      .map(response => (response.status, response.body))
+
+  private val queues = TrieMap.empty[String, TelegramChatQueue]
+
+  private def sendTo(chatId: String, message: String): Unit = {
+    val botToken = applicationConf.AhaWiki.telegram.botToken()
+    if (botToken.isEmpty) return
+
+    queues.getOrElseUpdate(chatId, new TelegramChatQueue(
+      chatId,
+      post(botToken, chatId),
+      (delay, run) => actorSystem.scheduler.scheduleOnce(delay)(run()),
+      message => logger.warn(message),
+    )).enqueue(message)
   }
 
   private def send(message: String, siteChatId: Option[String]): Unit = {

@@ -60,7 +60,7 @@ Google Spreadsheet 동기화	🔄	🔄 **PageName** spreadsheet synced by 닉네
   * `chatId()` — 읽기 (`Option[String]`, 미설정 시 `None`)
   * `saveChatId(v)` — 쓰기 (비우면 자동 삭제)
  * `app/logics/TelegramLogic.scala` — 알림 전송 전담 클래스 (`@Singleton`, DI)
-  * `sendTo(chatId, message)` — 단일 chatId로 Telegram API 호출 (비동기 fire-and-forget)
+  * `sendTo(chatId, message)` — 그 chatId 의 `TelegramChatQueue` 에 넣는다(아래 «한꺼번에 많이 생길 때»)
   * `send(message, siteChatId)` — 전역 chatId + 사이트별 chatId를 deduplicate하여 `sendTo` 호출
   * `pageUrl` / `diffUrl` / `h` / `b` / `commentLine` — 내부 유틸 (`diffUrl`은 `pageUrl + ?action=diff&after=revision`)
   * 이벤트별 public 메서드 — 모두 `siteChatId: Option[String] = None` 파라미터 보유
@@ -78,3 +78,14 @@ Google Spreadsheet 동기화	🔄	🔄 **PageName** spreadsheet synced by 닉네
 
 === 비동기 처리
 `wsClient.url(...).post(...).onComplete(...)` 방식으로 결과를 기다리지 않으므로, Telegram API 지연·오류가 페이지 저장 응답에 영향을 주지 않는다. 응답이 200 이 아니면 상태와 본문 앞 200자를, 연결 자체가 실패하면 예외의 클래스 이름만 `logger.warn` 으로 남긴다(`TelegramLogic.sendOutcomeWarning`). 예외 메시지는 남기지 않는다 — 요청 URL 에 봇 토큰이 들어 있고, 메시지가 URL 을 빼 준다는 보장이 없다. 2026-09-10 까지는 결과를 `foreach` 로 읽어서, 실패한 `Future` 에는 아무것도 돌지 않았고 연결 실패가 로그 한 줄 남기지 않았다.
+
+=== 한꺼번에 많이 생길 때
+Telegram 은 봇이 한 그룹에 1분에 20통쯤만 받고 나머지는 `429 Too Many Requests` 로 돌려보낸다. 2026-11-18 전까지는 일이 생길 때마다 바로 보냈기 때문에, 그날 저녁 sst 에서 첨부파일을 1분에 40~70개씩 세 번 올리자 알림 180통이 429 로 거절되었고 그대로 사라졌다(로그에는 `TelegramLogic.sendTo … status=429` 경고만 남았다).
+
+이제 chatId 마다 큐(`TelegramChatQueue`)가 하나씩 있다.
+ * 한 번에 한 요청만, 보낸 뒤 3초는 쉰다 — 1분 20통 안쪽이다.
+ * 보내는 중이거나 쉬는 동안 들어온 알림은 빈 줄로 이어 붙여 다음 한 통으로 보낸다. 한 통은 Telegram 의 한도 4096자 안에서 자른다(`TelegramLogic.takeBatch`). 그래서 파일 70개는 몇 통의 긴 메시지가 된다.
+ * 429 가 오면 본문의 `retry_after` 초에 1초를 더해 기다렸다가 같은 글을 다시 보낸다(`TelegramLogic.retryAfterSeconds`). 다섯 번 거절되면 그 글은 버리고 경고를 남긴다 — 끝없이 붙잡고 있지 않으려고.
+ * 큐는 프로세스 메모리에 있다. 재시작하면 아직 못 보낸 알림은 사라진다. 배포 동안 두 인스턴스가 각자 큐를 가지는 것도 그대로 둔다 — 겹치는 시간이 짧다.
+ * 알림을 이벤트 종류별로 «파일 N개 첨부» 처럼 요약하는 안은 하지 않았다. 이어 붙이기만으로 한도 안에 들고, 어떤 파일인지가 그대로 남는다.
+ * 검사는 `TelegramLogicSpec` — 가짜 전송·가짜 시계로 이어 붙이기, 429 뒤 다시 보내기, 다섯 번 뒤 포기를 본다.

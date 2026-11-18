@@ -56,11 +56,12 @@ reCAPTCHA	`ahawiki.net` 하나가 하위 도메인을 포함한다(Google 문서
 == 자기 도메인을 쓰는 사이트
 와일드카드에 들지 않는 이름이다. 아래 체크리스트를 손으로 한다.
 
-'''있는 사이트의 주소를 옮길 때도 같다.''' 2026-11-17 sst 위키를 `sst.ahawiki.net` 에서 `sst.aharise.com` 으로 옮겼다. 차례와 되돌리는 법은 운영 저장소 `README.md` 작업 이력에 있다. 옮겨 보니 놓치기 쉬운 것이 셋이다.
+'''있는 사이트의 주소를 옮길 때도 같다.''' 2026-11-17 sst 위키를 `sst.ahawiki.net` 에서 `sst.aharise.com` 으로 옮겼다. 차례와 되돌리는 법은 운영 저장소 `README.md` 작업 이력에 있다. 옮겨 보니 놓치기 쉬운 것이 넷이다.
 
  * '''로그인이 위임에서 빠진다.''' `*.ahawiki.net` 아래일 때는 Google 콜백을 상위 도메인이 받았지만(위 '''로그인'''), 다른 도메인으로 가면 Google 이 그 주소로 직접 돌아온다. OAuth 클라이언트에 새 콜백을 넣기 전에는 `redirect_uri_mismatch` 다.
  * '''`SiteDomain` 행만 넣으면 한동안 `notFound` 사이트가 보인다.''' 도메인 캐시 때문이다. 관리 화면에서 사이트의 `mainDomain` 을 바꾸면(`PUT /api/Admin/Site/:seq`) 캐시도 함께 버려져 바로 열린다. `mainDomain` 은 어차피 바꿔야 한다 — 다른 사이트가 이 사이트로 거는 링크가 그 값으로 만들어진다.
  * '''옛 주소는 nginx 의 301 로 보낸다.''' 앱은 도메인끼리 보내는 기능이 없다. 옛 `SiteDomain` 행은 남겨 두어도 된다 — nginx 가 앞에서 보내므로 앱에 닿지 않고, nginx 를 되돌리면 그대로 다시 열린다.
+ * '''reCAPTCHA 의 도메인 목록에서도 빠진다.''' `ahawiki.net` 항목이 하위 도메인을 덮어 주었지만 새 이름은 덮지 않는다. 그러면 편집 화면은 토큰을 받아 오는데 저장은 `siteverify` 가 `browser-error` 로 거절해 403 이다 — 그래서 옮긴 날 «토큰이 나온다» 만 보고 넘어갔고, 다음 날 사용자의 저장 여섯 번이 막힌 것이 운영 로그(`robot - browser-error`)에서 보였다(2026-11-18). 목록에 `sst.aharise.com` 을 넣고 몇 분 뒤에 통과했다. '''확인은 토큰이 아니라 저장 요청으로 한다''' — 편집 화면에서 토큰을 받아 틀린 `revision` 으로 POST 하면 reCAPTCHA 를 먼저 보므로, 409 면 통과·403 `reCAPTCHA failed` 면 막힘이고 글은 바뀌지 않는다(`Wiki.save`).
 
 == 신청 접수
  * 사이트 이름
@@ -97,7 +98,7 @@ https://wiki.example.com
 == reCAPTCHA 설정
 https://www.google.com/recaptcha/admin/
  * 기존 사이트 키의 도메인에 추가 (`wiki.example.com`). 등록한 도메인은 하위 도메인을 포함하므로, 이미 있는 도메인의 하위 이름이면 할 일이 없다
- * 도메인을 추가하지 않으면 그 사이트에서는 token 을 받을 수 없어 웹 저장이 전부 `403` 이 된다. 2026-09-13 전에는 빈 token 도 통과시켜서 이것이 드러나지 않았다.
+ * 도메인을 추가하지 않으면 웹 저장이 전부 `403` 이 된다. token 은 그래도 나온다 — 거절은 서버의 `siteverify` 가 `browser-error` 로 한다(2026-11-18 sst 에서 확인, 위 «자기 도메인을 쓰는 사이트»). 그래서 token 이 나오는 것으로는 확인이 안 되고, 저장 요청으로 본다. 2026-09-13 전에는 빈 token 도 통과시켜서 이것이 드러나지 않았다.
 
 == 관리자 설정
  * 관리자 Google 계정으로 로그인
@@ -110,4 +111,4 @@ https://www.google.com/recaptcha/admin/
  * 페이지 생성 / 편집 / 저장
  * 첨부파일 업로드 (S3)
  * 지도 표시 (`InterpreterMap`)
- * reCAPTCHA 동작
+ * reCAPTCHA 동작 — token 이 아니라 저장이 통과하는지(위 «자기 도메인을 쓰는 사이트» 의 409 확인)
