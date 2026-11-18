@@ -317,4 +317,47 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
       mustRenderWhole(contentAsString(result))
     }
   }
+
+  // The five that write. Each opens a connection -- delete and deleteLastRevision a transaction --
+  // and builds a context under it, which reads permissions and the user through the caches.
+  "the requests that write" should {
+    def post(path: String, form: (String, String)*) =
+      route(app, FakeRequest(POST, path).withHeaders(HOST -> host)
+        .withSession(SessionLogic.sessionKeySeq -> "61", SessionLogic.sessionKeyNickname -> "writer")
+        .withFormUrlEncodedBody(form: _*)).get
+
+    def lastRevision(name: String): Option[Int] =
+      app.injector.instanceOf[play.api.db.Database].withConnection { implicit connection =>
+        SQL("SELECT MAX(revision) FROM Page WHERE site = 61 AND name = {name}").on("name" -> name)
+          .as(anorm.SqlParser.scalar[Int].singleOpt)
+      }
+
+    "save, append to the diary, rename and delete on one connection" in {
+      // Each with the caches empty, as after a restart: the views above have filled them, and a
+      // warm cache asks for no connection at all.
+      def cold[A](f: => A): A = {
+        TestApplication.resetMemoryCaches()
+        logics.AhaWikiCacheMemoryDomainSite.refresh()(app.injector.instanceOf[play.api.db.Database])
+        f
+      }
+      def save(revision: Int, text: String) =
+        cold(status(post("/w/Written", "revision" -> revision.toString, "text" -> text, "comment" -> "spec")))
+
+      save(0, "first") mustBe OK
+      save(1, "second") mustBe OK
+      lastRevision("Written") mustBe Some(2)
+
+      cold(status(post("/actions/deleteLastRevision", "name" -> "Written"))) mustBe OK
+      lastRevision("Written") mustBe Some(1)
+
+      cold(status(post("/actions/rename", "name" -> "Written", "newName" -> "Moved"))) mustBe OK
+      lastRevision("Moved") mustBe Some(1)
+
+      cold(status(post("/actions/delete", "name" -> "Moved"))) mustBe OK
+      lastRevision("Moved") mustBe None
+
+      cold(status(post("/diary", "q" -> "diary-marker"))) mustBe SEE_OTHER
+      lastRevision(java.time.LocalDate.now().toString) mustBe Some(1)
+    }
+  }
 }
