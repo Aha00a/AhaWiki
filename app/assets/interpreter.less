@@ -270,8 +270,28 @@
 				display: inline-block;
 				border: 1px solid var(--color-border-subtle);
 				border-radius: 5px;
+				// The table keeps its own width and the wrapper above scrolls (2026-11-18). Held to
+				// the page's width, a table whose cells cannot wrap -- ColorCode swatches, numbers --
+				// was laid out at its narrowest: the one column that could wrap was squeezed to a
+				// few letters (the page's `word-break: break-all` lets it break anywhere), every row
+				// grew tall, and it was still cut off. A cell's text wraps at 40em, so a column of
+				// sentences stays readable instead of running out as one line -- or at 80% of the
+				// screen when that is less, so on a phone one scroll brings a whole cell into view
+				// rather than every line of it needing one.
 				.InterpreterTable {
 					margin-left: 0;
+					width: max-content;
+					max-width: none;
+					> tbody > tr > td > div {
+						max-width: ~"min(40em, 80vw)";
+					}
+					// The filter row's inputs fill their column without setting its width: at their
+					// own size they made every short column (a year, a hex code) about 180px wide.
+					.tablesorter-filter {
+						box-sizing: border-box;
+						width: 0;
+						min-width: 100%;
+					}
 				}
 			}
 		}

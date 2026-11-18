@@ -235,6 +235,16 @@
 }
 .AhaWiki .InterpreterRenderMetaWrapper.Table .InterpreterRenderContent .InterpreterTable {
   margin-left: 0;
+  width: max-content;
+  max-width: none;
+}
+.AhaWiki .InterpreterRenderMetaWrapper.Table .InterpreterRenderContent .InterpreterTable > tbody > tr > td > div {
+  max-width: min(40em, 80vw);
+}
+.AhaWiki .InterpreterRenderMetaWrapper.Table .InterpreterRenderContent .InterpreterTable .tablesorter-filter {
+  box-sizing: border-box;
+  width: 0;
+  min-width: 100%;
 }
 .AhaWiki .InterpreterRenderMetaWrapper.Text > .InterpreterRenderContent,
 .AhaWiki .InterpreterRenderMetaWrapper.Vim > .InterpreterRenderContent {
