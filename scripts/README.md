@@ -54,8 +54,8 @@ the browser would stop at the first `import {createContext} from "react"`.
 ## Vendored page assets
 
 `vendor.mjs` copies the third-party files the wiki's pages load — jQuery and its four plugins,
-MathJax, d3, Sortable, echarts, dayjs, mermaid, CodeMirror, diff2html, Font Awesome — from
-`node_modules` into `public/vendor/`, and the templates name them through `PublicAsset.url`.
+MathJax, d3, Sortable, echarts, dayjs, mermaid, CodeMirror, diff2html, Font Awesome, Pretendard —
+from `node_modules` into `public/vendor/`, and the templates name them through `PublicAsset.url`.
 
 ```bash
 npm run vendor
@@ -85,6 +85,12 @@ Rules of the copy:
    to itself it would take the fonts from jsdelivr too.
  * Mermaid is not on the skeleton's script list. `AhaWiki.Mermaid.js` fetches it when a page has
    a diagram, because 12.x is twice the size of 11.12 and few pages have one.
+ * Pretendard is not on the skeleton's list either. `InterpreterSlide` links its stylesheet in
+   front of a `keynote` slide deck, the one thing drawn in it, so a page without one fetches
+   nothing. It is the dynamic subset: the stylesheet names ninety-two files, each a slice of
+   Unicode, and a browser fetches the slices the deck's text falls in, where the one-file build is
+   2 MB. It is not a remote `@import` in the less either: lessc inlines one, and the Noto Sans KR
+   it once inlined that way held no Hangul (`app/assets/less.less`).
  * Font Awesome is one copy now, 6.5.2, for the pages and the admin UI alike. The admin UI's icon
    names are v5 names, which v6 keeps as aliases.
  * These packages are in `package.json`, so Dependabot reports their advisories. Raising one is

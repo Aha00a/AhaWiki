@@ -42,6 +42,22 @@
         isPresenterWindowName: function (name, deckIndex) {
             return name === Slide.presenterWindowName(deckIndex);
         },
+        // The largest whole number from lo to hi for which fits() holds, given that it holds for
+        // every number below one that it holds for; lo when it holds for none. What sizes a `big`
+        // title: fits(px) draws the title at px and says whether it stayed inside the slide.
+        largestFitting: function (lo, hi, fits) {
+            if (!fits(lo)) return lo;
+            if (fits(hi)) return hi;
+            while (hi - lo > 1) {
+                var mid = Math.floor((lo + hi) / 2);
+                if (fits(mid)) {
+                    lo = mid;
+                } else {
+                    hi = mid;
+                }
+            }
+            return lo;
+        },
         // Elapsed time as m:ss, or h:mm:ss past the hour.
         formatElapsed: function (ms) {
             var total = Math.max(0, Math.floor(ms / 1000));
@@ -64,6 +80,37 @@
 
     var DESIGN_W = 1280;
     var DESIGN_H = 720;
+
+    // The size a `big` slide's titles take (2026-11-18, the Takahashi method): one size for all of
+    // them, the largest at which none is wider than the slide -- a word that does not fit makes its
+    // title wider, since they do not break inside a word -- and the slide's content is no taller
+    // than the slide. The slide must be drawn at the design size, 1280x720, which is what every
+    // presenting surface draws it at; transform scales what is seen, not what is measured. Null
+    // when there is nothing to size, or the slide is not drawn.
+    var FIT_MIN = 16;
+    var FIT_MAX = 480;
+
+    function fitTitles(slide) {
+        var content = slide.querySelector('.slideContent');
+        var titles = content ? content.querySelectorAll('h1, h2') : [];
+        if (!titles.length || !slide.getClientRects().length) {
+            return null;
+        }
+        var style = getComputedStyle(slide);
+        var height = slide.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+        var fits = function (px) {
+            slide.style.setProperty('--slide-fit', px + 'px');
+            for (var i = 0; i < titles.length; i++) {
+                if (titles[i].scrollWidth > titles[i].clientWidth + 1) {
+                    return false;
+                }
+            }
+            return content.scrollHeight <= height + 1;
+        };
+        var px = Slide.largestFitting(FIT_MIN, FIT_MAX, fits);
+        slide.style.setProperty('--slide-fit', px + 'px');
+        return px;
+    }
 
     function initDeck(deck, deckIndex) {
         var slides = Array.prototype.slice.call(deck.querySelectorAll('.slide'));
@@ -151,6 +198,59 @@
                 thumbs.style.maxHeight = deck.classList.contains('filmstrip')
                     ? stageEl.clientHeight + 'px'
                     : '';
+            }
+            fitBig();
+        }
+
+        // Size the `big` slides' titles, each slide and its thumbnail alike. A slide is measured
+        // where it can be: on the stage, shown for the measuring if it is not the current one, or,
+        // with the stage hidden (overview), as its thumbnail. One that could be measured nowhere --
+        // the deck itself hidden -- waits for the next layout(). Measured again when a font
+        // arrives: the slide was sized with whatever drew it until then.
+        var bigSlides = slides.filter(function (s) {
+            return s.classList.contains('big') && s.querySelector('.slideContent h1, .slideContent h2');
+        });
+        var fitPending = bigSlides.length > 0;
+
+        function fitBig() {
+            if (!fitPending) {
+                return;
+            }
+            var pending = false;
+            bigSlides.forEach(function (slide) {
+                var i = slides.indexOf(slide);
+                var clone = thumbs ? thumbs.children[i].querySelector('.slide') : null;
+                var px = null;
+                if (stageEl.getClientRects().length) {
+                    var display = slide.style.display;
+                    slide.style.display = 'flex';
+                    px = fitTitles(slide);
+                    slide.style.display = display;
+                } else if (clone) {
+                    px = fitTitles(clone);
+                }
+                if (px === null) {
+                    pending = true;
+                    return;
+                }
+                slide.style.setProperty('--slide-fit', px + 'px');
+                if (clone) {
+                    clone.style.setProperty('--slide-fit', px + 'px');
+                }
+            });
+            fitPending = pending;
+        }
+
+        if (bigSlides.length && document.fonts) {
+            var refit = function () {
+                fitPending = true;
+                fitBig();
+            };
+            if (document.fonts.ready) {
+                document.fonts.ready.then(refit);
+            }
+            if (document.fonts.addEventListener) {
+                document.fonts.addEventListener('loadingdone', refit);
             }
         }
 
@@ -408,8 +508,12 @@
             }
         });
 
-        // Re-fit the slide and thumbnails whenever their boxes change size.
+        // Re-fit the slide and thumbnails whenever their boxes change size -- the window's, and the
+        // stage's own, which also changes when a deck that was hidden (a folded section) is shown.
         window.addEventListener('resize', layout);
+        if (typeof ResizeObserver !== 'undefined') {
+            new ResizeObserver(function () { layout(); }).observe(stageEl);
+        }
         document.addEventListener('fullscreenchange', function () {
             setPressed(fullBtn, document.fullscreenElement === deck);
             layout();

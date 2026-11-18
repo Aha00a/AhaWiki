@@ -17,6 +17,10 @@
 	// window: on a 3840px screen a 1280px slide got 192px by 268.8px of padding, its type shrank
 	// with the box inside, and a screenshot took a third of its height. Only a 1280px window drew it
 	// as designed. cqw inside the slide is the slide's and stays.
+	//
+	// A slide class that wants other padding at that size sets --slide-padding (`big`, a keynote
+	// picture slide), which every one of those surfaces reads -- so the stage, a thumbnail and the
+	// filmstrip cannot disagree, and the script that sizes a `big` title measures what each shows.
 	@slideDesignPadding: 64px 89.6px;
 
 	.slide {
@@ -179,6 +183,62 @@
 			}
 		}
 
+		// `big` (the Takahashi method, 2026-11-18): the titles as one word-sized block of type, the
+		// largest the slide holds, and what else the slide says small and muted under them. The size
+		// is the script's (--slide-fit, under @media screen below); without it, and in print, 3em.
+		// Wider padding than a slide's, so the type has room around it.
+		&.big {
+			--slide-padding: 120px 150px;
+
+			.slideContent {
+				text-align: center;
+
+				h1, h2 {
+					font-size: 3em;
+					font-weight: 800;
+					line-height: 1.12;
+					letter-spacing: -0.03em;
+					// A word that does not fit is what tells the script the size is too large; a
+					// word broken in two would never tell it.
+					word-break: keep-all;
+					overflow-wrap: normal;
+				}
+
+				p:not(.slideKicker) {
+					margin-top: 0.8em;
+					font-size: 0.5em;
+					color: var(--slide-muted);
+				}
+			}
+		}
+
+		// `backdrop`: the picture InterpreterSlide took out of the content, across the whole slide,
+		// faint and fading towards the edges, with the content over it.
+		.slideBackdrop {
+			position: absolute;
+			inset: 0;
+			z-index: 0;
+			overflow: hidden;
+			pointer-events: none;
+
+			img {
+				display: block;
+				width: 100%;
+				height: 100%;
+				max-width: none;
+				object-fit: cover;
+				opacity: 0.15;
+				filter: grayscale(0.3);
+				-webkit-mask-image: radial-gradient(120% 100% at 50% 30%, #000 30%, transparent 85%);
+				mask-image: radial-gradient(120% 100% at 50% 30%, #000 30%, transparent 85%);
+			}
+		}
+
+		.slideBackdrop ~ .slideContent {
+			position: relative;
+			z-index: 1;
+		}
+
 		// `dark`: the same dark slide whatever the theme, and in print too -- a deck exported to
 		// PDF should look like the deck. The theme's own variables are set here, so whatever the
 		// slide holds (links, code, tables) is drawn for the dark background as well.
@@ -200,11 +260,140 @@
 
 		.slideNumber {
 			position: absolute;
+			z-index: 1;
 			right: 3cqw;
 			bottom: 2.5cqw;
 			font-size: 2.2cqw;
 			opacity: 0.5;
 		}
+	}
+
+	// `keynote`, the deck's class (`#!Slide keynote`, 2026-11-18): every slide black with a faint
+	// light from above, its content centred, in Pretendard (InterpreterSlide links it for such a
+	// deck), without its number -- and the slide layouts above drawn for it: a screen slide with a
+	// smaller title and less padding so the screenshot is larger, a cover in heavier type with its
+	// subtitle in the gradient, cards as a line over each rather than a box, figures in the
+	// gradient. Fixed colours whatever the theme, and in print too, as `dark` is.
+	&.keynote .slide {
+		--color-text: #F5F5F7;
+		--color-surface: #000;
+		--color-surface-alt: #141416;
+		--color-border: rgba(255, 255, 255, 0.12);
+		--color-border-subtle: rgba(255, 255, 255, 0.08);
+		--color-muted: #8E8E93;
+		--color-link: #2997FF;
+		--color-heading-shadow: none;
+		--slide-accent: #2997FF;
+		--slide-muted: #8E8E93;
+		--slide-card: transparent;
+		--slide-card-border: rgba(255, 255, 255, 0.16);
+		--slide-picture-border: rgba(255, 255, 255, 0.10);
+		--slide-gradient: linear-gradient(100deg, #64D2FF 0%, #2997FF 45%, #BF5AF2 100%);
+		background: radial-gradient(140% 100% at 50% 0%, #1C1C1E 0%, #000 62%);
+		font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+		letter-spacing: -0.02em;
+		word-break: keep-all;
+		-webkit-print-color-adjust: exact;
+		print-color-adjust: exact;
+
+		.slideNumber { display: none; }
+
+		.slideContent {
+			text-align: center;
+
+			h1, h2 {
+				font-weight: 700;
+				letter-spacing: -0.04em;
+			}
+
+			.slideKicker {
+				font-size: 0.3em;
+				font-weight: 600;
+				letter-spacing: 0.14em;
+				color: var(--slide-accent);
+			}
+			.slideAfterKicker { margin-top: 0.25em; }
+
+			.slidePicture {
+				margin-top: 0.6em;
+
+				img {
+					border: none;
+					border-radius: 12px;
+					box-shadow: 0 0 0 1px var(--slide-picture-border), 0 24px 70px rgba(0, 0, 0, 0.7), 0 0 160px rgba(41, 151, 255, 0.12);
+				}
+			}
+
+			.slideCards {
+				> .slideCard {
+					padding: 1em 0.3em 0;
+					border: none;
+					border-top: 2px solid var(--slide-card-border);
+					border-radius: 0;
+					background: transparent;
+					text-align: left;
+				}
+
+				.slideCardTitle {
+					font-size: 1.15em;
+					font-weight: 700;
+				}
+			}
+		}
+
+		// A screenshot under a title: the title smaller and the padding less, so the picture takes
+		// most of the slide (about 73% of its width for a 16:9 screenshot).
+		&.slideHasPicture {
+			--slide-padding: 34px 56px 40px;
+
+			.slideContent h2 {
+				font-size: 0.68em;
+				line-height: 1.2;
+			}
+		}
+
+		&.cover .slideContent {
+			h1 {
+				font-size: 2.5em;
+				font-weight: 800;
+				line-height: 1.08;
+				letter-spacing: -0.05em;
+			}
+			.InterpreterRenderMetaWrapper + p {
+				font-size: 1em;
+				font-weight: 600;
+				.slideGradientText();
+			}
+		}
+
+		&.stats .slideContent .slideCards {
+			> .slideCard {
+				border-top: none;
+				text-align: center;
+			}
+
+			.slideCardTitle {
+				font-size: ~"min(2.6em, 34cqi)";
+				font-weight: 800;
+				line-height: 1.1;
+				letter-spacing: -0.05em;
+				.slideGradientText();
+			}
+		}
+
+		&.big .slideContent {
+			h1, h2 {
+				font-weight: 800;
+				letter-spacing: -0.05em;
+			}
+		}
+	}
+
+	.slideGradientText() {
+		background: var(--slide-gradient);
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
 	}
 
 	// The stage wrapper (built by the script) and the thumbnail container are hidden until a mode
@@ -332,7 +521,7 @@
 					margin: 0;
 					border: none;
 					box-shadow: none;
-					padding: @slideDesignPadding;
+					padding: var(--slide-padding, @slideDesignPadding);
 					transform-origin: center;
 					transform: translate(-50%, -50%) scale(var(--slide-scale, 1));
 					display: none;
@@ -355,7 +544,7 @@
 				margin: 0;
 				border: none;
 				box-shadow: none;
-				padding: @slideDesignPadding;
+				padding: var(--slide-padding, @slideDesignPadding);
 				transform-origin: top left;
 				transform: scale(var(--thumb-scale, 1));
 				pointer-events: none;
@@ -546,7 +735,7 @@
 					margin: 0;
 					border: none;
 					box-shadow: none;
-					padding: @slideDesignPadding;
+					padding: var(--slide-padding, @slideDesignPadding);
 					transform-origin: center;
 					transform: translate(-50%, -50%) scale(var(--slide-scale, 1));
 					display: none;
@@ -560,6 +749,27 @@
 				flex: 1 0 100%;
 				position: static;
 			}
+		}
+
+		// The padding a slide class sets for the design size (--slide-padding), as a share of the
+		// stacked slide's width: 120px of 1280 is 9.375%. Not once the deck is presenting, where a
+		// percentage would be of the stage.
+		&:not(.presenting) .slide.big { padding: 9.375% 11.71875%; }
+		&.keynote:not(.presenting) .slide.slideHasPicture { padding: 2.65625% 4.375% 3.125%; }
+
+		// A `big` title at the size the script found for it: the largest at which no title is wider
+		// than the slide, no word breaks, and the slide's content is no taller than the slide. The
+		// script only measures a slide drawn at the design size, and so only once the deck is
+		// presenting; print, which has no such size, keeps 3em.
+		&.presenting .slide.big .slideContent {
+			h1, h2 { font-size: var(--slide-fit, 3em); }
+		}
+
+		// A keynote deck is black behind its slides too: the letterbox in fullscreen, and the stage.
+		&.keynote,
+		&.keynote.presenting,
+		&.keynote.presenting .slideStage {
+			background-color: #000;
 		}
 	}
 

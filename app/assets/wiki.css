@@ -2711,6 +2711,48 @@
   font-size: 0.5em;
   color: var(--slide-muted);
 }
+.AhaWiki .slideDeck .slide.big {
+  --slide-padding: 120px 150px;
+}
+.AhaWiki .slideDeck .slide.big .slideContent {
+  text-align: center;
+}
+.AhaWiki .slideDeck .slide.big .slideContent h1,
+.AhaWiki .slideDeck .slide.big .slideContent h2 {
+  font-size: 3em;
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  word-break: keep-all;
+  overflow-wrap: normal;
+}
+.AhaWiki .slideDeck .slide.big .slideContent p:not(.slideKicker) {
+  margin-top: 0.8em;
+  font-size: 0.5em;
+  color: var(--slide-muted);
+}
+.AhaWiki .slideDeck .slide .slideBackdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.AhaWiki .slideDeck .slide .slideBackdrop img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  opacity: 0.15;
+  filter: grayscale(0.3);
+  -webkit-mask-image: radial-gradient(120% 100% at 50% 30%, #000 30%, transparent 85%);
+  mask-image: radial-gradient(120% 100% at 50% 30%, #000 30%, transparent 85%);
+}
+.AhaWiki .slideDeck .slide .slideBackdrop ~ .slideContent {
+  position: relative;
+  z-index: 1;
+}
 .AhaWiki .slideDeck .slide.dark {
   --color-text: #E8EDF3;
   --color-surface: #0B0F14;
@@ -2728,10 +2770,113 @@
 }
 .AhaWiki .slideDeck .slide .slideNumber {
   position: absolute;
+  z-index: 1;
   right: 3cqw;
   bottom: 2.5cqw;
   font-size: 2.2cqw;
   opacity: 0.5;
+}
+.AhaWiki .slideDeck.keynote .slide {
+  --color-text: #F5F5F7;
+  --color-surface: #000;
+  --color-surface-alt: #141416;
+  --color-border: rgba(255, 255, 255, 0.12);
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+  --color-muted: #8E8E93;
+  --color-link: #2997FF;
+  --color-heading-shadow: none;
+  --slide-accent: #2997FF;
+  --slide-muted: #8E8E93;
+  --slide-card: transparent;
+  --slide-card-border: rgba(255, 255, 255, 0.16);
+  --slide-picture-border: rgba(255, 255, 255, 0.1);
+  --slide-gradient: linear-gradient(100deg, #64D2FF 0%, #2997FF 45%, #BF5AF2 100%);
+  background: radial-gradient(140% 100% at 50% 0%, #1C1C1E 0%, #000 62%);
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  letter-spacing: -0.02em;
+  word-break: keep-all;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.AhaWiki .slideDeck.keynote .slide .slideNumber {
+  display: none;
+}
+.AhaWiki .slideDeck.keynote .slide .slideContent {
+  text-align: center;
+}
+.AhaWiki .slideDeck.keynote .slide .slideContent h1,
+.AhaWiki .slideDeck.keynote .slide .slideContent h2 {
+  font-weight: 700;
+  letter-spacing: -0.04em;
+}
+.AhaWiki .slideDeck.keynote .slide .slideContent .slideKicker {
+  font-size: 0.3em;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--slide-accent);
+}
+.AhaWiki .slideDeck.keynote .slide .slideContent .slideAfterKicker {
+  margin-top: 0.25em;
+}
+.AhaWiki .slideDeck.keynote .slide .slideContent .slidePicture {
+  margin-top: 0.6em;
+}
+.AhaWiki .slideDeck.keynote .slide .slideContent .slidePicture img {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px var(--slide-picture-border), 0 24px 70px rgba(0, 0, 0, 0.7), 0 0 160px rgba(41, 151, 255, 0.12);
+}
+.AhaWiki .slideDeck.keynote .slide .slideContent .slideCards > .slideCard {
+  padding: 1em 0.3em 0;
+  border: none;
+  border-top: 2px solid var(--slide-card-border);
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+}
+.AhaWiki .slideDeck.keynote .slide .slideContent .slideCards .slideCardTitle {
+  font-size: 1.15em;
+  font-weight: 700;
+}
+.AhaWiki .slideDeck.keynote .slide.slideHasPicture {
+  --slide-padding: 34px 56px 40px;
+}
+.AhaWiki .slideDeck.keynote .slide.slideHasPicture .slideContent h2 {
+  font-size: 0.68em;
+  line-height: 1.2;
+}
+.AhaWiki .slideDeck.keynote .slide.cover .slideContent h1 {
+  font-size: 2.5em;
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -0.05em;
+}
+.AhaWiki .slideDeck.keynote .slide.cover .slideContent .InterpreterRenderMetaWrapper + p {
+  font-size: 1em;
+  font-weight: 600;
+  background: var(--slide-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.AhaWiki .slideDeck.keynote .slide.stats .slideContent .slideCards > .slideCard {
+  border-top: none;
+  text-align: center;
+}
+.AhaWiki .slideDeck.keynote .slide.stats .slideContent .slideCards .slideCardTitle {
+  font-size: min(2.6em, 34cqi);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.05em;
+  background: var(--slide-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.AhaWiki .slideDeck.keynote .slide.big .slideContent h1,
+.AhaWiki .slideDeck.keynote .slide.big .slideContent h2 {
+  font-weight: 800;
+  letter-spacing: -0.05em;
 }
 .AhaWiki .slideDeck .slideStage {
   display: none;
@@ -2836,7 +2981,7 @@
     margin: 0;
     border: none;
     box-shadow: none;
-    padding: 64px 89.6px;
+    padding: var(--slide-padding, 64px 89.6px);
     transform-origin: center;
     transform: translate(-50%, -50%) scale(var(--slide-scale, 1));
     display: none;
@@ -2856,7 +3001,7 @@
     margin: 0;
     border: none;
     box-shadow: none;
-    padding: 64px 89.6px;
+    padding: var(--slide-padding, 64px 89.6px);
     transform-origin: top left;
     transform: scale(var(--thumb-scale, 1));
     pointer-events: none;
@@ -3017,7 +3162,7 @@
     margin: 0;
     border: none;
     box-shadow: none;
-    padding: 64px 89.6px;
+    padding: var(--slide-padding, 64px 89.6px);
     transform-origin: center;
     transform: translate(-50%, -50%) scale(var(--slide-scale, 1));
     display: none;
@@ -3029,6 +3174,21 @@
     order: 3;
     flex: 1 0 100%;
     position: static;
+  }
+  .AhaWiki .slideDeck:not(.presenting) .slide.big {
+    padding: 9.375% 11.71875%;
+  }
+  .AhaWiki .slideDeck.keynote:not(.presenting) .slide.slideHasPicture {
+    padding: 2.65625% 4.375% 3.125%;
+  }
+  .AhaWiki .slideDeck.presenting .slide.big .slideContent h1,
+  .AhaWiki .slideDeck.presenting .slide.big .slideContent h2 {
+    font-size: var(--slide-fit, 3em);
+  }
+  .AhaWiki .slideDeck.keynote,
+  .AhaWiki .slideDeck.keynote.presenting,
+  .AhaWiki .slideDeck.keynote.presenting .slideStage {
+    background-color: #000;
   }
 }
 @media print {

@@ -1,5 +1,5 @@
 // Copies the third-party files the wiki's pages load -- jQuery and its plugins, MathJax, d3,
-// echarts, mermaid, CodeMirror, diff2html, Font Awesome -- from node_modules into
+// echarts, mermaid, CodeMirror, diff2html, Font Awesome, Pretendard -- from node_modules into
 // public/vendor/, where the templates name them through PublicAsset.url.
 //
 //   npm run vendor
@@ -65,6 +65,13 @@ const manifest = [
   { pkg: "mathjax", from: "ui", to: "mathjax/ui" },
   { pkg: "@mathjax/mathjax-newcm-font", from: "chtml/woff2", to: "mathjax-newcm-font/chtml/woff2" },
   { pkg: "@mathjax/mathjax-newcm-font", from: "chtml/dynamic", to: "mathjax-newcm-font/chtml/dynamic" },
+  // A `keynote` slide deck's type (InterpreterSlide links the CSS on a page that has one). The
+  // dynamic subset: the CSS names ninety-two files, each a slice of Unicode, and a browser fetches
+  // only the slices the deck's text falls in. The CSS names ./woff2-dynamic-subset/, so the files
+  // go beside it; the licence goes with them (SIL OFL 1.1).
+  { pkg: "pretendard", from: "dist/web/variable/pretendardvariable-dynamic-subset.css", to: "pretendard/pretendardvariable-dynamic-subset.css" },
+  { pkg: "pretendard", from: "dist/web/variable/woff2-dynamic-subset", to: "pretendard/woff2-dynamic-subset" },
+  { pkg: "pretendard", from: "dist/LICENSE.txt", to: "pretendard/LICENSE.txt" },
   // The edit page.
   { pkg: "codemirror", from: "lib/codemirror.css", to: "codemirror/codemirror.css" },
   { pkg: "codemirror", from: "lib/codemirror.js", to: "codemirror/codemirror.min.js", minify: true },

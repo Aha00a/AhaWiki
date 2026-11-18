@@ -10,6 +10,15 @@ theme, the cards in one row of equal width with arrows between them, a figure th
 line in the narrowest card, a picture that stays inside its slide in its own proportions, the label
 on its title, and headings without a number, an underline or a fold button.
 
+Under it, a `keynote` deck of seven, with the Pretendard stylesheet `InterpreterSlide` links for
+one: a cover with a picture behind it (`backdrop`), cards with arrows, three `big` slides -- a
+short title, a long one that has to wrap between words, one word in an h1 -- a screenshot under
+a label, and figures. The checks there: the black slide and Pretendard whatever the theme, the
+font arrived, the picture behind the content across the whole slide, a `big` title at the size the
+script found, inside the slide, a pixel more not, no word broken, the thumbnail at the stage's
+size -- and that a font arriving later has the titles sized again (the page draws one in serif,
+then lets a font arrive).
+
 The markup is what `SlideUnit` pins on the server side; change one and change the other.
 
 Serve the repository root and open the page:
@@ -19,13 +28,14 @@ python -m http.server 9997
 ```
 
 then `http://localhost:9997/test/manual/slide-layout/index.html`. The results are printed under the
-deck. `?theme=dark` draws the page in the dark theme; `?stacked` leaves `AhaWiki.Slide.js` out, to
-check the slides as they stand without it.
+decks. `?theme=dark` draws the page in the dark theme; `?stacked` leaves `AhaWiki.Slide.js` out, to
+check the slides as they stand without it. `?at=3` leaves the first deck on its third slide, and
+`?deck=keynote&at=3` the keynote deck, with the first put away -- for `--screenshot`.
 
 Headless, the three of them:
 
 ```bash
-chrome --headless=new --window-size=1400,1000 --virtual-time-budget=5000 --dump-dom "http://localhost:9997/test/manual/slide-layout/index.html?theme=dark"
+chrome --headless=new --window-size=1400,1000 --virtual-time-budget=8000 --dump-dom "http://localhost:9997/test/manual/slide-layout/index.html?theme=dark"
 ```
 
 and read the `<pre id="result">` in what it prints. Run it at more than one window width -- 1280,
@@ -34,7 +44,8 @@ is the one width at which that looked right; the page prints the padding and typ
 
 A run in which both pictures measure about 60px high and three times as wide is one in which
 `http.server` dropped the pictures' requests; they drew as broken images. Run it again -- two in
-about thirty runs did that on 2026-11-18, and the same page passed each time it was repeated.
+about thirty runs did that on 2026-11-18, and the same page passed each time it was repeated. Its
+fonts go the same way: such a run also says no slice of Pretendard loaded.
 
 Give each run a new, empty `--user-data-dir`: `http.server` sends no cache headers, so a profile
 kept between runs can go on running yesterday's

@@ -175,6 +175,47 @@ object SlideUnit {
       assertEquals(Interpreters.toHtmlString("#!Slide\n * 수집\n  * 센서").contains("slideCard"), false)
     }
 
+    // `keynote` is the deck's class, and only a keynote deck links Pretendard.
+    {
+      val html = Interpreters.toHtmlString("#!Slide keynote\n#!class cover\n= 제목\n----\n둘")
+      assertEquals(html.contains("class=\"slideDeck keynote\""), true)
+      assertEquals(sections(html), Seq("slide cover", "slide"))
+      assertEquals(count(html, "vendor/pretendard/pretendardvariable-dynamic-subset.css"), 1)
+      assertEquals(html.indexOf("pretendardvariable") < html.indexOf("class=\"slideDeck"), true)
+      assertEquals(Interpreters.toHtmlString("#!Slide\n#!var class keynote\n= 제목").contains("pretendardvariable"), true)
+      assertEquals(Interpreters.toHtmlString("#!Slide\n= 제목").contains("pretendardvariable"), false)
+    }
+
+    // `backdrop`: the first picture alone in its paragraph leaves the content, without the width it
+    // was given, and is drawn behind it; it is not a picture the slide fits. A second one still is.
+    {
+      val html = Interpreters.toHtmlString("#!Slide\n#!class cover backdrop\n= 제목\n부제\n[[Image(/bg.webp, 93%)]]")
+      assertEquals(sections(html), Seq("slide cover backdrop"))
+      assertEquals(count(html, "<div class=\"slideBackdrop\"><img"), 1)
+      val backdrop = html.substring(html.indexOf("slideBackdrop"), html.indexOf("slideContent"))
+      assertEquals(backdrop.contains("/bg.webp"), true)
+      assertEquals(backdrop.contains("style="), false)
+      val content = html.substring(html.indexOf("slideContent"))
+      assertEquals(content.contains("/bg.webp"), false)
+      assertEquals(content.contains("<p>부제</p>"), true)
+      assertEquals(html.contains("slidePicture"), false)
+
+      val two = Interpreters.toHtmlString("#!Slide\n#!class backdrop\n[[Image(/bg.webp)]]\n== 상황판\n[[Image(/a.webp)]]")
+      assertEquals(sections(two), Seq("slide backdrop slideHasPicture"))
+      assertEquals(two.substring(two.indexOf("slideBackdrop"), two.indexOf("slideContent")).contains("/bg.webp"), true)
+      assertEquals(two.contains("<p class=\"slidePicture\"><span class=\"Macro InlineMacro Image\"><img src=\"/a.webp\""), true)
+      // Without the class a picture stays in the content; with it and no picture nothing moves.
+      assertEquals(Interpreters.toHtmlString("#!Slide\n[[Image(/bg.webp)]]").contains("slideBackdrop"), false)
+      assertEquals(Interpreters.toHtmlString("#!Slide\n#!class backdrop\n= 제목").contains("slideBackdrop"), false)
+    }
+
+    // `big` is drawn by the stylesheet and sized by the script: the server only passes the class on.
+    {
+      val html = Interpreters.toHtmlString("#!Slide\n#!class big\n== 종합 관제\n상황을 보는 화면")
+      assertEquals(sections(html), Seq("slide big"))
+      assertEquals(html.contains("<p>상황을 보는 화면</p>"), true)
+    }
+
     // `#!class` is Slide's alone: in Paper the line is text, as `???` is.
     {
       val html = Interpreters.toHtmlString("#!Paper\na\n#!class dark\nb")

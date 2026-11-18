@@ -66,3 +66,22 @@ test('formatElapsed reads m:ss, and h:mm:ss past the hour', () => {
     assert.equal(Slide.formatElapsed(3600000 + 5 * 60000 + 7000), '1:05:07');
     assert.equal(Slide.formatElapsed(-5), '0:00');
 });
+
+test('largestFitting finds the largest size that fits, by halving', () => {
+    const upTo = (limit) => {
+        const asked = [];
+        const fits = (n) => { asked.push(n); return n <= limit; };
+        return { fits, asked };
+    };
+    for (const limit of [16, 17, 100, 285, 479, 480]) {
+        const { fits, asked } = upTo(limit);
+        assert.equal(Slide.largestFitting(16, 480, fits), limit);
+        assert.ok(asked.length <= 12, `${limit}: asked ${asked.length} times`);
+    }
+    // Nothing fits: the smallest, which the caller draws anyway.
+    assert.equal(Slide.largestFitting(16, 480, () => false), 16);
+    // Everything fits: the largest, asked twice.
+    const { fits, asked } = upTo(10000);
+    assert.equal(Slide.largestFitting(16, 480, fits), 480);
+    assert.equal(asked.length, 2);
+});

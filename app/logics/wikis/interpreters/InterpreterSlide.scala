@@ -1,5 +1,6 @@
 package logics.wikis.interpreters
 
+import logics.PublicAsset
 import models.{ContextWikiPage, PageContent}
 import org.jsoup.nodes.{Comment, Document, Element, Node, TextNode}
 import org.jsoup.parser.{ParseSettings, Parser}
@@ -25,6 +26,12 @@ import scala.jdk.CollectionConverters._
 // on the HTML here (`layout`), since what they depend on is the shape of the content, which a
 // stylesheet cannot read: whether a paragraph holds text besides its picture, or which list items
 // a sub-list belongs to.
+//
+// The deck takes classes too, from `#!Slide name` or `#!var class` (2026-11-18): `keynote` draws every
+// slide black with a light from above, centred, in Pretendard, without its number. Two slide classes
+// work in any deck: `big`, whose titles AhaWiki.Slide.js sizes to the largest that fits the slide
+// (the Takahashi method), and `backdrop`, whose picture is taken out of the content here and drawn
+// faint behind it, across the whole slide.
 object InterpreterSlide extends TraitInterpreter {
 
   import models.tables.CalculatedLink
@@ -36,14 +43,22 @@ object InterpreterSlide extends TraitInterpreter {
     val cssClass = pageContent.argument.lift(0).filter(_.nonEmpty)
       .getOrElse(eciv.variables.getOrElse("class", ""))
 
+    // Pretendard, for a keynote deck only: a page that has none fetches nothing. A stylesheet may sit
+    // in the body; a second deck on the page names the same address, which the browser fetches once.
+    val fontLink =
+      if (!cssClass.split("""\s+""").contains("keynote")) ""
+      else "<link rel=\"stylesheet\" href=\"" + PublicAsset.url("vendor/pretendard/pretendardvariable-dynamic-subset.css") + "\">\n"
+
     val total = chunks.length
     val slides = chunks.map { c =>
       val orient = if (c.isLandscape) Seq("landscape") else if (c.isPortrait) Seq("portrait") else Nil
-      val (html, layoutClasses) = layout(c.html, c.classes)
-      val sectionClass = (Seq("slide") ++ orient ++ c.classes ++ layoutClasses).mkString(" ")
+      val laid = layout(c.html, c.classes)
+      val sectionClass = (Seq("slide") ++ orient ++ c.classes ++ laid.classes).mkString(" ")
+      // The backdrop before the content, so the content is drawn over it.
+      val backdrop = laid.backdrop.map(b => "\n  <div class=\"slideBackdrop\">" + b + "</div>").getOrElse("")
       s"""<section class="$sectionClass" data-index="${c.index}">
-         |  <div class="slideNumber">${c.pageNo} / ${c.pageTotal}</div>
-         |  <div class="slideContent"><div>$html</div></div>${c.notesHtml.map(n => "\n  <aside class=\"slideNotes\">" + n + "</aside>").getOrElse("")}
+         |  <div class="slideNumber">${c.pageNo} / ${c.pageTotal}</div>$backdrop
+         |  <div class="slideContent"><div>${laid.html}</div></div>${c.notesHtml.map(n => "\n  <aside class=\"slideNotes\">" + n + "</aside>").getOrElse("")}
          |</section>""".stripMargin
     }
 
@@ -59,7 +74,7 @@ object InterpreterSlide extends TraitInterpreter {
     // rather than hijacking the arrow keys of the whole page. Without JS the deck degrades to the
     // slides stacked and readable; AhaWiki.Slide.js adds the `presenting` class to switch to one at
     // a time. data-total lets the script show the counter before it has measured anything.
-    s"""<div class="slideDeck $cssClass" tabindex="0" data-total="$total">
+    s"""$fontLink<div class="slideDeck $cssClass" tabindex="0" data-total="$total">
        |${slides.mkString("\n")}
        |  <div class="slideChrome">
        |    <div class="slideChromeGroup">
@@ -82,10 +97,15 @@ object InterpreterSlide extends TraitInterpreter {
   override def toSeqLink(content: String)(implicit wikiContext: ContextWikiPage): Seq[CalculatedLink] =
     PaperSlideCore.toSeqLink(content)
 
+  /** One slide's HTML as `layout` leaves it, the picture to draw behind it, and the classes its <section> takes. */
+  private[interpreters] case class Layout(html: String, backdrop: Option[String], classes: Seq[String])
+
   /**
    * Marks the parts of one slide's HTML that _slide.less lays out, and returns it with the classes
    * the slide's <section> takes for them:
    *
+   *  - On a `backdrop` slide, the first paragraph that is only a picture is taken out, and the
+   *    picture alone returned to be drawn behind the slide. It is not one of the pictures below.
    *  - `slideKicker` on a paragraph that is all there is above the slide's first heading -- the small
    *    label over a title -- and `slideAfterKicker` on that heading.
    *  - `slidePicture` on a paragraph that holds one picture and nothing else, `slideFill` on each
@@ -99,7 +119,7 @@ object InterpreterSlide extends TraitInterpreter {
    *
    * A slide with none of these comes back as it went in, without passing through the parser.
    */
-  private[interpreters] def layout(html: String, classes: Seq[String]): (String, Seq[String]) = {
+  private[interpreters] def layout(html: String, classes: Seq[String]): Layout = {
     // Parsed as the body's children, so a <style> or <script> a block writes stays where it is
     // rather than moving to a <head>; preserveCase, so an inline SVG's viewBox is not lower-cased.
     val document = Document.createShell("")
@@ -108,12 +128,13 @@ object InterpreterSlide extends TraitInterpreter {
     Parser.htmlParser().settings(ParseSettings.preserveCase)
       .parseFragmentInput(html, root, "").asScala.toList.foreach(root.appendChild)
 
+    val backdrop = if (classes.contains("backdrop")) takeBackdrop(root) else None
     val kicker = markKicker(root)
     val picture = markPictures(root)
     val cards = classes.contains("cards") && markCards(root)
 
-    if (!kicker && !picture && !cards) (html, Nil)
-    else (root.html(), if (picture) Seq("slideHasPicture") else Nil)
+    if (backdrop.isEmpty && !kicker && !picture && !cards) Layout(html, None, Nil)
+    else Layout(root.html(), backdrop, if (picture) Seq("slideHasPicture") else Nil)
   }
 
   private def isBlankNode(node: Node): Boolean = node match {
@@ -146,6 +167,19 @@ object InterpreterSlide extends TraitInterpreter {
   // The blocks from `element` up to the slide's root, exclusive at both ends.
   private def blocksBetween(element: Element, root: Element): Seq[Element] =
     element.parents().asScala.takeWhile(_ != root).toSeq
+
+  // The picture behind a `backdrop` slide, out of its paragraph and whatever wrapped it: a link
+  // under the content could not be followed, and the width it was given was the content's -- behind
+  // the slide it covers the slide.
+  private def takeBackdrop(root: Element): Option[String] =
+    root.select("p").asScala.find(isPicture).flatMap { paragraph =>
+      pictureIn(paragraph).map { img =>
+        img.removeAttr("style")
+        val html = img.outerHtml()
+        paragraph.remove()
+        html
+      }
+    }
 
   private def markKicker(root: Element): Boolean = {
     val marked = for {
