@@ -264,6 +264,15 @@
 		&.Table {
 			overflow-x: auto;
 			margin-left: var(--wiki-indent-body, 30px);
+			// Headings that stay in view (2026-11-18): the header rows at the top, the first header
+			// column at the left. A box that scrolls sideways scrolls up and down too as far as CSS
+			// is concerned, so `top: 0` holds a cell to this box, not to the page -- and a box as
+			// tall as its table never scrolls. So a table taller than the screen is held to 80% of
+			// it and scrolls inside; a shorter one is not changed. The price is a scroll box within
+			// the page on a long table. Printed, the whole table is there.
+			@media screen {
+				max-height: 80vh;
+			}
 			.InterpreterRenderContent {
 				--wiki-indent-body: var(--wiki-contained-indent-body, 0px);
 				--wiki-indent-list: var(--wiki-contained-indent-list, 10px);
@@ -291,6 +300,37 @@
 						box-sizing: border-box;
 						width: 0;
 						min-width: 100%;
+					}
+					// The cells that stay put. Each header row's offset is the height of the rows
+					// above it -- the filter row sits under the headings -- which only the browser
+					// knows, so AhaWiki.PageView.js writes it as --sticky-top on the row. Only the
+					// first header column stays at the left: the second would need the first's width
+					// the same way, and no table has asked for it. The corner cell stays at the left
+					// only when the body has a header column, or it would hang over the scrolled body.
+					//
+					// A stuck cell needs a background of its own, or the cells passing under it show
+					// through the header's translucent colour: the page's colour under the header's.
+					// A collapsed border is painted by the table and stays behind when the cell moves,
+					// so the edge it leaves on is drawn again with an inset shadow.
+					--sticky-bg: ~"linear-gradient(var(--color-table-header-bg), var(--color-table-header-bg)), var(--color-bg)";
+					> thead > tr > * {
+						position: sticky;
+						top: var(--sticky-top, 0);
+						z-index: 2;
+						background: var(--sticky-bg);
+						box-shadow: inset 0 -1px var(--color-table-border);
+					}
+					> tbody > tr > th:first-child {
+						position: sticky;
+						left: 0;
+						z-index: 1;
+						background: var(--sticky-bg);
+						box-shadow: inset -1px 0 var(--color-table-border);
+					}
+					&:has(> tbody > tr > th) > thead > tr > :first-child {
+						left: 0;
+						z-index: 3;
+						box-shadow: inset -1px -1px var(--color-table-border);
 					}
 				}
 			}
