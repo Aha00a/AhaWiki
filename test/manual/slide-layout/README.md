@@ -9,7 +9,10 @@ so), a tall picture inside a link, and a plain slide -- with the real `app/asset
 colours whatever the theme, the cards in one row of equal width with arrows between them, a figure
 that stays on one line in the narrowest card, a picture that stays inside its slide in its own
 proportions, the label on its title, the line between the title and the picture -- under half the
-title, muted, one line -- and headings without a number, an underline or a fold button.
+title, muted, one line -- and headings without a number, an underline or a fold button. And the
+filmstrip rail when it holds more slides than it is tall: the page cuts the rail short, since its
+few slides would fit, and checks that the rail scrolls and the thumbnails stay 16:9 rather than
+squeezed flat, which is how the EWS deck's 83 drew.
 
 Under it, a `keynote` deck of seven, with the Pretendard stylesheet `InterpreterSlide` links for
 one: a cover with a picture behind it (`backdrop`), cards with arrows, three `big` slides -- a

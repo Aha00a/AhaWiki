@@ -391,6 +391,22 @@ window.addEventListener('load', async function () {
         show(0);
     }
 
+    // A deck longer than the filmstrip rail: the rail scrolls, and its thumbnails keep their height.
+    // The rail is a flex column and a thumbnail hides its overflow, which lets flex squeeze it to
+    // nothing -- 83 slides drew as a stack of 2px lines (2026-11-18, the EWS deck). The rail is held
+    // short here, since this deck's few slides fit any rail as tall as its stage.
+    if (!stacked) {
+        deck.querySelector('.slideFilmstrip').click();
+        const rail = deck.querySelector('.slideThumbs');
+        rail.style.maxHeight = '120px';
+        const ratios = [...rail.querySelectorAll('.slideThumbItem')].map((item) => rect(item).width / rect(item).height);
+        check('filmstrip: a full rail keeps its thumbnails 16:9', ratios.every((r) => near(r, 16 / 9, 0.1)), ratios.map((r) => r.toFixed(2)).join(','));
+        check('filmstrip: a full rail scrolls', rail.scrollHeight > rail.clientHeight);
+        rail.style.maxHeight = '';
+        deck.querySelector('.slideFilmstrip').click();
+        show(0);
+    }
+
     // keynote: the deck's own look, whatever the theme.
     {
         const s = showK(1);

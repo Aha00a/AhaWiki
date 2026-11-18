@@ -765,6 +765,13 @@
 				scrollbar-gutter: stable;
 				padding: 6px;
 				border-right: 1px solid var(--color-border);
+
+				// The script gives each thumbnail its height, but in a flex column an item that hides
+				// its overflow may shrink to nothing: a deck longer than the rail drew as a stack of
+				// 2px lines (83 slides, 2026-11-18). Not shrinking, they overflow and the rail scrolls.
+				.slideThumbItem {
+					flex-shrink: 0;
+				}
 			}
 
 			.slideStage {
