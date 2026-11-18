@@ -173,7 +173,9 @@
                 notesBody.classList.toggle('empty', !aside);
                 notesBody.scrollTop = 0;
                 var nextSlide = slides[index + 1];
-                var heading = nextSlide && nextSlide.querySelector('.slideContent h1, .slideContent h2, .slideContent h3');
+                // A slide that is only a picture has no heading of its own; its notes may.
+                var heading = nextSlide && (nextSlide.querySelector('.slideContent h1, .slideContent h2, .slideContent h3')
+                    || nextSlide.querySelector('.slideNotes h1, .slideNotes h2, .slideNotes h3'));
                 notesNext.textContent = nextSlide
                     ? '→ ' + (index + 2) + '. ' + (heading ? heading.textContent.trim() : '')
                     : '→ (end)';

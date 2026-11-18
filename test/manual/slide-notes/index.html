@@ -10,22 +10,28 @@
 </style>
 </head>
 <body class="AhaWiki">
-<!-- What InterpreterSlide writes for three slides, the first two with notes (SlideUnit pins the
+<!-- What InterpreterSlide writes for four slides, all but the third with notes, the last a picture
+     whose title is only in its notes (SlideUnit pins the
      server side). The checks below drive the real AhaWiki.Slide.js against the real wiki.css. -->
-<div class="slideDeck " tabindex="0" data-total="3">
+<div class="slideDeck " tabindex="0" data-total="4">
 <section class="slide" data-index="0">
-  <div class="slideNumber">1 / 3</div>
+  <div class="slideNumber">1 / 4</div>
   <div class="slideContent"><div><h1>첫 장</h1><p>audience-one</p></div></div>
   <aside class="slideNotes"><p>notes-one 첫 장에서 할 말</p></aside>
 </section>
 <section class="slide" data-index="1">
-  <div class="slideNumber">2 / 3</div>
+  <div class="slideNumber">2 / 4</div>
   <div class="slideContent"><div><h1>둘째 장</h1><p>audience-two</p></div></div>
   <aside class="slideNotes"><p>notes-two</p></aside>
 </section>
 <section class="slide" data-index="2">
-  <div class="slideNumber">3 / 3</div>
+  <div class="slideNumber">3 / 4</div>
   <div class="slideContent"><div><h1>셋째 장</h1><p>audience-three</p></div></div>
+</section>
+<section class="slide" data-index="3">
+  <div class="slideNumber">4 / 4</div>
+  <div class="slideContent"><div><p>(only a picture)</p></div></div>
+  <aside class="slideNotes"><h3>그림 장</h3><p>notes-four</p></aside>
 </section>
   <div class="slideChrome">
     <div class="slideChromeGroup">
@@ -34,7 +40,7 @@
     </div>
     <div class="slideChromeGroup">
       <button type="button" class="slidePrev" title="Previous slide (&#8592;)" aria-label="Previous slide">&#8249;</button>
-      <span class="slideCounter"><span class="slideCurrent">1</span> / 3</span>
+      <span class="slideCounter"><span class="slideCurrent">1</span> / 4</span>
       <button type="button" class="slideNext" title="Next slide (&#8594;)" aria-label="Next slide">&#8250;</button>
     </div>
     <div class="slideChromeGroup">
@@ -58,7 +64,7 @@ if (!/^AhaWikiSlidePresenter/.test(window.name)) {
         const asides = [...deck.querySelectorAll('.slideStage .slideNotes')];
         const panel = deck.querySelector('.slideNotesPanel');
 
-        check('notes are hidden on the stage', asides.length === 2 && asides.every((a) => !visible(a)));
+        check('notes are hidden on the stage', asides.length === 3 && asides.every((a) => !visible(a)));
         check('the panel is hidden until asked', !!panel && !visible(panel));
 
         deck.querySelector('.slideNotesToggle').click();
@@ -73,13 +79,14 @@ if (!/^AhaWikiSlidePresenter/.test(window.name)) {
         check('moving on changes the notes', panel.textContent.includes('notes-two') && !panel.textContent.includes('notes-one'));
         deck.querySelector('.slideNext').click();
         check('a slide without notes shows none', !panel.textContent.includes('notes-'));
+        check('a picture slide is named by the heading in its notes', panel.textContent.includes('4. 그림 장'));
         deck.querySelector('.slidePrev').click();
         deck.querySelector('.slidePrev').click();
 
         deck.querySelector('.slideOverview').click();
         check('the overview turns the notes off', !deck.classList.contains('notes'));
         const thumbsNotes = [...deck.querySelectorAll('.slideThumbs .slideNotes')];
-        check('thumbnails do not show notes', thumbsNotes.length === 2 && thumbsNotes.every((a) => !visible(a)));
+        check('thumbnails do not show notes', thumbsNotes.length === 3 && thumbsNotes.every((a) => !visible(a)));
         deck.querySelector('.slideOverview').click();
 
         // The presenter window: opened on the same page, it follows this deck and this deck follows it.

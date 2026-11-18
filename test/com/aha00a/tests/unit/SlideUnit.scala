@@ -83,6 +83,16 @@ object SlideUnit {
       assertEquals(without.contains("slidePresenter"), false)
     }
 
+    // Notes may be a block of their own -- a Markdown script, as the EWS deck keeps it. That works
+    // when the deck is the whole page; inside an inline [[[#!Slide]]] the first ]]] would close it.
+    {
+      val html = Interpreters.toHtmlString("#!Slide\n= Cover\n???\n[[[#!Markdown\n### 1. First\n\nsay **this**\n]]]\n----\npicture\n???\n[[[#!Markdown\n### 2. Second\n]]]")
+      assertEquals(count(html, "<section class=\"slide"), 2)
+      assertEquals(count(html, "<aside class=\"slideNotes\">"), 2)
+      assertEquals(html.contains("<strong>this</strong>"), true)
+      assertEquals(html.contains("???"), false)
+    }
+
     // Notes are Slide's alone: in Paper the `???` line is text, and the core leaves it unless asked.
     {
       val (_, chunks) = PaperSlideCore.render("#!Paper\na\n???\nb")
