@@ -146,7 +146,9 @@ document.addEventListener('DOMContentLoaded', function () {
         var interpreterCodeBlock = content.querySelector('.Interpreter.Text, .Interpreter.Vim');
         // Inside a slide deck these absolutely-positioned top-right overlays (Edit, Copy) sit on
         // top of the slide content -- and cover it entirely in the small overview thumbnails -- so
-        // a presentation skips them. The page is still edited from the normal view.
+        // a presentation skips them. The page is still edited from the normal view. So does the
+        // fold toggle below (2026-11-18): it put a faint button before every `==` title on a slide,
+        // and folding a slide's only section would leave it empty.
         var insideSlideDeck = wrapper.closest && wrapper.closest('.slideDeck');
         var editLink = null;
         var copyButton = null;
@@ -256,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         var foldToggle = null;
-        if (heading && !wrapper.closest('.paperContent')) {
+        if (heading && !wrapper.closest('.paperContent') && !insideSlideDeck) {
             foldToggle = wrapper.querySelector('.InterpreterRenderFoldToggle');
             if (!foldToggle) {
                 foldToggle = document.createElement('button');

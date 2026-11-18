@@ -98,9 +98,81 @@ object SlideUnit {
       val (_, chunks) = PaperSlideCore.render("#!Paper\na\n???\nb")
       assertEquals(chunks.head.notesHtml, None)
       assertEquals(chunks.head.html.contains("b"), true)
-      val (_, slideChunks) = PaperSlideCore.render("#!Slide\na\n???\nb", notes = true)
+      val (_, slideChunks) = PaperSlideCore.render("#!Slide\na\n???\nb", slide = true)
       assertEquals(slideChunks.head.notesHtml.exists(_.contains("b")), true)
       assertEquals(slideChunks.head.html.contains("b"), false)
+    }
+
+    def sections(html: String): Seq[String] =
+      """<section class="([^"]*)"""".r.findAllMatchIn(html).map(_.group(1)).toSeq
+
+    // `#!class` gives one slide classes of its own; the line itself is not drawn, the names are
+    // filtered to what a class attribute can hold, and the lines after it keep their numbers.
+    {
+      val html = Interpreters.toHtmlString("#!Slide\none\n----\n#!class dark cards \"><b>x</b> ok_2\n== Two")
+      assertEquals(sections(html), Seq("slide", "slide dark cards ok_2"))
+      assertEquals(html.contains("#!class"), false)
+      assertEquals(html.contains("<b>x</b>"), false)
+      assertEquals(html.contains("data-line-start=\"5\""), true)
+    }
+
+    // On the first slide the line sits right under `#!Slide`, among the page's directives. It is
+    // still that slide's, and it does not become the deck's class.
+    {
+      val html = Interpreters.toHtmlString("#!Slide\n#!class dark cover\n= Cover\n----\nplain")
+      assertEquals(sections(html), Seq("slide dark cover", "slide"))
+      assertEquals(html.contains("class=\"slideDeck \""), true)
+      assertEquals(html.contains("data-line-start=\"3\""), true)
+    }
+
+    // A paragraph alone above the first heading is the label over the title.
+    {
+      val html = Interpreters.toHtmlString("#!Slide\n종합 관제\n== 상황판\n본문")
+      assertEquals(html.contains("<p class=\"slideKicker\">종합 관제</p>"), true)
+      assertEquals(html.contains("slideAfterKicker"), true)
+      assertEquals(html.contains("<p>본문</p>"), true)
+      // Not when it is not alone, and not when there is no heading after it.
+      assertEquals(Interpreters.toHtmlString("#!Slide\n하나\n\n둘\n== 제목").contains("slideKicker"), false)
+      assertEquals(Interpreters.toHtmlString("#!Slide\n하나").contains("slideKicker"), false)
+    }
+
+    // A paragraph that is only a picture fills what the slide has left: it, the blocks around it
+    // and the slide are marked for _slide.less.
+    {
+      val html = Interpreters.toHtmlString("#!Slide\n종합 관제\n== 상황판\n[[Image(/a.webp)]]")
+      // Inside the <span> every macro's output is put in.
+      assertEquals(html.contains("<p class=\"slidePicture\"><span class=\"Macro InlineMacro Image\"><img"), true)
+      assertEquals(sections(html), Seq("slide slideHasPicture"))
+      assertEquals(html.contains("<div class=\"HeadingWrapper상황판 slideFill\">"), true)
+      // A picture that is a link is still a picture.
+      assertEquals(Interpreters.toHtmlString("#!Slide\n[[[#!Html\n<p><a href=\"/x\"><img src=\"/a.webp\"></a></p>\n]]]").contains("slidePicture"), true)
+      // A picture with words beside it is a paragraph like any other.
+      val captioned = Interpreters.toHtmlString("#!Slide\n== 상황판\n[[Image(/a.webp)]] 설명")
+      assertEquals(captioned.contains("slidePicture"), false)
+      assertEquals(sections(captioned), Seq("slide"))
+    }
+
+    // `cards`: the first list becomes cards, each item's sub-list moved inside it as the body.
+    // AhaMark writes a sub-list as the item's next sibling, so without the move a card would end
+    // where its title does.
+    {
+      val html = Interpreters.toHtmlString("#!Slide\n#!class cards flow\n== 흐름\n * 수집\n  * 센서\n * 판단\n  * 임계값\n  * 지속\n * 발령\n\n * 다른 목록")
+      assertEquals(sections(html), Seq("slide cards flow"))
+      assertEquals(count(html, "class=\"slideCards\""), 1)
+      assertEquals(count(html, "<li class=\"slideCard\">"), 3)
+      assertEquals(html.contains("<li class=\"slideCard\"><div class=\"slideCardTitle\">수집</div><ul class=\"slideCardBody\">\n<li>센서</li>\n</ul></li>"), true)
+      assertEquals(html.contains("<div class=\"slideCardTitle\">판단</div><ul class=\"slideCardBody\">\n<li>임계값</li>\n<li>지속</li>\n</ul></li>"), true)
+      assertEquals(html.contains("<li class=\"slideCard\"><div class=\"slideCardTitle\">발령</div></li>"), true)
+      // Only the first list.
+      assertEquals(html.contains("<li>다른 목록</li>"), true)
+      // Without the class, a list is a list.
+      assertEquals(Interpreters.toHtmlString("#!Slide\n * 수집\n  * 센서").contains("slideCard"), false)
+    }
+
+    // `#!class` is Slide's alone: in Paper the line is text, as `???` is.
+    {
+      val html = Interpreters.toHtmlString("#!Paper\na\n#!class dark\nb")
+      assertEquals(html.contains("#!class dark"), true)
     }
 
     // Guard: moving the split into PaperSlideCore left InterpreterPaper unchanged -- still an A4

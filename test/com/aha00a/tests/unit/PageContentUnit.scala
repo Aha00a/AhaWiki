@@ -18,6 +18,12 @@ object PageContentUnit {
     val pageContent3 = PageContent("#!WikiSyntaxPreview Vim\n#!java\nclass C {\n    private String s = \"Hello === java!\";\n}\n")
     assertEquals(pageContent3.shebang, List("WikiSyntaxPreview", "Vim", "java"))
 
+    // `#!class` names a slide's classes (InterpreterSlide); it is not part of the shebang.
+    val pageContentClass = PageContent("#!Slide wide\n#!class dark  x<y cover\n= Title")
+    assertEquals(pageContentClass.shebang, List("Slide", "wide"))
+    assertEquals(pageContentClass.classes, List("dark", "cover"))
+    assertEquals(pageContentClass.content, "= Title")
+
     val pageContent4 = PageContent("aaa\n[[[#!Vim java\na\n\nb\n\nc\n]]]\n")
     assertEquals(pageContent4.content, "aaa\n[[[#!Vim java\na\n\nb\n\nc\n]]]")
 

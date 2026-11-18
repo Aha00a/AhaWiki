@@ -27,14 +27,29 @@ case class PageContent(raw: String) {
     }
     .toMap
 
+  // `#!class a b` names classes for one slide of a #!Slide deck (PaperSlideCore). On the deck's first
+  // slide it sits right under `#!Slide`, among these lines, so it is kept out of the shebang: as an
+  // argument it would have become the deck's own class, `class`.
+  val classes: Seq[String] = directives.filter(PageContent.isClassDirective).flatMap(PageContent.classNames)
+
   val shebang: Seq[String] = directives
     .filterNot(_.startsWith("read"))
     .filterNot(_.startsWith("write"))
     .filterNot(_.startsWith("redirect"))
     .filterNot(isVarDirective)
+    .filterNot(PageContent.isClassDirective)
     .flatMap(_.split("""\s+"""))
 
   val interpreter: Option[String] = shebang.headOption
   val argument: Seq[String] = shebang.tailSafe()
 }
 
+object PageContent {
+  def isClassDirective(directive: String): Boolean =
+    directive == "class" || directive.startsWith("class ") || directive.startsWith("class\t")
+
+  // The class names on a `class` directive (without its `#!`). A name is letters, digits, `_` and `-`;
+  // anything else is dropped rather than written into a class attribute.
+  def classNames(directive: String): Seq[String] =
+    directive.stripPrefix("class").trim.split("""\s+""").toSeq.filter(_.matches("""[A-Za-z0-9_-]+"""))
+}

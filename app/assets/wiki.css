@@ -2577,6 +2577,11 @@
   overflow: hidden;
   color: var(--color-text);
   background-color: var(--color-surface);
+  --slide-accent: var(--color-link);
+  --slide-muted: var(--color-muted);
+  --slide-card: var(--color-surface-alt);
+  --slide-card-border: var(--color-border);
+  --slide-picture-border: var(--color-border);
 }
 .AhaWiki .slideDeck .slide .slideContent {
   width: 100%;
@@ -2595,6 +2600,122 @@
 }
 .AhaWiki .slideDeck .slide .slideContent img {
   max-width: 100%;
+}
+.AhaWiki .slideDeck .slide .slideContent h1,
+.AhaWiki .slideDeck .slide .slideContent h2,
+.AhaWiki .slideDeck .slide .slideContent h3,
+.AhaWiki .slideDeck .slide .slideContent h4,
+.AhaWiki .slideDeck .slide .slideContent h5,
+.AhaWiki .slideDeck .slide .slideContent h6 {
+  margin-left: 0;
+  padding: 0;
+  border-bottom: none;
+  text-shadow: none;
+}
+.AhaWiki .slideDeck .slide .slideContent .headingNumber {
+  display: none;
+}
+.AhaWiki .slideDeck .slide .slideContent .slideKicker {
+  margin: 0;
+  font-size: 0.5em;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  color: var(--slide-muted);
+}
+.AhaWiki .slideDeck .slide .slideContent .slideAfterKicker {
+  margin-top: 0.15em;
+}
+.AhaWiki .slideDeck .slide .slideContent .slidePicture {
+  margin: 0.4em 0 0;
+  text-align: center;
+}
+.AhaWiki .slideDeck .slide .slideContent .slidePicture img {
+  box-sizing: border-box;
+  border: 1px solid var(--slide-picture-border);
+  border-radius: 0.6cqw;
+  box-shadow: 0 0.6cqw 2.4cqw rgba(0, 0, 0, 0.12);
+}
+.AhaWiki .slideDeck .slide .slideContent .slideCards {
+  display: flex;
+  gap: 1em;
+  margin: 0.8em 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.6em;
+}
+.AhaWiki .slideDeck .slide .slideContent .slideCards > .slideCard {
+  position: relative;
+  container-type: inline-size;
+  flex: 1 1 0;
+  min-width: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 1.1em 1em;
+  border: 1px solid var(--slide-card-border);
+  border-radius: 0.5em;
+  background-color: var(--slide-card);
+  list-style: none;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.AhaWiki .slideDeck .slide .slideContent .slideCards .slideCardTitle {
+  font-weight: bold;
+  line-height: 1.3;
+}
+.AhaWiki .slideDeck .slide .slideContent .slideCards .slideCardBody {
+  margin: 0.6em 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.72em;
+  line-height: 1.5;
+  color: var(--slide-muted);
+}
+.AhaWiki .slideDeck .slide .slideContent .slideCards .slideCardBody li {
+  list-style: none;
+}
+.AhaWiki .slideDeck .slide.flow .slideCards > .slideCard + .slideCard::before {
+  content: "\25B6";
+  position: absolute;
+  left: -0.5em;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0.7);
+  color: var(--slide-accent);
+}
+.AhaWiki .slideDeck .slide.stats .slideCards > .slideCard {
+  padding-left: 0.7em;
+  padding-right: 0.7em;
+}
+.AhaWiki .slideDeck .slide.stats .slideCards .slideCardTitle {
+  font-size: min(1.7em, 23cqi);
+  line-height: 1.15;
+  color: var(--slide-accent);
+}
+.AhaWiki .slideDeck .slide.cover .slideContent h1 {
+  font-size: 2.4em;
+}
+.AhaWiki .slideDeck .slide.cover .slideContent .InterpreterRenderMetaWrapper + p {
+  margin-top: 0.4em;
+  font-size: 0.9em;
+  color: var(--slide-accent);
+}
+.AhaWiki .slideDeck .slide.cover .slideContent .InterpreterRenderMetaWrapper + p ~ p {
+  font-size: 0.5em;
+  color: var(--slide-muted);
+}
+.AhaWiki .slideDeck .slide.dark {
+  --color-text: #E8EDF3;
+  --color-surface: #0B0F14;
+  --color-surface-alt: #151B23;
+  --color-border: rgba(232, 237, 243, 0.12);
+  --color-border-subtle: rgba(232, 237, 243, 0.08);
+  --color-muted: #9AA6B4;
+  --color-link: #4F95FF;
+  --color-heading-shadow: none;
+  --slide-card: #151B23;
+  --slide-card-border: rgba(232, 237, 243, 0.08);
+  --slide-picture-border: rgba(232, 237, 243, 0.16);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 .AhaWiki .slideDeck .slide .slideNumber {
   position: absolute;
@@ -2648,6 +2769,35 @@
     border: 1px solid var(--color-border);
     -webkit-box-shadow: 10px 10px 50px 5px var(--color-shadow-soft);
     box-shadow: 10px 10px 50px 5px var(--color-shadow-soft);
+  }
+  .AhaWiki .slideDeck .slide.slideHasPicture {
+    justify-content: flex-start;
+  }
+  .AhaWiki .slideDeck .slide.slideHasPicture .slideContent,
+  .AhaWiki .slideDeck .slide.slideHasPicture .slideContent > div,
+  .AhaWiki .slideDeck .slide.slideHasPicture .slideFill {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    min-height: 0;
+  }
+  .AhaWiki .slideDeck .slide.slideHasPicture .slidePicture {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .AhaWiki .slideDeck .slide.slideHasPicture .slidePicture a,
+  .AhaWiki .slideDeck .slide.slideHasPicture .slidePicture span {
+    display: contents;
+  }
+  .AhaWiki .slideDeck .slide.slideHasPicture .slidePicture img {
+    min-width: 0;
+    min-height: 0;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
   }
   .AhaWiki .slideDeck.presenting {
     box-sizing: border-box;

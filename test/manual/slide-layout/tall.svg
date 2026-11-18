@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <rect width="1080" height="1920" fill="#f3efe6"/>
+  <rect x="60" y="60" width="960" height="1800" rx="24" fill="#ffffff" stroke="#d6cdb8" stroke-width="6"/>
+  <text x="540" y="980" font-family="sans-serif" font-size="96" text-anchor="middle" fill="#8a7f68">1080 x 1920</text>
+</svg>

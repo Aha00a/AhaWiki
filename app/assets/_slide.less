@@ -22,6 +22,12 @@
 		overflow: hidden;
 		color: var(--color-text);
 		background-color: var(--color-surface);
+		// What the slide layouts below draw with. `dark` sets them; otherwise they follow the theme.
+		--slide-accent: var(--color-link);
+		--slide-muted: var(--color-muted);
+		--slide-card: var(--color-surface-alt);
+		--slide-card-border: var(--color-border);
+		--slide-picture-border: var(--color-border);
 
 		.slideContent {
 			width: 100%;
@@ -31,6 +37,145 @@
 			h1 { font-size: 2em; line-height: 1.1; }
 			h2 { font-size: 1.5em; line-height: 1.15; }
 			img { max-width: 100%; }
+
+			// A heading on a slide is its title, not a section of a document (2026-11-18): no
+			// number, no underline or shadow, no indent by level, and no link to itself -- the
+			// number's anchor is that link, and following it would also take over the #/n the deck
+			// keeps in the address. js.js leaves out the fold button in a deck for the same reason.
+			h1, h2, h3, h4, h5, h6 {
+				margin-left: 0;
+				padding: 0;
+				border-bottom: none;
+				text-shadow: none;
+			}
+			.headingNumber { display: none; }
+
+			// The paragraph alone above the first heading: a small label over the title
+			// (InterpreterSlide marks it).
+			.slideKicker {
+				margin: 0;
+				font-size: 0.5em;
+				line-height: 1.3;
+				letter-spacing: 0.04em;
+				color: var(--slide-muted);
+			}
+			.slideAfterKicker { margin-top: 0.15em; }
+
+			// A paragraph that is only a picture. On screen it also shrinks to the slide's height
+			// (below); here, what it looks like in every medium.
+			.slidePicture {
+				margin: 0.4em 0 0;
+				text-align: center;
+
+				img {
+					box-sizing: border-box;
+					border: 1px solid var(--slide-picture-border);
+					border-radius: 0.6cqw;
+					box-shadow: 0 0.6cqw 2.4cqw rgba(0, 0, 0, 0.12);
+				}
+			}
+
+			// `cards`: the first list as one row of cards of equal width. An item's own text is the
+			// card's title, its sub-list the card's body.
+			.slideCards {
+				display: flex;
+				gap: 1em;
+				margin: 0.8em 0 0;
+				padding: 0;
+				list-style: none;
+				font-size: 0.6em;
+
+				> .slideCard {
+					position: relative;
+					// So `stats` can size a figure to the card it is in (cqi below).
+					container-type: inline-size;
+					flex: 1 1 0;
+					min-width: 0;
+					box-sizing: border-box;
+					margin: 0;
+					padding: 1.1em 1em;
+					border: 1px solid var(--slide-card-border);
+					border-radius: 0.5em;
+					background-color: var(--slide-card);
+					list-style: none;
+					word-break: keep-all;
+					overflow-wrap: anywhere;
+				}
+
+				.slideCardTitle {
+					font-weight: bold;
+					line-height: 1.3;
+				}
+
+				.slideCardBody {
+					margin: 0.6em 0 0;
+					padding: 0;
+					list-style: none;
+					font-size: 0.72em;
+					line-height: 1.5;
+					color: var(--slide-muted);
+
+					li { list-style: none; }
+				}
+			}
+		}
+
+		// `flow`: a step to the next card, centred in the gap between them. In em, the card's and the
+		// gap's: a cqw here would be the card's width now that the card is a container. Made smaller
+		// with scale(), which leaves the em it is placed by alone.
+		&.flow .slideCards > .slideCard + .slideCard::before {
+			content: "\25B6";
+			position: absolute;
+			left: -0.5em;
+			top: 50%;
+			transform: translate(-50%, -50%) scale(0.7);
+			color: var(--slide-accent);
+		}
+
+		// `stats`: the card's title is a figure, drawn large -- but no wider than its card, so five
+		// cards of «1,240 대» stay one line each rather than breaking before the unit.
+		&.stats .slideCards {
+			> .slideCard { padding-left: 0.7em; padding-right: 0.7em; }
+
+			.slideCardTitle {
+				font-size: ~"min(1.7em, 23cqi)";
+				line-height: 1.15;
+				color: var(--slide-accent);
+			}
+		}
+
+		// `cover`: a larger title, the paragraph right under it as its subtitle in the accent colour,
+		// and the ones after that small (a date, a name).
+		&.cover .slideContent {
+			h1 { font-size: 2.4em; }
+			.InterpreterRenderMetaWrapper + p {
+				margin-top: 0.4em;
+				font-size: 0.9em;
+				color: var(--slide-accent);
+			}
+			.InterpreterRenderMetaWrapper + p ~ p {
+				font-size: 0.5em;
+				color: var(--slide-muted);
+			}
+		}
+
+		// `dark`: the same dark slide whatever the theme, and in print too -- a deck exported to
+		// PDF should look like the deck. The theme's own variables are set here, so whatever the
+		// slide holds (links, code, tables) is drawn for the dark background as well.
+		&.dark {
+			--color-text: #E8EDF3;
+			--color-surface: #0B0F14;
+			--color-surface-alt: #151B23;
+			--color-border: rgba(232, 237, 243, 0.12);
+			--color-border-subtle: rgba(232, 237, 243, 0.08);
+			--color-muted: #9AA6B4;
+			--color-link: #4F95FF;
+			--color-heading-shadow: none;
+			--slide-card: #151B23;
+			--slide-card-border: rgba(232, 237, 243, 0.08);
+			--slide-picture-border: rgba(232, 237, 243, 0.16);
+			-webkit-print-color-adjust: exact;
+			print-color-adjust: exact;
 		}
 
 		.slideNumber {
@@ -94,6 +239,45 @@
 			padding: 4cqw 6cqw;
 			border: 1px solid var(--color-border);
 			.boxShadow(10px 10px 50px 5px var(--color-shadow-soft));
+		}
+
+		// A picture slide: the title at the top and the picture filling the height left under it,
+		// never past it (2026-11-18 -- a title over a 16:9 screenshot ran off the bottom of a
+		// 1280x720 slide). Every block InterpreterSlide marked between the slide and the picture
+		// becomes a column the picture's paragraph fills; the picture keeps its proportions inside.
+		// Screen only: a printed slide has no fixed height to fill.
+		.slide.slideHasPicture {
+			justify-content: flex-start;
+
+			.slideContent,
+			.slideContent > div,
+			.slideFill {
+				display: flex;
+				flex-direction: column;
+				flex: 1 1 0;
+				min-height: 0;
+			}
+
+			.slidePicture {
+				flex: 1 1 0;
+				min-height: 0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+
+				// What wraps the picture -- the <span> a macro's output is put in, a link -- would
+				// sit between the paragraph and the picture as a box of its own height, and the
+				// picture's max-height would have nothing to be a percentage of.
+				a, span { display: contents; }
+
+				img {
+					min-width: 0;
+					min-height: 0;
+					max-width: 100%;
+					max-height: 100%;
+					object-fit: contain;
+				}
+			}
 		}
 
 		&.presenting {

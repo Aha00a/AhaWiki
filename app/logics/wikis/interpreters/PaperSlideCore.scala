@@ -18,11 +18,15 @@ object PaperSlideCore {
   // The speaker-notes separator: a line of exactly `???` (remark.js's spelling). Only Slide asks for
   // it; for Paper the line is text like any other.
   private val notesMarkerRe     = """(?m)^\?\?\?[ \t]*$""".r
+  // `#!class a b`: classes for this one slide's <section>. Slide's alone, like `???`. `[ \t]*` rather
+  // than `\s*` at the start, so the match never takes the line break before it and the slide's
+  // lines keep their numbers.
+  private val classMarkerRe     = """(?m)^[ \t]*#!(class(?:[ \t][^\n]*)?)$""".r
 
   // One rendered page/slide: its zero-based index, its 1-based number and the total (the same
   // {{pageNo}} / {{pageTotal}} Paper exposes as variables), the orientation its per-chunk marker
-  // asked for, the chunk already rendered to HTML by InterpreterWiki, and -- when the caller asked
-  // for notes and the chunk has a `???` line -- what follows that line, rendered the same way.
+  // asked for, the chunk already rendered to HTML by InterpreterWiki, and -- when the caller is Slide
+  // -- what follows a `???` line, rendered the same way, and the classes its `#!class` lines name.
   final case class Chunk(
     index: Int,
     pageNo: Int,
@@ -31,6 +35,7 @@ object PaperSlideCore {
     isPortrait: Boolean,
     html: String,
     notesHtml: Option[String] = None,
+    classes: Seq[String] = Nil,
   )
 
   // Returns the variable holder (so the caller can read class / docId / header-footer variables and
@@ -38,7 +43,11 @@ object PaperSlideCore {
   // left at the last chunk's number; a caller that resolves {{pageNo}} per chunk must set it again
   // before each applyVariables -- InterpreterPaper does exactly that for its header and footer.
   //noinspection ZeroIndexToHead
-  def render(content: String, notes: Boolean = false)(implicit wikiContext: ContextWikiPage): (ExtractConvertInjectVariable, Seq[Chunk]) = {
+  //
+  // `slide` turns on the per-slide lines only Slide reads: `???` and `#!class`. On the first slide a
+  // `#!class` line that follows `#!Slide` directly is one of the page's directives, not a line of the
+  // body, so PageContent hands it over separately and it is added here.
+  def render(content: String, slide: Boolean = false)(implicit wikiContext: ContextWikiPage): (ExtractConvertInjectVariable, Seq[Chunk]) = {
     val pageContent: PageContent = PageContent(content)
 
     // #!var directive variables seed the holder; extract also pulls [[[#!Variable]]] blocks. Both run
@@ -63,17 +72,26 @@ object PaperSlideCore {
       // The first `???` line splits what the audience sees from what the speaker reads. Both halves
       // are padded to their own raw line numbers, so a partial-edit link in the notes opens the
       // notes' lines, not the slide's.
-      val (body, notesText) = notesMarkerRe.findFirstMatchIn(strippedChunk).filter(_ => notes) match {
+      val (bodyWithClassLines, notesText) = notesMarkerRe.findFirstMatchIn(strippedChunk).filter(_ => slide) match {
         case Some(m) =>
           val linesBefore = strippedChunk.substring(0, m.end).count(_ == '\n')
           (strippedChunk.substring(0, m.start), Some((linesBefore, strippedChunk.substring(m.end))))
         case None => (strippedChunk, None)
       }
+      // `#!class` lines above the notes are the slide's. Each is emptied, not removed, so the lines
+      // after it keep their numbers.
+      val (body, classes) =
+        if (!slide) (bodyWithClassLines, Nil)
+        else {
+          val fromBody = classMarkerRe.findAllMatchIn(bodyWithClassLines).flatMap(m => PageContent.classNames(m.group(1))).toSeq
+          val fromDirectives = if (index == 0) pageContent.classes else Nil
+          (classMarkerRe.replaceAllIn(bodyWithClassLines, ""), (fromDirectives ++ fromBody).distinct)
+        }
       val paddedResolved = "\n" * offset + eciv.applyVariables(body)
       val notesHtml = notesText.map { case (linesBefore, text) =>
         InterpreterWiki.toHtmlString("\n" * (offset + linesBefore) + eciv.applyVariables(text))
       }
-      Chunk(index, index + 1, chunks.length, isLandscape, isPortrait, InterpreterWiki.toHtmlString(paddedResolved), notesHtml)
+      Chunk(index, index + 1, chunks.length, isLandscape, isPortrait, InterpreterWiki.toHtmlString(paddedResolved), notesHtml, classes)
     }
 
     (eciv, rendered)

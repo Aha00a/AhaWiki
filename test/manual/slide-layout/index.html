@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<title>slide layout harness</title>
+<script>
+// ?theme=dark draws the page in the dark theme, as _themeClass.scala.html would with that choice
+// stored; a `dark` slide must look the same either way. ?stacked leaves AhaWiki.Slide.js out, to
+// see the slides as they stand before it runs, or without it.
+var params = new URLSearchParams(location.search);
+document.documentElement.classList.add(params.get('theme') === 'dark' ? 'theme-ahawiki-dark' : 'theme-ahawiki-light');
+</script>
+<link rel="stylesheet" href="../../../public/vendor/font-awesome/css/all.min.css">
+<link rel="stylesheet" href="../../../app/assets/less.css">
+<link rel="stylesheet" href="../../../app/assets/wiki.css">
+<link rel="stylesheet" href="../../../app/assets/interpreter.css">
+<script src="../../../public/vendor/jquery/jquery.min.js"></script>
+<script src="../../../public/js/js.js"></script>
+<script>
+if (!params.has('stacked')) {
+    document.write('<script src="../../../public/js/AhaWiki.Slide.js"><\/script>');
+}
+</script>
+<style>
+    #result { font: 13px/1.5 ui-monospace, monospace; white-space: pre-wrap; }
+</style>
+</head>
+<body class="AhaWiki no-mathjax">
+<!-- What InterpreterSlide writes for the six kinds of slide it lays out (SlideUnit pins the server
+     side): a dark cover, dark cards with arrows, dark figures, a screen with a label over its title
+     and a 16:9 picture, a tall picture inside a link, and a plain slide. Change InterpreterSlide's
+     output and these are to be changed with it. The checks below run the real wiki.css, js.js and
+     AhaWiki.Slide.js over them. -->
+<div role="main" class="wikiContent">
+<div class="limitWidth">
+<div class="slideDeck " tabindex="0" data-total="6">
+<section class="slide dark cover" data-index="0">
+  <div class="slideNumber">1 / 6</div>
+  <div class="slideContent"><div><div></div><div class="HeadingWrapperEWS-조기경보"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-edit-link="/w/Harness?action=edit&amp;revision=1&amp;lineStart=2&amp;lineEnd=5" data-line-start="2" data-line-end="5" data-edit-title="Edit section (r1, L2-L4)"><div class="InterpreterRenderContent"><h1 id="EWS-조기경보" class=""><a href="#EWS-조기경보" aria-label="Link to this heading" class="headingNumber"></a> EWS 조기경보</h1></div></div>
+<p>재난 예·경보 통합 관제</p>
+<p>2026-11-18</p></div></div></div>
+</section>
+<section class="slide dark cards flow" data-index="1">
+  <div class="slideNumber">2 / 6</div>
+  <div class="slideContent"><div><div></div><div class="HeadingWrapper경보-흐름"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-edit-link="/w/Harness?action=edit&amp;revision=1&amp;lineStart=7&amp;lineEnd=16" data-line-start="7" data-line-end="16" data-edit-title="Edit section (r1, L7-L15)"><div class="InterpreterRenderContent"><h2 id="경보-흐름" class=""><a href="#경보-흐름" aria-label="Link to this heading" class="headingNumber">1.</a> 경보 흐름</h2></div></div>
+<ul class="slideCards">
+<li class="slideCard"><div class="slideCardTitle">수집</div><ul class="slideCardBody">
+<li>센서·영상</li>
+</ul></li>
+<li class="slideCard"><div class="slideCardTitle">판단</div><ul class="slideCardBody">
+<li>임계값</li>
+<li>지속 시간</li>
+</ul></li>
+<li class="slideCard"><div class="slideCardTitle">발령</div><ul class="slideCardBody">
+<li>방송·문자·전광판</li>
+</ul></li>
+<li class="slideCard"><div class="slideCardTitle">확인</div><ul class="slideCardBody">
+<li>통화 결과 정산</li>
+</ul></li>
+</ul></div></div></div>
+</section>
+<section class="slide dark cards stats" data-index="2">
+  <div class="slideNumber">3 / 6</div>
+  <div class="slideContent"><div><div></div><div class="HeadingWrapper숫자로-보는-EWS"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-edit-link="/w/Harness?action=edit&amp;revision=1&amp;lineStart=18&amp;lineEnd=29" data-line-start="18" data-line-end="29" data-edit-title="Edit section (r1, L18-L28)"><div class="InterpreterRenderContent"><h2 id="숫자로-보는-EWS" class=""><a href="#숫자로-보는-EWS" aria-label="Link to this heading" class="headingNumber">1.</a> 숫자로 보는 EWS</h2></div></div>
+<ul class="slideCards">
+<li class="slideCard"><div class="slideCardTitle">39 개</div><ul class="slideCardBody">
+<li>관제 화면</li>
+</ul></li>
+<li class="slideCard"><div class="slideCardTitle">1,240 대</div><ul class="slideCardBody">
+<li>연계 단말</li>
+</ul></li>
+<li class="slideCard"><div class="slideCardTitle">12 종</div><ul class="slideCardBody">
+<li>센서 규격</li>
+</ul></li>
+<li class="slideCard"><div class="slideCardTitle">3 초</div><ul class="slideCardBody">
+<li>발령까지</li>
+</ul></li>
+<li class="slideCard"><div class="slideCardTitle">24 시간</div><ul class="slideCardBody">
+<li>무중단 감시</li>
+</ul></li>
+</ul></div></div></div>
+</section>
+<section class="slide slideHasPicture" data-index="3">
+  <div class="slideNumber">4 / 6</div>
+  <div class="slideContent"><div><div><p class="slideKicker">종합 관제</p>
+</div><div class="HeadingWrapper상황판 slideFill"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-edit-link="/w/Harness?action=edit&amp;revision=1&amp;lineStart=32&amp;lineEnd=34" data-line-start="32" data-line-end="34" data-edit-title="Edit section (r1, L32-L33)"><div class="InterpreterRenderContent"><h2 id="상황판" class="slideAfterKicker"><a href="#상황판" aria-label="Link to this heading" class="headingNumber">1.</a> 상황판</h2></div></div>
+<p class="slidePicture"><span class="Macro InlineMacro Image"><img src="screen.svg" alt="screen.svg" onerror="this.onerror=null;this.src='/assets/img/attachmentFallback.svg';"></span></p></div></div></div>
+</section>
+<section class="slide slideHasPicture" data-index="4">
+  <div class="slideNumber">5 / 6</div>
+  <div class="slideContent"><div><div></div><div class="HeadingWrapper세로-그림 slideFill"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-edit-link="/w/Harness?action=edit&amp;revision=1&amp;lineStart=36&amp;lineEnd=38" data-line-start="36" data-line-end="38" data-edit-title="Edit section (r1, L36-L37)"><div class="InterpreterRenderContent"><h2 id="세로-그림" class=""><a href="#세로-그림" aria-label="Link to this heading" class="headingNumber">1.</a> 세로 그림</h2></div></div>
+<p class="slidePicture"><span class="Macro InlineMacro Image"><a href="tall.svg"><img src="tall.svg" alt="tall.svg"></a></span></p></div></div></div>
+</section>
+<section class="slide" data-index="5">
+  <div class="slideNumber">6 / 6</div>
+  <div class="slideContent"><div><div></div><div class="HeadingWrapper일반-장"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-edit-link="/w/Harness?action=edit&amp;revision=1&amp;lineStart=40&amp;lineEnd=43" data-line-start="40" data-line-end="43" data-edit-title="Edit section (r1, L40-L42)"><div class="InterpreterRenderContent"><h2 id="일반-장" class=""><a href="#일반-장" aria-label="Link to this heading" class="headingNumber">1.</a> 일반 장</h2></div></div>
+<ul style="list-style-type: disc;">
+<li>요점 하나</li>
+<li>요점 둘</li>
+</ul></div></div></div>
+</section>
+  <div class="slideChrome">
+    <div class="slideChromeGroup">
+      <button type="button" class="slideFilmstrip" title="Filmstrip (L)" aria-label="Filmstrip" aria-pressed="false">&#9636;</button>
+      <button type="button" class="slideOverview" title="Overview (O)" aria-label="Overview" aria-pressed="false">&#9638;</button>
+    </div>
+    <div class="slideChromeGroup">
+      <button type="button" class="slidePrev" title="Previous slide (&#8592;)" aria-label="Previous slide">&#8249;</button>
+      <span class="slideCounter"><span class="slideCurrent">1</span> / 6</span>
+      <button type="button" class="slideNext" title="Next slide (&#8594;)" aria-label="Next slide">&#8250;</button>
+    </div>
+    <div class="slideChromeGroup">
+      <span class="slideTimer" hidden></span>
+      <button type="button" class="slideFullscreen" title="Fullscreen (F)" aria-label="Fullscreen" aria-pressed="false">&#9974;</button>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<pre id="result">running…</pre>
+<script>
+window.addEventListener('load', function () {
+    const out = [];
+    const check = (name, ok, detail) => out.push((ok ? 'PASS ' : 'FAIL ') + name + (ok || detail === undefined ? '' : '  (' + detail + ')'));
+    const deck = document.querySelector('.slideDeck');
+    const stacked = !deck.classList.contains('presenting');
+    const slides = [...deck.querySelectorAll('section.slide')];
+    const rect = (el) => el.getBoundingClientRect();
+    const css = (el, prop, pseudo) => getComputedStyle(el, pseudo).getPropertyValue(prop).trim();
+    const near = (a, b, tolerance) => Math.abs(a - b) <= tolerance;
+    // Shows slide i on the stage (or, stacked, scrolls it into view) and returns it.
+    const show = (i) => {
+        if (!stacked) {
+            deck.querySelector('.slideNext');
+            while (Number(deck.querySelector('.slideCurrent').textContent) - 1 < i) deck.querySelector('.slideNext').click();
+            while (Number(deck.querySelector('.slideCurrent').textContent) - 1 > i) deck.querySelector('.slidePrev').click();
+        }
+        return slides[i];
+    };
+
+    out.push((stacked ? 'stacked (no AhaWiki.Slide.js)' : 'presenting') + ', theme ' + (document.documentElement.classList.contains('theme-ahawiki-dark') ? 'dark' : 'light'));
+
+    // dark: the same colours whatever the theme.
+    {
+        const s = show(0);
+        check('dark: the background is #0B0F14', css(s, 'background-color') === 'rgb(11, 15, 20)', css(s, 'background-color'));
+        check('dark: the text is #E8EDF3', css(s.querySelector('h1'), 'color') === 'rgb(232, 237, 243)', css(s.querySelector('h1'), 'color'));
+        const paragraphs = s.querySelectorAll('.HeadingWrapperEWS-조기경보 > p');
+        check('cover: the subtitle is the accent, #4F95FF', css(paragraphs[0], 'color') === 'rgb(79, 149, 255)', css(paragraphs[0], 'color'));
+        check('cover: the date is smaller than the subtitle', parseFloat(css(paragraphs[1], 'font-size')) < parseFloat(css(paragraphs[0], 'font-size')));
+    }
+
+    // Headings carry nothing but their words.
+    {
+        const s = show(5);
+        const h2 = s.querySelector('h2');
+        check('a slide heading shows no number', css(h2.querySelector('.headingNumber'), 'display') === 'none');
+        check('a slide heading has no underline', css(h2, 'border-bottom-style') === 'none');
+        check('js.js put no fold button in the deck', deck.querySelectorAll('.InterpreterRenderFoldToggle').length === 0);
+    }
+
+    // cards: one row of equal cards; flow puts an arrow between them; stats draws the figures large.
+    for (const [i, name] of [[1, 'flow'], [2, 'stats']]) {
+        const s = show(i);
+        const cards = [...s.querySelectorAll('.slideCards > .slideCard')];
+        const boxes = cards.map(rect);
+        check(name + ': the cards are one row', boxes.every((b) => near(b.top, boxes[0].top, 1)));
+        check(name + ': the cards are as wide as each other', boxes.every((b) => near(b.width, boxes[0].width, 1)));
+        check(name + ': the cards stay inside the slide', boxes[boxes.length - 1].right <= rect(s).right && boxes[0].left >= rect(s).left);
+        const titleSize = parseFloat(css(cards[0].querySelector('.slideCardTitle'), 'font-size'));
+        const bodySize = parseFloat(css(cards[0].querySelector('.slideCardBody'), 'font-size'));
+        check(name + ': the body is smaller than the title', bodySize < titleSize);
+        check(name + ': the body has no bullets', css(cards[0].querySelector('.slideCardBody > li'), 'list-style-type') === 'none');
+        check(name + ': the card is #151B23', css(cards[0], 'background-color') === 'rgb(21, 27, 35)', css(cards[0], 'background-color'));
+        if (name === 'flow') {
+            check('flow: no arrow before the first card', css(cards[0], 'content', '::before') === 'none' || css(cards[0], 'content', '::before') === 'normal');
+            check('flow: an arrow before the others', cards.slice(1).every((c) => css(c, 'content', '::before') === '"▶"'));
+        } else {
+            // Five cards of «1,240 대» is the narrowest case: the figure gives way to its card there.
+            check('stats: the figure is well over the body', titleSize >= bodySize * 1.7, titleSize + ' / ' + bodySize);
+            check('stats: no arrows', css(cards[1], 'content', '::before') === 'none' || css(cards[1], 'content', '::before') === 'normal');
+        }
+        const lines = cards.map((c) => Math.round(rect(c.querySelector('.slideCardTitle')).height / parseFloat(css(c.querySelector('.slideCardTitle'), 'line-height'))));
+        check(name + ': every title fits on one line', lines.every((n) => n === 1), lines.join(','));
+    }
+
+    // A picture fills the height under the title, inside the slide, in its own proportions.
+    for (const [i, name, ratio] of [[3, '16:9 picture', 1920 / 1080], [4, 'tall picture in a link', 1080 / 1920]]) {
+        const s = show(i);
+        const img = s.querySelector('.slidePicture img');
+        const box = rect(img);
+        const slideBox = rect(s);
+        const padBottom = parseFloat(css(s, 'padding-bottom')) * (slideBox.height / s.offsetHeight);
+        check(name + ': inside the slide', box.bottom <= slideBox.bottom - padBottom + 1 && box.top >= slideBox.top && box.right <= slideBox.right && box.left >= slideBox.left,
+            'img ' + Math.round(box.top) + '..' + Math.round(box.bottom) + ', slide ' + Math.round(slideBox.top) + '..' + Math.round(slideBox.bottom));
+        check(name + ': below the title', box.top >= rect(s.querySelector('h2')).bottom);
+        check(name + ': its proportions kept', near(box.width / box.height, ratio, ratio * 0.02), (box.width / box.height).toFixed(3));
+        const content = rect(s.querySelector('.slideContent'));
+        check(name + ': centred', near(box.left + box.width / 2, content.left + content.width / 2, 2));
+        check(name + ': fills the height left under the title', box.bottom >= slideBox.bottom - padBottom - 4 || near(box.width, content.width, 2),
+            'gap ' + Math.round(slideBox.bottom - padBottom - box.bottom));
+        check(name + ': has a border', css(img, 'border-top-style') === 'solid');
+    }
+
+    // The label over a title.
+    {
+        const s = show(3);
+        const kicker = s.querySelector('.slideKicker');
+        const h2 = s.querySelector('h2');
+        check('kicker: under half the title', parseFloat(css(kicker, 'font-size')) * 2 <= parseFloat(css(h2, 'font-size')));
+        check('kicker: sits on the title', rect(h2).top - rect(kicker).bottom < parseFloat(css(kicker, 'font-size')) * (rect(s).height / s.offsetHeight));
+    }
+
+    // The thumbnails are clones of the slides; the picture fits in those too.
+    if (!stacked) {
+        deck.querySelector('.slideOverview').click();
+        const thumb = deck.querySelectorAll('.slideThumbItem')[3];
+        const img = thumb.querySelector('.slidePicture img');
+        check('overview: the picture stays inside its thumbnail', rect(img).bottom <= rect(thumb).bottom + 1 && rect(img).right <= rect(thumb).right + 1);
+        deck.querySelector('.slideOverview').click();
+        show(0);
+    }
+
+    const failed = out.filter((line) => line.startsWith('FAIL')).length;
+    out.push(failed ? failed + ' FAILED' : 'ALL PASSED');
+    document.getElementById('result').textContent = out.join('\n');
+});
+</script>
+</body>
+</html>

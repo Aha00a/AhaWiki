@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <rect width="1920" height="1080" fill="#eef2f7"/>
+  <rect width="1920" height="72" fill="#1f2a37"/>
+  <rect x="0" y="72" width="260" height="1008" fill="#d9e1ea"/>
+  <rect x="300" y="120" width="1560" height="900" rx="12" fill="#ffffff" stroke="#c7d0db" stroke-width="4"/>
+  <text x="1080" y="600" font-family="sans-serif" font-size="96" text-anchor="middle" fill="#7a8796">1920 x 1080</text>
+</svg>
