@@ -513,11 +513,13 @@
         // filter for each column (Tag, Category, Score).
         $('.tablesorter').not('[id^="mapTable"]').tablesorter({ widgets: ["filter"] });
 
-        // A #!Table's header rows stay at the top of its box (interpreter.less), each below the
-        // ones above it -- the headings, then the filter row the line above just added. How far
-        // below is their height, which only the browser knows: written on each row as
-        // --sticky-top, and again whenever the header changes size (a narrower screen wraps it).
-        $('.InterpreterRenderMetaWrapper.Table table.InterpreterTable').each(function () {
+        // A sorted table's header rows stay at the top of its box (.stickyHeaderRows() in
+        // _mixins.less), each below the ones above it -- the headings, then the filter row the
+        // line above just added. How far below is their height, which only the browser knows:
+        // written on each row as --sticky-top, and again whenever the header changes size (a
+        // narrower screen wraps it). The same tables the line above sets up; a row that does not
+        // stick has no use for the property.
+        $('.tablesorter').not('[id^="mapTable"]').each(function () {
             var thead = this.tHead;
             if (!thead || thead.rows.length < 2) return;
             var place = function () {

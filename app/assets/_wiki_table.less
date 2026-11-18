@@ -251,6 +251,18 @@
 	> .wikiTableSimple {
 		--wiki-indent-body: var(--wiki-contained-indent-body, 0px);
 	}
+
+	// The sorted tables the engine writes -- #!Query, [[PageList]] -- keep their header rows in
+	// view the way #!Table does (_mixins.less). Rows only: #!Query's group rows are a th in the
+	// body, which .stickyHeaderColumn() would take for a header column. A map page's table is
+	// left out, as AhaWiki.PageView.js leaves it out of the shared tablesorter set up: it sits
+	// beside its map in a layout of its own.
+	&:has(> table.tablesorter:not([id^="mapTable"])) {
+		.stickyHeadingsBox();
+		> table {
+			.stickyHeaderRows();
+		}
+	}
 }
 
 .tablesorter {

@@ -3030,6 +3030,21 @@
 .AhaWiki .wikiTableSimpleScroll > .wikiTableSimple {
   --wiki-indent-body: var(--wiki-contained-indent-body, 0px);
 }
+@media screen {
+  .AhaWiki .wikiTableSimpleScroll:has( > table.tablesorter:not([id^="mapTable"])) {
+    max-height: 80vh;
+  }
+}
+.AhaWiki .wikiTableSimpleScroll:has( > table.tablesorter:not([id^="mapTable"])) > table {
+  --sticky-bg: linear-gradient(var(--color-table-header-bg), var(--color-table-header-bg)), var(--color-bg);
+}
+.AhaWiki .wikiTableSimpleScroll:has( > table.tablesorter:not([id^="mapTable"])) > table > thead > tr > * {
+  position: sticky;
+  top: calc(var(--sticky-top, 0px) - 1px);
+  z-index: 2;
+  background: var(--sticky-bg);
+  box-shadow: inset 0 -1px var(--color-table-border);
+}
 .AhaWiki .tablesorter .tablesorter-header {
   position: relative;
   padding-right: 30px;

@@ -46,3 +46,65 @@
 		100% { transform: rotate(360deg); }
 	}
 }
+
+// Table headings that stay in view (2026-11-18): the header rows at the top of the box the table
+// scrolls in and, for a table that has one, the first header column at its left. Used by #!Table
+// (interpreter.less) and by the sorted tables the engine writes itself -- #!Query and
+// [[PageList]] (_wiki_table.less).
+//
+// A box that scrolls sideways scrolls up and down too as far as CSS is concerned, so `top: 0`
+// holds a cell to that box, not to the page -- and a box as tall as its table never scrolls. So
+// the box of a table taller than the screen is held to 80% of it and the table scrolls inside; a
+// shorter one is not changed. The price is a scroll box within the page on a long table. Printed,
+// the whole table is there.
+.stickyHeadingsBox() {
+	@media screen {
+		max-height: 80vh;
+	}
+}
+
+// On the table. Each header row's offset is the height of the rows above it -- the filter row
+// sits under the headings -- which only the browser knows, so AhaWiki.PageView.js writes it as
+// --sticky-top on the row.
+//
+// A stuck cell needs a background of its own, or the cells passing under it show through the
+// header's translucent colour: the page's colour under the header's. A collapsed border is
+// painted by the table and stays behind when the cell moves, so the edge it leaves on is drawn
+// again with an inset shadow. The table's own top border is one too, and the rows passing under
+// showed through the 1px it leaves -- on [[PageList]]; #!Table's frame happened to hide it -- so
+// every row sticks 1px higher and its background covers that pixel, as the column below does.
+.stickyHeaderRows() {
+	--sticky-bg: ~"linear-gradient(var(--color-table-header-bg), var(--color-table-header-bg)), var(--color-bg)";
+	> thead > tr > * {
+		position: sticky;
+		top: calc(var(--sticky-top, 0px) - 1px);
+		z-index: 2;
+		background: var(--sticky-bg);
+		box-shadow: inset 0 -1px var(--color-table-border);
+	}
+}
+
+// On the table too, after .stickyHeaderRows() (whose --sticky-bg it paints with). Only the first
+// header column stays at the left: the second would need the first's width the same way, and no
+// table has asked for it. The corner cell stays at the left only when the body has a header
+// column, or it would hang over the scrolled body. The table's own left border is a collapsed
+// border too: a column stuck at left 0 left its 1px empty and the scrolled cells showed through
+// it, so the column sticks 1px further left and its background covers that pixel.
+//
+// Not for a table whose body has a th that is not a header column: #!Query's group rows are one
+// th across the whole row, and with this the Name heading would stick over a Name column that
+// scrolls away.
+.stickyHeaderColumn() {
+	> tbody > tr > th:first-child {
+		position: sticky;
+		left: -1px;
+		z-index: 1;
+		background: var(--sticky-bg);
+		box-shadow: inset -1px 0 var(--color-table-border);
+	}
+	&:has(> tbody > tr > th) > thead > tr > :first-child {
+		left: -1px;
+		z-index: 3;
+		box-shadow: inset -1px -1px var(--color-table-border);
+	}
+}
