@@ -27,8 +27,8 @@ if (!params.has('stacked')) {
 </head>
 <body class="AhaWiki no-mathjax">
 <!-- What InterpreterSlide writes for the six kinds of slide it lays out (SlideUnit pins the server
-     side): a dark cover, dark cards with arrows, dark figures, a screen with a label over its title
-     and a 16:9 picture, a tall picture inside a link, and a plain slide. Change InterpreterSlide's
+     side): a dark cover, dark cards with arrows, dark figures, a screen with a label over its title,
+     a line under it and a 16:9 picture, a tall picture inside a link, and a plain slide. Change InterpreterSlide's
      output and these are to be changed with it. The checks below run the real wiki.css, js.js and
      AhaWiki.Slide.js over them. The deck sits in the wrapper a [[[#!Slide]]] block on a page gets,
      as on the InterpreterSlide page: js.js's fold button once reached through that wrapper into
@@ -91,6 +91,7 @@ if (!params.has('stacked')) {
   <div class="slideNumber">4 / 6</div>
   <div class="slideContent"><div><div><p class="slideKicker">종합 관제</p>
 </div><div class="HeadingWrapper상황판 slideFill"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-edit-link="/w/Harness?action=edit&amp;revision=1&amp;lineStart=32&amp;lineEnd=34" data-line-start="32" data-line-end="34" data-edit-title="Edit section (r1, L32-L33)"><div class="InterpreterRenderContent"><h2 id="상황판" class="slideAfterKicker"><a href="#상황판" aria-label="Link to this heading" class="headingNumber">1.</a> 상황판</h2></div></div>
+<p class="slideLead">지도에 안 보이는 것이 몇 건인지 반드시 알립니다</p>
 <p class="slidePicture"><span class="Macro InlineMacro Image"><img src="screen.svg" alt="screen.svg" onerror="this.onerror=null;this.src='/assets/img/attachmentFallback.svg';" style="max-width: min(100%, 93%)"></span></p></div></div></div>
 </section>
 <section class="slide slideHasPicture" data-index="4">
@@ -125,7 +126,8 @@ if (!params.has('stacked')) {
 </div></div>
 <!-- A `#!Slide keynote` deck, with the stylesheet InterpreterSlide links for one: a cover with a
      picture behind it (`backdrop`), cards with arrows, two `big` slides -- a short title and a long
-     one that has to wrap between words -- a screen with a label over its title, figures with
+     one that has to wrap between words -- a screen with a label over its title and a line under
+     it, figures with
      arrows and a closing line, and a `big` slide that is one word in an h1. -->
 <div class="InterpreterRenderMetaWrapper Slide" style="position: relative;" data-edit-link="/w/Harness?action=edit&amp;revision=1&amp;lineStart=46&amp;lineEnd=90" data-line-start="46" data-line-end="90" data-edit-title="Edit section (r1, L46-L89)"><div class="InterpreterRenderContent">
 <link rel="stylesheet" href="../../../public/vendor/pretendard/pretendardvariable-dynamic-subset.css">
@@ -171,6 +173,7 @@ if (!params.has('stacked')) {
   <div class="slideNumber">5 / 7</div>
   <div class="slideContent"><div><div><p class="slideKicker">종합 관제</p>
 </div><div class="HeadingWrapper통합-대시보드 slideFill"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-edit-link="/w/Harness?action=edit&amp;revision=1&amp;lineStart=75&amp;lineEnd=77" data-line-start="75" data-line-end="77" data-edit-title="Edit section (r1, L75-L76)"><div class="InterpreterRenderContent"><h2 id="통합-대시보드" class="slideAfterKicker"><a href="#통합-대시보드" aria-label="Link to this heading" class="headingNumber">1.</a> 통합 대시보드</h2></div></div>
+<p class="slideLead">지도에 안 보이는 것이 몇 건인지 반드시 알립니다</p>
 <p class="slidePicture"><span class="Macro InlineMacro Image"><img src="screen.svg" alt="screen.svg" onerror="this.onerror=null;this.src='/assets/img/attachmentFallback.svg';" style="max-width: min(100%, 93%)"></span></p></div></div></div>
 </section>
 <section class="slide cards stats flow" data-index="5">
@@ -361,6 +364,20 @@ window.addEventListener('load', async function () {
         check('kicker: sits on the title', rect(h2).top - rect(kicker).bottom < parseFloat(css(kicker, 'font-size')) * (rect(s).height / s.offsetHeight));
     }
 
+    // The line between a picture and its title: under the title, over the picture, one line, under
+    // half the title and muted as the label is.
+    {
+        const s = show(3);
+        const lead = s.querySelector('.slideLead');
+        const h2 = s.querySelector('h2');
+        const img = s.querySelector('.slidePicture img');
+        check('lead: between the title and the picture', rect(h2).bottom <= rect(lead).top + 1 && rect(lead).bottom <= rect(img).top + 1,
+            Math.round(rect(h2).bottom) + ' / ' + Math.round(rect(lead).top) + '..' + Math.round(rect(lead).bottom) + ' / ' + Math.round(rect(img).top));
+        check('lead: under half the title', parseFloat(css(lead, 'font-size')) * 2 <= parseFloat(css(h2, 'font-size')), css(lead, 'font-size') + ' / ' + css(h2, 'font-size'));
+        check('lead: muted as the label is', css(lead, 'color') === css(s.querySelector('.slideKicker'), 'color') && css(lead, 'color') !== css(h2, 'color'), css(lead, 'color'));
+        check('lead: one line', Math.round(lead.offsetHeight / parseFloat(css(lead, 'line-height'))) === 1);
+    }
+
     // The thumbnails are clones of the slides; the picture fits in those too.
     if (!stacked) {
         deck.querySelector('.slideOverview').click();
@@ -501,6 +518,11 @@ window.addEventListener('load', async function () {
         check('keynote screen: the title is .68em', near(parseFloat(css(h2, 'font-size')), base * 0.68, 0.5));
         check('keynote screen: the label is .3em in the accent', near(parseFloat(css(kicker, 'font-size')), base * 0.3, 0.5) && css(kicker, 'color') === 'rgb(41, 151, 255)');
         check('keynote screen: rounded, no border', css(img, 'border-top-style') === 'none' && css(img, 'border-top-left-radius') === '12px');
+        const lead = s.querySelector('.slideLead');
+        check('keynote screen: the lead is .42em, 500, #A1A1A6',
+            near(parseFloat(css(lead, 'font-size')), base * 0.42, 0.5) && css(lead, 'font-weight') === '500' && css(lead, 'color') === 'rgb(161, 161, 166)',
+            css(lead, 'font-size') + ' ' + css(lead, 'font-weight') + ' ' + css(lead, 'color'));
+        check('keynote screen: the lead between the title and the picture', rect(h2).bottom <= rect(lead).top + 1 && rect(lead).bottom <= rect(img).top + 1);
         const box = rect(img);
         const slideBox = rect(s);
         check('keynote screen: the picture inside the slide', box.bottom <= slideBox.bottom && box.top >= slideBox.top && box.left >= slideBox.left && box.right <= slideBox.right);
@@ -509,7 +531,8 @@ window.addEventListener('load', async function () {
             const share = box.width / slideBox.width;
             out.push('keynote screen: the picture is ' + (share * 100).toFixed(1) + '% of the slide\'s width');
             check('keynote screen: padding 34px 56px 40px', css(s, 'padding') === '34px 56px 40px', css(s, 'padding'));
-            check('keynote screen: the picture about 73% of the slide\'s width', share >= 0.68 && share <= 0.8);
+            // 73% under a title alone; the line under it takes some of the height (69% in the Chrome tab).
+            check('keynote screen: the picture about 69% of the slide\'s width', share >= 0.66 && share <= 0.72);
         }
     }
 

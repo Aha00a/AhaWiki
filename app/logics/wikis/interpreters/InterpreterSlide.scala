@@ -112,6 +112,8 @@ object InterpreterSlide extends TraitInterpreter {
    *    block between it and the slide, and `slideHasPicture` for the section: the blocks become a
    *    column the picture fills, so it shrinks to the height left under the title. A width given
    *    to the picture becomes its max-width.
+   *  - `slideLead` on each paragraph of words between such a picture and the heading over it: the
+   *    one line that says what the picture shows.
    *  - On a `cards` slide, the first list that is not inside another becomes the cards: `slideCards`
    *    on it, `slideCard` on each item, its own text in a `slideCardTitle`, and the sub-list under
    *    it -- which AhaMark writes as the next sibling of the item, not inside it -- moved inside as
@@ -203,8 +205,21 @@ object InterpreterSlide extends TraitInterpreter {
       p.addClass("slidePicture")
       blocksBetween(p, root).foreach(_.addClass("slideFill"))
       pictureIn(p).foreach(widthAsLimit)
+      markLead(p)
     }
     pictures.nonEmpty
+  }
+
+  // The words between a picture and the title over it say what the picture shows (2026-11-18: the
+  // EWS deck put one line under each screenshot's title, drawn until then as the slide's full type).
+  // Back from the picture, past paragraphs of words, to the block that is or holds the heading --
+  // AhaMark puts a section's paragraphs after the wrapper around its heading. Words that reach no
+  // heading, or stop at another picture or a block of something else, are not a lead.
+  private def markLead(picture: Element): Unit = {
+    val before = Iterator.iterate(picture.previousElementSibling())(_.previousElementSibling()).takeWhile(_ != null).toList
+    val (words, rest) = before.span(e => e.normalName() == "p" && !isPicture(e) && !e.hasClass("slideKicker"))
+    if (rest.headOption.exists(!_.select("h1, h2, h3, h4, h5, h6").isEmpty))
+      words.filter(_.text().trim.nonEmpty).foreach(_.addClass("slideLead"))
   }
 
   // The width a picture was given (`[[Attachment(x.webp, 93%)]]` writes `style="width: 93%"`)

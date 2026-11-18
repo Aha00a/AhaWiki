@@ -158,6 +158,24 @@ object SlideUnit {
       assertEquals(Interpreters.toHtmlString("#!Slide\n== 상황판\n[[Image(/a.webp, 93%)]] 설명").contains("style=\"width: 93%\""), true)
     }
 
+    // The words between a picture and its title are the line that says what it shows -- not the
+    // label over the title, not words after the picture, and not words with no title over them.
+    {
+      val html = Interpreters.toHtmlString("#!Slide\n종합 관제\n== 통합 대시보드\n지도에 안 보이는 것을 알립니다\n\n[[Image(/a.webp)]]\n\n그림 뒤")
+      assertEquals(html.contains("<p class=\"slideKicker\">종합 관제</p>"), true)
+      assertEquals(html.contains("<p class=\"slideLead\">지도에 안 보이는 것을 알립니다</p>"), true)
+      assertEquals(html.contains("<p class=\"slidePicture\">"), true)
+      assertEquals(html.contains("<p>그림 뒤</p>"), true)
+      assertEquals(count(html, "slideLead"), 1)
+      // Two paragraphs are two lines of it.
+      assertEquals(count(Interpreters.toHtmlString("#!Slide\n== 상황판\n하나\n\n둘\n\n[[Image(/a.webp)]]"), "<p class=\"slideLead\">"), 2)
+      assertEquals(Interpreters.toHtmlString("#!Slide\n머리 없는 글\n\n[[Image(/a.webp)]]").contains("slideLead"), false)
+      // Words after a list, between two pictures, or on a slide with no picture are the slide's.
+      assertEquals(Interpreters.toHtmlString("#!Slide\n== 상황판\n * 목록\n\n목록 뒤\n\n[[Image(/a.webp)]]").contains("slideLead"), false)
+      assertEquals(Interpreters.toHtmlString("#!Slide\n== 상황판\n[[Image(/a.webp)]]\n\n사이\n\n[[Image(/b.webp)]]").contains("slideLead"), false)
+      assertEquals(Interpreters.toHtmlString("#!Slide\n== 상황판\n요점").contains("slideLead"), false)
+    }
+
     // `cards`: the first list becomes cards, each item's sub-list moved inside it as the body.
     // AhaMark writes a sub-list as the item's next sibling, so without the move a card would end
     // where its title does.

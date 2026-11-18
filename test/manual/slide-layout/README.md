@@ -1,23 +1,25 @@
 # slide-layout
 
 Draws the slide layouts `InterpreterSlide` marks up -- a `dark cover`, `dark cards flow`,
-`dark cards stats`, a screen slide with a label over its title and a 16:9 picture given a width (as
-`[[Attachment(x.webp, 93%)]]` leaves it once `InterpreterSlide` has made the width a max-width;
-left as `width: 93%`, the picture's box loses its proportions and the check says so), a tall picture
-inside a link, and a plain slide -- with the real `app/assets/wiki.css`, `public/js/js.js` and
-`public/js/AhaWiki.Slide.js`, and checks what the stylesheet is for: the dark colours whatever the
-theme, the cards in one row of equal width with arrows between them, a figure that stays on one
-line in the narrowest card, a picture that stays inside its slide in its own proportions, the label
-on its title, and headings without a number, an underline or a fold button.
+`dark cards stats`, a screen slide with a label over its title, a line under it and a 16:9 picture
+given a width (as `[[Attachment(x.webp, 93%)]]` leaves it once `InterpreterSlide` has made the
+width a max-width; left as `width: 93%`, the picture's box loses its proportions and the check says
+so), a tall picture inside a link, and a plain slide -- with the real `app/assets/wiki.css`,
+`public/js/js.js` and `public/js/AhaWiki.Slide.js`, and checks what the stylesheet is for: the dark
+colours whatever the theme, the cards in one row of equal width with arrows between them, a figure
+that stays on one line in the narrowest card, a picture that stays inside its slide in its own
+proportions, the label on its title, the line between the title and the picture -- under half the
+title, muted, one line -- and headings without a number, an underline or a fold button.
 
 Under it, a `keynote` deck of seven, with the Pretendard stylesheet `InterpreterSlide` links for
 one: a cover with a picture behind it (`backdrop`), cards with arrows, three `big` slides -- a
 short title, a long one that has to wrap between words, one word in an h1 -- a screenshot under
-a label, and figures. The checks there: the black slide and Pretendard whatever the theme, the
-font arrived, the picture behind the content across the whole slide, a `big` title at the size the
-script found, inside the slide, a pixel more not, no word broken, the thumbnail at the stage's
-size -- and that a font arriving later has the titles sized again (the page draws one in serif,
-then lets a font arrive).
+a label and a line, and figures. The checks there: the black slide and Pretendard whatever the
+theme, the font arrived, the picture behind the content across the whole slide, the line under the
+screenshot's title in the values the Chrome tab settled, a `big` title at the size the script found,
+inside the slide, a pixel more not, no word broken, the thumbnail at the stage's size -- and that a
+font arriving later has the titles sized again (the page draws one in serif, then lets a font
+arrive).
 
 The markup is what `SlideUnit` pins on the server side; change one and change the other.
 

@@ -2625,6 +2625,12 @@
 .AhaWiki .slideDeck .slide .slideContent .slideAfterKicker {
   margin-top: 0.15em;
 }
+.AhaWiki .slideDeck .slide .slideContent .slideLead {
+  margin: 0.3em 0 0;
+  font-size: 0.55em;
+  line-height: 1.35;
+  color: var(--slide-muted);
+}
 .AhaWiki .slideDeck .slide .slideContent .slidePicture {
   margin: 0.4em 0 0;
   text-align: center;
@@ -2817,6 +2823,14 @@
 }
 .AhaWiki .slideDeck.keynote .slide .slideContent .slideAfterKicker {
   margin-top: 0.25em;
+}
+.AhaWiki .slideDeck.keynote .slide .slideContent .slideLead {
+  margin: 0.35em 0 0;
+  font-size: 0.42em;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: #A1A1A6;
 }
 .AhaWiki .slideDeck.keynote .slide .slideContent .slidePicture {
   margin-top: 0.6em;

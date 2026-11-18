@@ -62,6 +62,16 @@
 			}
 			.slideAfterKicker { margin-top: 0.15em; }
 
+			// The words between a picture and its title (InterpreterSlide marks them): one line that
+			// says what the picture shows, under the title and muted, so the picture is still what the
+			// slide is (2026-11-18, the EWS deck's screenshots).
+			.slideLead {
+				margin: 0.3em 0 0;
+				font-size: 0.55em;
+				line-height: 1.35;
+				color: var(--slide-muted);
+			}
+
 			// A paragraph that is only a picture. On screen it also shrinks to the slide's height
 			// (below); here, what it looks like in every medium.
 			.slidePicture {
@@ -312,6 +322,18 @@
 			}
 			.slideAfterKicker { margin-top: 0.25em; }
 
+			// The values a Chrome tab settled on the EWS deck (2026-11-18): under a .68em title, a
+			// line a little brighter than the muted grey, and the screenshot still about 69% of the
+			// slide's width.
+			.slideLead {
+				margin: 0.35em 0 0;
+				font-size: 0.42em;
+				font-weight: 500;
+				line-height: 1.35;
+				letter-spacing: -0.01em;
+				color: #A1A1A6;
+			}
+
 			.slidePicture {
 				margin-top: 0.6em;
 
@@ -353,7 +375,7 @@
 		}
 
 		// A screenshot under a title: the title smaller and the padding less, so the picture takes
-		// most of the slide (about 73% of its width for a 16:9 screenshot).
+		// most of the slide (about 73% of its width for a 16:9 screenshot, 69% with a lead line).
 		&.slideHasPicture {
 			--slide-padding: 34px 56px 40px;
 
