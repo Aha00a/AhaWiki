@@ -125,7 +125,16 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        wrapper.style.pointerEvents = 'none';
+        // The wrapper and its content are as wide as the page, and their empty part would take
+        // the clicks meant for what floats beside it (the contents, a #!Schema box): so they pass
+        // pointer events through, and only the drawn block takes them. Not a wrapper that scrolls
+        // -- a wide #!Table's (interpreter.less): Safari does not scroll a box with
+        // pointer-events: none by touch, and on a phone the table could not be moved sideways
+        // (2026-11-18). A scrolling box sits beside the floats rather than under them, so it has
+        // nothing to pass through.
+        if (window.getComputedStyle(wrapper).overflowX === 'visible') {
+            wrapper.style.pointerEvents = 'none';
+        }
         content.style.pointerEvents = 'none';
 
         var contentAnchorTarget = content.firstElementChild || content;
