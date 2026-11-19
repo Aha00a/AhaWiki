@@ -30,4 +30,5 @@ presenter follows the deck» and «the deck follows the presenter» fail there w
 Not checked here: that `F` folds the panel away for fullscreen and opens it again on the way out.
 A script's click cannot ask for fullscreen, and headless Chrome refuses even a key pressed over the
 DevTools protocol -- which does check the refusal path: the panel comes back. So does Chrome driven
-by its extension (2026-11-19). The way in and out takes a person pressing `F`.
+by its extension (2026-11-19). The way in and out takes a person pressing `F`; the owner did, on
+the live deck, the day it went in.
