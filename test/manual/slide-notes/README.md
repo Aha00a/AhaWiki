@@ -3,7 +3,7 @@
 Drives the real `public/js/AhaWiki.Slide.js` against the real `app/assets/wiki.css` on a deck shaped
 like what `InterpreterSlide` writes, and checks the speaker notes: hidden on the stage and in
 thumbnails, the panel under the slide -- open from the start since 2026-11-19, and `N` folds it
-away and back -- and the presenter window `P` opens, which follows
+away and back, the overview and the filmstrip hide it only while they are on -- and the presenter window `P` opens, which follows
 the deck and which the deck follows. And that the deck's keys stop at the deck: the wiki's own hotkeys
 (`hotkey.scala.html`, bound on document) took F to the front page and L to PageList until
 2026-11-19. A spy on document stands in for them; keys the deck does not use, and keys with Ctrl,

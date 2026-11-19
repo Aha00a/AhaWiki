@@ -107,6 +107,21 @@ if (!/^AhaWikiSlidePresenter/.test(window.name)) {
         const thumbsNotes = [...deck.querySelectorAll('.slideThumbs .slideNotes')];
         check('thumbnails do not show notes', thumbsNotes.length === 3 && thumbsNotes.every((a) => !visible(a)));
         deck.querySelector('.slideOverview').click();
+        // Hidden while another mode is on, not turned off: closing it brings the panel back,
+        // as picking a slide in the overview does -- unless N turned it off.
+        check('closing the overview brings the notes back', visible(panel));
+        deck.querySelector('.slideFilmstrip').click();
+        check('the filmstrip hides the notes', !visible(panel));
+        deck.querySelector('.slideFilmstrip').click();
+        check('closing the filmstrip brings the notes back', visible(panel));
+        deck.querySelector('.slideOverview').click();
+        deck.querySelector('.slideThumbs .slideThumbItem').click();
+        check('picking a slide in the overview brings the notes back', !deck.classList.contains('overview') && visible(panel));
+        toggle.click();
+        deck.querySelector('.slideOverview').click();
+        deck.querySelector('.slideOverview').click();
+        check('notes N turned off stay off', !visible(panel));
+        toggle.click();
 
         // The wiki binds F, L and the rest on document (hotkey.scala.html): F went to the front
         // page and L to PageList. The deck takes its keys first and lets none of them through.
@@ -127,7 +142,9 @@ if (!/^AhaWikiSlidePresenter/.test(window.name)) {
         press('e');
         check('a key the deck does not use still reaches them', reached.join() === 'l,e');
         document.removeEventListener('keydown', spy);
-        if (!deck.classList.contains('notes')) deck.querySelector('.slideNotesToggle').click();
+        // A script's F is refused fullscreen; the refusal arrives later, as a rejected promise.
+        await new Promise((r) => setTimeout(r, 300));
+        check('after F was refused the notes are back', visible(panel));
 
         // The presenter window: opened on the same page, it follows this deck and this deck follows it.
         const w = window.open(location.href.split('#')[0], AhaWiki.Slide.presenterWindowName(0), 'width=900,height=700');

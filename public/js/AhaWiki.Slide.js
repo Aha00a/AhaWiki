@@ -175,15 +175,24 @@
 
         deck.classList.add('presenting');
         // A deck with notes opens with the panel under the slide (owner's call, 2026-11-19): on a
-        // page the reader is usually the speaker rehearsing. Fullscreen is the audience's view, so
-        // it folds the panel away and gives it back on the way out -- see toggleFullscreen().
+        // page the reader is usually the speaker rehearsing. notesWanted is that choice, which only
+        // N changes; the overview, the filmstrip and fullscreen (the audience's view) hide the panel
+        // while they are on, and restoreNotes() gives it back when they go.
+        var notesWanted = hasNotes;
         if (hasNotes) {
             deck.classList.add('notes');
         }
         if (isPresenter) {
             deck.classList.add('presenterView');
         }
-        var notesBeforeFullscreen = false;
+
+        function restoreNotes() {
+            var audience = document.fullscreenElement === deck && !isPresenter;
+            if (notesWanted && !audience
+                    && !deck.classList.contains('overview') && !deck.classList.contains('filmstrip')) {
+                deck.classList.add('notes');
+            }
+        }
 
         function setPressed(btn, on) {
             if (btn) {
@@ -351,8 +360,7 @@
                     document.exitFullscreen();
                 }
             } else if (deck.requestFullscreen) {
-                notesBeforeFullscreen = !isPresenter && deck.classList.contains('notes');
-                if (notesBeforeFullscreen) {
+                if (!isPresenter && deck.classList.contains('notes')) {
                     deck.classList.remove('notes');
                     paint();
                 }
@@ -360,12 +368,9 @@
                 // Refused (no user gesture, a frame that forbids it): no change event follows.
                 if (asked && asked.catch) {
                     asked.catch(function () {
-                        if (notesBeforeFullscreen) {
-                            notesBeforeFullscreen = false;
-                            deck.classList.add('notes');
-                            paint();
-                            layout();
-                        }
+                        restoreNotes();
+                        paint();
+                        layout();
                     });
                 }
             }
@@ -398,6 +403,7 @@
                     to(i);
                     if (wasOverview) {
                         deck.classList.remove('overview');
+                        restoreNotes();
                         paint();
                         layout();
                     }
@@ -415,10 +421,12 @@
             }
             if (deck.classList.contains('notes')) {
                 deck.classList.remove('notes');
+                notesWanted = false;
             } else {
                 deck.classList.remove('overview');
                 deck.classList.remove('filmstrip');
                 deck.classList.add('notes');
+                notesWanted = true;
             }
             paint();
             layout();
@@ -435,6 +443,7 @@
         function toggleOverview() {
             if (deck.classList.contains('overview')) {
                 deck.classList.remove('overview');
+                restoreNotes();
             } else {
                 deck.classList.remove('filmstrip');
                 deck.classList.remove('notes');
@@ -448,6 +457,7 @@
         function toggleFilmstrip() {
             if (deck.classList.contains('filmstrip')) {
                 deck.classList.remove('filmstrip');
+                restoreNotes();
                 paint();
                 layout();
                 return;
@@ -579,14 +589,8 @@
             new ResizeObserver(function () { layout(); }).observe(stageEl);
         }
         document.addEventListener('fullscreenchange', function () {
-            if (document.fullscreenElement !== deck && notesBeforeFullscreen
-                    && !deck.classList.contains('overview') && !deck.classList.contains('filmstrip')) {
-                deck.classList.add('notes');
-                paint();
-            }
-            if (document.fullscreenElement !== deck) {
-                notesBeforeFullscreen = false;
-            }
+            restoreNotes();
+            paint();
             setPressed(fullBtn, document.fullscreenElement === deck);
             layout();
         });
