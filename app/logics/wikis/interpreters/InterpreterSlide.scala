@@ -89,6 +89,7 @@ object InterpreterSlide extends TraitInterpreter {
        |    <div class="slideChromeGroup">
        |      <span class="slideTimer" hidden></span>$notesButtons
        |      <button type="button" class="slideFullscreen" title="Fullscreen (F)" aria-label="Fullscreen" aria-pressed="false">&#9974;</button>
+       |      <button type="button" class="slideKeys" title="Keys (?)" aria-label="Keys" aria-pressed="false">?</button>
        |    </div>
        |  </div>
        |</div>""".stripMargin

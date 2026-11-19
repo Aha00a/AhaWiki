@@ -644,6 +644,15 @@
 				.slideCounter {
 					color: var(--color-text);
 					font-size: 14px;
+					white-space: nowrap;
+				}
+
+				// On a phone the bar's eight buttons ran past its right edge -- the last one, ?, out
+				// of reach -- and the counter broke over two lines. Narrower buttons, closer together.
+				@media (max-width: 767px) {
+					padding: 6px 8px;
+					.slideChromeGroup { gap: 4px; }
+					button { padding: 2px 7px; }
 				}
 
 				.slideTimer {

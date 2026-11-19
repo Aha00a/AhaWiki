@@ -144,6 +144,7 @@
         var fullBtn = deck.querySelector('.slideFullscreen');
         var notesBtn = deck.querySelector('.slideNotesToggle');
         var presenterBtn = deck.querySelector('.slidePresenter');
+        var keysBtn = deck.querySelector('.slideKeys');
         var timerEl = deck.querySelector('.slideTimer');
         var lone = document.querySelectorAll('.slideDeck').length === 1;
         var index = 0;
@@ -477,7 +478,7 @@
 
         function handleKey(e) {
             if (e.key === 'Escape' && keyHelp && !keyHelp.hidden) {
-                keyHelp.hidden = true;
+                showKeyHelp(false);
                 e.preventDefault();
                 return;
             }
@@ -524,10 +525,14 @@
                     row.insertCell().textContent = k.label;
                 });
                 keyHelp.appendChild(table);
-                keyHelp.addEventListener('click', function (e) { e.stopPropagation(); keyHelp.hidden = true; });
+                keyHelp.addEventListener('click', function (e) { e.stopPropagation(); showKeyHelp(false); });
                 deck.appendChild(keyHelp);
             }
-            keyHelp.hidden = !keyHelp.hidden;
+            showKeyHelp(keyHelp.hidden);
+        }
+        function showKeyHelp(open) {
+            keyHelp.hidden = !open;
+            setPressed(keysBtn, open);
         }
 
         if (lone) {
@@ -580,6 +585,7 @@
         if (filmBtn) { filmBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleFilmstrip(); }); }
         if (overBtn) { overBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleOverview(); }); }
         if (fullBtn) { fullBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleFullscreen(); }); }
+        if (keysBtn) { keysBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleKeyHelp(); }); }
         var prev = deck.querySelector('.slidePrev');
         var next = deck.querySelector('.slideNext');
         if (prev) { prev.addEventListener('click', function (e) { e.stopPropagation(); go(-1); }); }

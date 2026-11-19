@@ -81,6 +81,9 @@ object SlideUnit {
       val without = Interpreters.toHtmlString("#!Slide\none\n----\ntwo")
       assertEquals(without.contains("slideNotes"), false)
       assertEquals(without.contains("slidePresenter"), false)
+      // The key list is every deck's, notes or none: a button, since `?` alone is found by no one.
+      assertEquals(html.contains("class=\"slideKeys\""), true)
+      assertEquals(without.contains("class=\"slideKeys\""), true)
     }
 
     // Notes may be a block of their own -- a Markdown script, as the EWS deck keeps it. That works

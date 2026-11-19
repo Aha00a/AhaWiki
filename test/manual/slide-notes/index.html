@@ -55,6 +55,7 @@
       <button type="button" class="slideNotesToggle" title="Speaker notes (N)" aria-label="Speaker notes" aria-pressed="false">&#9998;</button>
       <button type="button" class="slidePresenter" title="Presenter window (P)" aria-label="Presenter window">&#9707;</button>
       <button type="button" class="slideFullscreen" title="Fullscreen (F)" aria-label="Fullscreen" aria-pressed="false">&#9974;</button>
+      <button type="button" class="slideKeys" title="Keys (?)" aria-label="Keys" aria-pressed="false">?</button>
     </div>
   </div>
 </div>
@@ -156,6 +157,12 @@ if (!/^AhaWikiSlidePresenter/.test(window.name)) {
         press('?', { shiftKey: true });
         help.click();
         check('a click closes the key list without moving on', !visible(help) && deck.querySelector('.slideCurrent').textContent === '1');
+        // The ? button in the bar, for whoever does not know to press ?: pressed while the list is open.
+        const keysBtn = deck.querySelector('.slideKeys');
+        keysBtn.click();
+        check('the ? button opens the list and shows pressed', visible(help) && keysBtn.getAttribute('aria-pressed') === 'true' && deck.querySelector('.slideCurrent').textContent === '1');
+        press('Escape');
+        check('Escape lets the ? button up', !visible(help) && keysBtn.getAttribute('aria-pressed') === 'false');
         document.removeEventListener('keydown', spy);
         // A script's F is refused fullscreen; the refusal arrives later, as a rejected promise.
         await new Promise((r) => setTimeout(r, 300));

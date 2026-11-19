@@ -7,7 +7,8 @@ away and back, the overview and the filmstrip hide it only while they are on -- 
 the deck and which the deck follows. And that the deck's keys stop at the deck: the wiki's own hotkeys
 (`hotkey.scala.html`, bound on document) took F to the front page and L to PageList until
 2026-11-19. A spy on document stands in for them; keys the deck does not use, and keys with Ctrl,
-must still reach it; `?` opens the deck's own key list instead of the wiki's. Under 768px the panel
+must still reach it; `?` opens the deck's own key list instead of the wiki's, and so does the `?` button at the
+end of the bar, which shows pressed while the list is open. Under 768px the panel
 opens folded, and the page checks that when it is run that narrow -- headless at
 `--window-size=390,900`, say. Inside the page's content, as on a wiki page, a heading in the
 notes is drawn as a slide's is -- no number, no underline -- and the line naming the next slide
