@@ -75,6 +75,11 @@ if (!/^AhaWikiSlidePresenter/.test(window.name)) {
         check('notes are hidden on the stage', asides.length === 3 && asides.every((a) => !visible(a)));
         // On by default since 2026-11-19; N folds it away and brings it back.
         const toggle = deck.querySelector('.slideNotesToggle');
+        // Except under 768px, where it opens folded. Run the page that narrow to check that one.
+        if (!matchMedia('(min-width: 768px)').matches) {
+            check('under 768px the panel opens folded', !visible(panel) && toggle.getAttribute('aria-pressed') === 'false');
+            toggle.click();
+        }
         check('the panel is shown from the start', visible(panel) && toggle.getAttribute('aria-pressed') === 'true');
         toggle.click();
         check('N hides the panel', !visible(panel) && toggle.getAttribute('aria-pressed') === 'false');
@@ -141,6 +146,16 @@ if (!/^AhaWikiSlidePresenter/.test(window.name)) {
         check('with Ctrl a key is left to the browser and the wiki', !deck.classList.contains('filmstrip') && reached.join() === 'l');
         press('e');
         check('a key the deck does not use still reaches them', reached.join() === 'l,e');
+        // `?` lists the deck's own keys, over the slide; the wiki's `?` help does not see it.
+        press('?', { shiftKey: true });
+        const help = deck.querySelector('.slideKeyHelp');
+        const helpText = help ? help.textContent : '';
+        check('? lists the deck\'s keys', visible(help) && /Fullscreen/.test(helpText) && /Filmstrip/.test(helpText) && /Speaker notes/.test(helpText) && reached.join() === 'l,e');
+        press('Escape');
+        check('Escape closes the key list', !visible(help));
+        press('?', { shiftKey: true });
+        help.click();
+        check('a click closes the key list without moving on', !visible(help) && deck.querySelector('.slideCurrent').textContent === '1');
         document.removeEventListener('keydown', spy);
         // A script's F is refused fullscreen; the refusal arrives later, as a rejected promise.
         await new Promise((r) => setTimeout(r, 300));

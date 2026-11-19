@@ -177,9 +177,12 @@
         // A deck with notes opens with the panel under the slide (owner's call, 2026-11-19): on a
         // page the reader is usually the speaker rehearsing. notesWanted is that choice, which only
         // N changes; the overview, the filmstrip and fullscreen (the audience's view) hide the panel
-        // while they are on, and restoreNotes() gives it back when they go.
-        var notesWanted = hasNotes;
-        if (hasNotes) {
+        // while they are on, and restoreNotes() gives it back when they go. Under 768px -- a phone --
+        // the panel would take what is left of the screen under a small slide, so it opens folded
+        // (same day); N still opens it.
+        var notesWanted = hasNotes && (isPresenter || !window.matchMedia
+            || window.matchMedia('(min-width: 768px)').matches);
+        if (notesWanted) {
             deck.classList.add('notes');
         }
         if (isPresenter) {
@@ -473,39 +476,58 @@
         }
 
         function handleKey(e) {
-            switch (e.key) {
-                case 'ArrowRight':
-                case 'PageDown':
-                case ' ':
-                case 'Spacebar':
-                    go(1); e.preventDefault(); break;
-                case 'ArrowLeft':
-                case 'PageUp':
-                    go(-1); e.preventDefault(); break;
-                case 'Home':
-                    to(0); e.preventDefault(); break;
-                case 'End':
-                    to(total - 1); e.preventDefault(); break;
-                case 'f':
-                case 'F':
-                    toggleFullscreen(); e.preventDefault(); break;
-                case 'o':
-                case 'O':
-                    toggleOverview(); e.preventDefault(); break;
-                case 'l':
-                case 'L':
-                    toggleFilmstrip(); e.preventDefault(); break;
-                case 'n':
-                case 'N':
-                    if (hasNotes) { toggleNotes(); e.preventDefault(); }
-                    break;
-                case 'p':
-                case 'P':
-                    if (hasNotes) { openPresenter(); e.preventDefault(); }
-                    break;
-                default:
-                    break;
+            if (e.key === 'Escape' && keyHelp && !keyHelp.hidden) {
+                keyHelp.hidden = true;
+                e.preventDefault();
+                return;
             }
+            var key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+            for (var i = 0; i < KEYS.length; i++) {
+                if (KEYS[i].keys.indexOf(key) >= 0 && (!KEYS[i].when || KEYS[i].when())) {
+                    KEYS[i].run();
+                    e.preventDefault();
+                    return;
+                }
+            }
+        }
+
+        // The deck's keys, once: handleKey() reads them, and the help `?` opens lists them. Inside
+        // a deck the wiki's own hotkeys do not reach (F, L), so its `?` help would have named
+        // keys that do something else here (2026-11-19).
+        var KEYS = [
+            { keys: ['ArrowRight', 'PageDown', ' ', 'Spacebar'], shown: '→ Space', label: 'Next slide', run: function () { go(1); } },
+            { keys: ['ArrowLeft', 'PageUp'], shown: '←', label: 'Previous slide', run: function () { go(-1); } },
+            { keys: ['Home'], shown: 'Home', label: 'First slide', run: function () { to(0); } },
+            { keys: ['End'], shown: 'End', label: 'Last slide', run: function () { to(total - 1); } },
+            { keys: ['f'], shown: 'F', label: 'Fullscreen', run: function () { toggleFullscreen(); } },
+            { keys: ['o'], shown: 'O', label: 'Overview', run: function () { toggleOverview(); } },
+            { keys: ['l'], shown: 'L', label: 'Filmstrip', run: function () { toggleFilmstrip(); } },
+            { keys: ['n'], shown: 'N', label: 'Speaker notes', when: function () { return hasNotes; }, run: function () { toggleNotes(); } },
+            { keys: ['p'], shown: 'P', label: 'Presenter window', when: function () { return hasNotes; }, run: function () { openPresenter(); } },
+            { keys: ['?'], shown: '?', label: 'These keys', run: function () { toggleKeyHelp(); } }
+        ];
+
+        // Inside the deck, so it shows in fullscreen too.
+        var keyHelp = null;
+        function toggleKeyHelp() {
+            if (!keyHelp) {
+                keyHelp = document.createElement('div');
+                keyHelp.className = 'slideKeyHelp';
+                keyHelp.hidden = true;
+                var table = document.createElement('table');
+                KEYS.forEach(function (k) {
+                    if (k.when && !k.when()) { return; }
+                    var row = table.insertRow();
+                    var th = document.createElement('th');
+                    th.textContent = k.shown;
+                    row.appendChild(th);
+                    row.insertCell().textContent = k.label;
+                });
+                keyHelp.appendChild(table);
+                keyHelp.addEventListener('click', function (e) { e.stopPropagation(); keyHelp.hidden = true; });
+                deck.appendChild(keyHelp);
+            }
+            keyHelp.hidden = !keyHelp.hidden;
         }
 
         if (lone) {
