@@ -505,7 +505,7 @@
             { keys: ['l'], shown: 'L', label: 'Filmstrip', run: function () { toggleFilmstrip(); } },
             { keys: ['n'], shown: 'N', label: 'Speaker notes', when: function () { return hasNotes; }, run: function () { toggleNotes(); } },
             { keys: ['p'], shown: 'P', label: 'Presenter window', when: function () { return hasNotes; }, run: function () { openPresenter(); } },
-            { keys: ['?'], shown: '?', label: 'These keys', run: function () { toggleKeyHelp(); } }
+            { keys: ['?'], shown: '?', label: 'Hotkey help', run: function () { toggleKeyHelp(); } }
         ];
 
         // Inside the deck, so it shows in fullscreen too. Shaped and behaving as the wiki's own `?`

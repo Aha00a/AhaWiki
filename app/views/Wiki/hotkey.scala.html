@@ -54,26 +54,8 @@
             hideHotkeyHelp();
             return false;
         }
-        var items = [
-            ['F', 'Front page'],
-            ['A', 'AhaWiki page'],
-            ['C', 'RecentChanges'],
-            ['T', 'TitleIndex'],
-            ['L', 'PageList'],
-            ['M', 'PageMap'],
-            ['R', 'Random page'],
-@if(enablePageActions) {
-            ['E', 'Edit action toggle'],
-            ['H', 'History action toggle'],
-            ['B', 'Blame action toggle'],
-}
-            ['S,G,/', 'Open search'],
-            ['W', 'Open diary write'],
-            ['?', 'Open hotkey help']
-        ];
-
-        var rows = items.map(function (item) {
-            return '<tr><th>' + item[0] + '</th><td>' + item[1] + '</td></tr>';
+        var rows = HOTKEYS.map(function (k) {
+            return '<tr><th>' + k.shown + '</th><td>' + k.label + '</td></tr>';
         }).join('');
 
         var popup = [
@@ -147,33 +129,31 @@
         return location.params({action: action});
     }
 
-    $(function(){
-        $(document).bind('keydown', 'f', function () { return go('/'); });
-
-        $(document).bind('keydown', 'a', function () { return go('/w/AhaWiki'); });
-
-        $(document).bind('keydown', 'c', function () { return go('/w/RecentChanges'); });
-        $(document).bind('keydown', 't', function () { return go('/w/TitleIndex'); });
-        $(document).bind('keydown', 'l', function () { return go('/w/PageList'); });
-
-        $(document).bind('keydown', 'm', function () { return go('/w/PageMap'); });
-
-        $(document).bind('keydown', 'r', function () { return go('/r'); });
-
+    // The wiki's keys, once: the bindings below and the list `?` opens both read this, so the list
+    // cannot name a key that does nothing or leave one out (2026-11-20; they were two lists until
+    // then). `keys` is jquery.hotkeys' spelling, space-separated; one bind() per entry, so a key
+    // that has two spellings -- `?` and `shift+/` -- runs once even where a layout matches both.
+    var HOTKEYS = [
+        { keys: 'f', shown: 'F', label: 'Front page', run: function () { return go('/'); } },
+        { keys: 'a', shown: 'A', label: 'AhaWiki page', run: function () { return go('/w/AhaWiki'); } },
+        { keys: 'c', shown: 'C', label: 'RecentChanges', run: function () { return go('/w/RecentChanges'); } },
+        { keys: 't', shown: 'T', label: 'TitleIndex', run: function () { return go('/w/TitleIndex'); } },
+        { keys: 'l', shown: 'L', label: 'PageList', run: function () { return go('/w/PageList'); } },
+        { keys: 'm', shown: 'M', label: 'PageMap', run: function () { return go('/w/PageMap'); } },
+        { keys: 'r', shown: 'R', label: 'Random page', run: function () { return go('/r'); } },
 @if(enablePageActions) {
-        $(document).bind('keydown', 'e', function () { return toggleAction('edit'); });
-        $(document).bind('keydown', 'h', function () { return toggleAction('history'); });
-        $(document).bind('keydown', 'b', function () { return toggleAction('blame'); });
+        { keys: 'e', shown: 'E', label: 'Edit action toggle', run: function () { return toggleAction('edit'); } },
+        { keys: 'h', shown: 'H', label: 'History action toggle', run: function () { return toggleAction('history'); } },
+        { keys: 'b', shown: 'B', label: 'Blame action toggle', run: function () { return toggleAction('blame'); } },
 }
+        { keys: 's g /', shown: 'S, G, /', label: 'Open search', run: function () { return showSearch(); } },
+        { keys: 'w', shown: 'W', label: 'Open diary write', run: function () { return showWrite(); } },
+        { keys: '? shift+/', shown: '?', label: 'Hotkey help', run: function () { return showHotkeyHelp(); } }
+    ];
 
-        $(document).bind('keydown', 's', function () { return showSearch(); });
-        $(document).bind('keydown', 'g', function () { return showSearch(); });
-        $(document).bind('keydown', '/', function () { return showSearch(); });
-
-        // One binding for both spellings: two would both fire on a layout that matches both, and
-        // a toggle fired twice is no toggle.
-        $(document).bind('keydown', '? shift+/', function () { return showHotkeyHelp(); });
-
-        $(document).bind('keydown', 'w', function () { return showWrite(); });
+    $(function(){
+        HOTKEYS.forEach(function (k) {
+            $(document).bind('keydown', k.keys, k.run);
+        });
     });
 </script>
