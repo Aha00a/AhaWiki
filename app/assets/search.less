@@ -33,6 +33,20 @@
 		}
 	}
 
+	// The list `?` opens (hotkey.scala.html), centred over the page rather than placed as .search
+	// is -- at 20% of the window its rows broke in two and ran off the bottom. Under .AhaWiki so its
+	// title is not drawn as the page's headings are.
+	.hotkeyHelp {
+		.hotkeyHelpBox();
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		z-index: 2;
+		max-width: calc(100vw - 32px);
+		max-height: calc(100vh - 32px);
+	}
+
 	.autocomplete-suggestions {
 		border: 1px solid var(--color-input-border);
 		background: var(--color-surface);

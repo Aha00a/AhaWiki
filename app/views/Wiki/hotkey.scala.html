@@ -48,7 +48,12 @@
         $('.search, .searchBg').remove();
     }
 
+    // `?` again closes it: each press used to add another on top (2026-11-20).
     function showHotkeyHelp() {
+        if ($('.hotkeyHelp').length) {
+            hideHotkeyHelp();
+            return false;
+        }
         var items = [
             ['F', 'Front page'],
             ['A', 'AhaWiki page'],
@@ -73,10 +78,10 @@
 
         var popup = [
             '<div class="searchBg hotkeyHelpBg"></div>',
-            '<div class="search hotkeyHelp">',
-            '<h2 style="margin:0 0 12px 0;">Hotkeys</h2>',
-            '<p class="description" style="margin:0 0 16px 0;">Press ESC or click outside to close.</p>',
-            '<table class="wikiTableSimple hotkeyHelpTable">' + rows + '</table>',
+            '<div class="hotkeyHelp">',
+            '<h2>Hotkeys</h2>',
+            '<p class="description">Press ESC or click outside to close.</p>',
+            '<table>' + rows + '</table>',
             '</div>'
         ].join('');
 
@@ -165,8 +170,9 @@
         $(document).bind('keydown', 'g', function () { return showSearch(); });
         $(document).bind('keydown', '/', function () { return showSearch(); });
 
-        $(document).bind('keydown', '?', function () { return showHotkeyHelp(); });
-        $(document).bind('keydown', 'shift+/', function () { return showHotkeyHelp(); });
+        // One binding for both spellings: two would both fire on a layout that matches both, and
+        // a toggle fired twice is no toggle.
+        $(document).bind('keydown', '? shift+/', function () { return showHotkeyHelp(); });
 
         $(document).bind('keydown', 'w', function () { return showWrite(); });
     });

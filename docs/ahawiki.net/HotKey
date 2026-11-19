@@ -29,7 +29,8 @@
 
 === Help
 단축키 도움말을 표시합니다.
- * [[Kbd(?)]], [[Kbd(Shift /)]] - Hotkey help
+ * [[Kbd(?)]], [[Kbd(Shift /)]] - Hotkey help. 열려 있을 때 한 번 더 누르면 닫힙니다. 2026-11-20 까지는 누를 때마다 목록이 하나씩 더 겹쳐 떴습니다.
+ * 슬라이드 덱 안에서는 덱의 키 목록이 대신 뜹니다([InterpreterSlide]). 두 목록은 모양이 같습니다.
 
 === Etc
  * [[Kbd(w)]] - Write log - 기록을 작성합니다.

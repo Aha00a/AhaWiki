@@ -508,13 +508,28 @@
             { keys: ['?'], shown: '?', label: 'These keys', run: function () { toggleKeyHelp(); } }
         ];
 
-        // Inside the deck, so it shows in fullscreen too.
+        // Inside the deck, so it shows in fullscreen too. Shaped and behaving as the wiki's own `?`
+        // list (hotkey.scala.html) is: a title, a line on closing it, a backdrop that closes it, and
+        // a click on the list itself leaves it open. Neither click moves the deck on.
         var keyHelp = null;
+        var keyHelpBg = null;
         function toggleKeyHelp() {
             if (!keyHelp) {
+                keyHelpBg = document.createElement('div');
+                keyHelpBg.className = 'slideKeyHelpBg';
+                keyHelpBg.hidden = true;
+                keyHelpBg.addEventListener('click', function (e) { e.stopPropagation(); showKeyHelp(false); });
+                deck.appendChild(keyHelpBg);
                 keyHelp = document.createElement('div');
                 keyHelp.className = 'slideKeyHelp';
                 keyHelp.hidden = true;
+                var title = document.createElement('h2');
+                title.textContent = 'Slide hotkeys';
+                keyHelp.appendChild(title);
+                var description = document.createElement('p');
+                description.className = 'description';
+                description.textContent = 'Press ESC or click outside to close.';
+                keyHelp.appendChild(description);
                 var table = document.createElement('table');
                 KEYS.forEach(function (k) {
                     if (k.when && !k.when()) { return; }
@@ -525,13 +540,14 @@
                     row.insertCell().textContent = k.label;
                 });
                 keyHelp.appendChild(table);
-                keyHelp.addEventListener('click', function (e) { e.stopPropagation(); showKeyHelp(false); });
+                keyHelp.addEventListener('click', function (e) { e.stopPropagation(); });
                 deck.appendChild(keyHelp);
             }
             showKeyHelp(keyHelp.hidden);
         }
         function showKeyHelp(open) {
             keyHelp.hidden = !open;
+            keyHelpBg.hidden = !open;
             setPressed(keysBtn, open);
         }
 

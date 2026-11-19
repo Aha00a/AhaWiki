@@ -156,7 +156,9 @@ if (!/^AhaWikiSlidePresenter/.test(window.name)) {
         check('Escape closes the key list', !visible(help));
         press('?', { shiftKey: true });
         help.click();
-        check('a click closes the key list without moving on', !visible(help) && deck.querySelector('.slideCurrent').textContent === '1');
+        check('a click on the key list leaves it open, as the wiki\'s does', visible(help) && deck.querySelector('.slideCurrent').textContent === '1');
+        deck.querySelector('.slideKeyHelpBg').click();
+        check('a click outside it closes it without moving on', !visible(help) && deck.querySelector('.slideCurrent').textContent === '1');
         // The ? button in the bar, for whoever does not know to press ?: pressed while the list is open.
         const keysBtn = deck.querySelector('.slideKeys');
         keysBtn.click();

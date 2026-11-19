@@ -30,6 +30,59 @@
   padding: 10px;
   font-size: 25px;
 }
+.AhaWiki .hotkeyHelp {
+  box-sizing: border-box;
+  overflow-y: auto;
+  padding: 16px 20px;
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: left;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
+}
+.AhaWiki .hotkeyHelp h2 {
+  margin: 0 0 4px 0;
+  padding: 0;
+  font-size: 18px;
+  border: 0;
+  text-shadow: none;
+}
+.AhaWiki .hotkeyHelp .description {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: var(--color-muted);
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.AhaWiki .hotkeyHelp table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0;
+}
+.AhaWiki .hotkeyHelp table th,
+.AhaWiki .hotkeyHelp table td {
+  padding: 4px 8px;
+  border-top: 1px solid var(--color-table-border);
+  white-space: nowrap;
+}
+.AhaWiki .hotkeyHelp table th {
+  text-align: left;
+  font-family: 'Ubuntu Mono', 'Consolas', monospace;
+  font-weight: bold;
+}
+.AhaWiki .hotkeyHelp table tr:first-child > * {
+  border-top: 0;
+}
 .AhaWiki .autocomplete-suggestions {
   border: 1px solid var(--color-input-border);
   background: var(--color-surface);
