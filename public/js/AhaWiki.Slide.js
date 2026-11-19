@@ -553,14 +553,24 @@
         if (prev) { prev.addEventListener('click', function (e) { e.stopPropagation(); go(-1); }); }
         if (next) { next.addEventListener('click', function (e) { e.stopPropagation(); go(1); }); }
 
-        document.addEventListener('keydown', function (e) {
+        // On window, capturing, so the deck sees its keys before the wiki's own hotkeys do
+        // (hotkey.scala.html binds them on document): F went to the front page instead of
+        // fullscreen, and L to PageList instead of the filmstrip, until 2026-11-19. A key the deck
+        // used goes no further. With a modifier it is the browser's (Ctrl+F) and is left alone.
+        window.addEventListener('keydown', function (e) {
+            if (e.ctrlKey || e.metaKey || e.altKey) {
+                return;
+            }
             var active = document.fullscreenElement
                 ? (document.fullscreenElement === deck)
                 : deck.contains(document.activeElement);
             if (active) {
                 handleKey(e);
+                if (e.defaultPrevented) {
+                    e.stopPropagation();
+                }
             }
-        });
+        }, true);
 
         // Re-fit the slide and thumbnails whenever their boxes change size -- the window's, and the
         // stage's own, which also changes when a deck that was hidden (a folded section) is shown.

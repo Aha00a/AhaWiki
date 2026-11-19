@@ -108,6 +108,27 @@ if (!/^AhaWikiSlidePresenter/.test(window.name)) {
         check('thumbnails do not show notes', thumbsNotes.length === 3 && thumbsNotes.every((a) => !visible(a)));
         deck.querySelector('.slideOverview').click();
 
+        // The wiki binds F, L and the rest on document (hotkey.scala.html): F went to the front
+        // page and L to PageList. The deck takes its keys first and lets none of them through.
+        const reached = [];
+        const spy = (e) => reached.push(e.key);
+        document.addEventListener('keydown', spy);
+        const press = (key, init = {}) => deck.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...init }));
+        deck.focus();
+        press('l');
+        check('L opens the filmstrip', deck.classList.contains('filmstrip'));
+        press('l');
+        press('f');
+        press('ArrowRight');
+        press('ArrowLeft');
+        check('the deck\'s keys do not reach the wiki\'s hotkeys', reached.length === 0);
+        press('l', { ctrlKey: true });
+        check('with Ctrl a key is left to the browser and the wiki', !deck.classList.contains('filmstrip') && reached.join() === 'l');
+        press('e');
+        check('a key the deck does not use still reaches them', reached.join() === 'l,e');
+        document.removeEventListener('keydown', spy);
+        if (!deck.classList.contains('notes')) deck.querySelector('.slideNotesToggle').click();
+
         // The presenter window: opened on the same page, it follows this deck and this deck follows it.
         const w = window.open(location.href.split('#')[0], AhaWiki.Slide.presenterWindowName(0), 'width=900,height=700');
         if (!w) {
