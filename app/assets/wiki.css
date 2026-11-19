@@ -3283,7 +3283,8 @@
   .AhaWiki .slideDeck .slideStage {
     display: contents;
   }
-  .AhaWiki .slideDeck .slideThumbs {
+  .AhaWiki .slideDeck .slideThumbs,
+  .AhaWiki .slideDeck .slideKeyHelp {
     display: none;
   }
 }
