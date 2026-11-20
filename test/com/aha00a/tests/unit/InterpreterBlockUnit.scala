@@ -33,6 +33,14 @@ object InterpreterBlockUnit {
       assertEquals(Interpreters.render(InterpreterWiki, "plain") == InterpreterWiki.toHtmlString("plain"), true)
     }; testFailingBlockStaysInItsBox()
 
+    // A sparkline in a cell is drawn there, and it does not make its column numeric: the column
+    // of a trend is not a number to right-align, bar or sort by.
+    def testSparklineInTableCell(): Unit = {
+      val html = Interpreters.toHtmlString("#!Table tsv 1\nName\tTrend\nA\t[[Sparkline(1 3 2)]]\nB\t[[Sparkline(2 2 5)]]")
+      assertEquals("""<svg class="MacroSparkline"""".r.findAllMatchIn(html).size, 2)
+      assertEquals(html.contains("numeric"), false)
+    }; testSparklineInTableCell()
+
     def testInterpreterTable(): Unit = {
       assertEquals(Interpreters.toHtmlString("#!table tsv\na\tb"), <table class="InterpreterTable wikiTableSimple tablesorter"><tbody><tr><td><div><p>a</p></div></td><td><div><p>b</p></div></td></tr></tbody></table>.toString())
       assertEquals(Interpreters.toHtmlString("#!table\n#!tsv\na\tb"), <table class="InterpreterTable wikiTableSimple tablesorter"><tbody><tr><td><div><p>a</p></div></td><td><div><p>b</p></div></td></tr></tbody></table>.toString())

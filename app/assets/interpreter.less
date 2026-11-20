@@ -73,6 +73,25 @@
 		}
 	}
 
+	// [[Sparkline(...)]]: a line the size of a word, in the link colour so it follows the theme
+	// and its hue. The viewBox is 80x20, so 4em x 1em keeps it undistorted at any text size.
+	svg.MacroSparkline {
+		width: 4em;
+		height: 1em;
+		vertical-align: -0.15em;
+		overflow: visible;
+		polyline {
+			fill: none;
+			stroke: var(--color-link);
+			stroke-width: 1.5;
+			stroke-linejoin: round;
+			stroke-linecap: round;
+		}
+		circle {
+			fill: var(--color-link);
+		}
+	}
+
 	.Macro {
 		&.PageList {
 			> table {

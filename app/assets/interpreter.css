@@ -68,6 +68,22 @@
 .AhaWiki .interpreterMap > .tableArea .count {
   text-align: right;
 }
+.AhaWiki svg.MacroSparkline {
+  width: 4em;
+  height: 1em;
+  vertical-align: -0.15em;
+  overflow: visible;
+}
+.AhaWiki svg.MacroSparkline polyline {
+  fill: none;
+  stroke: var(--color-link);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.AhaWiki svg.MacroSparkline circle {
+  fill: var(--color-link);
+}
 .AhaWiki .Macro.PageList > table {
   margin-left: 0;
 }

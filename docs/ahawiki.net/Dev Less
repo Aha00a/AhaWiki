@@ -40,7 +40,7 @@ lessc --source-map wiki.less wiki.css
 `wiki.less`	`.AhaWiki` 위키 콘텐츠, 테이블, TOC, schema, paperContent 등	모든 페이지
 `search.less`	`.search`, `.searchBg`, `.hotkeyHelp`(`?` 단축키 목록 — 모양은 `_mixins.less` 의 `.hotkeyHelpBox()` 로 슬라이드 덱의 키 목록과 같이 씀; 2026-11-20 `less.less` 에서 옮김), `.autocomplete-*`, `.searchResult`, `.ahaWikiLoader`	모든 페이지 (검색 오버레이가 전역 단축키로 동작)
 `kanban.less`	`.InterpreterKanban`, `.kanban-modal` 등 칸반 전체	모든 페이지 (위키 본문에 칸반 매크로가 올 수 있음)
-`interpreter.less`	`.Interpreter`, `.Macro`, `.InterpreterRenderMetaWrapper`, `.interpreterMap`	모든 페이지
+`interpreter.less`	`.Interpreter`, `.Macro`, `svg.MacroSparkline`, `.InterpreterRenderMetaWrapper`, `.interpreterMap`	모든 페이지
 `adjacent.less`	`svg.graph`, `.adjacentPagesHud`, `.crawlerPreview` 등 인접 페이지 그래프	모든 페이지
 `gantt.less`	`.InterpreterGantt` 간트차트	모든 위키 페이지 (`_baseSkeleton`. Admin 화면의 `_baseAdmin` 은 싣지 않는다)
 -

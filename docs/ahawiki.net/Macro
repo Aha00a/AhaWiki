@@ -28,6 +28,7 @@
 == 서식/텍스트
  1. [MacroBr] - 강제 줄바꿈
  1. [MacroKbd] - 키보드 키 표시
+ 1. [MacroSparkline] - 숫자 추세를 작은 선으로
  1. [MacroRuby] - 루비 주석 표시
  1. [MacroTrivial] - 덜 중요한 텍스트
  1. [MacroColorCode] - 색상 코드 미리보기

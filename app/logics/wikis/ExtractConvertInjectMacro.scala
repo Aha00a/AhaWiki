@@ -26,6 +26,7 @@ object ExtractConvertInjectMacro extends Logging {
     MacroTrivial,
     MacroCopyable,
     MacroKbd,
+    MacroSparkline,
     MacroCheckBox,
 
     MacroNavigation,

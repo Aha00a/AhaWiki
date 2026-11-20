@@ -62,7 +62,7 @@ object WikiMacrosUnit {
     // extractor here, which is where the null was.
     val macroExtractor = new logics.wikis.ExtractConvertInjectMacro()
     def renderMacroCall(call: String): String = macroExtractor.convert(call)
-    Seq("Image", "Attachment", "Copyable", "Embed", "Kbd").foreach { name =>
+    Seq("Image", "Attachment", "Copyable", "Embed", "Kbd", "Sparkline").foreach { name =>
       assertEquals(renderMacroCall(s"[[$name]]"), renderMacroCall(s"[[$name()]]"))
     }
     assertEquals(renderMacroCall("[[Kbd]]").contains("""<kbd class="MacroKbd">"""), true)
