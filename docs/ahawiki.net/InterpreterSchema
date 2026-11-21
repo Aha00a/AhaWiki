@@ -105,6 +105,20 @@ JSON-LD에는 다음 기본 값이 자동으로 들어갑니다.
  * 한 페이지에서 첫 Article 블록만 읽습니다. 두 번째는 화면에는 보이지만 JSON-LD 에는 나가지 않습니다. 한 페이지는 글 하나입니다.
  * 위 기본값(`url`·`@id`·`name`)은 Article 블록에는 쓰이지 않습니다. 페이지 단위 Article 의 `@id`·`headline`·`mainEntityOfPage` 가 그 자리를 합니다.
 
+=== Rating 블록
+`Rating` 블록은 사이트 주인이 그 페이지의 작품에 매긴 평점입니다. 그래서 `Rating` 하나로 내보내지 않고, 그 작품에 대한 `Review` 로 내보냅니다(`PageRating`).
+[[[#!Vim text
+[[[#!Schema Rating
+ratingValue	9.0
+]]]
+]]]
+ * `Review` 의 `@id` 는 `페이지 주소#review`, `itemReviewed` 는 `{"@id": 페이지 주소}` — 같은 페이지의 작품 블록이 쓰는 `@id` 입니다. `author` 는 사이트(`…/#organization`)로, 페이지 단위 Article 의 author 와 같습니다.
+ * 블록의 값은 `reviewRating` 안의 `Rating` 으로 들어갑니다. `bestRating` 을 쓰지 않으면 '''10''' 입니다. schema.org 는 `bestRating` 이 없으면 5 로 보기 때문에, 비워 두면 9.0 이 «5점 만점에 9점» 이 됩니다. 10점 만점이 아닌 평점이면 `bestRating` 을 직접 씁니다.
+ * 위 기본값(`url`·`@id`·`name`)은 Rating 블록에는 쓰이지 않습니다.
+ * `Rating` 자신만 이렇게 합니다. `AggregateRating` 같은 하위 클래스는 뜻이 달라서(여러 사람의 평점을 모은 것) 그대로 둡니다.
+ * 2026-11-22 전에는 다른 블록처럼 페이지 주소를 `@id` 로 한 `Rating` 이 나갔습니다. JSON-LD 는 `@id` 가 같은 노드를 하나로 합치므로 작품이 «작품이면서 평점» 으로 읽혔고, 평점이 그 작품의 것이라는 연결은 없었습니다.
+ * 위키 문법을 `Review` 블록 안에 `Rating` 을 넣는 모양으로 바꾸는 안은 하지 않았습니다. 평점 한 줄이 무거워지고 이미 쓴 평점을 모두 고쳐야 합니다. 감상의 `--[날짜]` 를 `datePublished` 로, 감상 글을 `reviewBody` 로 넣는 것도 아직 하지 않았습니다.
+
 == 페이지 색 (themeColor)
 
 나무위키처럼 주제마다 색을 정할 수 있습니다. 블록에 `themeColor` 를 `#rgb` 나 `#rrggbb` 로 적습니다.

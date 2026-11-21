@@ -123,6 +123,30 @@ object InterpreterSchemaUnit {
       assertEquals((written \ "inLanguage").as[String], "ja")
     }
 
+    // A Rating block is a Review of the page's thing, out of 10 unless it says otherwise. It used to
+    // take the work's own @id, so the work read as a Rating too, and had no bestRating (schema.org: 5).
+    {
+      import logics.wikis.PageRating
+      val rating = ParseResult("Rating", Seq(Seq("ratingValue", "9.0")))
+      assertEquals(PageRating.isRating(rating), true)
+      assertEquals(PageRating.isRating(ParseResult("AggregateRating", Seq(Seq("ratingValue", "9.0")))), false)
+
+      val review = PageRating.toReviewJsonLd(rating, Some("https://example.com/w/The%20Blacklist"), Some("example.com")).get
+      assertEquals((review \ "@type").as[String], "Review")
+      assertEquals((review \ "@id").as[String], "https://example.com/w/The%20Blacklist#review")
+      assertEquals((review \ "itemReviewed" \ "@id").as[String], "https://example.com/w/The%20Blacklist")
+      assertEquals((review \ "author" \ "@id").as[String], logics.wikis.JsonLdId.organization("example.com"))
+      assertEquals((review \ "reviewRating" \ "@type").as[String], "Rating")
+      assertEquals((review \ "reviewRating" \ "ratingValue").as[String], "9.0")
+      assertEquals((review \ "reviewRating" \ "bestRating").as[String], "10")
+      assertEquals((review \ "reviewRating" \ "@id").toOption, None)
+      assertEquals((review \ "reviewRating" \ "name").toOption, None)
+
+      val outOfFive = PageRating.toReviewJsonLd(ParseResult("Rating", Seq(Seq("ratingValue", "4"), Seq("bestRating", "5"))), None, None).get
+      assertEquals((outOfFive \ "reviewRating" \ "bestRating").as[String], "5")
+      assertEquals((outOfFive \ "itemReviewed").toOption, None)
+    }
+
     {
       val parseResult = ParseResult(
         "Organization",

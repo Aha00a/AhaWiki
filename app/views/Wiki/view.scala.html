@@ -16,7 +16,7 @@
     val webpageId = s"$canonicalUrl#webpage"
     val articleId = s"$canonicalUrl#article"
     val breadcrumbId = s"$canonicalUrl#breadcrumb"
-    val organizationId = s"https://${wikiContext.requestWrapper.host}/#organization"
+    val organizationId = logics.wikis.JsonLdId.organization(wikiContext.requestWrapper.host)
 
     val faviconPath = wikiContext.siteFavicon.stripPrefix("/")
 

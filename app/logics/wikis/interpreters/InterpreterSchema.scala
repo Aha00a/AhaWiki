@@ -342,12 +342,18 @@ object InterpreterSchema extends TraitInterpreter {
       </dl>
     // An Article block is the page's own Article, which view.scala.html writes with the block's
     // properties folded in (PageArticle). Written here as well, it was a second article.
-    val jsonLdScript = toJsonLdObject(
-      parseResult = parseResult,
-      baseUrl = baseUrl,
-      pageUrl = pageUrl,
-      pageName = Some(wikiContext.name),
-    ).filterNot(_ => logics.wikis.PageArticle.describesThePage(parseResult)).map(json =>
+    // A Rating block is the site's review of the page's thing, written as a Review (PageRating).
+    val json: Option[JsObject] =
+      if (logics.wikis.PageRating.isRating(parseResult))
+        logics.wikis.PageRating.toReviewJsonLd(parseResult, pageUrl, Option(wikiContext.requestWrapper.host).filter(_.isNotNullOrEmpty))
+      else
+        toJsonLdObject(
+          parseResult = parseResult,
+          baseUrl = baseUrl,
+          pageUrl = pageUrl,
+          pageName = Some(wikiContext.name),
+        )
+    val jsonLdScript = json.filterNot(_ => logics.wikis.PageArticle.describesThePage(parseResult)).map(json =>
       <script type="application/ld+json">{scala.xml.Unparsed(logics.HtmlJson.stringify(json))}</script>
     )
     // Read from the block being drawn, not from this page's stored rows, so a preview shows the
