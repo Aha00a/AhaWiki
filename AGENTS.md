@@ -29,7 +29,7 @@ once by someone who could have read it instead. Add a line here when you add a d
 | [docs/ahawiki.net/Dev Resources](docs/ahawiki.net/Dev%20Resources) | Why the app reads its files off the classpath, where the default pages live and why, and how to check nothing has gone back to relative paths. |
 | [docs/ahawiki.net/Dev Logs](docs/ahawiki.net/Dev%20Logs) | Where the production log is, the three commands that turn 491MB of it into a list of what is broken, and what that list held the first time anyone ran them. Also the fact that nothing rotates it. |
 | [docs/ahawiki.net/Dev Database](docs/ahawiki.net/Dev%20Database) | The database itself: what the columns mean, which timezone they are in, and why a new table has to say `COLLATE=utf8mb4_bin` itself — the database default is something else, and evolution 68 found that out in production. |
-| [docs/ahawiki.net/Dev SchemaOrgVocabulary](docs/ahawiki.net/Dev%20SchemaOrgVocabulary) | Where `public/schema.org/` comes from. Not what schema.org publishes: a separate repository strips the `@` and the prefixes, which is why `SchemaOrg.scala` can read `id` and `Class` directly. How to raise the version, and what 30.1 would bring — including 231 foreign-vocabulary terms and the `owner` property the importer has been waiting for. |
+| [docs/ahawiki.net/Dev SchemaOrgVocabulary](docs/ahawiki.net/Dev%20SchemaOrgVocabulary) | Where `public/schema.org/` comes from. Not what schema.org publishes: a separate repository strips the `@` and the prefixes, which is why `SchemaOrg.scala` can read `id` and `Class` directly. How to raise the version, and what the raise to 30.1 brought — including 231 foreign-vocabulary terms and the `owner` property the importer had been waiting for. |
 | [docs/kanban-fixtures/](docs/kanban-fixtures/) | Input and expected output for the Kanban round-trip tests. They once spent two months gone without a build noticing; `test/kanban.roundtrip-fixtures.test.mjs` now fails by name when one is missing, and runs any new directory without being told about it. |
 | [test/manual/editor-keys/](test/manual/editor-keys/) | Presses Tab and Enter in a real CodeMirror with the real editor scripts, without needing a server or a login, and checks that the table-option autocomplete offers the next word rather than the first again. Not part of `npm test` — it needs a browser. |
 | [test/manual/editor-grid/](test/manual/editor-grid/) | Opens the real editor scripts on a `#!Table` and a `#!gantt` block whose cells hold quotes, edits one other cell, and checks every cell is shown whole and written back as it was. It exists because both grids cut a cell at its first `"` and the next edit saved the cut text. Same shape: a browser, no server. |
@@ -118,7 +118,7 @@ Documents under `docs/ahawiki.net/` must use AhaMark format. Pay special attenti
  * [ ] Open checkbox item
  * [[CB(x)]] Checked checkbox item
  * Link to another wiki page: [PageName]
- * Link with label: [PageName Label Text]
+ * Link with label: [PageName|Label Text]  (the whole bracket is the page name, spaces included; the label goes after `|`)
  * Inline code uses backticks like `code`.
 
 [[[#!Vim text

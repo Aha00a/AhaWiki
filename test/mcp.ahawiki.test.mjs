@@ -117,3 +117,21 @@ test('the caller sends the key as a bearer token and turns a non-2xx into an err
     assert.equal(seen[0].init.headers.authorization, 'Bearer k');
     assert.equal(seen[0].init.headers['content-type'], 'application/json');
 });
+
+// The list tool's description is what an agent picks a tool by. It said «newest first» until
+// 2026-11-21, while /api/v1/pages answers in name order, so an agent asked what changed lately
+// could answer from the alphabetically first fifty and never look at recent_changes.
+test('list_pages says it lists by name, keeps the order it is given, and points at recent_changes for recency', async () => {
+    const { rpc } = serverWith({ answers: { 'GET /api/v1/pages': { pages: [
+        { name: 'Alpha', revision: 3, size: 10, dateTime: '2026-11-01T00:00:00' },
+        { name: 'Beta', revision: 1, size: 20, dateTime: '2026-11-20T00:00:00' },
+    ] } } });
+    const { result: listed } = await rpc('tools/list', {});
+    const tool = listed.tools.find((t) => t.name === 'ahawiki_list_pages');
+    assert.match(tool.description, /name order/);
+    assert.doesNotMatch(tool.description, /newest/);
+    assert.match(tool.description, /ahawiki_recent_changes/);
+    const { result } = await rpc('tools/call', { name: 'ahawiki_list_pages', arguments: { prefix: '' } });
+    const text = result.content[0].text;
+    assert.ok(text.indexOf('Alpha') < text.indexOf('Beta'), text);
+});

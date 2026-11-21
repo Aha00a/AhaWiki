@@ -14,6 +14,7 @@
 `ApiAdminS3`	버킷 브라우저 — 목록·삭제·다운로드 URL
 `ApiApiKey`	API Key — 사용자가 자기 것을 관리하는 쪽과 관리자가 회수하는 쪽
 `ApiUserNickname`	닉네임 변경 요청 — 사용자가 신청·철회하는 쪽과 관리자가 승인·거절하는 쪽
+`ApiSiteRequest`	위키 신청 — 관리자가 신청 목록을 보고 승인·거절하는 쪽(`/api/Admin/SiteRequests`). 신청하는 쪽은 `/site/request` 의 화면과 폼이다
 `ApiV1`	Bearer 인증 외부 API. ["Dev Api"] 참고
 `ApiCrawler`	외부 URL 크롤링과 그 캐시
 ]]]

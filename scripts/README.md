@@ -53,7 +53,7 @@ the browser would stop at the first `import {createContext} from "react"`.
 
 ## Vendored page assets
 
-`vendor.mjs` copies the third-party files the wiki's pages load — jQuery and its four plugins,
+`vendor.mjs` copies the third-party files the wiki's pages load — jQuery and its plugins,
 MathJax, d3, Sortable, echarts, dayjs, mermaid, CodeMirror, diff2html, Font Awesome, Pretendard —
 from `node_modules` into `public/vendor/`, and the templates name them through `PublicAsset.url`.
 

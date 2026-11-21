@@ -205,7 +205,7 @@ PHP	#4f5d95	6.30	2.74
  * 클래스 색을 사이트마다 관리 화면에서 고르기: 만들어 배포까지 했다가 걷어냈습니다(위 «클래스 색»).
  * 대표 이미지에서 색 뽑기: 이미지를 가져와 읽어야 하고(외부 주소가 대부분), 로고·포스터의 주된 색이 그 주제의 색이라는 보장이 없습니다.
 
-'''해 볼 만한 것: `<meta name="theme-color">`.''' 휴대폰 브라우저가 주소창을 칠하는 데 쓰는 HTML 표준 값이고, 이름이 같습니다. 페이지를 그릴 때 그 페이지의 색 하나를 더 읽으면 됩니다. `media="(prefers-color-scheme: dark)"` 로 테마마다 따로 줄 수 있습니다. 다만 주소창은 페이지 배경 위가 아니라 글자를 얹는 면이라, 위의 3:1 보정과는 다른 기준(글자가 읽히는지)을 써야 합니다.
+'''`<meta name="theme-color">` 는 했습니다'''(2026-11-17, 위 «그 색은 네 곳에 쓰입니다»). '''하지 않은 것:''' `media="(prefers-color-scheme: dark)"` 로 테마마다 따로 주는 것. 주소창은 페이지 배경 위가 아니라 글자를 얹는 면이라, 한다면 위의 3:1 보정과는 다른 기준(글자가 읽히는지)을 써야 합니다.
 
 == Preview
 
@@ -219,10 +219,11 @@ preview 렌더링에서는 추천 property, schema 계층, 사용 가능한 prop
  * [schema:Thing]
   * '''[schema:recommendedBy]''' - 추천해준 사람
   * [schema:CreativeWork]
-   * '''[schema:Standard] - 표준안을 정리하고 싶다.'''
    * '''[schema:Novel] - 소설. 왜 없지?'''
   * '''[schema:Species] - 생물 종'''
   * '''[schema:Organ] - 장기, 기관'''
+
+`Standard`(표준안)는 2026-09-20 에 생겨서 이 목록에서 뺐습니다. 새 class 를 정의하는 곳과 방법은 [Dev SchemaOrgVocabulary] «schema.org 에 없는 class 를 직접 정의한다».
 
 == 참고
 

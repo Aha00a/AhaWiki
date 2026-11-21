@@ -59,7 +59,7 @@ Style class:
  * `[[Ma` - macro name
  * `[Pa` 또는 `["Pa` - page name
  * `[[[#!Ta` - interpreter name
- * `[[[#!table ts` - table option. 몇 번째 낱말인지 보고 고른다(`edit.tableOptions.js`): 첫 낱말에는 `tsv`·`csv` 와 첫 줄 통째(`tsv 1 bar=all` 등), 형식 뒤 숫자만 이어지는 동안에는 머리글 수 `1`(둘까지), 그 뒤에는 옵션(`bar=all`·`heat=all`·`compact`) 가운데 아직 안 적은 것. 2026-11-15 전에는 한 목록을 어느 낱말에서나 내밀어, `tsv 1 ` 뒤에서 고르면 `tsv 1 tsv 1 bar=all` 이 됐다. 옵션 목록이 `InterpreterTable.parseRules` 가 읽는 키를 빠뜨리면 `test/editor.table-options.test.mjs` 가 실패한다.
+ * `[[[#!table ts` - table option. 몇 번째 낱말인지 보고 고른다(`edit.tableOptions.js`): 첫 낱말에는 `tsv`·`csv` 와 첫 줄 통째(`tsv 1 bar=all` 등), 형식 뒤 숫자만 이어지는 동안에는 머리글 수 `1`(둘까지), 그 뒤에는 옵션(목록은 `edit.tableOptions.js` 에만 있다) 가운데 아직 안 적은 것. 2026-11-15 전에는 한 목록을 어느 낱말에서나 내밀어, `tsv 1 ` 뒤에서 고르면 `tsv 1 tsv 1 bar=all` 이 됐다. 옵션 목록이 `InterpreterTable.parseRules` 가 읽는 키를 빠뜨리면 `test/editor.table-options.test.mjs` 가 실패한다.
  * `[[[#!Schema Pe` - schema.org class
  * `[[[#!Schema Person` 블록 내부 property line - schema.org property
 

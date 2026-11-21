@@ -81,7 +81,7 @@
 Account 쪽은 `Account/settings.scala.html` 의 `accountNickname` 절이고, 관리자 쪽은 Admin UI 의 `NicknameRequestsPage.jsx`(`/Admin/NicknameRequests`)다. 기본 필터는 `Pending` 이고 Approved·Rejected·Canceled·All 로 바꿀 수 있다.
 
  * '''공용 helper 를 끌어올렸다.''' `escapeHtml`·`formatDate`·`csrfToken` 과 CSRF 헤더를 붙이는 `send` 가 API Key 절 안에 있었는데 닉네임 절도 넷 다 필요했다. 베끼면 `escapeHtml` 이 두 개인 페이지가 되고 그중 하나만 고쳐지는 날이 온다. CSS 의 `apiKeyForm`·`apiKeyMessage` 도 같은 이유로 `accountForm`·`accountMessage` 로 바꿔 둘이 같이 쓴다.
- * 관리자 화면의 쓰기는 `api.js` 의 `sendJson` 을 쓴다. CSRF 헤더를 붙이고 `{error}` 봉투를 푸는 것을 손으로 조립하던 자리가 이미 열 곳이라, 열한 번째를 만드는 대신 helper 를 뒀다. 기존 열 곳을 옮기는 것은 따로 남아 있다.
+ * 관리자 화면의 쓰기는 `api.js` 의 `sendJson` 을 쓴다. CSRF 헤더를 붙이고 `{error}` 봉투를 푸는 것을 손으로 조립하던 자리가 이미 열 곳이라, 열한 번째를 만드는 대신 helper 를 뒀다. 기존 열 곳도 2026-09-01 에 모두 그리로 옮겼다(`0250f416`) — `api.js` 밖에서 쓰기를 보내는 곳은 없다.
 
 == 알려진 한계와, 하지 않기로 한 것
 

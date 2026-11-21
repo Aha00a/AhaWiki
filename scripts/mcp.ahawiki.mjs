@@ -50,7 +50,7 @@ export function wikiTools({ call, write }) {
     },
     {
       name: "ahawiki_list_pages",
-      description: "List pages whose name starts with a prefix, newest first, with revision and size. Not a search: it matches names from the start.",
+      description: "List pages whose name starts with a prefix, in name order, with revision, size and last change. At most `limit` (default 50), and it does not say when it stopped there. Not a search: it matches names from the start. For what changed lately, use ahawiki_recent_changes.",
       inputSchema: {
         type: "object",
         properties: {

@@ -64,6 +64,8 @@ curl https://ahawiki.net/api/v1/page/FrontPage \
 
 == 페이지 목록/메타 조회
 
+'''이름순'''이고 `limit` 개까지입니다(상한 5000). 잘렸는지는 응답에 나오지 않으므로, 다 받았는지 알려면 받은 수가 `limit` 보다 작은지 보세요. 최근에 바뀐 순서가 필요하면 아래 «최근 변경 조회» 를 쓰세요.
+
 [[[#!Vim sh
 curl "https://ahawiki.net/api/v1/pages?prefix=ToDo&limit=100" \
   -H "Authorization: Bearer <api-key>"

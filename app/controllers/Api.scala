@@ -401,7 +401,8 @@ class Api @Inject()(
       Page.selectLastRevision(name) match {
         case None =>
           // Neither the {"error": ...} nor the {"message": ...} envelope — this endpoint
-          // has always answered {"success": false, ...} and its callers are unknown.
+          // has always answered {"success": false, ...}. Its one caller and why changing this
+          // is safe are on the wiki page Dev ApiResponse, which names it the last one left.
           JsonResult(NotFound, Json.obj(
             "success" -> Json.fromBoolean(false),
             "message" -> Json.fromString("Page not found"),
