@@ -19,6 +19,25 @@ object InterpreterVim extends TraitInterpreter with Logging {
   private val ColorScheme = "ron"
   private val Shebang = "#!Vim"
 
+  // What a syntax name is made of: the name of a Vim syntax file -- letters, digits, `_`, `-`, and
+  // `.` (Vim reads `c.doxygen` as two syntaxes at once).
+  private val regexSyntaxName = """[A-Za-z0-9_.-]{1,40}""".r
+
+  /**
+   * The syntax name in what the author wrote after `#!Vim` (or after `#!` on the next line): its
+   * first word when that is a syntax name, and otherwise none -- the block then shows without
+   * highlighting, as a block that names no syntax does.
+   *
+   * The name goes into the command line that runs vi (buildCacheEntry) and into an HTML attribute.
+   * Until 2026-11-21 it went there as written, so `#!Vim $(...)` ran a command in a shell on the
+   * server -- and a preview renders a block for anyone, logged in or not. Even without a shell the
+   * name is an Ex command's argument, where `|` starts the next command and `!` runs one, so it is
+   * restricted rather than quoted, and it is restricted here, where the block is read, so nothing
+   * downstream ever holds anything else.
+   */
+  private def syntaxName(written: String): String =
+    written.trim.split("""\s+""").headOption.filter(regexSyntaxName.matches).getOrElse("")
+
   case class Parser(raw: String) {
     val (syntax:String, content:String, isError:Boolean) = {
       // The interpreter lookup ignores case (Interpreters.getInterpreter), so `#!vim` reaches
@@ -28,13 +47,13 @@ object InterpreterVim extends TraitInterpreter with Logging {
         ("", "", true)
       } else {
         val lines: Array[String] = raw.split( """\r\n|\n""")
-        val syntaxOnFirstLine = lines.head.substring(Shebang.length).trim
+        val writtenOnFirstLine = lines.head.substring(Shebang.length).trim
         val rest = lines.drop(1)
-        if (syntaxOnFirstLine.nonEmpty) {
-          (syntaxOnFirstLine, rest.mkString("\n"), false)
+        if (writtenOnFirstLine.nonEmpty) {
+          (syntaxName(writtenOnFirstLine), rest.mkString("\n"), false)
         } else {
           rest.headOption match {
-            case Some(l2) if l2.startsWith("#!") => (l2.substring(2), rest.drop(1).mkString("\n"), false)
+            case Some(l2) if l2.startsWith("#!") => (syntaxName(l2.substring(2)), rest.drop(1).mkString("\n"), false)
             // No syntax name: the body shows without highlighting. Until 2026-09-12 it came
             // out empty.
             case _ => ("", rest.mkString("\n"), false)

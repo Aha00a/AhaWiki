@@ -34,6 +34,39 @@ object InterpreterVimUnit {
     test(InterpreterVim.Parser("#!Vim\n1234"), "", "1234", false)
     test(InterpreterVim.Parser("#!Vim  cpp \n1234"), "cpp", "1234", false)
 
+    // The syntax name goes into the command line that runs vi and into an HTML attribute, so it
+    // is a Vim syntax file's name or it is nothing: the block then shows without highlighting, as
+    // one that names no syntax does. Until 2026-11-21 the name went there as written, and
+    // `#!Vim $(...)` ran the command in a shell -- for anyone, since a preview needs no login.
+    Seq("$(true)", "`true`", "x\";true;\"", "c|!true", "c;true", "a/b", "c++", "<b>", "\"", "'", "x" * 41).foreach { hostile =>
+      test(InterpreterVim.Parser(s"#!Vim $hostile\n1234"), "", "1234", false)
+      test(InterpreterVim.Parser(s"#!Vim\n#!$hostile\n1234"), "", "1234", false)
+    }
+    // Only the first word is the name; what follows it never reaches the command line.
+    test(InterpreterVim.Parser("#!Vim scala $(true)\n1234"), "scala", "1234", false)
+    test(InterpreterVim.Parser("#!Vim\n#!scala $(true)\n1234"), "scala", "1234", false)
+    // Names Vim really has: dotted for two syntaxes at once, digits, an underscore, a hyphen.
+    Seq("c.doxygen", "asm68k", "git_rebase", "objc-x", "x" * 40).foreach { name =>
+      test(InterpreterVim.Parser(s"#!Vim $name\n1234"), name, "1234", false)
+    }
+
+    // And the script that is written for vi holds no part of a refused name. The .sh file is
+    // written before anything runs, so this reads the same on a machine with no sh or no vi.
+    val scriptDir = Files.createTempDirectory("vim-cache-script").toFile
+    try {
+      val hostileHtml = InterpreterVim.toHtmlString("#!Vim $(true)\nval a = 1\n", scriptDir)
+      val scripts = Option(scriptDir.listFiles()).toSeq.flatten.filter(_.getName.endsWith(".sh"))
+      assertEquals(scripts.size, 1)
+      val script = new String(Files.readAllBytes(scripts.head.toPath), "UTF-8")
+      assertEquals(script.contains("$("), false)
+      assertEquals(script.contains("""+"set syntax=" """), true)
+      assertEquals(hostileHtml.contains("""data-lang="""""), true)
+      assertEquals(hostileHtml.contains("$(true)"), false)
+    } finally {
+      Option(scriptDir.listFiles()).toSeq.flatten.foreach(_.delete())
+      scriptDir.delete()
+    }
+
     // A cache directory that cannot be written -- here a plain file standing where the directory
     // would go, so mkdirs and every write under it fail. The block still renders, as the code it
     // holds rather than as highlighted code, and the page around it lives.
