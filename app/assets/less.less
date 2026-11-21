@@ -85,6 +85,8 @@ html.theme-ahawiki-light,
 	--color-input-bg: #ffffff;
 	--color-input-border: ~"oklch(85.0% 0.034 var(--hue))";
 	--color-focus-ring: ~"oklch(52.2% 0.188 var(--hue))";
+	// Text on the link colour used as a background: the skip link, a selected Gantt row number.
+	--color-on-accent: #ffffff;
 	--color-flash-success-text: #007700;
 	--color-flash-success-bg: #ddffdd;
 	--color-flash-success-border: #00aa00;
@@ -171,6 +173,7 @@ html.theme-ahawiki-light,
 		--color-input-bg: ~"oklch(22.0% 0.013 var(--hue))";
 		--color-input-border: ~"oklch(36.9% 0.020 var(--hue))";
 		--color-focus-ring: ~"oklch(71.3% 0.149 var(--hue))";
+		--color-on-accent: #090b0f;
 		--color-flash-success-text: #9ee6ad;
 		--color-flash-success-bg: #12351e;
 		--color-flash-success-border: #2f8a45;
@@ -993,14 +996,19 @@ kbd.MacroKbd {
 	}
 }
 
-.skipToContent {
+// Body-qualified, so it outranks `.AhaWiki a` and its :visited and :hover in wiki.css, which drew
+// the text in the link colour -- on the focus-ring background, the same colour in the dark theme
+// and nearly so in the light one. Until 2026-11-21 the first thing Tab reached could not be read.
+// On --color-link rather than the focus ring: white on the light focus ring falls under 4.5 at
+// some hues; test/theme.oklch-contrast.test.mjs checks the pair at every hue.
+body.AhaWiki a.skipToContent, body.AhaWiki a.skipToContent:visited, body.AhaWiki a.skipToContent:hover {
 	position: absolute;
 	top: -100px;
 	left: 0;
 	z-index: 9999;
 	padding: 8px 16px;
-	background: var(--color-focus-ring);
-	color: #fff;
+	background: var(--color-link);
+	color: var(--color-on-accent);
 	text-decoration: none;
 	font-weight: 700;
 	border-radius: 0 0 6px 0;

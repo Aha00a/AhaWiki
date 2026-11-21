@@ -58,6 +58,8 @@ const pairs = {
         ['--color-focus-ring', '--color-bg', mark],
         ['--color-kanban-primary', '--color-kanban-card-bg', mark],
         ['--color-adjacent-hud-action-active-bg', '--color-bg', mark],
+        // The skip link and a selected Gantt row: text on the link colour (2026-11-21).
+        ['--color-on-accent', '--color-link', text],
     ],
     dark: [
         ['--color-link', '--color-bg', text],
@@ -72,6 +74,7 @@ const pairs = {
         ['--color-focus-ring', '--color-surface', mark],
         ['--color-kanban-primary', '--color-kanban-card-bg', mark],
         ['--color-adjacent-dot-hop1', '--color-surface', mark],
+        ['--color-on-accent', '--color-link', text],
     ],
 };
 

@@ -505,8 +505,8 @@
   color: var(--color-text);
 }
 .ganttEditorGrid .ganttRowNum.ganttRowNumSelected {
-  background: var(--color-focus-ring);
-  color: #fff;
+  background: var(--color-link);
+  color: var(--color-on-accent);
 }
 .ganttEditorGrid .ganttRowDragOver td {
   border-bottom: 2px solid var(--color-focus-ring);
