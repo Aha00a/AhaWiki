@@ -483,7 +483,7 @@ class Api @Inject()(
       implicit val contextSite: ContextSite = ContextSite().holding(connection)
 
       val links = ahaWikiCacheMemoryApiLinks.getOrElseUpdate(site.seq, name) {
-        Adjacent.getSeqLinkFiltered(name)
+        Adjacent.getSeqLink(name)
       }.filter(_.and(contextSite.pageCanSee))
 
       val pageNamesForImages = links.flatMap(link => Seq(link.src, link.dst)).distinct

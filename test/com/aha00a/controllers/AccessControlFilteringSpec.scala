@@ -150,6 +150,22 @@ class AccessControlFilteringSpec extends PlaySpec with GuiceOneAppPerSuite with 
     }
   }
 
+  "the adjacent links endpoint" should {
+    // Its cache is one per app and keyed by site and page, not by reader. Until 2026-11-21 it held
+    // the first reader's filtered list: asked anonymously first, it then hid the private
+    // neighbour from the reader who may see it, for up to ten minutes.
+    "give each reader the links that reader may see, whoever asked first" in {
+      def links(request: FakeRequest[play.api.mvc.AnyContentAsEmpty.type]): String = {
+        val result = route(app, request).get
+        status(result) mustBe OK
+        contentAsString(result)
+      }
+      links(anonymous(GET, "/api/links/PublicPage")) must not include "PrivatePage"
+      links(asReader(GET, "/api/links/PublicPage")) must include("PrivatePage")
+      links(anonymous(GET, "/api/links/PublicPage")) must not include "PrivatePage"
+    }
+  }
+
   "the statistics endpoint" should {
     // The pages-created-per-day series counted every page of the site, while the totals beside
     // it counted only the pages the caller may read.
