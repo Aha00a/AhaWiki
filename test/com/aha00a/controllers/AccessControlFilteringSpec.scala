@@ -68,6 +68,14 @@ class AccessControlFilteringSpec extends PlaySpec with GuiceOneAppPerSuite with 
       "INSERT INTO Permission (site, target, targetType, actor, actorType, action) VALUES (7, '', 'All', '', 'All', 1)",
       "INSERT INTO Permission (site, target, targetType, actor, actorType, action) VALUES (7, 'PrivatePage', 'Exact', '', 'All', 0)",
       "INSERT INTO Permission (site, target, targetType, actor, actorType, action) VALUES (7, 'PrivatePage', 'Exact', 'reader@example.com', 'Exact', 1)",
+      // What a save's calculation leaves behind, written here by hand: links out of, into and
+      // past the private page, and a #!Schema Person row for each page. The third link's target
+      // is a name no page has -- a link to a page not written yet is nobody's secret.
+      "INSERT INTO CalculatedLink (site, src, dst, alias) VALUES (7, 'PublicPage', 'PrivatePage', 'acl-alias-to-private')",
+      "INSERT INTO CalculatedLink (site, src, dst, alias) VALUES (7, 'PrivatePage', 'PublicPage', 'acl-alias-from-private')",
+      "INSERT INTO CalculatedLink (site, src, dst, alias) VALUES (7, 'PublicPage', 'NoSuchPage', 'acl-alias-public')",
+      "INSERT INTO CalculatedSchemaOrg (site, page, cls, prop, value) VALUES (7, 'PublicPage', 'Person', 'birthPlace', 'Seoul')",
+      "INSERT INTO CalculatedSchemaOrg (site, page, cls, prop, value) VALUES (7, 'PrivatePage', 'Person', 'birthPlace', 'Busan')",
     ).foreach(sql => SQL(sql).execute())
     }
     TestApplication.resetMemoryCaches()
@@ -115,6 +123,88 @@ class AccessControlFilteringSpec extends PlaySpec with GuiceOneAppPerSuite with 
       val result = route(app, asReader(GET, "/api/pageNames")).get
       status(result) mustBe OK
       contentAsJson(result).as[Seq[String]] must contain allOf ("PublicPage", "PrivatePage")
+    }
+  }
+
+  "the page map endpoint" should {
+    // It answered ten random links of the site to anyone until 2026-11-21: the names of pages
+    // the caller may not read, what they link to, and the words the link was written with --
+    // which are words out of the private page's text. `[[PageMap]]` and /api/links, which
+    // read the same table, always filtered.
+    "leave out every link that touches a page the caller cannot read" in {
+      val result = route(app, anonymous(GET, "/api/pageMap")).get
+      status(result) mustBe OK
+      val body = contentAsString(result)
+      // Three rows in all, so the ten it draws at random are every row it is allowed to give.
+      body must include("acl-alias-public")
+      body must not include "PrivatePage"
+      body must not include "acl-alias-to-private"
+      body must not include "acl-alias-from-private"
+    }
+
+    "give those links to the actor the Exact row admits" in {
+      val body = contentAsString(route(app, asReader(GET, "/api/pageMap")).get)
+      body must include("acl-alias-to-private")
+      body must include("acl-alias-from-private")
+      body must include("acl-alias-public")
+    }
+  }
+
+  "the statistics endpoint" should {
+    // The pages-created-per-day series counted every page of the site, while the totals beside
+    // it counted only the pages the caller may read.
+    "count only the pages the caller can read among those created on a day" in {
+      def createdCounts(request: FakeRequest[play.api.mvc.AnyContentAsEmpty.type]): Seq[Long] = {
+        val result = route(app, request).get
+        status(result) mustBe OK
+        (contentAsJson(result) \ "arrayArrayYmdCountOfFirstRevision").as[Seq[(String, Long)]].map(_._2)
+      }
+      createdCounts(anonymous(GET, "/api/statistics")).sum mustBe 1
+      createdCounts(asReader(GET, "/api/statistics")).sum mustBe 2
+    }
+  }
+
+  "#!Query" should {
+    def rendered(request: FakeRequest[play.api.mvc.AnyContentAsEmpty.type], lines: String*): String = {
+      val result = route(app, request.withJsonBody(Json.obj("comment" -> ("[[[#!Query Person\n" + lines.mkString("\n") + "\n]]]")))).get
+      status(result) mustBe OK
+      (contentAsJson(result) \ "html").as[String]
+    }
+
+    // The page was left out of the rows from the start, but until 2026-11-21 it was still
+    // counted: the line under the table read «2 page(s) (showing 1)».
+    "neither list nor count a page the reader cannot see" in {
+      val html = rendered(anonymous(POST, "/api/renderAhaMark/SomePage"), "show\tbirthPlace")
+      html must include("PublicPage")
+      html must include("Seoul")
+      html must not include "PrivatePage"
+      html must not include "Busan"
+      html must include("""<div class="queryCount">1 page(s)</div>""")
+    }
+
+    // Sorted by birthPlace the unreadable page comes first. It used to take the one place the
+    // limit leaves, and the reader was told nothing matched.
+    "give the limit's places to the pages the reader can see" in {
+      val html = rendered(anonymous(POST, "/api/renderAhaMark/SomePage"), "show\tbirthPlace", "sort\tbirthPlace", "limit\t1")
+      html must include("PublicPage")
+      html must include("""<div class="queryCount">1 page(s)</div>""")
+    }
+
+    // What the count made possible: `!~` also holds for a page whose value does not hold the
+    // text, so two queries whose counts differed answered one yes-or-no question about a page
+    // the asker may not read -- and a query can be posted to this endpoint by anyone.
+    "answer the same whatever the values of an unreadable page are" in {
+      val holdsForThePrivatePage = rendered(anonymous(POST, "/api/renderAhaMark/SomePage"), "where\tbirthPlace\t!~\tnowhere")
+      val doesNotHoldForIt = rendered(anonymous(POST, "/api/renderAhaMark/SomePage"), "where\tbirthPlace\t!~\tBusan")
+      holdsForThePrivatePage must include("""<div class="queryCount">1 page(s)</div>""")
+      doesNotHoldForIt must include("""<div class="queryCount">1 page(s)</div>""")
+    }
+
+    "list and count both pages for the actor the Exact row admits" in {
+      val html = rendered(asReader(POST, "/api/renderAhaMark/SomePage"), "show\tbirthPlace")
+      html must include("PublicPage")
+      html must include("PrivatePage")
+      html must include("""<div class="queryCount">2 page(s)</div>""")
     }
   }
 

@@ -388,6 +388,9 @@ primary key:
  * WebSocket watch
  * API 일부 응답 필터링
  * `/api/pageRevision` — 읽을 수 없는 페이지는 없는 페이지처럼 revision 0으로 답합니다. 2026-09-12 전에는 검사가 없어서, 비공개 페이지가 있는지와 몇 번 저장됐는지를 누구나 알 수 있었습니다.
+ * `/api/pageMap` — 사이트의 링크 가운데 무작위 열 개를 답하는데, 양쪽 끝을 다 읽을 수 있는 링크에서만 고릅니다. 2026-11-21 전에는 모든 링크에서 골라서, 읽을 수 없는 페이지의 이름과 그 페이지가 가리키는 곳, 링크에 붙인 글자(비공개 본문에서 온 글자입니다)를 누구나 받을 수 있었습니다. 같은 표를 읽는 `[[PageMap]]` 과 `/api/links` 는 처음부터 걸렀습니다. 이 주소를 부르는 곳은 저장소 안에 없고 히스토리에도 없었지만, 2015년부터 열려 있던 주소라 지우지 않고 거르기만 했습니다.
+ * `/api/statistics` 의 «날짜별로 만들어진 페이지 수» — 읽을 수 있는 페이지만 셉니다. 2026-11-21 전에는 SQL 이 사이트의 모든 페이지를 셌습니다(옆의 전체 개수·크기는 그때도 읽을 수 있는 페이지만이었습니다). 세는 일을 SQL 에서 Scala 로 옮긴 까닭이 이것입니다 — SQL 에서 세면 권한을 볼 자리가 없습니다.
+ * `#!Query` — 읽을 수 없는 페이지는 목록에도 개수에도 없고, `limit` 의 자리도 차지하지 않습니다. 2026-11-21 전에는 목록에서만 빠졌습니다([InterpreterQuery] «정한 것과 그 이유»).
 
 읽기가 거부되면 보통 `Permission denied.`를 반환합니다.
 
@@ -499,7 +502,7 @@ save 시에는 form body의 새 본문이 아니라 DB의 최신 본문을 기�
   * 같이 정리한 것: 서명 가능한 action 목록이 `Api`와 `SignedReadUrlLogic`에 두 벌 있던 것을 `SignableActions` 하나로 합쳤습니다.
  * [[CB(x)]] 매칭 row 없음, target/actor 우선순위, 목록·검색·include 필터링을 테스트로 보장한다. (2026-08-29)
   * row 의미론은 `PermissionLogicUnit` — 매칭 row 없음 → 거부, specificity 우선순위, 같은 specificity 에서 target·actor 길이 tie-break, 정규식 full match.
-  * 소비 지점은 `AccessControlFilteringSpec` — 목록(`/api/pageNames`)과 `[[Include(...)]]` 를 라우터로 통과시켜, 익명에게 비공개 페이지가 새지 않고 Exact actor 에게는 보이는 것까지.
+  * 소비 지점은 `AccessControlFilteringSpec` — 목록(`/api/pageNames`)과 `[[Include(...)]]` 를 라우터로 통과시켜, 익명에게 비공개 페이지가 새지 않고 Exact actor 에게는 보이는 것까지. 2026-11-21 에 `/api/pageMap`, `/api/statistics` 의 날짜별 개수, `#!Query` 의 목록·개수·`limit` 을 더했습니다 — 셋 다 고치기 전에는 이 스펙에서 실패했습니다.
   * '''검색만 자동화 밖이다.''' `Page.pageSearch` 의 `COLLATE utf8mb4_general_ci` 는 테이블이 `utf8mb4_bin` 이라 하중을 받는 절인데 H2 가 그 문법을 거부한다. 필터 자체는 위 둘과 같은 `WikiPermission.isReadable` 호출이고(`Search.scala`), 검사를 위해 COLLATE 를 빼면 운영 검색이 대소문자 구분으로 조용히 바뀐다 — 그 값을 치를 일이 아니다.
  * [[CB(x)]] 익명에게 옛 리비전(history·blame·diff)을 막을지 정한다. → '''지금은 막지 않는다.''' (2026-11-08, 소유자 결정) 그날 수집기가 `?action=blame`·`?action=raw` 를 긁은 뒤 권한과 엮어 검토했다.
   * '''수집 대책으로는 효과가 작다.''' 막히는 것은 옛 리비전뿐이고 지금 본문은 `view` 로 그대로 열린다. `raw` 는 `view` 와 같은 본문이라 막아도 얻는 것이 없다. 비용이 큰 blame 은 이미 한 번에 읽는 양에 상한이 있다([Dev Page] '''본문을 많이 읽는 두 경로''').

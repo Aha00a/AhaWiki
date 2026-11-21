@@ -38,25 +38,33 @@ object InterpreterQuery extends TraitInterpreter {
   }
 
   private def render(spec: QueryEngine.Spec)(implicit wikiContext: ContextWikiPage): String = {
+    // A page the reader may not see is not listed, and is not counted either. It is taken out
+    // here, before the engine counts and cuts. Until 2026-11-21 it was taken out of the rows the
+    // engine gave back, which is too late three ways: the total still counted it («2 page(s)
+    // (showing 1)»), it took a place under `limit` that a page the reader could see then lost,
+    // and `where` was answered about it -- two queries whose counts differed told the asker one
+    // thing about a page they may not read, and a preview renders a query for anyone.
+    // Both inputs are filtered: with a class named the engine's candidates are `inClass`, and
+    // without one they are the keys of `facts`.
     val result = wikiContext.withConnection { implicit connection =>
       implicit val site: Site = wikiContext.site
-      val inClass = if (spec.classes.isEmpty) None else Some(CalculatedSchemaOrg.selectPagesOfClasses(spec.classes))
+      val inClass = if (spec.classes.isEmpty) None else Some(CalculatedSchemaOrg.selectPagesOfClasses(spec.classes).filter(wikiContext.pageCanSee))
       val facts = CalculatedSchemaOrg.selectFacts(spec.props, spec.classes)
+        .filter { case (page, _, _) => wikiContext.pageCanSee(page) }
         .groupBy(_._1)
         .map { case (page, rows) => page -> rows.groupBy(_._2).map { case (prop, vs) => prop -> vs.map(_._3).sorted } }
       QueryEngine.run(spec, facts, inClass, wikiContext.localDateNow)
     }
 
-    // A page the reader may not see is not listed, and is not counted either.
-    val visible = result.rows.filter(row => wikiContext.pageCanSee(row.page))
-    if (visible.isEmpty) {
+    if (result.rows.isEmpty) {
       """<div class="InterpreterQuery empty">No pages match.</div>"""
     } else {
       val body = spec.view match {
-        case "list" => renderList(spec, visible)
-        case _ => renderTable(spec, visible)
+        case "list" => renderList(spec, result.rows)
+        case _ => renderTable(spec, result.rows)
       }
-      val more = if (result.total > visible.size) s" (showing ${visible.size})" else ""
+      // Only `limit` makes the rows fewer than the total now.
+      val more = if (result.total > result.rows.size) s" (showing ${result.rows.size})" else ""
       s"""<div class="InterpreterQuery">$body<div class="queryCount">${result.total} page(s)$more</div></div>"""
     }
   }

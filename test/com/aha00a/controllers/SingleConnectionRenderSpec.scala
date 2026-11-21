@@ -288,8 +288,10 @@ class SingleConnectionRenderSpec extends PlaySpec with GuiceOneAppPerSuite with 
         "/api/pageRevision/Pool",
         "/api/pageNames",
         "/api/pageMap",
-        // Not /search, /api/change and /api/statistics: their SQL is MySQL's and H2 will not run
-        // it. All three build their context the same way, holding the connection.
+        "/api/statistics",
+        // Not /search and /api/change: their SQL is MySQL's and H2 will not run it. Both build
+        // their context the same way, holding the connection. /api/statistics was the third
+        // until 2026-11-21, when its counting moved out of SQL.
         "/sitemap.xml",
         "/robots.txt",
         "/r",

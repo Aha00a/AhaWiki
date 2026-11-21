@@ -296,10 +296,17 @@ class Api @Inject()(
     }
   }
 
+  // Ten of the site's links at random, out of those whose two ends the caller may see. Until
+  // 2026-11-21 it drew from every link, so anyone was told the names of pages they may not read,
+  // what those pages link to, and the words each link was written with -- words out of the private
+  // page's text. `[[PageMap]]` and `links` below, which read the same table, always filtered.
+  // Nothing in this repository calls this, and nothing in its history did; it is kept because an
+  // address public since 2015 may have callers the repository cannot show.
   def pageMap: Action[AnyContent] = Action { implicit request =>
     database.withConnection { implicit connection =>
       implicit val site: Site = SiteLogic.get(request.host)
-      val listLink = Random.shuffle(CalculatedLink.selectAllButNotEmpty()).take(10)
+      implicit val contextSite: ContextSite = ContextSite().holding(connection)
+      val listLink = Random.shuffle(CalculatedLink.selectAllButNotEmpty().filter(_.and(contextSite.pageCanSee))).take(10)
       Ok(listLink.asJson)
     }
   }
@@ -523,7 +530,16 @@ class Api @Inject()(
       implicit val contextWikiPage: ContextWikiPage = ContextWikiPage("").holding(connection)
 
       val seqPage: Seq[PageLatestSummary] = contextWikiPage.seqPageByPermission
-      val selectYmdCountOfFirstRevision: Seq[(String, Long)] = Page.selectYmdCountOfFirstRevision()
+      // Pages created per day, of the pages the caller may read -- the same pages the totals below
+      // are made of. Until 2026-11-21 the days were counted in SQL over every page of the site,
+      // the unreadable ones too, beside totals that left them out.
+      val readable: Set[String] = seqPage.map(_.name).toSet
+      val selectYmdCountOfFirstRevision: Seq[(String, Long)] = Page.selectNameAndDateTimeOfFirstRevision()
+        .collect { case (name, dateTime) if readable.contains(name) => dateTime.toIsoLocalDateString }
+        .groupBy(identity)
+        .map { case (ymd, pages) => ymd -> pages.size.toLong }
+        .toSeq
+        .sortBy(_._1)
 
       val totalSize: Long = seqPage.map(_.size).sum
 

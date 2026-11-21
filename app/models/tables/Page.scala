@@ -249,18 +249,18 @@ INSERT INTO Page
     }
   }
 
-  def selectYmdCountOfFirstRevision()(implicit connection: Connection, site: Site): Seq[(String, Long)] = {
-    //language=sql
-    SQL"""
-SELECT
-    DATE_FORMAT(dateTime, '%Y-%m-%d') ymd, COUNT(*) cnt
-    FROM Page w
-    WHERE site = ${site.seq} AND revision = 1
-    GROUP BY DATE_FORMAT(dateTime, '%Y-%m-%d')
-    ORDER BY DATE_FORMAT(dateTime, '%Y-%m-%d')
-    """
-      .as(str("ymd") ~ long("cnt") *).map(flatten)
-  }
+  /**
+   * Every page's name and the time of its first save: what «pages created per day» is counted
+   * from.
+   *
+   * This was a `GROUP BY DATE_FORMAT(dateTime, ...)` that did the counting, until 2026-11-21. A
+   * count made in SQL counts every page of the site, the ones the caller may not read among them,
+   * so the rows come out by name and the caller keeps the ones it may show before it counts
+   * (`Api.statistics`). It also stopped being SQL only MySQL runs, which no spec could reach.
+   */
+  def selectNameAndDateTimeOfFirstRevision()(implicit connection: Connection, site: Site): Seq[(String, LocalDateTime)] =
+    SQL"SELECT name, dateTime FROM Page WHERE site = ${site.seq} AND revision = 1"
+      .as(str("name") ~ localDateTime("dateTime") *).map(flatten)
 
   /**
    * At most `limit` pages: the page named exactly `q` first, then the most recently changed. Ask
