@@ -72,7 +72,7 @@ private def withSiteAdmin(seq: Long)(block: Site => Result)(implicit request: Re
  * `ApiV1` 의 revision 충돌 응답 3벌 — `revisionConflict` 로 뽑았다. `latestRevision` 을 함께 실어야 해서 `JsonError` 로는 표현되지 않고 `JsonResult` 를 쓴다.
  * `Api.pageRevision` 의 404 — (뒤에 그 404 분기째 없어졌다) 봉투 모양은 호출부를 모르므로 그대로 두고 `JsonResult` 만 태웠다.
 
-그래도 하나는 남아 있다. `Api.pagePreview` 의 404 는 `{"success": false, "message"}` 를, 403 은 같은 모양을 `.toString()).as(JSON)` 로 만든다. 소비자는 `AhaWiki.PageView.js` 의 `showPreview` 하나이고 오류 본문을 읽지 않으므로 통일해도 깨질 것은 없다 — 통일하려면 여기가 남은 자리다.
+마지막 하나도 2026-11-21 에 옮겼다. `Api.pagePreview` 의 404 는 `{"success": false, "message"}` 를, 403 은 같은 모양을 `.toString()).as(JSON)` 로 만들고 있었다. 소비자는 `AhaWiki.PageView.js` 의 `showPreview` 하나이고 오류 본문을 읽지 않아서, 둘 다 `JsonError` 로 바꿔도 깨질 것이 없었다. 검사는 `ApiErrorEnvelopeSpec`.
 
 == 목록 봉투
 

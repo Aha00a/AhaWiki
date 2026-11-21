@@ -400,21 +400,14 @@ class Api @Inject()(
 
       Page.selectLastRevision(name) match {
         case None =>
-          // Neither the {"error": ...} nor the {"message": ...} envelope — this endpoint
-          // has always answered {"success": false, ...}. Its one caller and why changing this
-          // is safe are on the wiki page Dev ApiResponse, which names it the last one left.
-          JsonResult(NotFound, Json.obj(
-            "success" -> Json.fromBoolean(false),
-            "message" -> Json.fromString("Page not found"),
-          ))
+          // The shared error envelope since 2026-11-21. It was {"success": false, "message"}, the
+          // last of the old shapes; its one caller reads no error body (Dev ApiResponse).
+          JsonError(NotFound, "Page not found")
 
         case Some(page) =>
           val pageContent = PageContent(page.content)
           if (!WikiPermission().isReadable(name)) {
-            Forbidden(Json.obj(
-              "success" -> Json.fromBoolean(false),
-              "message" -> Json.fromString("Permission denied"),
-            ).toString()).as(JSON)
+            JsonError(Forbidden, "Permission denied")
           } else {
             val renderedText = Try(Interpreters.toText(page.content)).getOrElse(pageContent.content)
             val description = pageContent.redirect

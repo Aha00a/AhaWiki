@@ -73,6 +73,17 @@ class ApiErrorEnvelopeSpec extends PlaySpec with GuiceOneAppPerSuite with Before
     }
   }
 
+  "Api.pagePreview" should {
+    // The last endpoint with its own error shape, {"success": false, "message"}, until 2026-11-21.
+    "answer a missing page with the error envelope" in {
+      val result = route(app, FakeRequest(GET, "/api/pagePreview/NoSuchPageForEnvelopeSpec")).get
+      status(result) mustBe NOT_FOUND
+      contentType(result) mustBe Some(JSON)
+      (contentAsJson(result) \ "error").asOpt[String] mustBe Some("Page not found")
+      (contentAsJson(result) \ "success").asOpt[Boolean] mustBe None
+    }
+  }
+
   "Api.pageRevision" should {
     "answer a missing page with revision 0 and nothing else" in {
       val result = route(app, FakeRequest(GET, "/api/pageRevision/NoSuchPageForEnvelopeSpec")).get
