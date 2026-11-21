@@ -409,12 +409,15 @@ class ApiAdminSite @Inject()(
     }
   }
 
+  // The site-admin check opens a connection of its own, so it comes before this action opens one.
+  // Until 2026-11-21 these five took a connection first and then asked: a logged-in non-admin held
+  // two at once, which a pool of one turns into a timeout (AdminRoutesSpec found it).
   def adminSiteFavicon: Action[AnyContent] = Action { implicit request =>
-    database.withConnection { implicit connection =>
-      resolveAdminTargetSiteWithAuth(request.getQueryString("siteSeq")) match {
-        case Left(errorResult) => errorResult
-        case Right(siteValue) =>
-          implicit val site: Site = siteValue
+    resolveAdminTargetSiteWithAuth(request.getQueryString("siteSeq")) match {
+      case Left(errorResult) => errorResult
+      case Right(siteValue) =>
+        implicit val site: Site = siteValue
+        database.withConnection { implicit connection =>
           val objectKeyOption = Config.select(AhaWikiConfig.FaviconConfigKey).map(_.v.trim).filter(_.nonEmpty)
           val faviconUrlOption = AhaWikiConfig.resolveFavicon(objectKeyOption.getOrElse(""), applicationConf)
           Ok(Json.obj(
@@ -422,53 +425,53 @@ class ApiAdminSite @Inject()(
             "objectKey" -> Json.fromString(objectKeyOption.getOrElse("")),
             "faviconUrl" -> Json.fromString(faviconUrlOption.getOrElse(AhaWikiConfig.DefaultFaviconPath)),
           ))
-      }
+        }
     }
   }
 
+  // Who is asking comes before what was sent: until 2026-11-21 a caller with no right to the site
+  // was told what was wrong with the file first. The upload to S3 holds no database connection.
   def adminUploadSiteFavicon: Action[MultipartFormData[TemporaryFile]] = Action(parse.multipartFormData) { implicit request =>
-    request.body.file("file") match {
-      case None =>
-        JsonError(BadRequest, "file is required")
-      case Some(filePart) =>
-        val contentType = filePart.contentType.getOrElse("application/octet-stream")
-        if (!contentType.startsWith("image/")) {
-          JsonError(BadRequest, "Only image files are allowed.")
-        } else {
-          database.withConnection { implicit connection =>
-            val siteSeqValue = request.body.dataParts.get("siteSeq").flatMap(_.headOption)
-            resolveAdminTargetSiteWithAuth(siteSeqValue) match {
-                case Left(errorResult) => errorResult
-                case Right(siteValue) =>
-                  implicit val site: Site = siteValue
-                  val objectKey = buildAdminFaviconObjectKey(site.seq, filePart.filename.trim)
-
-                  try {
-                    S3Logic.putFile(applicationConf, objectKey, contentType, filePart.ref.path)
-                    Config.upsert(AhaWikiConfig.FaviconConfigKey, objectKey)
-                    val faviconUrl = AhaWikiConfig.resolveFavicon(objectKey, applicationConf).getOrElse(AhaWikiConfig.DefaultFaviconPath)
-                    Ok(Json.obj(
-                      "ok" -> Json.fromBoolean(true),
-                      "siteSeq" -> Json.fromLong(site.seq),
-                      "objectKey" -> Json.fromString(objectKey),
-                      "faviconUrl" -> Json.fromString(faviconUrl),
-                    ))
-                  } catch {
-                    case error: Throwable =>
-                      logger.error(s"adminUploadSiteFavicon failed. objectKey=$objectKey", error)
-                      JsonError(InternalServerError, "Favicon upload failed.")
-                  }
+    resolveAdminTargetSiteWithAuth(request.body.dataParts.get("siteSeq").flatMap(_.headOption)) match {
+      case Left(errorResult) => errorResult
+      case Right(siteValue) =>
+        implicit val site: Site = siteValue
+        request.body.file("file") match {
+          case None =>
+            JsonError(BadRequest, "file is required")
+          case Some(filePart) =>
+            val contentType = filePart.contentType.getOrElse("application/octet-stream")
+            if (!contentType.startsWith("image/")) {
+              JsonError(BadRequest, "Only image files are allowed.")
+            } else {
+              val objectKey = buildAdminFaviconObjectKey(site.seq, filePart.filename.trim)
+              try {
+                S3Logic.putFile(applicationConf, objectKey, contentType, filePart.ref.path)
+                database.withConnection { implicit connection =>
+                  Config.upsert(AhaWikiConfig.FaviconConfigKey, objectKey)
+                }
+                val faviconUrl = AhaWikiConfig.resolveFavicon(objectKey, applicationConf).getOrElse(AhaWikiConfig.DefaultFaviconPath)
+                Ok(Json.obj(
+                  "ok" -> Json.fromBoolean(true),
+                  "siteSeq" -> Json.fromLong(site.seq),
+                  "objectKey" -> Json.fromString(objectKey),
+                  "faviconUrl" -> Json.fromString(faviconUrl),
+                ))
+              } catch {
+                case error: Throwable =>
+                  logger.error(s"adminUploadSiteFavicon failed. objectKey=$objectKey", error)
+                  JsonError(InternalServerError, "Favicon upload failed.")
+              }
             }
-          }
         }
     }
   }
 
   def adminDeleteSiteFavicon: Action[AnyContent] = Action { implicit request =>
-    database.withConnection { implicit connection =>
-      resolveAdminTargetSiteWithAuth(request.getQueryString("siteSeq")) match {
-          case Left(errorResult) => errorResult
-          case Right(siteValue) =>
+    resolveAdminTargetSiteWithAuth(request.getQueryString("siteSeq")) match {
+      case Left(errorResult) => errorResult
+      case Right(siteValue) =>
+        database.withConnection { implicit connection =>
             implicit val site: Site = siteValue
             val objectKeyOption = Config.select(AhaWikiConfig.FaviconConfigKey).map(_.v.trim).filter(_.nonEmpty)
             objectKeyOption.foreach { objectKey =>
@@ -490,10 +493,10 @@ class ApiAdminSite @Inject()(
   }
 
   def adminSiteTheme: Action[AnyContent] = Action { implicit request =>
-    database.withConnection { implicit connection =>
-      resolveAdminTargetSiteWithAuth(request.getQueryString("siteSeq")) match {
-          case Left(errorResult) => errorResult
-          case Right(siteValue) =>
+    resolveAdminTargetSiteWithAuth(request.getQueryString("siteSeq")) match {
+      case Left(errorResult) => errorResult
+      case Right(siteValue) =>
+        database.withConnection { implicit connection =>
             implicit val site: Site = siteValue
             val defaultHue = Config.select(SiteThemeLogic.DefaultHueKey).flatMap(c => SiteThemeLogic.parseHue(c.v)).map(_.toString).getOrElse("")
             Ok(Json.obj(
@@ -536,12 +539,12 @@ class ApiAdminSite @Inject()(
   }
 
   def adminUpdateSiteTheme: Action[AnyContent] = Action { implicit request =>
-    database.withConnection { implicit connection =>
-      val body = request.body.asFormUrlEncoded.getOrElse(Map.empty)
-      val siteSeqValue = body.get("siteSeq").flatMap(_.headOption).orElse(request.getQueryString("siteSeq"))
-      resolveAdminTargetSiteWithAuth(siteSeqValue) match {
-          case Left(errorResult) => errorResult
-          case Right(siteValue) =>
+    val body = request.body.asFormUrlEncoded.getOrElse(Map.empty)
+    val siteSeqValue = body.get("siteSeq").flatMap(_.headOption).orElse(request.getQueryString("siteSeq"))
+    resolveAdminTargetSiteWithAuth(siteSeqValue) match {
+      case Left(errorResult) => errorResult
+      case Right(siteValue) =>
+        database.withConnection { implicit connection =>
             implicit val site: Site = siteValue
             val defaultHue = SiteThemeLogic.parseHue(body.get("defaultHue").flatMap(_.headOption).getOrElse("")).map(_.toString).getOrElse("")
 
