@@ -33,6 +33,11 @@ trait TraitInterpreter {
   def toText(pageContent: PageContent)(implicit wikiContext: ContextWikiPage): String = {
     val document = Jsoup.parse(toHtmlString(pageContent))
     document.select(".headingNumber").remove()
+    // The contents list a page of seven or more headings gets. It is the headings again, so the
+    // text -- a page's description, its link preview, its terms for similar pages -- began with
+    // every heading title in a row until 2026-11-21. Matched by its toggle button, because an
+    // author's own `#!var class toc` wraps the whole page in a plain `div.toc`.
+    document.select("div.toc:has(> button.tocToggle)").remove()
     // document.select(".schema dt").remove()
     document.text()
   }

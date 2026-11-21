@@ -41,6 +41,19 @@ object InterpreterBlockUnit {
       assertEquals(html.contains("numeric"), false)
     }; testSparklineInTableCell()
 
+    // A page's text -- what its description, its link preview and its similar-pages terms are made
+    // from -- leaves out the contents list drawn over a page of seven or more headings. Until
+    // 2026-11-21 the text began with every heading title in a row.
+    def testTextLeavesOutTheContents(): Unit = {
+      val page = "First sentence of the page.\n" + (1 to 7).map(i => s"== Heading$i\nBody $i.").mkString("\n")
+      val text = Interpreters.toText(page)
+      assertEquals(text.startsWith("First sentence of the page."), true)
+      assertEquals("Heading1".r.findAllMatchIn(text).size, 1)
+      // An author's own `toc` class around the whole page is not the contents list: the page's text stays.
+      val wrapped = Interpreters.toText("#!var class toc\n" + page)
+      assertEquals(wrapped.startsWith("First sentence of the page."), true)
+    }; testTextLeavesOutTheContents()
+
     def testInterpreterTable(): Unit = {
       assertEquals(Interpreters.toHtmlString("#!table tsv\na\tb"), <table class="InterpreterTable wikiTableSimple tablesorter"><tbody><tr><td><div><p>a</p></div></td><td><div><p>b</p></div></td></tr></tbody></table>.toString())
       assertEquals(Interpreters.toHtmlString("#!table\n#!tsv\na\tb"), <table class="InterpreterTable wikiTableSimple tablesorter"><tbody><tr><td><div><p>a</p></div></td><td><div><p>b</p></div></td></tr></tbody></table>.toString())
