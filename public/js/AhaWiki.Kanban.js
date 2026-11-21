@@ -2056,7 +2056,13 @@
             var dueDateText = dueDateValues.length > 0 ? String(dueDateValues[0]).replace(/^\[|\]$/g, '').trim() : '';
             var dueDateElement = document.createElement('span');
             if (dueDateText) {
-                dueDateElement.innerHTML = '<i class="far fa-calendar-alt" aria-hidden="true"></i> ' + dueDateText;
+                // The date is page text: it goes in as text, as the card's title does. It was
+                // written with innerHTML until 2026-11-21, so `11/30 <tentative>` lost its last word.
+                var dueDateIcon = document.createElement('i');
+                dueDateIcon.className = 'far fa-calendar-alt';
+                dueDateIcon.setAttribute('aria-hidden', 'true');
+                dueDateElement.appendChild(dueDateIcon);
+                dueDateElement.appendChild(document.createTextNode(' ' + dueDateText));
             } else {
                 dueDateElement.style.display = 'none';
             }

@@ -114,6 +114,18 @@ test('card surface shows assignee avatars where the card id used to be', () => {
   assert.deepEqual(avatars.map((avatar) => avatar.textContent), ['A', 'B']);
 });
 
+// The due date is page text and goes onto the card as text. It went in with innerHTML until
+// 2026-11-21, so a date written `11/30 <tentative>` lost the bracketed word.
+test('card surface shows a DueDate as text, tags and all', () => {
+  const content = ['=== ToDo', '==== Card ==== #c1', '===== Property', ' * DueDate: 11/30 <tentative>', '===== Activity'].join('\n');
+  const { board } = boot({ writable: true, content });
+  const card = board.querySelector('.kanban-card');
+  const stat = card.querySelector('.kanban-card-stats');
+  const due = stat.children.find((child) => child.children.some((c) => c.textContent === ' 11/30 <tentative>'));
+  assert.ok(due, 'the date is a text node holding what was written');
+  assert.equal(due.innerHTML, '');
+});
+
 test('card surface highlights cards assigned to the current user only', () => {
   const { board } = boot({ writable: true, content: assigneeHighlightContent, currentUserNickname: 'Aha00a' });
   const assigned = board.querySelectorAll('.kanban-card').find((card) => card.getAttribute('data-card-id') === 'assigned');

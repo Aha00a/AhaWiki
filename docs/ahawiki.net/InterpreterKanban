@@ -209,6 +209,7 @@ UI가 쓰는 속성:
  * `Creator` (1) — 카드를 만들 때 쓴다.
  * `dateCreated` (1) — 카드를 만들 때 쓴다.
  * `DueDate` (1)
+  * 카드 앞면에는 쓴 글자 그대로 나온다 — `11/30 <미정>` 이면 `<미정>` 까지. 페이지 글은 카드에 글자(`textContent`·텍스트 노드)로만 들어간다. 2026-11-21 전에는 이 칸만 `innerHTML` 로 넣어서 꺾쇠 안 낱말이 사라졌다(검사 `test/kanban.readonly.test.mjs`).
  * `Assignee` (n)
  * `BlockedBy` (n)
  * `ParentCard` (n)

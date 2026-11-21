@@ -350,6 +350,8 @@ export const bootBoard = ({ writable, content, hash = '', currentUserNickname = 
     addEventListener: (evt, cb) => { if (evt === 'DOMContentLoaded') onReady = cb; },
     removeEventListener: () => {},
     createElement: (tagName) => new Element(tagName),
+    // A text node is an element that only has text: enough for what the board reads back.
+    createTextNode: (text) => { const node = new Element('#text'); node.textContent = String(text); return node; },
     querySelectorAll: (selector) => selector === '.InterpreterKanban' ? [root] : [],
     querySelector: (selector) => selector === '.revision a' ? revisionLink : null,
   };
