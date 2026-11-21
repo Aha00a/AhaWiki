@@ -47,7 +47,7 @@ class WikiSpreadsheet @Inject()(
   crossInstanceBus: CrossInstanceBus,
 ) extends BaseController with FormResults with Logging {
 
-  val regexGoogleSpreadsheetUrl: Regex = """https://docs\.google\.com/spreadsheets/d/([^/?#\s]+).*""".r
+  val regexGoogleSpreadsheetUrl: Regex = WikiSpreadsheet.regexGoogleSpreadsheetUrl
 
   def padColumns[T](matrix: Seq[Seq[T]], default: T): Seq[Seq[T]] = {
     val maxLength = matrix.map(_.length).max
@@ -69,20 +69,7 @@ class WikiSpreadsheet @Inject()(
               SupercsvUtil.toTsvString(padColumns(spreadsheet, ""))
             }
             // Case 1: embedded [[[#!Map url sheetName\ncontent]]] form
-            val extractor = ExtractConvertInject.markedBlocks(s => {
-              val chunk = PageContent(s)
-              if (url == chunk.argument.getOrElse(0, "") && sheetName == chunk.argument.getOrElse(1, "")) {
-                url match {
-                  case regexGoogleSpreadsheetUrl(id) =>
-                  val mapHeader = if (sheetName.nonEmpty) s"#!Map $url $sheetName" else s"#!Map $url"
-                  s"[[[$mapHeader\n${fetchTsv(id)}]]]"
-                  case _ => s
-                }
-              } else {
-                s
-              }
-            })
-            val updatedBodyContent = extractor.inject(extractor.extract(pageContent.content))
+            val updatedBodyContent = WikiSpreadsheet.syncEmbeddedBlocks(pageContent.content, url, sheetName, fetchTsv)
             val newPageBody = if (updatedBodyContent != pageContent.content) {
               // embedded form updated — reconstruct full page preserving page-level directives
               if (pageContent.directives.isEmpty) updatedBodyContent
@@ -119,4 +106,34 @@ class WikiSpreadsheet @Inject()(
       }
     }
   }}
+}
+
+object WikiSpreadsheet {
+  val regexGoogleSpreadsheetUrl: Regex = """https://docs\.google\.com/spreadsheets/d/([^/?#\s]+).*""".r
+
+  /**
+   * `content` with the body of every `[[[#!Map url sheetName ...]]]` block for this sheet replaced
+   * by what `fetchTsv` gives for the sheet's id, and every other block left exactly as written.
+   *
+   * Every `[[[ ... ]]]` block of the page passes through here, because that is how the blocks are
+   * found (ExtractConvertInject keeps only what is between the brackets). Until 2026-11-21 a block
+   * that was not this sheet's came back without its brackets: one press of the map's sync button
+   * saved the page with every other block -- a #!Vim listing, a #!Table, a second map -- turned into
+   * loose text, `#!Vim` line and all. Putting the brackets back is the other half of the round trip
+   * (MacroInlineDays.oneLevelDeeper does the same).
+   */
+  def syncEmbeddedBlocks(content: String, url: String, sheetName: String, fetchTsv: String => String)(implicit wikiContext: ContextWikiPage): String = {
+    val extractor = ExtractConvertInject.markedBlocks(block => {
+      val chunk = PageContent(block)
+      val isThisSheet = url == chunk.argument.getOrElse(0, "") && sheetName == chunk.argument.getOrElse(1, "")
+      (isThisSheet, url) match {
+        case (true, regexGoogleSpreadsheetUrl(id)) =>
+          val mapHeader = if (sheetName.nonEmpty) s"#!Map $url $sheetName" else s"#!Map $url"
+          s"[[[$mapHeader\n${fetchTsv(id)}]]]"
+        case _ =>
+          s"[[[$block]]]"
+      }
+    })
+    extractor.inject(extractor.extract(content))
+  }
 }
