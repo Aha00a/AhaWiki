@@ -104,6 +104,7 @@ Source API:
  * cell focus highlight
  * arrow key로 cell 이동
  * 입력 후 짧은 debounce로 raw text에 자동 반영
+ * 칸의 글자는 따옴표까지 그대로 보이고 그대로 다시 쓴다(`escapeAttribute`). '''2026-11-21 전에는 큰따옴표에서 잘렸다.''' 칸마다 `<input value="…">` 를 만들 때 쓴 이스케이프(jQuery 의 `.text().html()`)가 `"` 를 바꾸지 않아서, `27" monitor` 는 `27` 로, 따옴표로 시작하는 칸(`["Name: X"]`, 따옴표 친 CSV 칸)은 빈칸으로 보였다 — 그리고 아무 칸이나 하나 고치면 그 잘린 글자가 블록 전체와 함께 다시 쓰여 저장됐다. 블록의 Edit 링크는 곧장 이 격자로 열리므로 평범하게 닿는 길이었다. Gantt 편집기의 칸도 같았다. 검사는 `test/manual/editor-grid/`(브라우저, 서버 없음) — 옛 스크립트로는 FAIL 다섯이 나온다.
 
 주의:
  * CSV 파싱은 현재 단순 delimiter split이다. quoted CSV field escaping은 처리하지 않는다.

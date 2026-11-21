@@ -277,10 +277,23 @@ function editText(key) {
                     $textarea.hide();
                 }
             }
+            // A cell's text as it may stand inside a quoted attribute. jQuery's .text().html() was used
+            // here until 2026-11-21: it escapes < > & but not the quote, so a cell holding `27" monitor`
+            // ended the value at the quote, the grid showed `27`, and the next edit of any cell wrote
+            // `27` back into the page. A cell starting with a quote (`["Name: X"]`, a quoted csv field)
+            // lost everything. The rest of such a value became attributes of the input, too.
+            function escapeAttribute(value) {
+                return String(value == null ? '' : value)
+                    .replace(/&/g, '&amp;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#39;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;');
+            }
             function renderTableGrid($grid, rows) {
                 const maxCol = Math.max(1, ...rows.map(r => r.length));
                 const html = rows.map((row, rIdx) => {
-                    const tds = Array.from({length: maxCol}).map((_, cIdx) => `<td><input type="text" data-r="${rIdx}" data-c="${cIdx}" value="${$('<div>').text(row[cIdx] || '').html()}"></td>`).join('');
+                    const tds = Array.from({length: maxCol}).map((_, cIdx) => `<td><input type="text" data-r="${rIdx}" data-c="${cIdx}" value="${escapeAttribute(row[cIdx])}"></td>`).join('');
                     return `<tr>${tds}</tr>`;
                 }).join('');
                 $grid.html(html || '<tr><td><input type="text" data-r="0" data-c="0" value=""></td></tr>');
@@ -384,10 +397,10 @@ function editText(key) {
                     const paddingLeft = row.depth * 20 + 6;
                     const isSelected = ganttSelectedRows.has(rIdx);
                     const rowNumTd = `<td class="ganttRowNum${isSelected ? ' ganttRowNumSelected' : ''}" data-r="${rIdx}">${rIdx + 1}</td>`;
-                    const nameTd = `<td><input class="ganttNameInput" type="text" data-r="${rIdx}" data-c="${GANTT_COL_NAME}" style="padding-left:${paddingLeft}px" value="${$('<div>').text(row.name).html()}" placeholder="Task name"></td>`;
-                    const startTd = `<td><input class="ganttStartOrRefInput" type="text" data-r="${rIdx}" data-c="${GANTT_COL_START}" value="${$('<div>').text(row.startOrRef).html()}" placeholder="YYYY-MM-DD or ref"></td>`;
-                    const estTd = `<td><input class="ganttEstInput" type="number" min="0" data-r="${rIdx}" data-c="${GANTT_COL_EST}" value="${$('<div>').text(row.est).html()}" placeholder="days"></td>`;
-                    const progressTd = `<td><input class="ganttProgressInput" type="number" min="0" max="100" data-r="${rIdx}" data-c="${GANTT_COL_PROGRESS}" value="${$('<div>').text(row.progress).html()}" placeholder="%"></td>`;
+                    const nameTd = `<td><input class="ganttNameInput" type="text" data-r="${rIdx}" data-c="${GANTT_COL_NAME}" style="padding-left:${paddingLeft}px" value="${escapeAttribute(row.name)}" placeholder="Task name"></td>`;
+                    const startTd = `<td><input class="ganttStartOrRefInput" type="text" data-r="${rIdx}" data-c="${GANTT_COL_START}" value="${escapeAttribute(row.startOrRef)}" placeholder="YYYY-MM-DD or ref"></td>`;
+                    const estTd = `<td><input class="ganttEstInput" type="number" min="0" data-r="${rIdx}" data-c="${GANTT_COL_EST}" value="${escapeAttribute(row.est)}" placeholder="days"></td>`;
+                    const progressTd = `<td><input class="ganttProgressInput" type="number" min="0" max="100" data-r="${rIdx}" data-c="${GANTT_COL_PROGRESS}" value="${escapeAttribute(row.progress)}" placeholder="%"></td>`;
                     return `<tr data-r="${rIdx}" data-depth="${row.depth}"${isSelected ? ' class="ganttRowSelected"' : ''}>${rowNumTd}${nameTd}${startTd}${estTd}${progressTd}</tr>`;
                 }).join('');
                 $ganttInlineEditorGrid.html(html);
@@ -2397,11 +2410,6 @@ function editText(key) {
             else if ($('input[name=lineStart]').length || detectTableBlock(initialSrc))
                 openInlineTableEditor();
         });
-        function preventXss(html) {
-            const div = document.createElement('div');
-            div.textContent = html;
-            return div.innerHTML;
-        }
 
         $(function () {
             const wikipediaToSchema = window.AhaWiki.WikipediaToSchema;
