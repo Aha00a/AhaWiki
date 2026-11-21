@@ -169,6 +169,50 @@ class ApiV1Spec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAfterAll
     }
   }
 
+  "GET /api/v1/backlinks/:name" should {
+    def link(src: String, dst: String, alias: String = ""): Unit = db.withConnection { implicit connection =>
+      SQL"INSERT INTO CalculatedLink (site, src, dst, alias) VALUES (1, $src, $dst, $alias)".executeUpdate()
+    }
+
+    "list the readable pages that link to it, once each, even when it does not exist" in {
+      val created = createApiKey()
+      link("BlSourceB", "BlGone")
+      link("BlSourceA", "BlGone")
+      link("BlSourceA", "BlGone", "twice, under another label")
+      link("BlGone", "BlGone")
+      link("BlSecretC", "BlGone")
+      link("BlSourceA", "BlOther")
+
+      db.withConnection { implicit connection =>
+        SQL"""
+          INSERT INTO Permission (site, target, targetType, actor, actorType, action)
+          VALUES (1, 'BlSecret.*', 'RegularExpression', '', 'Login', 0)
+        """.executeUpdate()
+      }
+      AhaWikiCacheMemoryPermission.clear()
+      try {
+        val result = route(app, apiV1Request(GET, "/api/v1/backlinks/BlGone", created.rawKey)).get
+
+        status(result) mustBe OK
+        (contentAsJson(result) \ "name").as[String] mustBe "BlGone"
+        (contentAsJson(result) \ "backlinks" \\ "name").map(_.as[String]) mustBe Seq("BlSourceA", "BlSourceB")
+      } finally {
+        replaceLoginPermission(255)
+      }
+    }
+
+    "return 403 when the page itself is not readable" in {
+      val created = createApiKey()
+      try {
+        replaceLoginPermission(0)
+        val result = route(app, apiV1Request(GET, "/api/v1/backlinks/BlGone", created.rawKey)).get
+        status(result) mustBe FORBIDDEN
+      } finally {
+        replaceLoginPermission(255)
+      }
+    }
+  }
+
   "GET /api/v1/pages" should {
     "return readable page metadata with content hashes" in {
       val created = createApiKey()

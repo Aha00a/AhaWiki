@@ -17,6 +17,7 @@ Claude Code 에서는 이 명령을 MCP 서버로 등록합니다(`claude mcp ad
 도구	하는 일	쓰기
 `ahawiki_search`	이름·본문 검색. 맞은 곳 앞뒤 글과 함께	아니오
 `ahawiki_read_page`	페이지 원문과 현재 revision	아니오
+`ahawiki_backlinks`	이 페이지를 가리키는 페이지 목록. 없는 페이지에도 답한다	아니오
 `ahawiki_list_pages`	이름 접두사로 목록	아니오
 `ahawiki_recent_changes`	최근 변경	아니오
 `ahawiki_save_page`	페이지 전체를 바꿔 저장	예 — `AHAWIKI_MCP_WRITE=1` 일 때만 보입니다

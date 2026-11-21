@@ -296,6 +296,40 @@ class ApiV1 @Inject()(
     }
   }
 
+  /**
+   * The pages that link to `name`, as far as the reader may read them: what `[[Backlinks]]` shows,
+   * as JSON. A page that does not exist is still answered, because that is when the question
+   * matters -- before deleting a page, or to find who still links to one that is gone.
+   *
+   * It reads CalculatedLink, which the page calculation writes after a save returns, so a link
+   * saved a moment ago may not be there yet (wiki page Dev Page, «Calculation»).
+   */
+  def backlinks(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
+    withApiUser(request) { user =>
+      val name = decodePageName(nameEncoded)
+      database.withConnection { implicit connection =>
+        implicit val site: Site = SiteLogic.get(request.host)
+        implicit val requestWrapper: RequestWrapper = RequestWrapper.forUser(user)
+        implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(name), RenderingMode.Normal).holding(connection)
+        val wikiPermission = WikiPermission()
+
+        if (!wikiPermission.isReadable(name)) {
+          JsonError(Forbidden, "Permission denied.")
+        } else {
+          val sources = models.tables.CalculatedLink.selectDst(name)
+            .map(_.src)
+            .filter(src => src != name && wikiPermission.isReadable(src))
+            .distinct
+            .sorted
+          Ok(Json.obj(
+            "name" -> Json.fromString(name),
+            "backlinks" -> Json.fromValues(sources.map(src => Json.obj("name" -> Json.fromString(src)))),
+          ))
+        }
+      }
+    }
+  }
+
   def savePage(nameEncoded: String): Action[AnyContent] = Action { implicit request =>
     withApiUserAndKey(request) { (user, apiKey) =>
       request.body.asJson match {

@@ -49,6 +49,19 @@ export function wikiTools({ call, write }) {
       },
     },
     {
+      name: "ahawiki_backlinks",
+      description: "List the pages that link to a page, in name order: what [[Backlinks]] shows. Works for a page that does not exist, which is when it matters -- before deleting or renaming one, or to find who still links to one that is gone. Only pages you may read are listed. Links saved in the last moments may be missing until the wiki has recalculated the page.",
+      inputSchema: {
+        type: "object",
+        properties: { name: { type: "string", description: "The exact name of the page linked to." } },
+        required: ["name"],
+      },
+      async run({ name }) {
+        const found = await call("GET", `/api/v1/backlinks/${encode(name)}`);
+        return found.backlinks.map((page) => `- ${page.name}`).join("\n") || `No page links to "${found.name}".`;
+      },
+    },
+    {
       name: "ahawiki_list_pages",
       description: "List pages whose name starts with a prefix, in name order, with revision, size and last change. At most `limit` (default 50), and it does not say when it stopped there. Not a search: it matches names from the start. For what changed lately, use ahawiki_recent_changes.",
       inputSchema: {

@@ -12,6 +12,7 @@ AhaWiki API 요청에는 CSRF token과 reCAPTCHA가 필요하지 않습니다.
  * API Key 인증 사용자로 페이지 저장
  * API Key 인증 사용자로 페이지 목록/메타 조회
  * API Key 인증 사용자로 이름·본문 검색
+ * API Key 인증 사용자로 백링크(이 페이지를 가리키는 페이지) 조회
  * API Key 인증 사용자로 최근 변경 조회
  * API Key 인증 사용자로 페이지 이름변경/삭제
  * 저장된 revision에 `viaApi = true`와 저장에 사용한 API Key(`userApiKey`) 기록
@@ -122,6 +123,30 @@ curl "https://ahawiki.net/api/v1/search?q=OnThisDay&limit=20" \
  * `truncated` 가 `true` 이면 `limit` 보다 많이 맞았다는 뜻입니다.
  * `q` 가 비어 있으면 `400` 입니다.
  * 전문 검색 색인이 아니라 `LIKE` 검색입니다. 페이지가 아주 많은 위키에서 느려지면 그때 색인을 봅니다.
+
+== 백링크 조회
+
+[[[#!Vim sh
+curl "https://ahawiki.net/api/v1/backlinks/Dev%20Page"   -H "Authorization: Bearer <api-key>"
+]]]
+
+응답:
+
+[[[#!Vim json
+{
+  "name": "Dev Page",
+  "backlinks": [
+    { "name": "Dev" },
+    { "name": "Dev Database" }
+  ]
+}
+]]]
+
+`Dev Page` 를 링크하는 페이지들입니다 — `[[Backlinks]]` 가 보여 주는 것과 같습니다. 이름순이고, 한 페이지가 여러 번 링크해도 한 번만 나옵니다. 자기 자신은 빠집니다.
+
+ * '''없는 페이지에도 답합니다.''' 지우거나 이름을 바꾸기 전에, 또는 이미 없는 페이지를 아직 누가 가리키는지 볼 때 쓰는 것이라서입니다.
+ * 읽을 수 있는 페이지만 나옵니다. 그 페이지 자체를 읽을 수 없으면 `403` 입니다.
+ * 링크는 저장 뒤 페이지 계산이 쓰는 표(`CalculatedLink`)에서 읽습니다. 방금 저장한 링크는 계산이 닿기 전 잠깐 빠질 수 있습니다.
 
 == Batch 페이지 메타 조회
 

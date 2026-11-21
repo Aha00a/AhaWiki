@@ -75,6 +75,15 @@ test('reading a page reports the revision a later save needs, and encodes the na
     assert.equal(result.content[0].text, 'revision: 12\n\n= Less');
 });
 
+test('backlinks encodes the name and says so when nothing links to it', async () => {
+    const { rpc, calls } = serverWith({ answers: { 'GET /api/v1/backlinks/ToDo%20A%2FB': { name: 'ToDo A/B', backlinks: [{ name: 'Kanban' }, { name: 'Log' }] } } });
+    const { result } = await rpc('tools/call', { name: 'ahawiki_backlinks', arguments: { name: 'ToDo A/B' } });
+    assert.equal(calls[0].path, '/api/v1/backlinks/ToDo%20A%2FB');
+    assert.equal(result.content[0].text, '- Kanban\n- Log');
+    const none = serverWith({ answers: { 'GET /api/v1/backlinks/Lone': { name: 'Lone', backlinks: [] } } });
+    assert.equal((await none.rpc('tools/call', { name: 'ahawiki_backlinks', arguments: { name: 'Lone' } })).result.content[0].text, 'No page links to "Lone".');
+});
+
 test('a save sends the revision it was given, and is minor unless told otherwise', async () => {
     const { rpc, calls } = serverWith({ write: true, answers: { 'POST /api/v1/page/Notes': { name: 'Notes', revision: 5 } } });
     const { result } = await rpc('tools/call', { name: 'ahawiki_save_page', arguments: { name: 'Notes', text: 'new', revision: 4, comment: 'why' } });
