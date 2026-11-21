@@ -18,7 +18,9 @@ object DateTimeUtil {
   def nowEpochMicro: Long = Instant.now().toEpochMilli * 1000
 
   def expand_ym_to_ym_y(ym:String): Seq[String] = {
-    Try(LocalDate.parse(ym, DateTimeFormatterHolder.yearDashMonth)).toOption.map(localDate => Seq(
+    // YearMonth, not LocalDate: a LocalDate needs a day, so until 2026-11-21 this never parsed and
+    // a year-month page's LinkDate linked to itself alone, not to its year.
+    Try(java.time.YearMonth.parse(ym, DateTimeFormatterHolder.yearDashMonth).atDay(1)).toOption.map(localDate => Seq(
       localDate.toYearString,
       localDate.toYearDashMonthString,
     )).getOrElse(Seq(ym))

@@ -17,9 +17,9 @@ object LocalDateTimeUtil {
     None
       .orElse(Try(LocalDateTime.parse(s, DateTimeFormatterHolder.isoLocalDateTimeWithMillisec)).toOption)  // 밀리초까지 처리
       .orElse(Try(LocalDateTime.parse(s, DateTimeFormatterHolder.isoLocalDateTime)).toOption)  // 일반 LocalDateTime 포맷
-      .orElse(Try(LocalDate.parse(s, DateTimeFormatterHolder.isoLocalDate)).toOption.map(_.atStartOfDay()))  // 날짜만 있는 경우, 00:00:00 추가
-      .orElse(Try(LocalDate.parse(s, DateTimeFormatterHolder.yearDashMonth)).toOption.map(_.atStartOfDay()))  // 연-월 포맷 처리
-      .orElse(Try(LocalDate.parse(s, DateTimeFormatterHolder.year)).toOption.map(_.atStartOfDay()))  // 연도만 있는 경우, 00:00:00 추가
+      // A date, a year-month or a year: LocalDateUtil reads those, at the start of their first day.
+      // This chain had its own copy of that one, with the same two short forms that never parsed.
+      .orElse(LocalDateUtil.tryParse(s).map(_.atStartOfDay()))
   }
 
   def tryParseIso(s: String): Option[LocalDateTime] = Try(LocalDateTime.parse(s, DateTimeFormatterHolder.isoLocalDateTime)).toOption
