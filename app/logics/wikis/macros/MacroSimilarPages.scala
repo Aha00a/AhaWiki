@@ -2,6 +2,8 @@ package logics.wikis.macros
 
 import com.aha00a.commons.Implicits._
 import logics.PermissionLogic
+import logics.wikis.ExtractConvertInjectMacro
+import logics.wikis.HtmlPlaceholders
 import logics.wikis.PageLogic
 import logics.wikis.interpreters.InterpreterWiki
 import models.ContextWikiPage
@@ -12,11 +14,34 @@ import play.api.Logging
 import scala.collection.immutable
 
 object MacroSimilarPages extends TraitMacro with Logging {
+  /**
+   * The list is AhaMark -- its bullets and numbers are the renderer's -- but no page's name is
+   * written into that markup: each line's HTML is made from the values and put in afterwards
+   * (HtmlPlaceholders).
+   *
+   * Until 2026-11-21 a line was written as `[[PercentLinkTitle(0.7, Abbr:Name, "")]]` and the
+   * whole list rendered. A similarity row can join pages of two sites, so `Name` could be a page
+   * of a sister wiki, named by its author: a name holding `)]]` ended the macro there and the
+   * rest of it was read as markup, `[[Html(...)]]` included -- HTML of one wiki's author, run for
+   * the readers of another.
+   */
   override def toHtmlString(argument:String)(implicit wikiContext: ContextWikiPage): String = {
-    InterpreterWiki.toHtmlString(getMarkupSimilarPages(argument.getOrElse(wikiContext.name)))
+    val placeholders = new HtmlPlaceholders
+    val markup = getMarkupSimilarPages(argument.getOrElse(wikiContext.name), line => placeholders.hold(lineHtml(line)))
+    placeholders.restore(InterpreterWiki.toHtmlString(markup))
   }
 
-  def getMarkupSimilarPages(name: String)(implicit wikiContext: ContextWikiPage): String = {
+  /** One line of the list: the page it names (`Abbr:Name` for a sister wiki's), how alike the two are, and the terms they share. */
+  private[macros] case class Line(link: String, similarity: Double, terms: String)
+
+  // What `[[PercentLinkTitle(similarity, link, "")]] [[Trivial(terms)]]` came out as, made from the
+  // values: the two macros' own HTML, each in the element every macro's HTML is wrapped in.
+  private def lineHtml(line: Line)(implicit wikiContext: ContextWikiPage): String =
+    ExtractConvertInjectMacro.wrap(MacroPercentLinkTitle, MacroPercentLinkTitle.toHtmlString(line.similarity, line.link, "")) +
+      " " +
+      ExtractConvertInjectMacro.wrap(MacroTrivial, MacroTrivial.toHtmlString(line.terms))
+
+  private def getMarkupSimilarPages(name: String, draw: Line => String)(implicit wikiContext: ContextWikiPage): String = {
     wikiContext.withConnection { implicit connection =>
       implicit val site: Site = wikiContext.site
 
@@ -72,25 +97,29 @@ object MacroSimilarPages extends TraitMacro with Logging {
           siteBySeq = siteBySeq,
           currentSiteSeq = wikiContext.site.seq,
           highScoredTerms = highScoredTerms,
-        )
+        )(draw)
       }
     }
   }
 
+  /**
+   * The list's markup. `draw` gives what stands on a line for the page it names; the macro passes
+   * one that answers with a placeholder, so this markup holds no name.
+   */
   private[macros] def formatSimilarPagesMarkup(
     sameSiteSimilarities: Seq[CalculatedCosineSimilarity],
     crossSiteSimilarities: Seq[CalculatedCosineSimilarity],
     siteBySeq: Map[Long, Site],
     currentSiteSeq: Long,
     highScoredTerms: Map[(Long, String), String],
-  ): String = {
+  )(draw: Line => String): String = {
     val hasSameSite = sameSiteSimilarities.nonEmpty
     val hasCrossSite = crossSiteSimilarities.nonEmpty
 
     if (hasSameSite && hasCrossSite) {
       Seq(
-        formatSimilarPagesGroup("Same Wiki", sameSiteSimilarities, siteBySeq, currentSiteSeq, highScoredTerms),
-        formatSimilarPagesGroup("Sister Wikis", crossSiteSimilarities, siteBySeq, currentSiteSeq, highScoredTerms),
+        formatSimilarPagesGroup("Same Wiki", sameSiteSimilarities, siteBySeq, currentSiteSeq, highScoredTerms, draw),
+        formatSimilarPagesGroup("Sister Wikis", crossSiteSimilarities, siteBySeq, currentSiteSeq, highScoredTerms, draw),
       ).flatten.mkString("\n")
     } else {
       formatSimilarPagesItems(
@@ -99,6 +128,7 @@ object MacroSimilarPages extends TraitMacro with Logging {
         currentSiteSeq = currentSiteSeq,
         highScoredTerms = highScoredTerms,
         indent = " ",
+        draw = draw,
       )
     }
   }
@@ -109,11 +139,12 @@ object MacroSimilarPages extends TraitMacro with Logging {
     siteBySeq: Map[Long, Site],
     currentSiteSeq: Long,
     highScoredTerms: Map[(Long, String), String],
+    draw: Line => String,
   ): Option[String] = {
     if (similarities.isEmpty) {
       None
     } else {
-      val links = formatSimilarPagesItems(similarities, siteBySeq, currentSiteSeq, highScoredTerms, indent = "  ")
+      val links = formatSimilarPagesItems(similarities, siteBySeq, currentSiteSeq, highScoredTerms, indent = "  ", draw = draw)
 
       Some(s" * $heading\n$links")
     }
@@ -125,6 +156,7 @@ object MacroSimilarPages extends TraitMacro with Logging {
     currentSiteSeq: Long,
     highScoredTerms: Map[(Long, String), String],
     indent: String,
+    draw: Line => String,
   ): String = {
     similarities.map { c =>
       val link = siteBySeq
@@ -132,7 +164,7 @@ object MacroSimilarPages extends TraitMacro with Logging {
         .filter(_.seq != currentSiteSeq)
         .map(targetSite => s"${targetSite.abbr}:${c.name2}")
         .getOrElse(c.name2)
-      s"""${indent}1. [[PercentLinkTitle(${c.similarity}, $link, "")]] [[Trivial(${{highScoredTerms.getOrElse((c.site2, c.name2), "")}})]]"""
+      s"${indent}1. ${draw(Line(link, c.similarity, highScoredTerms.getOrElse((c.site2, c.name2), "")))}"
     }.mkString("\n")
   }
 

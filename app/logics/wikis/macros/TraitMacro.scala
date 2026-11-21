@@ -1,5 +1,6 @@
 package logics.wikis.macros
 
+import com.aha00a.commons.Implicits.RichString
 import logics.wikis.interpreters.ahaMark.AhaMarkLink
 import models.ContextWikiPage
 import models.tables.CalculatedLink
@@ -19,9 +20,13 @@ trait TraitMacro {
    * Ten macros spelled this message out themselves. A wording change had to find all ten,
    * and a macro that phrased it differently looked like a different kind of failure to the
    * reader.
+   *
+   * The call is quoted as text. The box is HTML, and until 2026-11-21 the argument went into it
+   * as written -- which is the page author's own text when they typed the macro, but a macro can
+   * be written by another macro, with a page name in it that someone else chose.
    */
   protected def argumentError(argument: String)(implicit wikiContext: ContextWikiPage): String =
-    MacroError.toHtmlString(s"Argument Error - ${macroCall(argument)}")
+    MacroError.toHtmlString(s"Argument Error - ${macroCall(argument).escapeHtml()}")
 
   protected def toCalculatedLink(dst: String)(implicit wikiContext: ContextWikiPage): CalculatedLink =
     AhaMarkLink(dst).toLink(wikiContext.name)

@@ -15,6 +15,34 @@ object ExtractConvertInject {
     }
 }
 
+/**
+ * Keys that stand in for HTML while AhaMark is rendered around them.
+ *
+ * For a macro that draws a list of pages it found. The list is markup -- the renderer makes the
+ * list, as it does everywhere -- but what a line of it shows is not: a page's name put into markup
+ * is read as markup, and a name is chosen by whoever made the page, which for a list that reaches
+ * across sister wikis is the author of another wiki. `[[Html(...)]]` in a name was run. So such a
+ * macro makes each line's HTML from the values it holds, writes a key into the markup in its
+ * place, renders, and puts the HTML back. Nothing a page was named ever reaches the parser.
+ *
+ * The keys come from where the renderer's own come from (UuidUtil), so they pass through it as
+ * its own do.
+ */
+final class HtmlPlaceholders {
+  private val held = new ArrayBuffer[(String, String)]()
+
+  /** A key to write into markup where `html` belongs. */
+  def hold(html: String): String = {
+    val key = UuidUtil.newString
+    held += key -> html
+    key
+  }
+
+  /** `rendered` with every key replaced by the HTML it stands for. */
+  def restore(rendered: String): String =
+    held.foldLeft(rendered) { case (html, (key, itsHtml)) => html.replace(key, itsHtml) }
+}
+
 trait ExtractConvertInject {
   val arrayBuffer = new ArrayBuffer[(String, String)]()
 

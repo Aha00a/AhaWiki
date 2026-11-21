@@ -84,6 +84,21 @@ object ExtractConvertInjectMacro extends Logging {
         logger.error(s"[[${theMacro.name}]] failed on page '${wikiContext.name}'", e)
         MacroError.toHtmlString(s"[[${theMacro.name}(${argument.escapeHtml()})]] failed - ${e.toString.escapeHtml()}")
     }
+
+  /**
+   * What every macro's HTML is wrapped in, which the stylesheets select by. Here so that a caller
+   * that draws a macro's HTML without writing the macro into markup -- HtmlPlaceholders says why
+   * one would -- gets the same element.
+   */
+  def wrap(theMacro: TraitMacro, body: String): String = wrap(theMacro.name, theMacro.isBlock, body)
+
+  private def wrap(name: String, isBlock: Boolean, body: String): String =
+    if (isBlock) s"""<div class="Macro BlockMacro $name">$body</div>"""
+    else s"""<span class="Macro InlineMacro $name">$body</span>"""
+
+  /** A name that is no macro is wrapped as an inline one: the error box that says so. */
+  private def wrapByName(name: String, body: String): String =
+    wrap(name, mapMacros.get(name).exists(_.isBlock), body)
 }
 
 class ExtractConvertInjectMacro extends ExtractConvertInject {
@@ -144,11 +159,7 @@ class ExtractConvertInjectMacro extends ExtractConvertInject {
     case _ => "error"
   }
 
-  private def wrapMacro(name: String, body: String): String =
-    ExtractConvertInjectMacro.mapMacros.get(name).filter(_.isBlock) match {
-      case Some(_) => s"""<div class="Macro BlockMacro $name">$body</div>"""
-      case None => s"""<span class="Macro InlineMacro $name">$body</span>"""
-    }
+  private def wrapMacro(name: String, body: String): String = ExtractConvertInjectMacro.wrapByName(name, body)
 
   def isBlockToken(token: String): Boolean = {
     extracted(token).exists {

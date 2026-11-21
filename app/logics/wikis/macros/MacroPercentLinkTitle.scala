@@ -20,6 +20,15 @@ object MacroPercentLinkTitle extends TraitMacro {
   override def toHtmlString(argument: String)(implicit wikiContext: ContextWikiPage): String =
     render(argument, link => resolveLink(link)).getOrElse(argumentError(argument))
 
+  /**
+   * The same drawing from values rather than from a macro's argument, for a caller that holds a
+   * page name and must not have it read as markup: MacroSimilarPages, whose names come from
+   * sister wikis too (HtmlPlaceholders says what a name could do). The link is resolved as the
+   * macro resolves it -- a page of this name on this wiki first, then `Abbr:Name`.
+   */
+  def toHtmlString(ratio: Double, link: String, title: String)(implicit wikiContext: ContextWikiPage): String =
+    draw(ratio, resolveLink(link), title)
+
   private[macros] def toHtmlString(argument: String, pageNames: Set[String], sites: Seq[Site]): String =
     render(argument, link => resolveLink(link, pageNames, sites)).getOrElse(macroCall(argument))
 
@@ -28,15 +37,17 @@ object MacroPercentLinkTitle extends TraitMacro {
    * the match threw, nothing caught it, and the whole page answered 500.
    */
   private def render(argument: String, resolve: String => ResolvedLink): Option[String] = argument match {
-    case regex(percent, link, title) =>
-      val resolvedLink = resolve(link)
-      val percentString = "%2.2f".format(percent.toDoubleOrZero * 100) + "%"
-      Some(s"""<a href="${resolvedLink.href.escapeHtmlAttribute()}"${targetAttributes(resolvedLink.external)}><span class="percentTotal">
-         |        <span class="percentBar" style="width: ${percentString.escapeHtmlAttribute()}"></span>
-         |        <span class="percentLabel">${percentString.escapeHtml()}</span>
-         |    </span>${resolvedLink.displayLink.escapeHtml()}</a>
-         |    <span>${title.escapeHtml()}</span>""".stripMargin)
+    case regex(percent, link, title) => Some(draw(percent.toDoubleOrZero, resolve(link), title))
     case _ => None
+  }
+
+  private def draw(ratio: Double, resolvedLink: ResolvedLink, title: String): String = {
+    val percentString = "%2.2f".format(ratio * 100) + "%"
+    s"""<a href="${resolvedLink.href.escapeHtmlAttribute()}"${targetAttributes(resolvedLink.external)}><span class="percentTotal">
+       |        <span class="percentBar" style="width: ${percentString.escapeHtmlAttribute()}"></span>
+       |        <span class="percentLabel">${percentString.escapeHtml()}</span>
+       |    </span>${resolvedLink.displayLink.escapeHtml()}</a>
+       |    <span>${title.escapeHtml()}</span>""".stripMargin
   }
 
   private val twinLinkRegex: Regex = """([^:]+):(.+)""".r

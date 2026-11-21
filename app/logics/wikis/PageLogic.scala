@@ -345,6 +345,10 @@ object PageLogic {
    * summed frequency alone left every tie to the database, which does not answer the same way
    * twice: `SimilarPages` rendered a different set of terms, in a different order, on two
    * consecutive requests for a page nobody had edited.
+   *
+   * The ORDER BY names the columns, not the aliases the SELECT gives them. It is the same order;
+   * H2 does not read an alias inside an expression there, and until 2026-11-21 that kept every
+   * spec from drawing a `[[SimilarPages]]` list that had a row in it.
    */
   def selectHighScoredTerm(
     sourceSite: models.tables.Site,
@@ -364,7 +368,7 @@ SELECT
     WHERE
         CTF1.site = ${sourceSite.seq} AND CTF1.name = $name AND
         CTF2.site = ${targetSite.seq} AND CTF2.name IN ($similarPageNames)
-    ORDER BY frequency1 + frequency2 DESC, frequency1 DESC, CT.term ASC
+    ORDER BY CTF1.frequency + CTF2.frequency DESC, CTF1.frequency DESC, CT.term ASC
       """
         .as(str("name") ~ str("term") ~ int("frequency1") ~ int("frequency2") *).map(flatten)
         .map(HighScoredTerm.tupled)
