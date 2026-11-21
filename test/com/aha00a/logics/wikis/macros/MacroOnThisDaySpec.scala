@@ -61,16 +61,18 @@ class MacroOnThisDaySpec extends AnyFreeSpec with EmptyContextWikiPage {
   "entries" - {
     def row(page: String, prop: String, value: String, cls: String = "Person") = CalculatedSchemaOrg(page, cls, prop, value)
 
-    "run oldest first, with the year-less ones after the dated ones" in {
+    "run newest first, with the year-less ones after the dated ones" in {
       val entries = MacroOnThisDay.toEntries(Seq(
         row("Me", "birthDate", "--10-23"),
         row("Ada", "birthDate", "1815-10-23"),
         row("Old", "deathDate", "1066-10-23"),
+        row("Bee", "birthDate", "1815-10-23"),
       ))
 
       assert(entries === Seq(
-        Entry(Some("1066-10-23"), "deathDate", "Old"),
         Entry(Some("1815-10-23"), "birthDate", "Ada"),
+        Entry(Some("1815-10-23"), "birthDate", "Bee"),
+        Entry(Some("1066-10-23"), "deathDate", "Old"),
         Entry(None, "birthDate", "Me"),
       ))
     }

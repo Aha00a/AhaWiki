@@ -59,7 +59,10 @@ object MacroOnThisDay extends TraitMacro {
   }
 
   /**
-   * Dated entries oldest first, then the undated ones, each group by page name.
+   * Dated entries newest first, then the undated ones; within one date, by page name.
+   *
+   * Newest first since 2026-11-21, at the owner's word -- it was oldest first, so the list began
+   * with the most distant year and the recent ones were at the bottom.
    *
    * The same page appears once per property, not once per class it declares — the database holds a
    * row per class, and a page that is both a Person and a Thing was not born twice.
@@ -69,7 +72,8 @@ object MacroOnThisDay extends TraitMacro {
       .filter(r => InterpreterSchema.isDateKey(r.prop))
       .map(r => Entry(dateOf(r.value), r.prop, r.page))
       .distinct
-      .sortBy(e => (e.date.isEmpty, e.date.getOrElse(""), e.page, e.prop))
+      .sortBy(e => (e.date.isEmpty, e.date.getOrElse(""), e.page, e.prop))(
+        Ordering.Tuple4(Ordering.Boolean, Ordering.String.reverse, Ordering.String, Ordering.String))
 
   // Every entry shares the month and day, so ordering the dates as strings is ordering the years.
   private def dateOf(value: String): Option[String] = value match {
