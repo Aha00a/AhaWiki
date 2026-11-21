@@ -810,16 +810,6 @@
 .AhaWiki .commonAhaWiki div.MacroLinkDate.around {
   clear: right;
 }
-.AhaWiki .commonAhaWiki div.UnlinkedMentions {
-  margin: 8px 0;
-}
-.AhaWiki .commonAhaWiki div.UnlinkedMentions .unlinkedMentionsResult {
-  margin-top: 6px;
-}
-.AhaWiki .commonAhaWiki div.UnlinkedMentions .unlinkedMentionSnippet {
-  font-size: 0.9em;
-  color: var(--color-muted);
-}
 .AhaWiki .commonAhaWiki div.InterpreterQuery {
   margin: 12px 0;
 }
@@ -1414,16 +1404,6 @@
 }
 .AhaWiki .wikiContent div.MacroLinkDate.around {
   clear: right;
-}
-.AhaWiki .wikiContent div.UnlinkedMentions {
-  margin: 8px 0;
-}
-.AhaWiki .wikiContent div.UnlinkedMentions .unlinkedMentionsResult {
-  margin-top: 6px;
-}
-.AhaWiki .wikiContent div.UnlinkedMentions .unlinkedMentionSnippet {
-  font-size: 0.9em;
-  color: var(--color-muted);
 }
 .AhaWiki .wikiContent div.InterpreterQuery {
   margin: 12px 0;
@@ -2262,16 +2242,6 @@
 }
 .AhaWiki .paperContent .page .pageContent div.MacroLinkDate.around {
   clear: right;
-}
-.AhaWiki .paperContent .page .pageContent div.UnlinkedMentions {
-  margin: 8px 0;
-}
-.AhaWiki .paperContent .page .pageContent div.UnlinkedMentions .unlinkedMentionsResult {
-  margin-top: 6px;
-}
-.AhaWiki .paperContent .page .pageContent div.UnlinkedMentions .unlinkedMentionSnippet {
-  font-size: 0.9em;
-  color: var(--color-muted);
 }
 .AhaWiki .paperContent .page .pageContent div.InterpreterQuery {
   margin: 12px 0;

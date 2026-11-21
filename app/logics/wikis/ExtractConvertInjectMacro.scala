@@ -42,7 +42,6 @@ object ExtractConvertInjectMacro extends Logging {
     MacroTwinPages,
     MacroSimilarPages,
     MacroBacklinks,
-    MacroUnlinkedMentions,
     MacroYears,
 
     MacroPageCount,

@@ -440,8 +440,7 @@ controllerComponents: ControllerComponents,
     s"""=== ${t("backlinks")} === #Backlinks-Generated.generated
       |<Columns count="3" gap="16" minWidth="220">
       |[[Backlinks]]
-      |</Columns>
-      |[[UnlinkedMentions]]""".stripMargin
+      |</Columns>""".stripMargin
 
   private def generateSimilarPagesMarkup(t: String => String): String =
     s"=== ${t("similarPages")} === #Similar-Pages-Generated.generated\n${t("similarPages.note")}\n[[SimilarPages]]"
