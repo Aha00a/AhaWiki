@@ -65,7 +65,10 @@ class ApiErrorEnvelopeSpec extends PlaySpec with GuiceOneAppPerSuite with Before
       val result = route(app, FakeRequest(GET, "/api/crawler?q=http://127.0.0.1/")).get
       status(result) mustBe FORBIDDEN
       contentType(result) mustBe Some(JSON)
-      (contentAsJson(result) \ "error").asOpt[String] mustBe defined
+      // The refusal itself, not any 403. Until 2026-11-21 nothing refused this URL: the request
+      // went out to loopback, and this case passed only because nothing was listening there and
+      // the failed connection also answers 403.
+      (contentAsJson(result) \ "error").asOpt[String] mustBe Some("Blocked host")
       (contentAsJson(result) \ "message").asOpt[String] mustBe None
     }
   }
