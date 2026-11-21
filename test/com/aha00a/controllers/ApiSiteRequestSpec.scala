@@ -216,10 +216,11 @@ class ApiSiteRequestSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAn
     expires: Long = System.currentTimeMillis() + 60000,
     email: String = "alice@example.com",
   ) =
-    OAuthHandoff.Value(purpose, host, "/w/Page", "nonce", connect = false, expires, email, "")
+    OAuthHandoff.Value(purpose, host, "/w/Page", OAuthHandoff.nonceOf("nonce"), connect = false, expires, email, "")
 
+  // The nonce is in a cookie of its own since 2026-11-21; it was in the flash (GoogleOAuth says why it moved).
   private def handoff(token: String, host: String, nonce: String) =
-    route(app, FakeRequest(GET, s"/google/oauth/handoff?token=$token").withHeaders(HOST -> host).withFlash("oauthNonce" -> nonce)).get
+    route(app, FakeRequest(GET, s"/google/oauth/handoff?token=$token").withHeaders(HOST -> host).withCookies(play.api.mvc.Cookie("oauthNonce", nonce))).get
 
   "a login handed to a site" should {
     "open a session on the host it names, in the browser that started it" in {
@@ -280,14 +281,17 @@ class ApiSiteRequestSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAn
       val result = route(app, FakeRequest(GET, "/google/oauth/login").withHeaders(HOST -> s"alices.$parent")).get
       val location = redirectLocation(result).get
       location must include(s"redirect_uri=https://$parent/google/oauth/callback")
-      flash(result).get("oauthNonce") mustBe defined
       val state = location.substring(location.indexOf("&state=") + 7)
-      OAuthHandoff.open(state, "state", System.currentTimeMillis(), sign).map(_.host) mustBe Some(s"alices.$parent")
+      val opened = OAuthHandoff.open(state, "state", System.currentTimeMillis(), sign)
+      opened.map(_.host) mustBe Some(s"alices.$parent")
+      // The browser keeps the secret whose digest the state holds, in a cookie of its own
+      // (GoogleOAuthSpec has the rest).
+      cookies(result).get("oauthNonce").map(cookie => OAuthHandoff.nonceOf(cookie.value)) mustBe opened.map(_.nonce)
     }
 
     "refuse a state that names no site" in {
       val token = OAuthHandoff.seal(value(purpose = "state", host = s"nosuch.$parent"), sign)
-      status(route(app, FakeRequest(GET, s"/google/oauth/callback?code=x&state=$token").withHeaders(HOST -> parent)).get) mustBe BAD_REQUEST
+      redirectLocation(route(app, FakeRequest(GET, s"/google/oauth/callback?code=x&state=$token").withHeaders(HOST -> parent)).get) mustBe Some("/")
     }
   }
 }

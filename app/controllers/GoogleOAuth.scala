@@ -19,6 +19,22 @@ import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 
+/**
+ * Logging in with Google.
+ *
+ * Every login leaves for Google with a signed `state` and comes back with it, and is finished only
+ * in the browser that started it: the state names the host and holds the digest of a secret that
+ * browser was given in a cookie when it left. A callback with no state, with a state of another
+ * host, or in a browser without the cookie is refused before Google is asked anything.
+ *
+ * Until 2026-11-21 only a site under the parent domain did this (OAuthHandoff says why those go
+ * through the parent host). Every other host -- the parent itself, a site on a domain of its own,
+ * every host when no parent domain is set -- sent no state, redeemed whatever code a callback
+ * brought, and took where to go and whether this was «connect an e-mail» from the flash. So a link
+ * to the callback carrying someone else's code signed its visitor in as that someone; with a
+ * connect pending in the visitor's flash it joined that someone's e-mail to the visitor's account;
+ * and the address a login returned to was the Referer as sent, another site's included.
+ */
 //noinspection TypeAnnotation
 class GoogleOAuth @Inject()(
   implicit val
@@ -30,9 +46,47 @@ class GoogleOAuth @Inject()(
   cookieSigner: CookieSigner,
 ) extends BaseController with Logging {
   private val confApi = applicationConf.AhaWiki.google.credentials.oAuth
+  // What a sealed value is for, so that one cannot be used as another: a state the parent host
+  // relays for a site under it, a state the host that left for Google finishes itself, and the
+  // profile the parent hands to a site.
   private val purposeState = "state"
+  private val purposeDirect = "direct"
   private val purposeHandoff = "handoff"
-  private val flashKeyNonce = "oauthNonce"
+
+  // The browser's half of the check has a cookie of its own. For the handoff it was kept in the
+  // flash until 2026-11-21, but the flash lasts until the next request this browser makes to this
+  // host, whichever request that is -- and another tab of the wiki can make one while this tab is
+  // away at Google. The login would then end in «Login expired» for no reason the person could see.
+  // Lax, so that it comes back on the navigation from Google; five minutes, as long as the state.
+  //
+  // It holds a secret, and the state only its digest (OAuthHandoff.nonceOf), so an address read in
+  // a log or a history does not say what the cookie must hold. Over https its name carries the
+  // `__Host-` prefix: a browser then takes it only from this very host, Secure and on `/`, so a page
+  // on another host under the same parent domain cannot plant one -- and a page under the parent
+  // can run script, since an author may write HTML.
+  private def nonceCookieName(implicit request: RequestHeader): String =
+    if (request.secure) "__Host-oauthNonce" else "oauthNonce"
+  private def nonceCookie(secret: String)(implicit request: RequestHeader): Cookie = Cookie(
+    nonceCookieName, secret,
+    maxAge = Some((OAuthHandoff.MaxAgeMillis / 1000).toInt),
+    path = "/",
+    domain = None,
+    secure = request.secure,
+    httpOnly = true,
+    sameSite = Some(Cookie.SameSite.Lax),
+  )
+  private def discardNonce(implicit request: RequestHeader) =
+    DiscardingCookie(nonceCookieName, path = "/", secure = request.secure)
+
+  /** This value was sealed for this host, and this browser is the one that left with it. */
+  private def startedHere(value: OAuthHandoff.Value)(implicit request: RequestHeader): Boolean =
+    value.host == request.host && request.cookies.get(nonceCookieName).exists(cookie => OAuthHandoff.nonceOf(cookie.value) == value.nonce)
+
+  // Every refusal is this redirect, not a 400. An error answer is written to the access log and
+  // the AccessLog table with its address, and a callback's address holds Google's code, which
+  // until it is redeemed can be redeemed by anyone who reads it (FilterAccessLog also drops the
+  // query of these paths now). A redirect is not stored at all.
+  private def expired: Result = Redirect("/").flashing("error" -> "Login expired. Please try again.")
 
   def googleApiRedirectUri()(implicit request: Request[Any]): String = {
     routes.GoogleOAuth.callback("").absoluteURL().replace("?code=", "")
@@ -45,69 +99,86 @@ class GoogleOAuth @Inject()(
   private def hubRedirectUri: String = s"https://$parentDomain" + routes.GoogleOAuth.callback("").url.replace("?code=", "")
   private def sign(text: String): String = cookieSigner.sign(text)
 
-  /** Off to Google, either the plain way or, under the parent domain, through it. See OAuthHandoff. */
-  private def startOAuth(redirect: String, flash: (String, String)*)(implicit request: Request[Any]): Result = {
-    val connect = flash.contains("oauthMode" -> "connect")
-    if (OAuthHandoff.isUnderParent(request.host, parentDomain)) {
-      val nonce = java.util.UUID.randomUUID().toString
-      val state = OAuthHandoff.seal(OAuthHandoff.Value(
-        purposeState, request.host, OAuthHandoff.localPath(redirect), nonce, connect, System.currentTimeMillis() + OAuthHandoff.MaxAgeMillis, "", ""
-      ), sign)
-      Redirect(googleOAuthUrl(hubRedirectUri) + "&state=" + state).flashing(flashKeyNonce -> nonce)
-    } else {
-      Redirect(googleOAuthUrl(googleApiRedirectUri())).flashing(flash: _*)
-    }
+  /**
+   * Google's answer for a code: the e-mail and the picture. A member so that a spec can answer in
+   * its place -- it is the one step of a login that needs Google.
+   */
+  protected def retrieveProfile(code: String, redirectUri: String): Future[Option[(String, Option[String])]] =
+    GoogleOAuthApi().retrieveProfileWithCode(code, confApi.clientId(), confApi.clientSecret(), redirectUri)
+      .map(_.map(profile => (profile.email, profile.profileImageUrl)))
+
+  /** Off to Google, to come straight back to this host or, under the parent domain, through it. See OAuthHandoff. */
+  private def startOAuth(redirect: String, connect: Boolean)(implicit request: Request[Any]): Result = {
+    val viaParent = OAuthHandoff.isUnderParent(request.host, parentDomain)
+    val secret = java.util.UUID.randomUUID().toString
+    val state = OAuthHandoff.seal(OAuthHandoff.Value(
+      if (viaParent) purposeState else purposeDirect,
+      request.host, OAuthHandoff.localPath(redirect), OAuthHandoff.nonceOf(secret), connect, System.currentTimeMillis() + OAuthHandoff.MaxAgeMillis, "", ""
+    ), sign)
+    Redirect(googleOAuthUrl(if (viaParent) hubRedirectUri else googleApiRedirectUri()) + "&state=" + state)
+      .withCookies(nonceCookie(secret))
   }
 
   def login = Action { implicit request =>
-    startOAuth(request.refererOrRoot, "redirect" -> request.refererOrRoot)
+    startOAuth(request.refererOrRoot, connect = false)
   }
 
   def connect = Action { implicit request =>
     if (SessionLogic.getUser(request).isEmpty) {
       Redirect(routes.Auth.login).flashing("error" -> "Login required.")
     } else {
-      startOAuth(routes.Account.settings().url, "redirect" -> routes.Account.settings().url, "oauthMode" -> "connect")
+      startOAuth(routes.Account.settings().url, connect = true)
     }
   }
 
   /** On the parent host: read the profile, and send it to the site that asked. */
   private def relayToSite(code: String, state: OAuthHandoff.Value): Future[Result] =
-    GoogleOAuthApi().retrieveProfileWithCode(code, confApi.clientId(), confApi.clientSecret(), hubRedirectUri).map { profileOpt =>
+    retrieveProfile(code, hubRedirectUri).map { profileOpt =>
       val token = OAuthHandoff.seal(state.copy(
         purpose = purposeHandoff,
         expires = System.currentTimeMillis() + OAuthHandoff.MaxAgeMillis,
-        email = profileOpt.map(_.email).getOrElse(""),
-        profileImageUrl = profileOpt.flatMap(_.profileImageUrl).getOrElse(""),
+        email = profileOpt.map(_._1).getOrElse(""),
+        profileImageUrl = profileOpt.flatMap(_._2).getOrElse(""),
       ), sign)
       Redirect(s"https://${state.host}" + routes.GoogleOAuth.handoff(token).url)
     }
 
   def callback(code: String): Action[AnyContent] = Action.async { implicit request =>
-    request.getQueryString("state").map { token =>
-      OAuthHandoff.open(token, purposeState, System.currentTimeMillis(), sign)
-        // The state is ours, but it named a host a request claimed. Only a real site gets a profile.
-        .filter(state => OAuthHandoff.isUnderParent(state.host, parentDomain) && AhaWikiCacheMemoryDomainSite.get(state.host).isDefined)
-        .map(state => relayToSite(code, state))
-        .getOrElse(Future.successful(BadRequest("Invalid login state.")))
-    }.getOrElse {
-      val api = GoogleOAuthApi()
-      api.retrieveProfileWithCode(code, confApi.clientId(), confApi.clientSecret(), googleApiRedirectUri()).map { profileOpt =>
-        complete(profileOpt.map(profile => (profile.email, profile.profileImageUrl)), request.flash.get("redirect").getOrElse("/"), request.flash.get("oauthMode").contains("connect"))
-      }
+    val now = System.currentTimeMillis()
+    request.getQueryString("state") match {
+      // No state: nothing here says which browser asked for this login, or that any did.
+      case None => Future.successful(expired)
+      case Some(token) =>
+        OAuthHandoff.open(token, purposeState, now, sign) match {
+          // For a site under the parent, on the parent host. The state is ours, but it named a
+          // host a request claimed: only a real site gets a profile. The browser is checked where
+          // the profile lands, in `handoff`.
+          case Some(state) if OAuthHandoff.isUnderParent(state.host, parentDomain) && AhaWikiCacheMemoryDomainSite.get(state.host).isDefined =>
+            relayToSite(code, state)
+          case Some(_) =>
+            Future.successful(expired)
+          case None =>
+            OAuthHandoff.open(token, purposeDirect, now, sign).filter(startedHere) match {
+              case Some(state) =>
+                retrieveProfile(code, googleApiRedirectUri())
+                  .map(profileOpt => complete(profileOpt, state.redirect, state.connect).discardingCookies(discardNonce))
+              case None =>
+                Future.successful(expired)
+            }
+        }
     }
   }
 
   /** On the site: the profile the parent host read, for the browser that started this login. */
   def handoff(token: String): Action[AnyContent] = Action { implicit request =>
     OAuthHandoff.open(token, purposeHandoff, System.currentTimeMillis(), sign)
-      .filter(value => value.host == request.host && request.flash.get(flashKeyNonce).contains(value.nonce))
+      .filter(startedHere)
       .map(value => complete(
         Some(value.email).filter(_.nonEmpty).map(email => (email, Some(value.profileImageUrl).filter(_.nonEmpty))),
         value.redirect,
         value.connect,
-      ))
-      .getOrElse(Redirect("/").flashing("error" -> "Login expired. Please try again."))
+      ).discardingCookies(discardNonce))
+      .getOrElse(expired)
   }
 
   private def complete(profileOpt: Option[(String, Option[String])], redirectUrl: String, isConnect: Boolean)(implicit request: Request[AnyContent]): Result = {

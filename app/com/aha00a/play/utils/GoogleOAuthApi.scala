@@ -41,11 +41,14 @@ case class GoogleOAuthApi()(implicit wsClient: WSClient, executionContext: Execu
       "code" -> Seq(code),
       "grant_type" -> Seq("authorization_code")
     )).map { response =>
-      logger.info(response.status.toString)
-      logger.info(response.body)
       if (200 == response.status) {
         Some(response.json)
       } else {
+        // The status and Google's own word for the refusal -- never the body of a success. That
+        // body is the access token, and until 2026-11-21 every login wrote it to the log, along
+        // with the status, before looking at either.
+        val refusal = scala.util.Try((response.json \ "error").asOpt[String]).toOption.flatten.getOrElse("")
+        logger.info(s"Google token request refused: ${response.status} $refusal")
         None
       }
     }

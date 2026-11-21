@@ -71,7 +71,7 @@ class FilterAccessLog @Inject()(
       method = rh.method,
       scheme = rh.scheme,
       host = rh.host,
-      path = rh.uri,
+      path = FilterAccessLog.loggable(rh.uri),
       remoteAddress = rh.remoteAddressWithXRealIp,
       userAgent = rh.userAgent.getOrElse(""),
       status = status,
@@ -87,7 +87,7 @@ class FilterAccessLog @Inject()(
   private def rejectWithTarpit(label: String, startTime: Long)
                                (onLog: Int => Unit)
                                (implicit site: Site, rh: RequestHeader): Future[Result] = {
-    val url = s"${rh.scheme}://${rh.host}${rh.uri}"
+    val url = s"${rh.scheme}://${rh.host}${FilterAccessLog.loggable(rh.uri)}"
     logger.warn(s"\t\t${rh.method}\t$FORBIDDEN\t${rh.remoteAddressWithXRealIp}\t$label\t$url\t${rh.userAgent.getOrElse("")}")
     after(FilterAccessLog.tarpitDelay(), actorSystem.scheduler)({
       val duration = (System.currentTimeMillis - startTime).toInt
@@ -100,7 +100,7 @@ class FilterAccessLog @Inject()(
   private def rejectImmediately(label: String, startTime: Long)
                                 (onLog: Int => Unit)
                                 (implicit site: Site, rh: RequestHeader): Future[Result] = {
-    val url = s"${rh.scheme}://${rh.host}${rh.uri}"
+    val url = s"${rh.scheme}://${rh.host}${FilterAccessLog.loggable(rh.uri)}"
     val duration = (System.currentTimeMillis - startTime).toInt
     logger.warn(s"\t\t${rh.method}\t$FORBIDDEN\t${rh.remoteAddressWithXRealIp}\t$label\t$url\t${rh.userAgent.getOrElse("")}")
     logRequest(rh.method, FORBIDDEN, duration, rh.remoteAddressWithXRealIp, rh.uri, url, rh.userAgent.getOrElse(""))
@@ -113,7 +113,7 @@ class FilterAccessLog @Inject()(
     implicit val rh: RequestHeader = requestHeader
     val remoteAddress          = rh.remoteAddressWithXRealIp
     val uri                    = rh.uri
-    val url                    = s"${rh.scheme}://${rh.host}$uri"
+    val url                    = s"${rh.scheme}://${rh.host}${FilterAccessLog.loggable(uri)}"
 
     // 운영자가 명시한 주소는 자동 차단보다 앞선다. 예전에는 IpDeny 검사가 화이트리스트보다
     // 먼저였고, IpDeny 는 행이 남아 있는 한 계속 403 이라 한 번 걸린 주소는 화이트리스트에
@@ -168,6 +168,15 @@ class FilterAccessLog @Inject()(
 }
 
 object FilterAccessLog {
+  /**
+   * The address as it may be written down. The login's own addresses lose their query: it holds
+   * Google's code (which anyone who reads it can redeem until it is used), the signed state, and
+   * on a handoff the e-mail address in base64. Until 2026-11-21 an error answer to one of them was
+   * written whole to the log file and to the AccessLog table, which a site's admins can read.
+   */
+  def loggable(uri: String): String =
+    if (uri.startsWith("/google/oauth/")) uri.takeWhile(_ != '?') else uri
+
   // A tarpit has to answer before anything between it and the bot gives up on the connection.
   // Until 2026-10-02 it held for 1 to 6 or 11 minutes, and the server closes a connection idle for
   // play.server.http.idleTimeout (75s by default) -- so almost every tarpit ended in a reset, not a

@@ -15,6 +15,14 @@ class FilterAccessLogSpec extends AnyFreeSpec {
     assert(FilterAccessLog.TarpitMax < idleTimeout)
   }
 
+  "writes the login's addresses down without their query, and every other address whole" in {
+    assert(FilterAccessLog.loggable("/google/oauth/callback?code=4/abc&state=xyz.sig") === "/google/oauth/callback")
+    assert(FilterAccessLog.loggable("/google/oauth/handoff?token=ZW1haWw.sig") === "/google/oauth/handoff")
+    assert(FilterAccessLog.loggable("/google/oauth/login") === "/google/oauth/login")
+    assert(FilterAccessLog.loggable("/w/Page?action=edit") === "/w/Page?action=edit")
+    assert(FilterAccessLog.loggable("/search?q=google/oauth/") === "/search?q=google/oauth/")
+  }
+
   "tarpitDelay stays between the bounds" in {
     val delays = (1 to 1000).map(_ => FilterAccessLog.tarpitDelay())
     assert(delays.forall(d => d >= FilterAccessLog.TarpitMin && d <= FilterAccessLog.TarpitMax))
