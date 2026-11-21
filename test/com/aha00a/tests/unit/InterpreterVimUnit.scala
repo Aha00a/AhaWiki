@@ -76,6 +76,20 @@ object InterpreterVimUnit {
     // block already in the cache rendered, a freshly written one failed.
     val blockingFile = Files.createTempFile("vim-cache-not-a-dir", ".tmp").toFile
     blockingFile.deleteOnExit()
+    // Whether or not this machine has a working vi, the code is never put into the page as markup.
+    // With no vi output it used to be cached unescaped (until 2026-11-21).
+    locally {
+      val dir = Files.createTempDirectory("vim-cache-markup").toFile
+      try {
+        val drawn = InterpreterVim.toHtmlString("#!Vim nosuchsyntaxzz\n<b>bold?</b> List<String>\n", dir)
+        assertEquals(drawn.contains("<b>bold?</b>"), false)
+        assertEquals(drawn.contains("List<String>"), false)
+      } finally {
+        Option(dir.listFiles()).toSeq.flatten.foreach(_.delete())
+        dir.delete()
+      }
+    }
+
     val html = InterpreterVim.toHtmlString("#!Vim scala\nval a = 1 < 2\n", new File(blockingFile, "Vim"))
     assertEquals(html.contains("<pre>val a = 1 &lt; 2</pre>"), true)
     assertEquals(html.contains("Interpreter Vim vim notranslate"), true)

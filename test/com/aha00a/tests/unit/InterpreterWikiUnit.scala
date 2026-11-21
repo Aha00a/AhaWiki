@@ -38,6 +38,12 @@ object InterpreterWikiUnit {
       assert(withMacro.contains("""<h2 id="저장" class="">"""), withMacro)
       assert(withMacro.contains("""<kbd>Ctrl</kbd>"""), withMacro)
     }
+    // A link to the page it is on is bold text. Its label reaches it with `<` already escaped by
+    // the line's renderer, so no tag in it is drawn (checked 2026-11-21, when it was suspected).
+    locally {
+      val self = InterpreterWiki.toHtmlString(s"[${contextWikiPage.name}|<i>x</i>]")
+      assert(!self.contains("<i>x</i>"), self)
+    }
     val pipedHeadingHtml = InterpreterWiki.toHtmlString("== [KR|대한민국] ==")
     assert(pipedHeadingHtml.contains("""<div class="HeadingWrapper대한민국">"""))
     assert(pipedHeadingHtml.contains("""<h2 id="대한민국" class="">"""))

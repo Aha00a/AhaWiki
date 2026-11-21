@@ -150,8 +150,11 @@ object InterpreterVim extends TraitInterpreter with Logging {
 
         cacheFileHtml.writeAll(styleString + pre)
       } else {
-        val lines = Using(scala.io.Source.fromFile(cacheFileText))(_.getLines().toSeq)
-        cacheFileHtml.writeAll("<pre>" + lines.mkString("\n") + "</pre>")
+        // vi wrote nothing -- it is missing, or it failed. The caller then shows the code escaped
+        // and caches nothing, so installing vim later fixes the block. Until 2026-11-21 this
+        // wrote the code into the cache as it was, unescaped: `List<String>` lost `<String>`, an
+        // HTML example ran as markup, and it stayed so after vim was installed.
+        throw new java.io.IOException(s"vi wrote no highlighted file for ${cacheFileHtmlRaw.getName}")
       }
     }
   }
