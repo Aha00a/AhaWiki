@@ -570,9 +570,23 @@
             });
         });
 
-        var match = /\/search\?q=(.+)/.exec(document.referrer);
-        if(match && match[1]) {
-            $('.wikiContent').mark(decodeURIComponent(match[1]));
+        // What was searched for, when the reader came from this wiki's search page. The search box
+        // is a GET form, so a space arrives as `+`; until 2026-11-21 the query was cut out of the
+        // address with a regular expression and decodeURIComponent left the `+`, so a search for
+        // two words highlighted nothing on the page it led to. URLSearchParams reads a form the
+        // way the form wrote it. test/wiki-view.search-highlight.test.mjs holds it.
+        function searchTermFromReferrer(referrer, origin) {
+            try {
+                var from = new URL(referrer);
+                if (from.origin !== origin || from.pathname !== '/search') return '';
+                return (from.searchParams.get('q') || '').trim();
+            } catch (e) {
+                return '';
+            }
+        }
+        var searchTerm = searchTermFromReferrer(document.referrer, location.origin);
+        if (searchTerm) {
+            $('.wikiContent').mark(searchTerm);
         }
 
         function TocGeneratedContentToggle() {
