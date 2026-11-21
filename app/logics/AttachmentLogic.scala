@@ -61,6 +61,25 @@ object AttachmentLogic extends Logging {
 
   def sitePrefix(siteSeq: Long): String = s"$Root/$siteSeq/"
 
+  /**
+   * How a page names one of its site's attachments as its image (`PageMeta.image`): `attachment:`
+   * and the object key without the site prefix. The address is signed when it is handed out, so
+   * the stored name never expires.
+   *
+   * Both directions are here because until 2026-11-21 each was written out where it was used --
+   * the writing side in MacroAttachment and PageLogic, the reading side in Api -- each spelling the
+   * site prefix itself, one as `Root` and one as the literal `"Attachment/"`.
+   */
+  val UriScheme: String = "attachment:"
+
+  def isUri(value: String): Boolean = value.startsWith(UriScheme)
+
+  def toUri(siteSeq: Long, objectKey: String): String =
+    s"$UriScheme${objectKey.stripPrefix(sitePrefix(siteSeq))}"
+
+  def objectKeyFromUri(siteSeq: Long, uri: String): Option[String] =
+    Option(uri).filter(isUri).map(value => s"${sitePrefix(siteSeq)}${value.stripPrefix(UriScheme)}")
+
   def pagePrefix(siteSeq: Long, pageName: String): String =
     s"${sitePrefix(siteSeq)}${sanitizePathSegment(pageName)}/"
 

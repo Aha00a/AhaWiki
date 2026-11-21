@@ -50,10 +50,8 @@ object MacroAttachment extends TraitMacro {
   private def normalizeObjectKey(rawObjectKey: String)(implicit wikiContext: ContextWikiPage): String =
     normalizeObjectKey(rawObjectKey, wikiContext.site.seq, wikiContext.name)
 
-  def toAttachmentUri(rawObjectKey: String, siteSeq: Long, pageName: String): String = {
-    val objectKey = normalizeObjectKey(rawObjectKey, siteSeq, pageName)
-    s"attachment:${objectKey.stripPrefix(s"$attachmentRoot/$siteSeq/")}"
-  }
+  def toAttachmentUri(rawObjectKey: String, siteSeq: Long, pageName: String): String =
+    AttachmentLogic.toUri(siteSeq, normalizeObjectKey(rawObjectKey, siteSeq, pageName))
 
   /**
    * The object key, and the CSS width if one was given; a bare number is pixels.

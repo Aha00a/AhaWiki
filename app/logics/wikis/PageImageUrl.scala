@@ -16,7 +16,7 @@ object PageImageUrl {
     * it, which is why the old `attachmentFallback.svg` was never seen. */
   def forSocialPreview(raw: String, host: String): Option[String] =
     Option(raw).map(_.trim)
-      .filter(value => value.nonEmpty && !value.startsWith("attachment:"))
+      .filter(value => value.nonEmpty && !logics.AttachmentLogic.isUri(value))
       .filter(value => SvgAddress.findFirstIn(value).isEmpty)
       .map(value => absolute(value, "https", host))
 }

@@ -14,7 +14,6 @@ import play.api.db.Database
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
-import java.time.LocalDateTime
 import javax.inject._
 import scala.concurrent.ExecutionContext
 
@@ -40,14 +39,11 @@ controllerComponents: ControllerComponents,
     implicit val provider: RequestWrapper = contextWikiPage.requestWrapper
 
     val wikiPermission = WikiPermission()
-    // One more than shown, to learn whether the limit cut the list short.
-    val found = q.toOption.map(q => models.tables.Page.pageSearch(q, SearchResult.MaxPages + 1)).getOrElse(Seq.empty)
-    val moreThanShown = found.size > SearchResult.MaxPages
+    val (readable, moreThanShown) = q.toOption
+      .map(q => logics.wikis.ReadablePages.search(models.tables.Page.pageSearch(q, _), SearchResult.MaxPages, wikiPermission.isReadable))
+      .getOrElse((Seq.empty, false))
     val seq: Seq[SearchResultSummary] = q.toOption.map(q =>
-      found
-        .take(SearchResult.MaxPages)
-        .filter(sr => wikiPermission.isReadable(sr.name))
-        .sortBy(_.dateTime)(Ordering[LocalDateTime].reverse)
+      readable
         .partition(_.name == q)
         .concat()
         .map(_.summarise(q))

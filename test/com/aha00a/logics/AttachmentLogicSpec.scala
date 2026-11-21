@@ -12,6 +12,28 @@ import java.time.LocalDateTime
 class AttachmentLogicSpec extends AnyFreeSpec {
   private val uploadedAt = LocalDateTime.of(2024, 1, 1, 12, 0, 0)
 
+  "the attachment: name a page's image is stored as" - {
+    "is the object key without the site prefix" in {
+      assert(AttachmentLogic.toUri(3, "Attachment/3/MyPage/x.png/x.2024-01-01T12-00-00.png") === "attachment:MyPage/x.png/x.2024-01-01T12-00-00.png")
+    }
+
+    "reads back to the same key, under the same site" in {
+      val key = AttachmentLogic.objectKey(3, "대문 페이지", "x.png", "png", uploadedAt)
+      assert(AttachmentLogic.objectKeyFromUri(3, AttachmentLogic.toUri(3, key)).contains(key))
+    }
+
+    // The reading side signs what it reads. Another site's number in the name stays inside this
+    // site's prefix rather than reaching that site's objects.
+    "reads another site's number as a path under this site" in {
+      assert(AttachmentLogic.objectKeyFromUri(3, "attachment:Attachment/4/P/x.png").contains("Attachment/3/Attachment/4/P/x.png"))
+    }
+
+    "is not read out of anything else" in {
+      assert(AttachmentLogic.objectKeyFromUri(3, "https://example.com/x.png").isEmpty)
+      assert(AttachmentLogic.objectKeyFromUri(3, null).isEmpty)
+    }
+  }
+
   "objectKey" - {
     "is the page prefix, the file's name, and the name again with the upload time" in {
       assert(AttachmentLogic.objectKey(1, "MyPage", "photo.jpg", "jpg", uploadedAt) === "Attachment/1/MyPage/photo.jpg/photo.2024-01-01T12-00-00.jpg")

@@ -156,16 +156,11 @@ class ApiV1 @Inject()(
           val wikiPermission = WikiPermission()
           val bounded = limit.max(1).min(100)
 
-          // One more than asked, to learn whether the limit cut the list short.
-          val found = Page.pageSearch(q.trim, bounded + 1)
-          val readable = found
-            .take(bounded)
-            .filter(r => wikiPermission.isReadable(r.name))
-            .sortBy(_.dateTime)(Ordering[java.time.LocalDateTime].reverse)
+          val (readable, truncated) = logics.wikis.ReadablePages.search(Page.pageSearch(q.trim, _), bounded, wikiPermission.isReadable)
 
           Ok(Json.obj(
             "q" -> Json.fromString(q.trim),
-            "truncated" -> Json.fromBoolean(found.size > bounded),
+            "truncated" -> Json.fromBoolean(truncated),
             "pages" -> Json.fromValues(readable.map(r => Json.obj(
               "name" -> Json.fromString(r.name),
               "dateTime" -> Json.fromString(r.dateTime.toString),
@@ -253,19 +248,7 @@ class ApiV1 @Inject()(
                 ChangeSourceRow(name, revision, dateTime, comment, isMinorEdit, viaApi, userApiKeyName)
             }.*)
 
-          @scala.annotation.tailrec
-          def collectReadableRows(offset: Int, acc: List[ChangeSourceRow]): List[ChangeSourceRow] = {
-            if (acc.size >= boundedLimit) {
-              acc.take(boundedLimit)
-            } else {
-              val rows = selectRows(offset)
-              val readableRows = rows.filter(row => wikiPermission.isReadable(row.name))
-              val next = acc ++ readableRows
-              if (rows.size < batchSize) next.take(boundedLimit) else collectReadableRows(offset + rows.size, next)
-            }
-          }
-
-          val rows = collectReadableRows(0, List.empty).map { row =>
+          val rows = logics.wikis.ReadablePages.collect[ChangeSourceRow](selectRows, batchSize, boundedLimit, _.name, wikiPermission.isReadable).map { row =>
             Json.obj(
               "name" -> Json.fromString(row.name),
               "revision" -> Json.fromLong(row.revision),

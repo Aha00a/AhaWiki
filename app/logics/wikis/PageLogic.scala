@@ -109,9 +109,7 @@ object PageLogic {
   }
 
   private def extractAttachmentImage(pageName: String)(implicit connection: Connection, site: models.tables.Site): Option[String] = {
-    Attachment.selectUploadedByPage(site.seq, pageName).headOption.map { att =>
-      s"attachment:${att.objectKey.stripPrefix(s"Attachment/${site.seq}/")}"
-    }
+    Attachment.selectUploadedByPage(site.seq, pageName).headOption.map(att => logics.AttachmentLogic.toUri(site.seq, att.objectKey))
   }
 
   private def extractRepresentativeImage(content: String, pageName: String)(implicit connection: Connection, site: models.tables.Site): Option[String] = {

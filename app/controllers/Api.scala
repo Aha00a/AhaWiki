@@ -202,19 +202,7 @@ class Api @Inject()(
         }.*)
       }
 
-      @scala.annotation.tailrec
-      def collectReadableRows(offset: Int, acc: List[ChangeSourceRow]): List[ChangeSourceRow] = {
-        if (acc.size >= boundedLimit) {
-          acc.take(boundedLimit)
-        } else {
-          val rows = selectRows(offset)
-          val readableRows = rows.filter(row => wikiPermission.isReadable(row.name))
-          val next = acc ++ readableRows
-          if (rows.size < batchSize) next.take(boundedLimit) else collectReadableRows(offset + rows.size, next)
-        }
-      }
-
-      val readableRows = collectReadableRows(0, List.empty).map { row =>
+      val readableRows = logics.wikis.ReadablePages.collect[ChangeSourceRow](selectRows, batchSize, boundedLimit, _.name, wikiPermission.isReadable).map { row =>
         ChangeRow(
           name = row.name,
           revision = row.revision,
@@ -383,9 +371,10 @@ class Api @Inject()(
     val trimmed = Option(raw).map(_.trim).getOrElse("")
     if (trimmed.isEmpty) {
       ""
-    } else if (trimmed.startsWith("attachment:")) {
-      val objectKey = s"Attachment/${site.seq}/${trimmed.stripPrefix("attachment:")}"
-      S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, objectKey).toOption.getOrElse("")
+    } else if (logics.AttachmentLogic.isUri(trimmed)) {
+      logics.AttachmentLogic.objectKeyFromUri(site.seq, trimmed)
+        .flatMap(S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, _).toOption)
+        .getOrElse("")
     } else {
       logics.wikis.PageImageUrl.absolute(trimmed, request.scheme, request.host)
     }
