@@ -59,9 +59,12 @@ object PaperSlideCore {
     val chunks = bodyExtracted.split("""(?m)^-{4,}$""", -1)
     eciv.variables("pageTotal") = chunks.length.toString
 
-    // lineOffset starts at the number of directive lines (#! lines stripped by PageContent), so that
-    // padded content line numbers map back to raw-document line numbers.
-    var lineOffset = pageContent.directives.length
+    // Line numbers count from the content, the `#!` lines left out, as a plain wiki page's do: the
+    // edit screen adds the directive lines back (Wiki.buildEditFormState). Until 2026-11-21 this
+    // started at the number of directive lines, so they were added twice -- every section's Edit on
+    // a #!Paper page (where `#!Paper` itself is one) opened lines further down than the section,
+    // and the last section's opened the whole page.
+    var lineOffset = 0
     val rendered = chunks.zipWithIndex.map { case (chunk, index) =>
       val offset = lineOffset
       lineOffset += chunk.count(_ == '\n')

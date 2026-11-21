@@ -90,6 +90,8 @@ Source API:
 == Partial Edit
 편집 URL에 `lineStart`와 `lineEnd`가 있으면 해당 line range만 editor에 넣는다.
 
+'''줄 번호는 페이지의 내용 줄로 센다''' — `#!` 디렉티브 줄은 빼고 센 번호를 받아, 편집 화면이 그 페이지의 디렉티브 줄 수를 더해 자른다(`Wiki.partialEdit`). 그러니 편집 링크를 만드는 쪽은 모두 디렉티브를 빼고 세야 한다. '''2026-11-21 전에는 둘이 더하고 있었다''' — `#!Paper`·`#!Slide` 페이지(`PaperSlideCore`, `#!Paper` 자체가 디렉티브 한 줄이다)와 월 페이지가 끌어온 날짜 페이지(`MacroInlineDays.bodyOf`)가 링크에 이미 디렉티브 줄을 더해서 두 번 더해졌다. 그래서 `== A` 의 Edit 이 `== B` 를 열었고, 마지막 절은 범위가 페이지 끝을 넘어 페이지 전체가 열렸다. 검사는 `InterpreterBlockUnit` — 실제로 그린 `#!Paper` 페이지의 Edit 링크를 `Wiki.partialEdit` 에 넘겨 그 절이 열리는지 본다.
+
  * 저장 시 서버에서 최신 본문에 partial body를 merge한다.
  * preview와 scroll sync는 partial line offset을 반영한다.
  * generated See Also 영역은 partial 저장 merge 전에 제거한다.

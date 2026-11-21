@@ -54,6 +54,27 @@ object InterpreterBlockUnit {
       assertEquals(wrapped.startsWith("First sentence of the page."), true)
     }; testTextLeavesOutTheContents()
 
+    // A section's Edit link, followed to the edit screen, opens that section and nothing else --
+    // on a #!Paper page, where `#!Paper` and `#!var` are directive lines. Until 2026-11-21 those
+    // lines were counted by the link and again by the edit screen: `== A` opened `== B`, and the
+    // last section's link opened the whole page.
+    def testSectionEditLinksOpenTheirSection(): Unit = {
+      val page = "#!Paper\n#!var docId X\n= Title\nintro\n== A\na-body\n== B\nb-body"
+      val html = Interpreters.toHtmlString(page)
+      val ranges = """data-edit-link="[^"]*lineStart=(\d+)&(?:amp;)?lineEnd=(\d+)""".r.findAllMatchIn(html).map(m => (m.group(1).toInt, m.group(2).toInt)).toSeq.distinct
+      val opened = ranges.map { case (start, end) => controllers.Wiki.partialEdit(page, Some(start), Some(end))._1 }
+      assertEquals(opened.contains("== A\na-body"), true)
+      assertEquals(opened.contains("== B\nb-body"), true)
+      // A page without directives was always right, and stays so.
+      val plain = "intro\n== A\na-body\n== B\nb-body"
+      val plainRanges = """data-edit-link="[^"]*lineStart=(\d+)&(?:amp;)?lineEnd=(\d+)""".r.findAllMatchIn(Interpreters.toHtmlString(plain)).map(m => (m.group(1).toInt, m.group(2).toInt)).toSeq.distinct
+      assertEquals(plainRanges.map { case (s, e) => controllers.Wiki.partialEdit(plain, Some(s), Some(e))._1 }.contains("== B\nb-body"), true)
+      // A month page's link to a day page counts the day page's content lines the same way.
+      val day = "#!read all\n[[DayHeader]]\nAte out.\n== Evening\nWent home."
+      val body = logics.wikis.macros.MacroInlineDays.bodyOf(day)
+      assertEquals(controllers.Wiki.partialEdit(day, Some(body.firstLine), Some(body.lineCount + 1))._1, "Ate out.\n== Evening\nWent home.")
+    }; testSectionEditLinksOpenTheirSection()
+
     def testInterpreterTable(): Unit = {
       assertEquals(Interpreters.toHtmlString("#!table tsv\na\tb"), <table class="InterpreterTable wikiTableSimple tablesorter"><tbody><tr><td><div><p>a</p></div></td><td><div><p>b</p></div></td></tr></tbody></table>.toString())
       assertEquals(Interpreters.toHtmlString("#!table\n#!tsv\na\tb"), <table class="InterpreterTable wikiTableSimple tablesorter"><tbody><tr><td><div><p>a</p></div></td><td><div><p>b</p></div></td></tr></tbody></table>.toString())

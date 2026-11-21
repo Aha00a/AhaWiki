@@ -116,7 +116,7 @@ object SlideUnit {
       assertEquals(sections(html), Seq("slide", "slide dark cards ok_2"))
       assertEquals(html.contains("#!class"), false)
       assertEquals(html.contains("<b>x</b>"), false)
-      assertEquals(html.contains("data-line-start=\"5\""), true)
+      assertEquals(html.contains("data-line-start=\"4\""), true)
     }
 
     // On the first slide the line sits right under `#!Slide`, among the page's directives. It is
@@ -125,7 +125,7 @@ object SlideUnit {
       val html = Interpreters.toHtmlString("#!Slide\n#!class dark cover\n= Cover\n----\nplain")
       assertEquals(sections(html), Seq("slide dark cover", "slide"))
       assertEquals(html.contains("class=\"slideDeck \""), true)
-      assertEquals(html.contains("data-line-start=\"3\""), true)
+      assertEquals(html.contains("data-line-start=\"1\""), true)
     }
 
     // A paragraph alone above the first heading is the label over the title.

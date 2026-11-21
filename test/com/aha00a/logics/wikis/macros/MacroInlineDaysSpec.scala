@@ -81,37 +81,39 @@ class MacroInlineDaysSpec extends AnyFreeSpec with EmptyContextWikiPage {
       val body = MacroInlineDays.bodyOf("= [2020-01]-04 Sat\nAte out.\nWent home.")
 
       assert(body.lines === Seq("Ate out.", "Went home."))
-      assert(body.firstRawLine === 2)
-      assert(body.rawLineCount === 3)
+      assert(body.firstLine === 2)
+      assert(body.lineCount === 3)
     }
 
     "starts after a DayHeader macro" in {
       val body = MacroInlineDays.bodyOf("[[DayHeader]]\nAte out.")
 
       assert(body.lines === Seq("Ate out."))
-      assert(body.firstRawLine === 2)
+      assert(body.firstLine === 2)
     }
 
-    "counts the directives the reader would count" in {
+    // The edit screen adds a page's directive lines to the numbers it is given, so these leave them
+    // out. They counted them until 2026-11-21, and the directives were added twice.
+    "counts content lines, leaving the directives to the edit screen" in {
       val body = MacroInlineDays.bodyOf("#!read all\n#!var mood good\n[[DayHeader]]\nAte out.")
 
       assert(body.lines === Seq("Ate out."))
-      assert(body.firstRawLine === 4)
-      assert(body.rawLineCount === 4)
+      assert(body.firstLine === 2)
+      assert(body.lineCount === 2)
     }
 
     "keeps a first line that is not a heading" in {
       val body = MacroInlineDays.bodyOf("Ate out.\nWent home.")
 
       assert(body.lines === Seq("Ate out.", "Went home."))
-      assert(body.firstRawLine === 1)
+      assert(body.firstLine === 1)
     }
 
     "keeps a first line that is not a heading, after directives" in {
       val body = MacroInlineDays.bodyOf("#!read all\nAte out.")
 
       assert(body.lines === Seq("Ate out."))
-      assert(body.firstRawLine === 2)
+      assert(body.firstLine === 1)
     }
   }
 
@@ -141,13 +143,14 @@ class MacroInlineDaysSpec extends AnyFreeSpec with EmptyContextWikiPage {
       assert(assembled.sourceAt(1) === Some(InlinedSource("2020-01-04", 8, 1, 3)))
     }
 
-    "counts a body line from where it sits in the page as stored" in {
+    "counts a body line from where it sits among the page's content lines" in {
       val assembled = MacroInlineDays.assemble(Seq(page("2020-01-04", 8, "#!read all\n[[DayHeader]]\nAte out.\n== Evening\nWent home.")))
 
-      // 조립된 2번째 줄부터가 본문. 저장된 페이지에서는 디렉티브 1줄 + 제목 1줄 뒤인 3번째 줄이다.
-      assert(assembled.sourceAt(2).map(_.line) === Some(3))
-      assert(assembled.sourceAt(3).map(_.line) === Some(4))
-      assert(assembled.sourceAt(4).map(_.line) === Some(5))
+      // 조립된 2번째 줄부터가 본문. 그 페이지의 내용 줄로는 제목 1줄 뒤인 2번째 줄이다 — 디렉티브 줄은
+      // 편집 화면이 더한다(2026-11-21 전에는 여기서도 더해서 두 번 더해졌다).
+      assert(assembled.sourceAt(2).map(_.line) === Some(2))
+      assert(assembled.sourceAt(3).map(_.line) === Some(3))
+      assert(assembled.sourceAt(4).map(_.line) === Some(4))
     }
 
     "keeps each day apart" in {

@@ -55,6 +55,33 @@ import scala.util.Try
 object Wiki {
   private[controllers] def shouldNotifyTelegramForPageSave(isMinorEdit: Boolean, viaApi: Boolean): Boolean =
     !isMinorEdit && !viaApi
+
+  /**
+   * What the editor opens with for a section's Edit link: the lines `lineStart` to `lineEnd`
+   * (exclusive) of the page, and the range in the page as stored -- or the whole page, when the
+   * range is missing, backwards or past the end.
+   *
+   * The link's numbers count the page's content lines, its `#!` lines left out, so the directive
+   * lines are added here. Every link has to count that way: a #!Paper page's and a month page's
+   * counted the directives too until 2026-11-21, and they were added twice (InterpreterBlockUnit
+   * renders a section's link and checks it opens that section).
+   */
+  def partialEdit(pageContent: String, lineStart: Option[Int], lineEnd: Option[Int]): (String, Option[(Int, Int)]) = {
+    val numDirectiveLines = models.PageContent(pageContent).directives.length
+    val partialRange = for {
+      start <- lineStart.filter(_ > 0).map(_ + numDirectiveLines)
+      end <- lineEnd.filter(_ > 0).map(_ + numDirectiveLines)
+      if end >= start
+    } yield (start, end)
+
+    val pageLines = pageContent.split("""\r\n|\n""", -1).toSeq
+    val partialRangeInBounds = partialRange.filter { case (_, end) => end <= pageLines.length + 1 }
+    val initialEditorText = partialRangeInBounds
+      .map { case (start, end) => pageLines.slice(start - 1, end - 1).mkString("\n") }
+      .getOrElse(pageContent)
+
+    (initialEditorText, partialRangeInBounds)
+  }
 }
 
 /**
@@ -279,25 +306,7 @@ controllerComponents: ControllerComponents,
   private def buildEditFormState(pageContent: String, request: RequestHeader): (String, Option[(Int, Int)]) = {
     val lineStart = request.getQueryString("lineStart").flatMap(v => scala.util.Try(v.toInt).toOption).filter(_ > 0)
     val lineEnd = request.getQueryString("lineEnd").flatMap(v => scala.util.Try(v.toInt).toOption).filter(_ > 0)
-
-    // URL의 줄 번호는 directives가 제거된 content 기준이므로 raw content에서 슬라이싱할 때 directive 줄 수만큼 보정
-    val numDirectiveLines = models.PageContent(pageContent).directives.length
-    val adjustedLineStart = lineStart.map(_ + numDirectiveLines)
-    val adjustedLineEnd = lineEnd.map(_ + numDirectiveLines)
-
-    val partialRange = for {
-      start <- adjustedLineStart
-      end <- adjustedLineEnd
-      if end >= start
-    } yield (start, end)
-
-    val pageLines = pageContent.split("""\r\n|\n""", -1).toSeq
-    val partialRangeInBounds = partialRange.filter { case (_, end) => end <= pageLines.length + 1 }
-    val initialEditorText = partialRangeInBounds
-      .map { case (start, end) => pageLines.slice(start - 1, end - 1).mkString("\n") }
-      .getOrElse(pageContent)
-
-    (initialEditorText, partialRangeInBounds)
+    Wiki.partialEdit(pageContent, lineStart, lineEnd)
   }
 
   private def renderNotFoundPage(name: String, isWritable: Boolean, pageFirstRevision: Option[PageWithoutContent], pageLastRevision: Option[Page])

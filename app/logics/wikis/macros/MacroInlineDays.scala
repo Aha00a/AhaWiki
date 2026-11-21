@@ -84,11 +84,11 @@ object MacroInlineDays extends TraitMacro {
       val body = bodyOf(p.content)
 
       lines += s"== [${p.name}] $weekday"
-      sources += InlinedSource(p.name, p.revision, 1, body.rawLineCount)
+      sources += InlinedSource(p.name, p.revision, 1, body.lineCount)
 
       oneLevelDeeper(body.lines.mkString("\n")).split("\n").zipWithIndex.foreach { case (line, index) =>
         lines += line
-        sources += InlinedSource(p.name, p.revision, body.firstRawLine + index, body.rawLineCount)
+        sources += InlinedSource(p.name, p.revision, body.firstLine + index, body.lineCount)
       }
     }
 
@@ -107,7 +107,7 @@ object MacroInlineDays extends TraitMacro {
    * which was safe only because no day page has ever opened with prose, and would have eaten
    * the first sentence of the one that did. Directives go through `PageContent`, which knows a
    * page may carry more than one of them — and both of those are lines the reader would count,
-   * so both move `firstRawLine`.
+   * so both moved `firstLine` -- until 2026-11-21, when the directives stopped counting (see `Body`).
    */
   def bodyOf(raw: String): Body = {
     val content = PageContent(raw)
@@ -115,17 +115,22 @@ object MacroInlineDays extends TraitMacro {
     val ownHeading = contentLines.headOption.exists(l => l.startsWith("=") || l.contains(s"[[${MacroDayHeader.name}"))
     Body(
       lines = if (ownHeading) contentLines.tail else contentLines,
-      firstRawLine = content.directives.size + (if (ownHeading) 1 else 0) + 1,
-      rawLineCount = raw.count(_ == '\n') + 1,
+      firstLine = (if (ownHeading) 1 else 0) + 1,
+      lineCount = contentLines.length,
     )
   }
 
   /**
    * @param lines        the body as it will be spliced in
-   * @param firstRawLine where `lines.head` sits in the page as stored, counting from 1
-   * @param rawLineCount how long the page as stored is
+   * Both count the page's content lines, its `#!` lines left out, as every edit link does: the
+   * edit screen adds the directive lines back (Wiki.buildEditFormState). Until 2026-11-21 they
+   * counted the page as stored, so a day page opening with a `#!read` line had its directives
+   * added twice -- each section's Edit opened lower than the section, the last one the whole page.
+   *
+   * @param firstLine where `lines.head` sits among the page's content lines, counting from 1
+   * @param lineCount how many content lines the page has
    */
-  case class Body(lines: Seq[String], firstRawLine: Int, rawLineCount: Int)
+  case class Body(lines: Seq[String], firstLine: Int, lineCount: Int)
 
   /**
    * The page's own headings, pushed one level down so they sit under the day's heading.
