@@ -268,11 +268,21 @@
             };
         }
 
+        // ISO 8601 in the reader's timezone, with its offset: 2026-11-21T10:57:46+09:00. The admin
+        // screens write the same fields the same way (formatDateTimeInClientTimezone in
+        // app/assets/js/admin/utils.js). That one stays apart because it is the admin bundle's and
+        // uses dayjs, which this page does not load. Until 2026-11-21 this was toLocaleString(), so
+        // the form followed the browser's language («2026. 11. 21. 오전 10:57:46»).
         function formatDate(value) {
             if (!value) return "-";
             const date = new Date(value);
             if (Number.isNaN(date.getTime())) return value;
-            return date.toLocaleString();
+            const pad = function (n) { return String(n).padStart(2, "0"); };
+            const offset = -date.getTimezoneOffset();
+            const sign = offset < 0 ? "-" : "+";
+            return date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate()) +
+                "T" + pad(date.getHours()) + ":" + pad(date.getMinutes()) + ":" + pad(date.getSeconds()) +
+                sign + pad(Math.floor(Math.abs(offset) / 60)) + ":" + pad(Math.abs(offset) % 60);
         }
 
         function escapeHtml(value) {

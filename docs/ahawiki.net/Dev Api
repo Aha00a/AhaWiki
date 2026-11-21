@@ -161,6 +161,8 @@ Account Settings에 API Key 관리 섹션을 추가했다.
 
 목록 조회에서는 plain text key를 반환하지 않고 `keyPrefix`만 보여준다.
 
+Created·Last Used 는 ISO 8601 로, 보는 사람의 시간대와 그 오프셋을 붙여 쓴다 — `2026-11-21T10:57:46+09:00`. Admin 의 API Keys 화면이 같은 칸을 이미 그렇게 쓰고 있었다(`formatDateTimeInClientTimezone`). 2026-11-21 전에는 브라우저의 `toLocaleString()` 이라 브라우저 언어에 따라 «2026. 11. 21. 오전 10:57:46» 처럼 나왔다. 같은 화면의 닉네임 신청 날짜도 같은 함수를 쓴다.
+
 이 화면은 Admin SPA가 아니라 '''위키 문서와 같은 껍데기'''를 쓴다. `Account/settings.scala.html`이 `_base` 레이아웃 안에서 `wikiContent` · `limitWidth`를 두르고, 표는 `wikiTableSimple`이다. Admin 화면(React · Mantine)과 다른 쪽을 고른 것이므로, 이 화면을 고칠 때 Admin 쪽 컴포넌트를 가져오면 톤이 어긋난다.
 
 세션 기반 내부 API:
