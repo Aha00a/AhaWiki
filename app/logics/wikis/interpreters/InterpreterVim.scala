@@ -110,6 +110,24 @@ object InterpreterVim extends TraitInterpreter with Logging {
     }
   }
 
+  /**
+   * How vi is run: as a program with its arguments, not through a shell. Until 2026-11-22 the same
+   * command line was written to `{md5}.sh` and run with `sh`, so a block left four files behind --
+   * the code, the script, vi's own HTML and the HTML the page reads -- and only the last was ever
+   * read again. Without the shell there is no quoting for anything to escape from; the syntax
+   * name is still restricted (syntaxName), because it is an Ex command's argument either way.
+   */
+  def viCommand(syntax: String, colorscheme: String, rawHtmlOut: File, textIn: File): Seq[String] = Seq(
+    "vi", "-T", "xterm",
+    "+set encoding=utf-8", s"+colorscheme $colorscheme", "+syntax on", "+set nonu", s"+set syntax=$syntax",
+    "+runtime! syntax/2html.vim", s"+wq! ${rawHtmlOut.getSlashBasedPath}", "+q!",
+    textIn.getSlashBasedPath,
+  )
+
+  /** What a working directory under the cache is called. The cleanup removes one left behind by a
+    * process that died while vi ran (CacheFileCleanupService). */
+  val WorkDirPrefix = "work-"
+
   private def buildCacheEntry(
     cacheDir: File,
     cacheFileHtml: File,
@@ -121,22 +139,43 @@ object InterpreterVim extends TraitInterpreter with Logging {
   )(implicit codec: Codec): Unit = {
     if (isCacheFileHtmlInvalid(cacheFileHtml)) {
       cacheDir.mkdirs()
-      val cacheFileText = new File(cacheDir, md5 + ".txt")
-      cacheFileText.writeAll(body)
-
-
-      val cacheFileSh = new File(cacheDir, md5 + ".sh")
-      val shellScript = s"""vi -T xterm +"set encoding=utf-8" +"colorscheme $colorscheme" +"syntax on" +"set nonu" +"set syntax=$syntax" +"runtime! syntax/2html.vim" +"wq! ${cacheFileHtmlRaw.getSlashBasedPath}" +q! ${cacheFileText.getSlashBasedPath} 2> /dev/null"""
-      logger.info(shellScript)
-      cacheFileSh.writeAll(shellScript)
-      //noinspection LanguageFeature
+      // vi's input and output live in a directory of their own, inside the cache so the finished
+      // file moves into place on the same file system, and the directory goes when this is done.
+      val workDir = java.nio.file.Files.createTempDirectory(cacheDir.toPath, WorkDirPrefix).toFile
       try {
-        Seq("sh", cacheFileSh.getPath) !!
+        val textIn = new File(workDir, "in.txt")
+        val rawHtmlOut = new File(workDir, cacheFileHtmlRaw.getName)
+        textIn.writeAll(body)
+        val command = viCommand(syntax, colorscheme, rawHtmlOut, textIn)
+        logger.info(command.mkString(" "))
+        try {
+          //noinspection LanguageFeature
+          command ! ProcessLogger(_ => (), _ => ())
+        } catch {
+          case e: RuntimeException => logger.error(e.toString)
+        }
+        writeCacheFileHtml(rawHtmlOut, new File(workDir, cacheFileHtml.getName), md5)
+        java.nio.file.Files.move(new File(workDir, cacheFileHtml.getName).toPath, cacheFileHtml.toPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+      } finally {
+        Option(workDir.listFiles()).toSeq.flatten.foreach(_.delete())
+        workDir.delete()
       }
-      catch {
-        case e:RuntimeException => logger.error(e.toString)
-      }
+    } else {
+      markUsed(cacheFileHtml)
+    }
+  }
 
+  /**
+   * An entry's modification time is when it was last drawn, at a day's grain: that is what the
+   * monthly cleanup reads to drop entries nothing has drawn for a year. The access time looked like
+   * it would do and did not -- anything that reads the directory sets it, and one read of every
+   * file on 2026-11-21 made all 7,043 entries look used that day.
+   */
+  def markUsed(cacheFileHtml: File, now: Long = System.currentTimeMillis()): Unit =
+    if (now - cacheFileHtml.lastModified() > 24L * 60 * 60 * 1000) cacheFileHtml.setLastModified(now)
+
+  private def writeCacheFileHtml(cacheFileHtmlRaw: File, cacheFileHtml: File, md5: String)(implicit codec: Codec): Unit = {
+    {
       if(cacheFileHtmlRaw.exists()) {
         val lines = Using(scala.io.Source.fromFile(cacheFileHtmlRaw))(_.getLines().toSeq)
         val style = lines.dropWhile(!_.startsWith("<style")).takeWhile(_ != "</style>")

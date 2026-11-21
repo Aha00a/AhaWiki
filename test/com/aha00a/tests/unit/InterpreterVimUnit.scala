@@ -50,21 +50,54 @@ object InterpreterVimUnit {
       test(InterpreterVim.Parser(s"#!Vim $name\n1234"), name, "1234", false)
     }
 
-    // And the script that is written for vi holds no part of a refused name. The .sh file is
-    // written before anything runs, so this reads the same on a machine with no sh or no vi.
-    val scriptDir = Files.createTempDirectory("vim-cache-script").toFile
-    try {
-      val hostileHtml = InterpreterVim.toHtmlString("#!Vim $(true)\nval a = 1\n", scriptDir)
-      val scripts = Option(scriptDir.listFiles()).toSeq.flatten.filter(_.getName.endsWith(".sh"))
-      assertEquals(scripts.size, 1)
-      val script = new String(Files.readAllBytes(scripts.head.toPath), "UTF-8")
-      assertEquals(script.contains("$("), false)
-      assertEquals(script.contains("""+"set syntax=" """), true)
-      assertEquals(hostileHtml.contains("""data-lang="""""), true)
-      assertEquals(hostileHtml.contains("$(true)"), false)
-    } finally {
-      Option(scriptDir.listFiles()).toSeq.flatten.foreach(_.delete())
-      scriptDir.delete()
+    // And the command vi is run with holds no part of a refused name. It is built from what the
+    // parser kept, so this reads the same on a machine with no vi.
+    locally {
+      val refused = InterpreterVim.Parser("#!Vim $(true)\nval a = 1\n")
+      val command = InterpreterVim.viCommand(refused.syntax, "ron", new File("out.html"), new File("in.txt"))
+      assertEquals(command.exists(_.contains("$(")), false)
+      assertEquals(command.contains("+set syntax="), true)
+      assertEquals(command.head, "vi")
+    }
+
+    // Drawing a block leaves at most the one file the page reads: no copy of the code, no script,
+    // no vi output, no working directory -- whether or not this machine has a vi. Until 2026-11-22
+    // every block left four files, and on ahawiki.net three of every four cache files were these.
+    locally {
+      val dir = Files.createTempDirectory("vim-cache-leftovers").toFile
+      try {
+        val hostileHtml = InterpreterVim.toHtmlString("#!Vim $(true)\nval a = 1\n", dir)
+        assertEquals(hostileHtml.contains("""data-lang="""""), true)
+        assertEquals(hostileHtml.contains("$(true)"), false)
+        val left = Option(dir.listFiles()).toSeq.flatten.map(_.getName)
+        assertEquals(left.forall(_.matches("[0-9a-f]{32}\\.html")), true)
+      } finally {
+        Option(dir.listFiles()).toSeq.flatten.foreach(_.delete())
+        dir.delete()
+      }
+    }
+
+    // An entry that is drawn again is marked as used, at a day's grain, for the cleanup to read.
+    locally {
+      val dir = Files.createTempDirectory("vim-cache-used").toFile
+      try {
+        val raw = "#!Vim scala\nval used = 1\n"
+        val md5 = java.security.MessageDigest.getInstance("MD5").digest(("ron" + raw).getBytes).map("%02x".format(_)).mkString
+        val entry = InterpreterVim.getCacheFileHtml(dir, md5)
+        Files.write(entry.toPath, ("<style>" + ("x" * 400) + "</style><pre>val used = 1</pre>").getBytes("UTF-8"))
+        val longAgo = System.currentTimeMillis() - 400L * 24 * 60 * 60 * 1000
+        entry.setLastModified(longAgo)
+        InterpreterVim.toHtmlString(raw, dir)
+        assertEquals(entry.lastModified() > longAgo + 300L * 24 * 60 * 60 * 1000, true)
+        // Within a day it is left alone, so a page drawn often does not write to the disk each time.
+        val recently = System.currentTimeMillis() - 60L * 60 * 1000
+        entry.setLastModified(recently)
+        InterpreterVim.toHtmlString(raw, dir)
+        assertEquals(entry.lastModified() / 1000, recently / 1000)
+      } finally {
+        Option(dir.listFiles()).toSeq.flatten.foreach(_.delete())
+        dir.delete()
+      }
     }
 
     // A cache directory that cannot be written -- here a plain file standing where the directory

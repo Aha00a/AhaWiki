@@ -116,8 +116,11 @@ class ApplicationLifecycleHook @Inject()(
   // change to the instance that did not handle it; the six-hourly clear that used to be here was
   // the only thing that did, six hours late.
 
-  // 캐시 파일 정리 스케쥴러: 서버 로컬 타임존 기준 매주 1회(기본 7일 간격) 만료된 캐시 파일을 정리합니다.
-  scheduleWithDynamicDelay("CacheFileCleanup", 15 seconds, () => 7.days, () => {
+  // Vim cache cleanup, once a month (owner's choice, 2026-11-22). This asks daily, and the service
+  // runs only when its marker in the cache directory says a month has passed -- a deploy restarts
+  // this process nearly every day, so a 30-day timer here would never fire. What it removes is in
+  // CacheFileCleanupService.
+  scheduleWithDynamicDelay("CacheFileCleanup", 1.hour, () => 1.day, () => {
     cacheFileCleanupService.cleanupAllExpiredCaches()
   })
 

@@ -10,7 +10,7 @@ AhaWikiCacheMemoryApiLinks	인-메모리	ConcurrentHashMap	10분 주기 초기�
 AhaWikiCacheMemoryPermission	인-메모리	ConcurrentHashMap	`AccessDecisionMaxAge` 지나면 다시 읽음	사이트별 권한 목록
 AhaWikiCacheMemorySiteAdmin	인-메모리	ConcurrentHashMap	`AccessDecisionMaxAge` 지나면 다시 읽음	사이트별 관리자 목록
 CacheCrawler	DB 캐시	MySQL	180일 TTL	외부 URL 메타데이터
-InterpreterVim	파일 캐시	cache/Vim/	7일마다, 1년 넘게 안 읽은 파일만 삭제	Vim 문법 강조 결과
+InterpreterVim	파일 캐시	cache/Vim/	한 달에 한 번, 1년 넘게 안 그린 항목 삭제	Vim 문법 강조 결과
 ]]]
 
 == AhaWikiCache
@@ -178,10 +178,16 @@ Vim을 사용한 문법 강조(syntax highlight) 결과를 파일 시스템에 �
 
  * 캐시 위치: `cache/Vim/`
  * 캐시 키: `MD5(colorscheme + 원본 코드)`
- * 저장 파일: 블록마다 넷 — `{md5}.txt`·`{md5}.sh`·`{md5}.raw.html`·`{md5}.html`(최종 HTML). 읽는 것은 `.html` 뿐이다
- * `{md5}.sh` 는 `vi` 를 띄우는 명령줄이고, 글쓴이가 적은 것 중에는 언어 이름만 들어간다. 그 이름은 허용한 글자만 받는다 — 2026-11-21 전에는 쓴 그대로 들어가서, 로그인 없이도 서버에서 명령을 실행할 수 있었다. 자세한 것은 [InterpreterVim] '''언어 이름은 허용한 글자만'''
+ * 저장 파일: 블록마다 `{md5}.html` 하나.
+  * '''2026-11-22 전에는 넷이었다''' — vi 에 넘긴 코드(`.txt`), vi 를 띄운 셸 스크립트(`.sh`), vi 가 쓴 HTML(`.raw.html`), 그리고 읽는 `.html`. 앞의 셋은 다시 읽히지 않는데 지우지도 않아서, 운영의 28,345개 파일 가운데 21,302개가 그것이었다(2026-11-22 집계, 120MB 중 내용은 28MB 이고 나머지는 작은 파일마다 드는 4KB 블록). 편집 중 미리보기도 블록을 그리므로, 고치는 동안의 모든 중간 모습이 항목을 하나씩 남긴다.
+  * 지금은 vi 를 캐시 안의 `work-…` 임시 디렉터리에서 돌리고, 완성된 `.html` 만 옮겨 넣은 뒤 그 디렉터리를 지운다. 셸을 거치지 않고 `vi` 를 인자와 함께 바로 띄운다(`InterpreterVim.viCommand`).
+ * `vi` 의 인자에 글쓴이가 적은 것 중에는 언어 이름만 들어간다. 그 이름은 허용한 글자만 받는다 — 2026-11-21 전에는 쓴 그대로 셸 스크립트에 들어가서, 로그인 없이도 서버에서 명령을 실행할 수 있었다. 자세한 것은 [InterpreterVim] '''언어 이름은 허용한 글자만'''
  * `GET /dev/deleteVimCache?md5=` 는 그 `.html` 하나를 지운다. 캐시가 모든 사이트의 것이라 전역 관리자만 부를 수 있고, md5 는 32자리 16진수여야 한다. 2026-09-15 까지는 누구나 부를 수 있었고 md5 를 그대로 파일 경로에 넣어서, `md5=../..` 로 서비스가 쓸 수 있는 `.html` 파일을 아무거나 지울 수 있었다
- * 주기적 정리: 7일마다 한 번, 마지막 접근이 1년 넘은 파일만 최대 1,000개 지운다(`CacheFileCleanupService`). 전체를 비우지 않는다
+ * '''정리는 한 달에 한 번, 1년 넘게 안 그린 항목만'''(`CacheFileCleanupService`, 2026-11-22 소유자 결정). 지워진 블록은 다음에 그릴 때 vi 를 한 번 더 돌리는 것이 대가의 전부다.
+  * «언제 마지막으로 그렸나» 는 `.html` 의 수정 시각이다. 캐시에서 꺼내 쓸 때 그 시각을 지금으로 바꾼다(`InterpreterVim.markUsed`) — 하루에 한 번까지만, 자주 보는 페이지가 그릴 때마다 디스크에 쓰지 않게.
+  * 접근 시각(atime)은 쓰지 않는다. 2026-11-22 전에는 이것을 읽었는데, 무엇이든 파일을 읽으면 바뀐다 — 2026-11-21 에 디렉터리 전체를 한 번 읽은 것으로 7,043개 항목이 모두 그날 쓴 것처럼 보였고, 그 전에도 1년이 넘은 파일이 있었지만 지워진 적이 없었다.
+  * «한 달에 한 번» 은 캐시 디렉터리의 `.last-cleanup` 파일 수정 시각으로 센다. 배포가 거의 매일 프로세스를 다시 띄우므로, 프로세스 안의 30일 타이머로는 한 달에 닿지 못한다. 스케줄은 매일 묻고, 한 달이 지났을 때만 돈다.
+  * 같이 지우는 것: 2026-11-22 전의 `.txt`·`.sh`·`.raw.html`(새 것이든 아니든), 하루 넘은 `work-…` 디렉터리(vi 가 도는 동안 프로세스가 죽으면 남는다). 한 번에 지우는 개수 상한(1,000)은 없앴다 — 첫 정리에서 지울 부산물이 2만 개가 넘는다.
 
 == AhaWikiCacheMemoryTrieMap
 
@@ -215,7 +221,7 @@ AhaWikiCacheMemoryApiLinks	다음 `ApiLinksCacheClear` 까지(최대 10분)
 SiteDomainCacheRefresh	5초	1시간	도메인-사이트 캐시 전체 갱신
 ApiLinksCacheClear	10분	10분	링크 캐시 전체 삭제
 ahaWikiCacheMemoryApiLinks	0	5분	이 인스턴스의 링크 캐시 현황을 Redis 스냅샷에 기록
-CacheFileCleanup	15초	7일	Vim 파일 캐시 정리
+CacheFileCleanup	1시간	1일	Vim 파일 캐시 정리 — 지난 정리가 한 달 전일 때만 실제로 돈다
 CrawlerCacheCleanup	10초	12시간	만료된 크롤러 캐시 DB 삭제
 deleteExpired	10~30분 랜덤	10~30분 랜덤	로그 테이블 만료 행 삭제 — 기간은 ["Dev Database"] 참조
 Calculate	20초~1분 랜덤	1분~1시간 랜덤	사이트 하나를 골라 `PageMeta` 행이 없는 페이지 최대 10개를 계산. 이미 계산된 페이지는 다시 돌리지 않는다(그 분기는 `if(false)` 로 꺼져 있다)
