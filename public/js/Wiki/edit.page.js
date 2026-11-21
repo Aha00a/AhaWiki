@@ -1964,7 +1964,29 @@ function editText(key) {
                     });
             }
 
+            // The two upload routes share one body limit. A file larger than it is refused before
+            // it is sent: otherwise the whole file goes up first and the answer is the server's 413
+            // page, which the alert used to print as raw HTML. A file just under the limit can still
+            // be refused, because the form around it counts too, so a 413 says the same sentence.
+            function uploadTooLargeText() {
+                return editText('upload.tooLarge').replace('{max}', formatFileSize(AhaWikiEditConfig.maxUploadBytes));
+            }
+
+            function refuseIfTooLarge(failedKey, file) {
+                if (!AhaWikiEditConfig.maxUploadBytes || !file || file.size <= AhaWikiEditConfig.maxUploadBytes)
+                    return false;
+                alert(editText(failedKey) + ' ' + (file.name || '') + ' (' + formatFileSize(file.size) + ')\n' + uploadTooLargeText());
+                return true;
+            }
+
+            function uploadFailedText(failedKey, jqXHR) {
+                const reason = jqXHR.status === 413 ? uploadTooLargeText() : (jqXHR.responseText || jqXHR.statusText);
+                return editText(failedKey) + ' ' + reason;
+            }
+
             function uploadFile(file) {
+                if (refuseIfTooLarge('upload.fileFailed', file))
+                    return;
                 const uploadId = Date.now() + '-' + Math.random().toString(36).slice(2);
                 uploadingMap.set(uploadId, {
                     originalFilename: file.name,
@@ -2017,7 +2039,7 @@ function editText(key) {
                         uploadingMap.set(uploadId, uploading);
                         renderAttachmentList();
                     }
-                    alert(editText('upload.fileFailed') + ' ' + (jqXHR.responseText || jqXHR.statusText));
+                    alert(uploadFailedText('upload.fileFailed', jqXHR));
                 });
             }
 
@@ -2073,6 +2095,8 @@ function editText(key) {
             });
 
             $("html").pasteImageReader(function(results) {
+                if (refuseIfTooLarge('upload.imageFailed', results.file))
+                    return;
                 const formData = new FormData();
                 formData.append('csrfToken', $('[name=csrfToken]').val());
                 formData.append('pageName', AhaWikiEditConfig.pageName);
@@ -2091,7 +2115,7 @@ function editText(key) {
                         alert(editText('upload.imageFailed'));
                     }
                 }).fail(function (jqXHR) {
-                    alert(editText('upload.imageFailed') + ' ' + (jqXHR.responseText || jqXHR.statusText));
+                    alert(uploadFailedText('upload.imageFailed', jqXHR));
                 });
             });
 

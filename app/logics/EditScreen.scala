@@ -92,6 +92,7 @@ object EditScreen extends TextTable("EditScreen", Map(
     "attachment.listFailed" -> Text("첨부 파일 목록을 읽지 못했습니다.", "Attachment list load failed."),
     "upload.fileFailed" -> Text("파일을 올리지 못했습니다.", "File upload failed."),
     "upload.imageFailed" -> Text("그림을 올리지 못했습니다.", "Image upload failed."),
+    "upload.tooLarge" -> Text("한 번에 올릴 수 있는 크기는 {max} 까지입니다.", "An upload can be at most {max}."),
     "save.noRecaptcha" -> Text(
       "reCAPTCHA 토큰을 받지 못해 저장하지 않았습니다. 무언가 reCAPTCHA 를 막고 있을 수 있습니다.",
       "Could not get a reCAPTCHA token, so the page was not saved. Something may be blocking reCAPTCHA."),

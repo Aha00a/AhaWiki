@@ -32,6 +32,9 @@
                     schemaPropertyNames: "@routes.Api.schemaPropertyNames",
                     pageNames: "@routes.Api.pageNames"
                 },
+                // The body limit both upload routes enforce (AttachmentLogic.MaxUploadRequestBytes),
+                // so a file that cannot fit is refused here rather than after it has been sent.
+                maxUploadBytes: @logics.AttachmentLogic.MaxUploadRequestBytes,
                 // The script's words in the reader's language (EditScreen.scriptTexts).
                 text: @Html(logics.HtmlJson.stringify(play.api.libs.json.Json.toJson(logics.EditScreen.scriptTexts(screenLanguage))))
             };
