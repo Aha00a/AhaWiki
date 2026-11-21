@@ -1017,6 +1017,16 @@
 		}
 	}
 
+	// The code block's Copy button. Its other styles are set by js.js; its display is here, so the
+	// page prints without it. Until 2026-11-21 js.js set display inline too, and every code block
+	// printed with a faint «Copy» pill in its corner.
+	.InterpreterRenderCopyButton {
+		display: inline-flex;
+		@media print {
+			display: none;
+		}
+	}
+
 	.header, .footer, .flash,
 	.generatedSection,
 	.InterpreterRenderEditLink,

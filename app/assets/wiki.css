@@ -3579,6 +3579,9 @@
   display: none;
 }
 @media print {
+  .AhaWiki .tablesorter .tablesorter-filter-row {
+    display: none;
+  }
   .AhaWiki .tablesorter .tablesorter-header {
     padding-right: 0;
     cursor: default;
@@ -3589,6 +3592,14 @@
 }
 .AhaWiki .wikiHistory table {
   margin-top: 20px;
+}
+.AhaWiki .InterpreterRenderCopyButton {
+  display: inline-flex;
+}
+@media print {
+  .AhaWiki .InterpreterRenderCopyButton {
+    display: none;
+  }
 }
 @media print {
   .AhaWiki .header,

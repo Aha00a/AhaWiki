@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 copyButton.style.position = 'absolute';
                 copyButton.style.top = '6px';
                 copyButton.style.right = '8px';
-                copyButton.style.display = 'inline-flex';
+                // display is the stylesheet's (wiki.less), so print can hide the button without !important.
                 copyButton.style.alignItems = 'center';
                 copyButton.style.justifyContent = 'center';
                 copyButton.style.width = '64px';

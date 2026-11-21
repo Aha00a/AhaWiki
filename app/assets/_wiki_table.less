@@ -308,6 +308,12 @@
 }
 
 @media print {
+	// The filter inputs under the header row are for the screen. Until 2026-11-21 every sortable
+	// table printed an empty row of input boxes. A table printed while filtered still prints only
+	// the rows it shows; nothing on paper says so.
+	.tablesorter .tablesorter-filter-row {
+		display: none;
+	}
 	.tablesorter .tablesorter-header {
 		padding-right: 0;
 		cursor: default;
