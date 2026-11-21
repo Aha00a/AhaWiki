@@ -121,6 +121,19 @@ object InterpreterWiki extends TraitInterpreterOfPageContent {
     private val regexDivEnd: Regex = """^\s*</div>\s*$""".r
     private val regexSpanStart: Regex = """^\s*<span(?:\s+([^>]*))?>\s*$""".r
     private val regexSpanEnd: Regex = """^\s*</span>\s*$""".r
+    // While a page is read, every code span and macro stands as a placeholder key; their HTML is
+    // put back at the end, wherever the key ended up. A heading's anchor is built from its title in
+    // between, so it has to turn the keys into words first: a code span into its text, a macro
+    // into nothing. Until 2026-11-21 it did not, and the HTML was put back inside the id, the
+    // wrapper class and the contents link -- `#<code>JsonResults</code>` for `=== `JsonResults``,
+    // and an id attribute cut short by a quote in a code span or by any macro.
+    private val regexPlaceholder: Regex = """[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}""".r
+    private def placeholdersAsText(s: String): String = regexPlaceholder.replaceAllIn(s, m => Regex.quoteReplacement(
+      extractConvertInjectBackQuote.extracted(m.matched).map(html => org.jsoup.Jsoup.parse(html).text())
+        .orElse(extractConvertInjectMacro.extracted(m.matched).map(_ => ""))
+        .getOrElse(m.matched)
+    )).replaceAll("""\s+""", " ")
+
     private def previewLineStartAttr(lineNumber: Int): String =
       if (wikiContext.renderingMode == RenderingMode.Preview) s""" data-line-start="$lineNumber"""" else ""
 
@@ -219,7 +232,7 @@ object InterpreterWiki extends TraitInterpreterOfPageContent {
       val headingId = headingAttributes.collectFirst { case m if m.group(1) == "#" => m.group(2) }
       val rawHeadingClasses = headingAttributes.collect { case m if m.group(1) == "." => m.group(2) }
       val headingClasses = rawHeadingClasses.map("Heading" + _)
-      val idNotEmpty = headingId.getOrElse(titleForToc.replaceAll("""\s+""", "-"))
+      val idNotEmpty = headingId.getOrElse(placeholdersAsText(titleForToc).trim.replaceAll("""\s+""", "-"))
       val isGeneratedHeading = rawHeadingClasses.contains("generated")
       val wrapperClass = Seq("HeadingWrapper" + idNotEmpty, if (isInitiallyCollapsed) "sectionCollapsed" else "", if (isGeneratedHeading) "generatedSection" else "").filter(_.nonEmpty).mkString(" ")
       val normalizedHeadingClasses = if (isGeneratedHeading) headingClasses :+ "generated" else headingClasses

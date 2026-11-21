@@ -22,6 +22,22 @@ object InterpreterWikiUnit {
     assertEquals(
       InterpreterWiki.linksAsText("""[KR|대한민국] [CSharp C#] [wiki:FrontPage] [wiki:FrontPage 대문] ["Dev Api"] ["Dev Api" API] [https://aha00a.com 홈] [#a 절] \[KR|x] http://aha00a.com"""),
       """대한민국 CSharp C# FrontPage 대문 Dev Api API 홈 절 \[KR|x] http://aha00a.com""")
+    // A heading's anchor is its words, a code span's text included and a macro's HTML left out.
+    // Until 2026-11-21 it was built while code spans and macros were still placeholders, which
+    // were then filled in inside the attributes: `=== `JsonResults`` got the anchor
+    // `#<code>JsonResults</code>`, and a quote in the span or any macro ended the id attribute.
+    locally {
+      val code = InterpreterWiki.toHtmlString("=== `JsonResults` ===")
+      assert(code.contains("""<h3 id="JsonResults" class="">"""), code)
+      assert(code.contains("""<div class="HeadingWrapperJsonResults""""), code)
+      assert(code.contains("<code>JsonResults</code></h3>"), code)
+      val quoted = InterpreterWiki.toHtmlString("""== `git commit -m "x"` ==""")
+      assert(quoted.contains("""<h2 id="git-commit--m-&quot;x&quot;" class="">"""), quoted)
+      assert(quoted.contains("""<code>git commit -m "x"</code></h2>"""), quoted)
+      val withMacro = InterpreterWiki.toHtmlString("== [[Kbd(Ctrl S)]] 저장 ==")
+      assert(withMacro.contains("""<h2 id="저장" class="">"""), withMacro)
+      assert(withMacro.contains("""<kbd>Ctrl</kbd>"""), withMacro)
+    }
     val pipedHeadingHtml = InterpreterWiki.toHtmlString("== [KR|대한민국] ==")
     assert(pipedHeadingHtml.contains("""<div class="HeadingWrapper대한민국">"""))
     assert(pipedHeadingHtml.contains("""<h2 id="대한민국" class="">"""))
