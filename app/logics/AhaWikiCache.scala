@@ -185,7 +185,6 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     implicit val ds = (database, site)
     PageMeta.invalidateLists()
     Footer.invalidate()
-    Config.invalidate()
   }
 
   object Footer extends CacheEntityWithContextSite[String] {
@@ -206,13 +205,6 @@ class AhaWikiCache @Inject()(syncCacheApi: SyncCacheApi, environment: Environmen
     html
       .replaceAll("""\sdata-edit-link="[^"]*"""", "")
       .replaceAll("""\sdata-edit-title="[^"]*"""", "")
-  }
-
-  object Config extends CacheEntityWithContextSite[String] {
-    override def orElse()(implicit contextSite: ContextSite): String = contextSite.withConnection { implicit connection =>
-      implicit val site: Site = contextSite.site
-      models.tables.Page.selectLastRevision(".config").map(_.content).getOrElse("")
-    }
   }
 
   object UserProfileImageUrl extends CacheEntity[Option[String], (Database, Site, String)] {

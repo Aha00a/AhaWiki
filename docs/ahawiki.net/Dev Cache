@@ -44,20 +44,13 @@ TTL 이 지나면 다음 요청이 그 자리에서 다시 계산합니다(호�
 
 === 캐시 항목
 
-캐시 키는 각 객체의 `key()` 가 만듭니다. 사이트 부분은 `site.seq` 가 아니라 `Site` case class 의 toString 전체라, 사이트 이름이나 도메인을 바꾸면 키도 바뀝니다. `Header` 항목은 2026-05-31 에 사이트 헤더와 함께 없어졌습니다.
+캐시 키는 각 객체의 `key()` 가 만듭니다. 사이트 부분은 `site.seq` 가 아니라 `Site` case class 의 toString 전체라, 사이트 이름이나 도메인을 바꾸면 키도 바뀝니다. `Header` 항목은 2026-05-31 에 사이트 헤더와 함께 없어졌습니다. `.config` 페이지 내용을 담던 `Config` 항목은 2026-11-21 에 없앴습니다 — 마지막으로 읽던 것이 2026-05-19 에 없앤 Google Analytics 설정이었고, 그 뒤로는 저장할 때 비우기만 했습니다. HOCON 으로 읽던 `Hocon` 클래스도 함께 없앴습니다. `.config` 페이지가 남아 있는 사이트가 있어도 아무것도 읽지 않습니다.
 
 ==== Footer
 
  * 캐시 키: `Footer$:Site(...)` — `getSimpleName` 과 `Site` 의 toString
  * 저장 값: `.footer` 페이지 렌더링 결과 (HTML 문자열)
  * TTL: 개발 모드 1분, 프로덕션 1시간
- * 무효화: `invalidateSiteCaches()` 호출 시
-
-==== Config
-
- * 캐시 키: `Config$:Site(...)`
- * 저장 값: `.config` 페이지 내용 (설정 저장소)
- * TTL: 개발 모드 1분, 프로덕션 5분 (`CacheEntity` 기본값)
  * 무효화: `invalidateSiteCaches()` 호출 시
 
 ==== UserProfileImageUrl

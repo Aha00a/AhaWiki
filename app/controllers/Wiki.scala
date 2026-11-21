@@ -586,7 +586,6 @@ controllerComponents: ControllerComponents,
 
               name match {
                 case ".footer" => ahaWikiCache.Footer.invalidate()
-                case ".config" => ahaWikiCache.Config.invalidate()
                 case _ => // do nothing
               }
 

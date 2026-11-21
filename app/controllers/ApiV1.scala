@@ -337,7 +337,6 @@ class ApiV1 @Inject()(
                   crossInstanceBus.publishPageUpdated(site.seq, name, nextRevision, user.nickname, now, None)
                   name match {
                     case ".footer" => ahaWikiCache.Footer.invalidate()
-                    case ".config" => ahaWikiCache.Config.invalidate()
                     case _ => // do nothing
                   }
                   implicit val tupleDatabaseSite: (Database, Site) = (database, site)
