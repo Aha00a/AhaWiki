@@ -40,8 +40,10 @@ test('a notification gets no answer, and an unknown request gets a method-not-fo
 
 test('without the write switch the agent is not offered a way to change a page', async () => {
     const names = async write => (await serverWith({ write }).rpc('tools/list')).result.tools.map(t => t.name);
-    assert.ok(!(await names(false)).includes('ahawiki_save_page'));
-    assert.ok((await names(true)).includes('ahawiki_save_page'));
+    for (const tool of ['ahawiki_save_page', 'ahawiki_rename_page', 'ahawiki_delete_page']) {
+        assert.ok(!(await names(false)).includes(tool), tool);
+        assert.ok((await names(true)).includes(tool), tool);
+    }
     assert.ok((await names(false)).includes('ahawiki_search'), 'the read tools are there either way');
 });
 
@@ -99,6 +101,27 @@ test('a save with no revision, or no comment, is refused before it reaches the w
     const noComment = (await rpc('tools/call', { name: 'ahawiki_save_page', arguments: { name: 'Notes', text: 't', revision: 1, comment: '  ' } })).result;
     assert.equal(noComment.isError, true);
     assert.equal(calls.length, 0, 'nothing was sent');
+});
+
+test('a delete sends the revision it read and the confirmation, and needs a revision first', async () => {
+    const { rpc, calls } = serverWith({ write: true, answers: { 'DELETE /api/v1/page/ToDo%20A': { ok: true, name: 'ToDo A', deletedRevision: 7 } } });
+    const noRevision = (await rpc('tools/call', { name: 'ahawiki_delete_page', arguments: { name: 'ToDo A' } })).result;
+    assert.equal(noRevision.isError, true);
+    assert.equal(calls.length, 0, 'nothing was sent without a revision');
+    const { result } = await rpc('tools/call', { name: 'ahawiki_delete_page', arguments: { name: 'ToDo A', revision: 7 } });
+    assert.deepEqual(calls[0], { method: 'DELETE', path: '/api/v1/page/ToDo%20A', body: { revision: 7, confirm: true } });
+    assert.match(result.content[0].text, /Deleted ToDo A at revision 7/);
+});
+
+test('a rename sends the revision and a comment, and refuses without either', async () => {
+    const { rpc, calls } = serverWith({ write: true, answers: { 'POST /api/v1/rename': { name: 'Old', newName: 'New', revision: 3 } } });
+    for (const args of [{ name: 'Old', newName: 'New', comment: 'c' }, { name: 'Old', newName: 'New', revision: 3, comment: ' ' }, { name: 'Old', newName: ' ', revision: 3, comment: 'c' }]) {
+        assert.equal((await rpc('tools/call', { name: 'ahawiki_rename_page', arguments: args })).result.isError, true);
+    }
+    assert.equal(calls.length, 0, 'nothing was sent');
+    const { result } = await rpc('tools/call', { name: 'ahawiki_rename_page', arguments: { name: 'Old', newName: 'New', revision: 3, comment: 'clearer name' } });
+    assert.deepEqual(calls[0].body, { name: 'Old', newName: 'New', revision: 3, comment: 'clearer name' });
+    assert.match(result.content[0].text, /Renamed Old to New/);
 });
 
 test('a failure in a tool comes back for the model to read, not as a protocol error', async () => {

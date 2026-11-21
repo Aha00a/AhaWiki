@@ -4,7 +4,7 @@
 //
 // Where the wiki is comes from the environment, because this repository is public and names no
 // host. The key is the user's own API key (Dev ApiKey): the agent sees what that user can see, and
-// writes only what that user may write. `AHAWIKI_MCP_WRITE=1` is what adds the write tool; without
+// writes only what that user may write. `AHAWIKI_MCP_WRITE=1` is what adds the write tools (save, rename, delete); without
 // it the agent has no way to change a page, whatever the key could do.
 //
 // Why this exists and what it leaves out is in the wiki page Dev Mcp.
@@ -113,6 +113,48 @@ export function wikiTools({ call, write }) {
         if (!comment || !String(comment).trim()) throw new Error("comment is required: say what changed.");
         const saved = await call("POST", `/api/v1/page/${encode(name)}`, { revision, text, comment, minorEdit: minorEdit ?? true });
         return `Saved ${saved.name} as revision ${saved.revision}.`;
+      },
+    });
+    // Delete and rename were left out until 2026-11-22 and are here by the owner's decision of that
+    // day; Dev Mcp says what they still cost. Both need the revision just read, as a save does.
+    tools.push({
+      name: "ahawiki_rename_page",
+      description: "Rename a page. The old name keeps a redirect to the new one, so links to it still arrive. `revision` must be the one ahawiki_read_page returned; if the page changed since, nothing is renamed. Refused if a page already has the new name. Renaming back later is refused too, by that redirect, until it is deleted.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "The page's current exact name." },
+          newName: { type: "string", description: "The name it should have." },
+          revision: { type: "number", description: "The revision you read." },
+          comment: { type: "string", description: "Why, for the page history." },
+        },
+        required: ["name", "newName", "revision", "comment"],
+      },
+      async run({ name, newName, revision, comment }) {
+        if (!Number.isInteger(revision)) throw new Error("revision is required: read the page first, and pass the revision it reported.");
+        if (!comment || !String(comment).trim()) throw new Error("comment is required: say why.");
+        if (!newName || !String(newName).trim()) throw new Error("newName is required.");
+        const renamed = await call("POST", "/api/v1/rename", { name, newName, revision, comment });
+        return `Renamed ${renamed.name} to ${renamed.newName}; ${renamed.name} now redirects there.`;
+      },
+    });
+    tools.push({
+      name: "ahawiki_delete_page",
+      description: "Delete a page. It is kept with all its revisions and attachments, but only a site admin can restore it, so check first that nothing still needs it: ahawiki_backlinks lists the pages that link to it. `revision` must be the one ahawiki_read_page returned; if the page changed since, nothing is deleted.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "The page's exact name." },
+          revision: { type: "number", description: "The revision you read." },
+        },
+        required: ["name", "revision"],
+      },
+      async run({ name, revision }) {
+        if (!Number.isInteger(revision)) throw new Error("revision is required: read the page first, and pass the revision it reported.");
+        // The API asks for confirm so that a request cannot delete by accident; calling this tool,
+        // with the revision it read, is that confirmation.
+        const deleted = await call("DELETE", `/api/v1/page/${encode(name)}`, { revision, confirm: true });
+        return `Deleted ${deleted.name} at revision ${deleted.deletedRevision}. A site admin can restore it from Deleted Pages.`;
       },
     });
   }
