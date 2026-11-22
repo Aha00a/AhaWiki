@@ -1208,6 +1208,16 @@
 			&.DayHeader {
 				--wiki-indent-body: 0px;
 			}
+			// A month page's days are sections of that page, headings and body, not one block of
+			// body: the wrapper takes no indent and what is in it keeps the page's. Not the variable
+			// as above -- the sections inside inherit it.
+			&.InlineDays {
+				margin-left: 0;
+				> * {
+					--wiki-indent-body: inherit;
+					--wiki-indent-list: inherit;
+				}
+			}
 		}
 	}
 

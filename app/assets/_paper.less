@@ -64,7 +64,8 @@
 					box-sizing: border-box;
 					max-width: calc(100% - var(--wiki-indent-body, 30px));
 				}
-				> .Macro.BlockMacro {
+				// Not InlineDays: its days are sections (wiki.less), and this would outweigh that rule.
+				> .Macro.BlockMacro:not(.InlineDays) {
 					margin-left: var(--wiki-indent-body, 30px);
 				}
 			}

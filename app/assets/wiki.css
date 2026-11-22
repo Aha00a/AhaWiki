@@ -2444,9 +2444,9 @@
   box-sizing: border-box;
   max-width: calc(100% - var(--wiki-indent-body, 30px));
 }
-.AhaWiki .paperContent .page .pageContent > div > .Macro.BlockMacro,
-.AhaWiki .paperContent .page .pageContent > div > div > .Macro.BlockMacro,
-.AhaWiki .paperContent .page .pageContent > div > div > div > .Macro.BlockMacro {
+.AhaWiki .paperContent .page .pageContent > div > .Macro.BlockMacro:not(.InlineDays),
+.AhaWiki .paperContent .page .pageContent > div > div > .Macro.BlockMacro:not(.InlineDays),
+.AhaWiki .paperContent .page .pageContent > div > div > div > .Macro.BlockMacro:not(.InlineDays) {
   margin-left: var(--wiki-indent-body, 30px);
 }
 .AhaWiki .paperContent .page.pageOverflow {
@@ -3729,6 +3729,13 @@
 }
 .AhaWiki .Macro.BlockMacro.DayHeader {
   --wiki-indent-body: 0px;
+}
+.AhaWiki .Macro.BlockMacro.InlineDays {
+  margin-left: 0;
+}
+.AhaWiki .Macro.BlockMacro.InlineDays > * {
+  --wiki-indent-body: inherit;
+  --wiki-indent-list: inherit;
 }
 .AhaWiki .WikiColumns {
   padding-top: 15px;
