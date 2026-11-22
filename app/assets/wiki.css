@@ -3727,6 +3727,9 @@
   --wiki-indent-body: var(--wiki-contained-indent-body, 0px);
   --wiki-indent-list: var(--wiki-contained-indent-list, 10px);
 }
+.AhaWiki .Macro.BlockMacro.DayHeader {
+  --wiki-indent-body: 0px;
+}
 .AhaWiki .WikiColumns {
   padding-top: 15px;
   padding-bottom: 5px;

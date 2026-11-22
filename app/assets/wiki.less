@@ -1202,6 +1202,12 @@
 				--wiki-indent-body: var(--wiki-contained-indent-body, 0px);
 				--wiki-indent-list: var(--wiki-contained-indent-list, 10px);
 			}
+			// A day page's title is a heading, not body, so the body's indent is none here. It is
+			// the variable rather than margin-left because #!Paper indents block macros with a more
+			// specific rule of its own, and both read this.
+			&.DayHeader {
+				--wiki-indent-body: 0px;
+			}
 		}
 	}
 
