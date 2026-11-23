@@ -797,9 +797,9 @@
 
 		// Smaller headings on a phone (2026-11-23). At the wide screen's sizes an h2 was 32px on a
 		// 390px screen and an ordinary title such as «이런 사람에게 좋습니다» took two lines.
-		// Here and not in the `@media @widthTablet { .commonAhaWiki { … } }` below: that block
-		// matches no element -- .commonAhaWiki is a mixin, not a class anything carries -- and
-		// what it holds has never applied.
+		// Here, under .wikiContent: a `@media @widthTablet { .commonAhaWiki { … } }` block that
+		// stood below from 2026-03-26 matched no element -- .commonAhaWiki is a mixin, not a class
+		// anything carries -- and was removed on 2026-11-23 rather than revived (Dev Less).
 		@media @widthTablet {
 			h1 { font-size: 1.75em; }
 			h2 { font-size: 1.45em; }
@@ -807,44 +807,6 @@
 			h4 { font-size: 1.1em; }
 			h5 { font-size: 1em; }
 			h6 { font-size: .9em; }
-		}
-	}
-
-	@media @widthTablet {
-		.commonAhaWiki {
-			padding: 0 0 20px;
-
-			h1, h2, h3, h4, h5, h6 {
-				margin-left: 0;
-			}
-
-			hr {
-				margin-left: 0;
-			}
-
-			div.toc ul, div.schema dl {
-				max-height: 40vh;
-				overflow-y: auto;
-				padding-right: 4px;
-			}
-
-			div.toc ul {
-				padding-left: 18px;
-			}
-
-			table {
-				display: block;
-				max-width: 100%;
-				overflow-x: auto;
-				-webkit-overflow-scrolling: touch;
-			}
-
-			.seeAlsoGrid {
-				display: block;
-				.seeAlsoSecondary {
-					margin-top: 12px;
-				}
-			}
 		}
 	}
 

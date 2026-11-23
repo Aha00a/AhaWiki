@@ -24,6 +24,14 @@ lessc --source-map wiki.less wiki.css
 
 `.defaultFont()` 를 부르면 그 이름을 가진 것이 '''모두''' 적용된다 — `_mixins.less` 의 믹스인과 `less.less` 의 `.defaultFont` 규칙이 차례로 `font-family` 를 한 줄씩 내놓고, 마지막 줄이 이긴다. 글꼴 순서를 바꾸려면 마지막에 오는 것을 고쳐야 한다.
 
+=== 믹스인 이름에 규칙을 붙여도 아무 데도 걸리지 않는다
+
+`.commonAhaWiki` 는 `wiki.less` 안에서 믹스인으로 쓰인다 — `.wikiContent { .commonAhaWiki; }` 가 그 안의 규칙을 `.wikiContent` 로 가져온다. 하지만 `.commonAhaWiki` 라는 클래스를 가진 요소는 없다. 그래서 다른 자리에 `@media … { .commonAhaWiki { … } }` 처럼 그 이름으로 규칙을 쓰면, 믹스인 호출에 따라오지 않고 `.AhaWiki .commonAhaWiki …` 라는 아무 데도 걸리지 않는 선택자로만 컴파일된다.
+
+ * 2026-03-26 에 휴대폰용 규칙 묶음이 그렇게 들어와 2026-11-23 까지 한 번도 적용되지 않았다. 제목·`hr` 왼쪽 여백 0, 표를 `display: block` 으로 가로 스크롤, 목차와 Schema 속성 목록 높이 40vh 제한, 아래 여백 20px, `.seeAlsoGrid` 를 한 줄로.
+ * 살리지 않고 지웠다. 규칙마다 운영 페이지에 끼워 390px 에서 재 보니, 넓은 표는 이미 모두 스크롤되고(`js.js` 가 감싼다) `display: block` 은 RecentChanges 의 표 모양만 바꿔 206px 길게 했다. Schema 높이 제한은 상자 안에 스크롤을 하나 더 만들었다. 휴대폰 목차는 이미 접힌 채 열린다. `hr` 여백은 이미 0이고, 제목 여백 5~15px 차이는 그림에서 거의 보이지 않았다. `.seeAlsoGrid` 마크업은 2026-05-01 에 없어졌다.
+ * 휴대폰에서 `.wikiContent` 에 규칙을 더하려면 `.wikiContent { … @media @widthTablet { … } }` 안에 쓴다. 제목 크기가 그렇게 들어가 있다([Dev Editor] «블록 단추와 휴대폰»).
+
 == 파일 구조
 
 === 공용 믹스인 (컴파일 안 함)

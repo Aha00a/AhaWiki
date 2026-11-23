@@ -1595,43 +1595,6 @@
     font-size: 0.9em;
   }
 }
-@media (max-width: 767px) {
-  .AhaWiki .commonAhaWiki {
-    padding: 0 0 20px;
-  }
-  .AhaWiki .commonAhaWiki h1,
-  .AhaWiki .commonAhaWiki h2,
-  .AhaWiki .commonAhaWiki h3,
-  .AhaWiki .commonAhaWiki h4,
-  .AhaWiki .commonAhaWiki h5,
-  .AhaWiki .commonAhaWiki h6 {
-    margin-left: 0;
-  }
-  .AhaWiki .commonAhaWiki hr {
-    margin-left: 0;
-  }
-  .AhaWiki .commonAhaWiki div.toc ul,
-  .AhaWiki .commonAhaWiki div.schema dl {
-    max-height: 40vh;
-    overflow-y: auto;
-    padding-right: 4px;
-  }
-  .AhaWiki .commonAhaWiki div.toc ul {
-    padding-left: 18px;
-  }
-  .AhaWiki .commonAhaWiki table {
-    display: block;
-    max-width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  .AhaWiki .commonAhaWiki .seeAlsoGrid {
-    display: block;
-  }
-  .AhaWiki .commonAhaWiki .seeAlsoGrid .seeAlsoSecondary {
-    margin-top: 12px;
-  }
-}
 .AhaWiki .oldRevisionNotice {
   clear: both;
   margin: 10px 0;
