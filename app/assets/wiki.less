@@ -256,7 +256,11 @@
 		}
 	}
 
-	.commonAhaWiki {
+	// A mixin only, called by .wikiContent below and _paper.less's .pageContent. With no
+	// parentheses until 2026-11-23, Less also wrote it out as a rule of its own, and wiki.css
+	// carried a second copy of all of it under `.AhaWiki .commonAhaWiki`, which no element
+	// matches: 103 rules, 18KB (Dev Less).
+	.commonAhaWiki() {
 		--wiki-indent-body: 30px;
 		--wiki-indent-list: 40px;
 		--wiki-contained-indent-body: 0px;
@@ -793,7 +797,7 @@
 	}
 
 	.wikiContent {
-		.commonAhaWiki;
+		.commonAhaWiki();
 
 		// Smaller headings on a phone (2026-11-23). At the wide screen's sizes an h2 was 32px on a
 		// 390px screen and an ordinary title such as «이런 사람에게 좋습니다» took two lines.
