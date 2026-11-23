@@ -128,7 +128,7 @@ Admin 설정이 없으므로 colorscheme 변경에 따른 캐시 무효화는 �
 
 === 복사 단추와 인쇄
 
-코드 블록 오른쪽 위의 Copy 단추는 화면에만 있고 인쇄에는 찍히지 않는다. 단추의 다른 모양은 `js.js` 가 붙이지만 `display` 는 `wiki.less` 의 `.InterpreterRenderCopyButton` 이 정하고, 인쇄 규칙이 그것을 끈다. 2026-11-21 전에는 `js.js` 가 `display` 까지 인라인으로 붙여서, 코드 블록마다 흐린 «Copy» 알약이 종이에 찍혔다.
+코드 블록 오른쪽 위의 Copy 단추는 화면에만 있고 인쇄에는 찍히지 않는다. 단추의 모양은 `wiki.less` 의 `.InterpreterRenderCopyButton` 이 정하고(2026-11-23부터는 `display` 만이 아니라 전부, [Dev Editor] «블록 단추와 휴대폰»), 인쇄 규칙이 그것을 끈다. 2026-11-21 전에는 `js.js` 가 `display` 까지 인라인으로 붙여서, 코드 블록마다 흐린 «Copy» 알약이 종이에 찍혔다.
 
 === 구현 메모
 

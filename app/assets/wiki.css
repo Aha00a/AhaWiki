@@ -1576,6 +1576,26 @@
   }
 }
 @media (max-width: 767px) {
+  .AhaWiki .wikiContent h1 {
+    font-size: 1.75em;
+  }
+  .AhaWiki .wikiContent h2 {
+    font-size: 1.45em;
+  }
+  .AhaWiki .wikiContent h3 {
+    font-size: 1.25em;
+  }
+  .AhaWiki .wikiContent h4 {
+    font-size: 1.1em;
+  }
+  .AhaWiki .wikiContent h5 {
+    font-size: 1em;
+  }
+  .AhaWiki .wikiContent h6 {
+    font-size: 0.9em;
+  }
+}
+@media (max-width: 767px) {
   .AhaWiki .commonAhaWiki {
     padding: 0 0 20px;
   }
@@ -3563,36 +3583,113 @@
 .AhaWiki .wikiHistory table {
   margin-top: 20px;
 }
-.AhaWiki .InterpreterRenderCopyButton {
+.AhaWiki .InterpreterRenderMetaWrapper a.InterpreterRenderEditLink,
+.AhaWiki .InterpreterRenderMetaWrapper .InterpreterRenderCopyButton,
+.AhaWiki .InterpreterRenderMetaWrapper .InterpreterRenderFoldToggle {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-decoration: none;
+  opacity: 0.4;
+  transition: opacity 0.15s ease, color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+  pointer-events: auto;
+}
+.AhaWiki .InterpreterRenderMetaWrapper a.InterpreterRenderEditLink:hover,
+.AhaWiki .InterpreterRenderMetaWrapper .InterpreterRenderCopyButton:hover,
+.AhaWiki .InterpreterRenderMetaWrapper .InterpreterRenderFoldToggle:hover,
+.AhaWiki .InterpreterRenderMetaWrapper a.InterpreterRenderEditLink:focus,
+.AhaWiki .InterpreterRenderMetaWrapper .InterpreterRenderCopyButton:focus,
+.AhaWiki .InterpreterRenderMetaWrapper .InterpreterRenderFoldToggle:focus {
+  opacity: 1;
 }
 @media print {
-  .AhaWiki .InterpreterRenderCopyButton {
+  .AhaWiki .InterpreterRenderMetaWrapper a.InterpreterRenderEditLink,
+  .AhaWiki .InterpreterRenderMetaWrapper .InterpreterRenderCopyButton,
+  .AhaWiki .InterpreterRenderMetaWrapper .InterpreterRenderFoldToggle {
     display: none;
   }
 }
-.AhaWiki .InterpreterRenderEditLink {
+.AhaWiki .InterpreterRenderMetaWrapper a.InterpreterRenderEditLink,
+.AhaWiki .InterpreterRenderMetaWrapper .InterpreterRenderCopyButton {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: 1px solid var(--color-input-border);
+  font-size: 12px;
+}
+.AhaWiki .InterpreterRenderMetaWrapper a.InterpreterRenderEditLink {
   width: 50px;
+  height: 20px;
+}
+.AhaWiki .InterpreterRenderMetaWrapper .InterpreterRenderCopyButton {
+  width: 64px;
+  height: 22px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+@media screen {
+  .AhaWiki .InterpreterRenderMetaWrapper :is(h1, h2, h3, h4, h5, h6):has(> a.InterpreterRenderEditLink) {
+    padding-right: 64px;
+  }
+}
+.AhaWiki .InterpreterRenderMetaWrapper :is(h1, h2, h3, h4, h5, h6) > a.InterpreterRenderEditLink {
+  font-weight: normal;
+  text-shadow: none;
+  vertical-align: middle;
 }
 @media (max-width: 767px) {
-  .AhaWiki .InterpreterRenderEditLink {
+  .AhaWiki .InterpreterRenderMetaWrapper a.InterpreterRenderEditLink,
+  .AhaWiki .InterpreterRenderMetaWrapper .InterpreterRenderCopyButton {
     width: 24px;
   }
-  .AhaWiki .InterpreterRenderEditLink .InterpreterRenderEditLinkText {
+  .AhaWiki .InterpreterRenderMetaWrapper .InterpreterRenderEditLinkText,
+  .AhaWiki .InterpreterRenderMetaWrapper .InterpreterRenderCopyButtonText {
     display: none;
   }
-}
-.AhaWiki .InterpreterRenderMetaWrapper:has(> .InterpreterRenderEditLink) > .InterpreterRenderContent > :is(h2, h3, h4, h5, h6) {
-  padding-right: 64px;
-}
-@media (max-width: 767px) {
-  .AhaWiki .InterpreterRenderMetaWrapper:has(> .InterpreterRenderEditLink) > .InterpreterRenderContent > :is(h2, h3, h4, h5, h6) {
-    padding-right: 36px;
+  .AhaWiki .InterpreterRenderMetaWrapper :is(h1, h2, h3, h4, h5, h6):has(> a.InterpreterRenderEditLink) {
+    padding-right: 5px;
+  }
+  .AhaWiki .InterpreterRenderMetaWrapper :is(h1, h2, h3, h4, h5, h6) > a.InterpreterRenderEditLink {
+    position: static;
+    margin-left: 8px;
   }
 }
-@media print {
-  .AhaWiki .InterpreterRenderMetaWrapper:has(> .InterpreterRenderEditLink) > .InterpreterRenderContent > :is(h2, h3, h4, h5, h6) {
-    padding-right: 0;
+.AhaWiki .InterpreterRenderMetaWrapper .InterpreterRenderFoldToggle {
+  position: static;
+  box-sizing: border-box;
+  padding: 1px 6px;
+  width: calc(12px + 1.25em);
+  margin-left: calc(-12px - 1.25em);
+  border: none;
+  font-size: 0.5em;
+  line-height: 1;
+  vertical-align: middle;
+  cursor: pointer;
+}
+@media screen {
+  .AhaWiki .InterpreterRenderMetaWrapper :is(h1, h2, h3):has(> .InterpreterRenderFoldToggle) {
+    padding-left: calc(5px + 12px + 0.625em);
+  }
+  .AhaWiki .InterpreterRenderMetaWrapper :is(h4, h5, h6):has(> .InterpreterRenderFoldToggle) {
+    padding-left: calc(3px + 12px + 0.625em);
+  }
+}
+@media (max-width: 767px) {
+  .AhaWiki .InterpreterRenderMetaWrapper:has(> .InterpreterRenderCopyButton) .Interpreter.Vim[data-lang]::before {
+    position: static;
+    display: block;
+    box-sizing: border-box;
+    min-height: 30px;
+    text-align: left;
+  }
+  .AhaWiki .InterpreterRenderMetaWrapper:has(> .InterpreterRenderCopyButton) .Interpreter.Text pre {
+    margin-top: 30px;
+  }
+  .AhaWiki .InterpreterRenderMetaWrapper:has(> .InterpreterRenderCopyButton) pre.Interpreter.Text {
+    padding-top: 30px;
   }
 }
 @media print {
@@ -3600,8 +3697,6 @@
   .AhaWiki .footer,
   .AhaWiki .flash,
   .AhaWiki .generatedSection,
-  .AhaWiki .InterpreterRenderEditLink,
-  .AhaWiki .InterpreterRenderFoldToggle,
   .AhaWiki button.tocToggle {
     display: none !important;
   }

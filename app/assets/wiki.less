@@ -794,6 +794,20 @@
 
 	.wikiContent {
 		.commonAhaWiki;
+
+		// Smaller headings on a phone (2026-11-23). At the wide screen's sizes an h2 was 32px on a
+		// 390px screen and an ordinary title such as «이런 사람에게 좋습니다» took two lines.
+		// Here and not in the `@media @widthTablet { .commonAhaWiki { … } }` below: that block
+		// matches no element -- .commonAhaWiki is a mixin, not a class anything carries -- and
+		// what it holds has never applied.
+		@media @widthTablet {
+			h1 { font-size: 1.75em; }
+			h2 { font-size: 1.45em; }
+			h3 { font-size: 1.25em; }
+			h4 { font-size: 1.1em; }
+			h5 { font-size: 1em; }
+			h6 { font-size: .9em; }
+		}
 	}
 
 	@media @widthTablet {
@@ -1004,48 +1018,143 @@
 		}
 	}
 
-	// The code block's Copy button. Its other styles are set by js.js; its display is here, so the
-	// page prints without it. Until 2026-11-21 js.js set display inline too, and every code block
-	// printed with a faint «Copy» pill in its corner.
-	.InterpreterRenderCopyButton {
-		display: inline-flex;
-		@media print {
-			display: none;
-		}
-	}
-
-	// A section's Edit button. js.js sets the rest of its look; its width is here, so a phone can
-	// have it narrower: the icon alone, without the word.
-	.InterpreterRenderEditLink {
-		width: 50px;
-		@media @widthTablet {
-			width: 24px;
-			.InterpreterRenderEditLinkText {
+	// The buttons js.js puts on a rendered block: Edit, a code block's Copy, a heading's fold.
+	// Until 2026-11-23 js.js set each of these styles inline, the same dozen three times, and
+	// nothing here could change them for a phone. js.js still sets where Edit and Copy sit (top,
+	// left), which it measures. The selectors name the wrapper so that they outweigh the page's
+	// own `a` and `a:visited` colours, which the inline styles used to.
+	.InterpreterRenderMetaWrapper {
+		a.InterpreterRenderEditLink, .InterpreterRenderCopyButton, .InterpreterRenderFoldToggle {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 50px;
+			background: var(--color-surface);
+			color: var(--color-text);
+			text-decoration: none;
+			opacity: .4;
+			transition: opacity .15s ease, color .15s ease, background-color .15s ease, border-color .15s ease;
+			pointer-events: auto;
+			&:hover, &:focus {
+				opacity: 1;
+			}
+			@media print {
 				display: none;
+			}
+		}
+
+		a.InterpreterRenderEditLink, .InterpreterRenderCopyButton {
+			position: absolute;
+			top: 6px;
+			right: 8px;
+			border: 1px solid var(--color-input-border);
+			font-size: 12px;
+		}
+
+		a.InterpreterRenderEditLink {
+			width: 50px;
+			height: 20px;
+		}
+
+		.InterpreterRenderCopyButton {
+			width: 64px;
+			height: 22px;
+			white-space: nowrap;
+			cursor: pointer;
+		}
+
+		// A section's Edit button is in its heading (js.js). On a wide screen it still sits in the
+		// heading's top right corner -- the wrapper is what it is placed against, not the heading,
+		// so the heading's overflow does not cut it -- and the title wraps short of it: the
+		// button's 50px, its 8px from the edge, and a gap. Until 2026-11-23 a long title ran under
+		// it, which on a phone was most titles.
+		// Screen only, here and for the fold button's room below: print has no buttons.
+		@media screen {
+			:is(h1, h2, h3, h4, h5, h6):has(> a.InterpreterRenderEditLink) {
+				padding-right: 64px;
+			}
+		}
+
+		:is(h1, h2, h3, h4, h5, h6) > a.InterpreterRenderEditLink {
+			font-weight: normal;
+			text-shadow: none;
+			vertical-align: middle;
+		}
+
+		// On a phone a corner of its own costs a title too much: 64px of 390. The button follows
+		// the title's last word instead, as its icon alone, and goes to the next line with it when
+		// the title does. Keeping it in the corner and only narrowing it was tried first: the
+		// title still had to stop short of it, and a month page's «2026-11-09 Mon» did not fit.
+		@media @widthTablet {
+			a.InterpreterRenderEditLink, .InterpreterRenderCopyButton {
+				width: 24px;
+			}
+			.InterpreterRenderEditLinkText, .InterpreterRenderCopyButtonText {
+				display: none;
+			}
+			:is(h1, h2, h3, h4, h5, h6):has(> a.InterpreterRenderEditLink) {
+				padding-right: 5px;
+			}
+			:is(h1, h2, h3, h4, h5, h6) > a.InterpreterRenderEditLink {
+				position: static;
+				margin-left: 8px;
+			}
+		}
+
+		// The fold button hangs in the heading's left padding rather than standing before the
+		// title, so a title of two lines starts both at the same place: until 2026-11-23 the
+		// second began under the button, left of the first line's number. Its width is what it
+		// measured when it stood inline -- a button's 1px and 6px padding and the icon's 1.25em, at its
+		// own size, half the heading's -- so the first line is where it was; the heading's padding
+		// grows by the same 12px and .625em of the heading's size.
+		.InterpreterRenderFoldToggle {
+			position: static;
+			box-sizing: border-box;
+			padding: 1px 6px;
+			width: calc(12px + 1.25em);
+			margin-left: calc(-12px - 1.25em);
+			border: none;
+			font-size: .5em;
+			line-height: 1;
+			vertical-align: middle;
+			cursor: pointer;
+		}
+		@media screen {
+			:is(h1, h2, h3):has(> .InterpreterRenderFoldToggle) {
+				padding-left: calc(5px + 12px + .625em);
+			}
+			:is(h4, h5, h6):has(> .InterpreterRenderFoldToggle) {
+				padding-left: calc(3px + 12px + .625em);
 			}
 		}
 	}
 
-	// The button sits over the heading's top right corner, so a title long enough to reach it --
-	// on a phone, a month page's «2026-11-22 Sun» -- ran under the button until 2026-11-23. The
-	// title wraps short of it instead: the button's width, its 8px from the edge, and a gap. Only
-	// where the button is, so a page that cannot be edited keeps its headings' full width. On a
-	// phone the button is narrow so that this costs little: with the 50px one and its 64px here,
-	// every day heading of a month page at 390px lost its weekday to a second line.
-	.InterpreterRenderMetaWrapper:has(> .InterpreterRenderEditLink) > .InterpreterRenderContent > :is(h2, h3, h4, h5, h6) {
-		padding-right: 64px;
-		@media @widthTablet {
-			padding-right: 36px;
-		}
-		@media print {
-			padding-right: 0;
+	// A code block's language name and its Copy and Edit buttons lie over the block's top right
+	// corner, so on a phone, where code wraps at the screen's edge, they covered its first line.
+	// There the name becomes a band of its own above the code, tall enough for the buttons too.
+	// Only where the buttons are: a slide deck has none (js.js), and keeps its blocks as they were.
+	@media @widthTablet {
+		.InterpreterRenderMetaWrapper:has(> .InterpreterRenderCopyButton) {
+			.Interpreter.Vim[data-lang]::before {
+				position: static;
+				display: block;
+				box-sizing: border-box;
+				min-height: 30px;
+				text-align: left;
+			}
+			// A #!Text block is either a box holding a pre, or the pre itself (in a help page's
+			// «Raw» cell); the room is above the text in both.
+			.Interpreter.Text pre {
+				margin-top: 30px;
+			}
+			pre.Interpreter.Text {
+				padding-top: 30px;
+			}
 		}
 	}
 
 	.header, .footer, .flash,
 	.generatedSection,
-	.InterpreterRenderEditLink,
-	.InterpreterRenderFoldToggle,
 	button.tocToggle {
 		@media print {
 			display: none !important;

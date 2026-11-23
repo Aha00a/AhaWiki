@@ -143,6 +143,11 @@ document.addEventListener('DOMContentLoaded', function () {
         var href = wrapper.getAttribute('data-edit-link');
         var title = wrapper.getAttribute('data-edit-title');
         var heading = content.querySelector('h2, h3, h4, h5, h6');
+        // The heading a section's Edit button goes into, when the block is a heading: the button
+        // follows its title on a phone instead of lying over the title's end (wiki.less). Only
+        // a heading that is the block itself -- a #!Schema box's class title is a heading inside
+        // a block, and the button belongs to the box.
+        var ownHeading = content.querySelector(':scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6');
         var interpreterCodeBlock = content.querySelector('.Interpreter.Text, .Interpreter.Vim');
         // Inside a slide deck these absolutely-positioned top-right overlays (Edit, Copy) sit on
         // top of the slide content -- and cover it entirely in the small overview thumbnails -- so
@@ -160,41 +165,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 editLink = document.createElement('a');
                 editLink.className = 'InterpreterRenderEditLink';
                 editLink.rel = 'nofollow';
-                // The word is in a span of its own, and the width is the stylesheet's (wiki.less):
-                // on a phone the button keeps only its icon, so a heading beside it has room.
-                // aria-label names it there too, where the word is not shown.
+                // How it looks is the stylesheet's (wiki.less, with the Copy and fold buttons):
+                // until 2026-11-23 each of the three set the same dozen styles here, and a phone
+                // could not have them otherwise. Here only the left and top it is moved to below.
+                // The word is in a span of its own, which a phone hides; aria-label names the
+                // button there too.
                 editLink.innerHTML = '<i class="fas fa-edit"></i><span class="InterpreterRenderEditLinkText">&nbsp;</span>';
                 editLink.lastChild.appendChild(document.createTextNode(frameText('js.edit')));
                 editLink.setAttribute('aria-label', frameText('js.edit'));
-                editLink.style.position = 'absolute';
-                editLink.style.top = '6px';
-                editLink.style.right = '8px';
-                editLink.style.display = 'inline-flex';
-                editLink.style.alignItems = 'center';
-                editLink.style.justifyContent = 'center';
-                editLink.style.height = '20px';
-                editLink.style.borderRadius = '50px';
-                editLink.style.border = '1px solid var(--color-input-border)';
-                editLink.style.background = 'var(--color-surface)';
-                editLink.style.color = 'var(--color-text)';
-                editLink.style.textDecoration = 'none';
-                editLink.style.opacity = '.4';
-                editLink.style.fontSize = '12px';
-                editLink.style.transition = 'opacity .15s ease, color .15s ease, background-color .15s ease, border-color .15s ease';
-                editLink.style.pointerEvents = 'auto';
-                editLink.addEventListener('mouseenter', function () {
-                    editLink.style.opacity = '1';
-                });
-                editLink.addEventListener('mouseleave', function () {
-                    editLink.style.opacity = '.4';
-                });
-                editLink.addEventListener('focus', function () {
-                    editLink.style.opacity = '1';
-                });
-                editLink.addEventListener('blur', function () {
-                    editLink.style.opacity = '.4';
-                });
-                wrapper.appendChild(editLink);
+                (ownHeading || wrapper).appendChild(editLink);
             }
 
             editLink.href = href;
@@ -209,39 +188,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 copyButton = document.createElement('button');
                 copyButton.type = 'button';
                 copyButton.className = 'InterpreterRenderCopyButton';
-                copyButton.innerHTML = '<i class="fas fa-copy"></i>&nbsp;';
-                copyButton.appendChild(document.createTextNode(frameText('js.copy')));
-                copyButton.style.position = 'absolute';
-                copyButton.style.top = '6px';
-                copyButton.style.right = '8px';
-                // display is the stylesheet's (wiki.less), so print can hide the button without !important.
-                copyButton.style.alignItems = 'center';
-                copyButton.style.justifyContent = 'center';
-                copyButton.style.width = '64px';
-                copyButton.style.whiteSpace = 'nowrap';
-                copyButton.style.height = '22px';
-                copyButton.style.borderRadius = '50px';
-                copyButton.style.border = '1px solid var(--color-input-border)';
-                copyButton.style.background = 'var(--color-surface)';
-                copyButton.style.color = 'var(--color-text)';
-                copyButton.style.textDecoration = 'none';
-                copyButton.style.opacity = '.4';
-                copyButton.style.fontSize = '12px';
-                copyButton.style.transition = 'opacity .15s ease, color .15s ease, background-color .15s ease, border-color .15s ease';
-                copyButton.style.pointerEvents = 'auto';
-                copyButton.style.cursor = 'pointer';
-                copyButton.addEventListener('mouseenter', function () {
-                    copyButton.style.opacity = '1';
-                });
-                copyButton.addEventListener('mouseleave', function () {
-                    copyButton.style.opacity = '.4';
-                });
-                copyButton.addEventListener('focus', function () {
-                    copyButton.style.opacity = '1';
-                });
-                copyButton.addEventListener('blur', function () {
-                    copyButton.style.opacity = '.4';
-                });
+                // The word in a span a phone hides, as on the Edit button.
+                copyButton.innerHTML = '<i class="fas fa-copy"></i><span class="InterpreterRenderCopyButtonText">&nbsp;</span>';
+                copyButton.lastChild.appendChild(document.createTextNode(frameText('js.copy')));
+                copyButton.setAttribute('aria-label', frameText('js.copy'));
+                // Its look is the stylesheet's, as the Edit button's above is.
                 copyButton.addEventListener('click', function () {
                     var text = interpreterCodeBlock.innerText || '';
                     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -270,35 +221,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 foldToggle.type = 'button';
                 foldToggle.className = 'InterpreterRenderFoldToggle';
                 foldToggle.setAttribute('aria-label', frameText('js.fold'));
-                foldToggle.style.position = 'static';
-                foldToggle.style.display = 'inline-flex';
-                foldToggle.style.alignItems = 'center';
-                foldToggle.style.justifyContent = 'center';
-                foldToggle.style.borderRadius = '50px';
-                foldToggle.style.border = 'none';
-                foldToggle.style.background = 'var(--color-surface)';
-                foldToggle.style.color = 'var(--color-text)';
-                foldToggle.style.textDecoration = 'none';
-                foldToggle.style.opacity = '.4';
-                foldToggle.style.fontSize = '0.5em';
-                foldToggle.style.lineHeight = '1';
-                foldToggle.style.marginRight = '0px';
-                foldToggle.style.verticalAlign = 'middle';
-                foldToggle.style.transition = 'opacity .15s ease, color .15s ease, background-color .15s ease, border-color .15s ease';
-                foldToggle.style.pointerEvents = 'auto';
-                foldToggle.style.cursor = 'pointer';
-                foldToggle.addEventListener('mouseenter', function () {
-                    foldToggle.style.opacity = '1';
-                });
-                foldToggle.addEventListener('mouseleave', function () {
-                    foldToggle.style.opacity = '.4';
-                });
-                foldToggle.addEventListener('focus', function () {
-                    foldToggle.style.opacity = '1';
-                });
-                foldToggle.addEventListener('blur', function () {
-                    foldToggle.style.opacity = '.4';
-                });
+                // Its look is the stylesheet's, as the Edit button's above is.
                 heading.insertBefore(foldToggle, heading.firstChild);
             }
 
@@ -420,6 +343,12 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             heading.addEventListener('keydown', function (event) {
+                // Not a key pressed on a link or button in the heading -- its title's links, its
+                // number, the Edit button: Enter there follows the link. Until 2026-11-23 it
+                // folded the section instead, as the click handler above already knew not to.
+                if (event.target.closest('a, button')) {
+                    return;
+                }
                 if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
                     toggleSectionFold();
@@ -468,7 +397,16 @@ document.addEventListener('DOMContentLoaded', function () {
             editLink.style.top = top + 'px';
             editLink.style.left = (left < 0 ? 0 : left) + 'px';
             editLink.style.right = 'auto';
-            if (copyButton) {
+            if (copyButton && interpreterCodeBlock !== contentAnchorTarget) {
+                // A code block inside the block rather than the block itself -- the «Raw» cell of
+                // a help page's Raw | Preview table: the button goes on the code it copies. Beside
+                // Edit, at the table's corner, it lay over the «Preview» header on a phone
+                // (2026-11-23).
+                var codeRect = interpreterCodeBlock.getBoundingClientRect();
+                copyButton.style.top = (codeRect.top - wrapperRect.top + 4) + 'px';
+                copyButton.style.left = (codeRect.right - wrapperRect.left - copyButton.offsetWidth - 4) + 'px';
+                copyButton.style.right = 'auto';
+            } else if (copyButton) {
                 rightOffset += editLink.offsetWidth + 4;
                 copyButton.style.top = top + 'px';
                 copyButton.style.left = (targetRect.right - wrapperRect.left - copyButton.offsetWidth - rightOffset) + 'px';
