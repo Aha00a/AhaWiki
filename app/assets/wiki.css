@@ -3571,6 +3571,30 @@
     display: none;
   }
 }
+.AhaWiki .InterpreterRenderEditLink {
+  width: 50px;
+}
+@media (max-width: 767px) {
+  .AhaWiki .InterpreterRenderEditLink {
+    width: 24px;
+  }
+  .AhaWiki .InterpreterRenderEditLink .InterpreterRenderEditLinkText {
+    display: none;
+  }
+}
+.AhaWiki .InterpreterRenderMetaWrapper:has(> .InterpreterRenderEditLink) > .InterpreterRenderContent > :is(h2, h3, h4, h5, h6) {
+  padding-right: 64px;
+}
+@media (max-width: 767px) {
+  .AhaWiki .InterpreterRenderMetaWrapper:has(> .InterpreterRenderEditLink) > .InterpreterRenderContent > :is(h2, h3, h4, h5, h6) {
+    padding-right: 36px;
+  }
+}
+@media print {
+  .AhaWiki .InterpreterRenderMetaWrapper:has(> .InterpreterRenderEditLink) > .InterpreterRenderContent > :is(h2, h3, h4, h5, h6) {
+    padding-right: 0;
+  }
+}
 @media print {
   .AhaWiki .header,
   .AhaWiki .footer,

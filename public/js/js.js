@@ -160,15 +160,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 editLink = document.createElement('a');
                 editLink.className = 'InterpreterRenderEditLink';
                 editLink.rel = 'nofollow';
-                editLink.innerHTML = '<i class="fas fa-edit"></i>&nbsp;';
-                editLink.appendChild(document.createTextNode(frameText('js.edit')));
+                // The word is in a span of its own, and the width is the stylesheet's (wiki.less):
+                // on a phone the button keeps only its icon, so a heading beside it has room.
+                // aria-label names it there too, where the word is not shown.
+                editLink.innerHTML = '<i class="fas fa-edit"></i><span class="InterpreterRenderEditLinkText">&nbsp;</span>';
+                editLink.lastChild.appendChild(document.createTextNode(frameText('js.edit')));
+                editLink.setAttribute('aria-label', frameText('js.edit'));
                 editLink.style.position = 'absolute';
                 editLink.style.top = '6px';
                 editLink.style.right = '8px';
                 editLink.style.display = 'inline-flex';
                 editLink.style.alignItems = 'center';
                 editLink.style.justifyContent = 'center';
-                editLink.style.width = '50px';
                 editLink.style.height = '20px';
                 editLink.style.borderRadius = '50px';
                 editLink.style.border = '1px solid var(--color-input-border)';

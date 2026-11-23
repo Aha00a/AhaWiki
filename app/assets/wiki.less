@@ -1014,6 +1014,34 @@
 		}
 	}
 
+	// A section's Edit button. js.js sets the rest of its look; its width is here, so a phone can
+	// have it narrower: the icon alone, without the word.
+	.InterpreterRenderEditLink {
+		width: 50px;
+		@media @widthTablet {
+			width: 24px;
+			.InterpreterRenderEditLinkText {
+				display: none;
+			}
+		}
+	}
+
+	// The button sits over the heading's top right corner, so a title long enough to reach it --
+	// on a phone, a month page's «2026-11-22 Sun» -- ran under the button until 2026-11-23. The
+	// title wraps short of it instead: the button's width, its 8px from the edge, and a gap. Only
+	// where the button is, so a page that cannot be edited keeps its headings' full width. On a
+	// phone the button is narrow so that this costs little: with the 50px one and its 64px here,
+	// every day heading of a month page at 390px lost its weekday to a second line.
+	.InterpreterRenderMetaWrapper:has(> .InterpreterRenderEditLink) > .InterpreterRenderContent > :is(h2, h3, h4, h5, h6) {
+		padding-right: 64px;
+		@media @widthTablet {
+			padding-right: 36px;
+		}
+		@media print {
+			padding-right: 0;
+		}
+	}
+
 	.header, .footer, .flash,
 	.generatedSection,
 	.InterpreterRenderEditLink,
