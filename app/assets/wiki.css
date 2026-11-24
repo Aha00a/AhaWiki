@@ -3045,20 +3045,18 @@
     padding-left: calc(3px + 12px + 0.625em);
   }
 }
-@media (max-width: 767px) {
-  .AhaWiki .InterpreterRenderMetaWrapper:has(> .InterpreterRenderCopyButton) .Interpreter.Vim[data-lang]::before {
-    position: static;
-    display: block;
-    box-sizing: border-box;
-    min-height: 30px;
-    text-align: left;
-  }
-  .AhaWiki .InterpreterRenderMetaWrapper:has(> .InterpreterRenderCopyButton) .Interpreter.Text pre {
-    margin-top: 30px;
-  }
-  .AhaWiki .InterpreterRenderMetaWrapper:has(> .InterpreterRenderCopyButton) pre.Interpreter.Text {
-    padding-top: 30px;
-  }
+.AhaWiki .InterpreterRenderMetaWrapper:has(> .InterpreterRenderCopyButton) .Interpreter.Vim[data-lang]::before {
+  position: static;
+  display: block;
+  box-sizing: border-box;
+  min-height: 30px;
+  text-align: left;
+}
+.AhaWiki .InterpreterRenderMetaWrapper:has(> .InterpreterRenderCopyButton) .Interpreter.Text pre {
+  margin-top: 30px;
+}
+.AhaWiki .InterpreterRenderMetaWrapper:has(> .InterpreterRenderCopyButton) pre.Interpreter.Text {
+  padding-top: 30px;
 }
 @media print {
   .AhaWiki .header,
