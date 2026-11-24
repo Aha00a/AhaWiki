@@ -1095,28 +1095,9 @@
 		}
 	}
 
-	// A code block's language name and its Copy and Edit buttons lay over the block's top right
-	// corner and covered a long first line: on a phone, where code wraps at the screen's edge,
-	// almost always; on a wide screen, wherever the first line ran that far. So on every screen the
-	// name is a band of its own above the code, tall enough for the buttons too.
-	// Only where the buttons are: a slide deck has none (js.js), and keeps its blocks as they were.
-	.InterpreterRenderMetaWrapper:has(> .InterpreterRenderCopyButton) {
-		.Interpreter.Vim[data-lang]::before {
-			position: static;
-			display: block;
-			box-sizing: border-box;
-			min-height: 30px;
-			text-align: left;
-		}
-		// A #!Text block is either a box holding a pre, or the pre itself (in a help page's
-		// «Raw» cell); the room is above the text in both.
-		.Interpreter.Text pre {
-			margin-top: 30px;
-		}
-		pre.Interpreter.Text {
-			padding-top: 30px;
-		}
-	}
+	// A code block's language name and its Copy and Edit buttons lie over its top right corner and
+	// can cover a long first line. A band above the code fixed that, on a phone and then on every
+	// screen, and was taken out on 2026-11-24 for its look: see Dev Editor, «블록 단추와 휴대폰».
 
 	.header, .footer, .flash,
 	.generatedSection,
