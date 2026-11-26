@@ -93,19 +93,27 @@ Content-Type: multipart/form-data
   contentType      - MIME 타입
 ]]]
 
+=== API Key 로 올리기
+`POST /api/v1/attachment/*name`(`WikiAttachment.uploadAttachmentViaApi`, 2026-11-26)이 같은 업로드를 API Key 로 받는다. 요청·응답은 [Api] «첨부파일 올리기».
+ * `ApiV1` 이 아니라 `WikiAttachment` 에 둔 것은 세 업로드가 `storeFile`(행 기록 → S3 → 상태 표시)을 함께 쓰게 하려는 것이다. 경로를 `/api/v1/` 아래에 둔 것은 `Filters` 가 그 아래만 CSRF 없이 통과시키기 때문이다. 편집 화면의 `POST /api/uploadAttachment` 는 그대로 세션과 CSRF 를 요구한다 — `ApiV1FilterSpec` 이 키를 든 요청에 그 라우트가 403 을 답하는 것까지 본다.
+ * 권한은 키 주인의 Upload 다. 첨부 행의 `user`·`uploaderEmail` 도 키 주인으로 남는다. 어느 키로 올렸는지는 남지 않는다 — `Attachment` 에 그 칸이 없다.
+ * 텔레그램 알림은 보내지 않는다. API 저장과 같은 규칙이다([Api] «제한사항»).
+ * 본문은 키를 보기 전에 읽는다. 편집 화면의 업로드가 세션을 보기 전에 읽는 것과 같다 — 키 없는 요청도 한도까지는 서버가 받아 읽지만, S3 와 테이블에는 닿지 않는다.
+ * `storeFile` 로 모으며 바뀐 것 하나: 실패 처리가 S3 에 넣는 일만 감싼다. 그 전에는 두 라우트 모두 서명 주소와 텔레그램 알림까지 같은 `try` 안에 있어서, 알림이 실패하면 잘 올라간 파일의 행이 `Failed` 가 됐다.
+
 === 업로드 크기
- * 두 업로드 라우트(`uploadAttachment`·`uploadClipboardImage`)는 요청 본문을 `AttachmentLogic.MaxUploadRequestBytes` 까지 받는다. 파일이 아니라 multipart 본문 전체의 한도라, 파일은 그보다 몇백 바이트 작아야 한다.
+ * 세 업로드 라우트(`uploadAttachment`·`uploadClipboardImage`·`uploadAttachmentViaApi`)는 요청 본문을 `AttachmentLogic.MaxUploadRequestBytes` 까지 받는다. 파일이 아니라 multipart 본문 전체의 한도라, 파일은 그보다 몇백 바이트 작아야 한다.
  * 넘는 본문은 파서가 액션 전에 413 으로 거절한다 — 권한 확인·S3·DB 에 닿지 않는다.
  * 2026-11-18 에 Play 기본값 `play.http.parser.maxDiskBuffer`(10MB)에서 50MiB 로 올렸다. 그 전에는 15MB pdf 가 `Request Entity Too Large` 였다.
   * 그 413 은 앱이 낸 것이었다 — 앞단 접근 로그의 그 줄에 upstream 응답 시간이 찍혀 있었다. 앞단이 거절하면 그 칸이 비고, 응답 본문이 nginx 의 HTML 이다.
- * 전역 `maxDiskBuffer` 를 올리지 않았다. 그것은 본문을 디스크로 받는 모든 라우트의 한도이고, 큰 본문을 받을 이유가 있는 것은 이 둘뿐이다.
+ * 전역 `maxDiskBuffer` 를 올리지 않았다. 그것은 본문을 디스크로 받는 모든 라우트의 한도이고, 큰 본문을 받을 이유가 있는 것은 이 업로드 라우트들뿐이다.
  * 클립보드 라우트도 같은 값이다. 같은 사용자가 같은 권한으로 같은 버킷에 이 크기의 파일을 이미 올릴 수 있으니, 거기만 10MB 로 두면 막는 것은 없고 큰 스크린숏만 거절된다.
  * 앞단 리버스 프록시에도 본문 한도가 따로 있고, 이 값 이상이어야 한다. 그 설정은 운영 쪽 사실이다 — 운영 저장소 `ahawiki/README.md` «앞단 nginx».
   * 2026-11-18 전에는 앞단 한도가 20MB 였다. 앱만 올렸다면 28MB pptx 는 거기서 막혔다. 앱 한도를 다시 바꾸면 앞단도 같이 본다.
  * 편집 화면은 올리기 전에 크기를 본다(2026-11-21). 템플릿이 `AhaWikiEditConfig.maxUploadBytes` 로 같은 한도를 넘겨, 그보다 큰 파일은 보내지 않고 파일 이름·크기와 한도를 한 문장으로 알린다.
   * 그 전에는 파일을 다 보낸 뒤에야 거절됐고, 413 응답 본문(HTML)이 그대로 알림창에 떴다.
   * 한도보다 몇백 바이트 작은 파일은 여전히 서버가 413 으로 거절할 수 있다 — 화면은 파일 크기만 알고 multipart 본문 크기는 모른다. 그때도 HTML 대신 같은 문장을 띄운다.
- * 확인 — 스펙: `WikiAttachmentUploadLimitSpec` 이 두 라우트의 파서로 본다. 15MB 통과, 한도 꼭 맞는 본문 통과, 1바이트 넘는 본문 413(Content-Length 가 있을 때·없을 때).
+ * 확인 — 스펙: `WikiAttachmentUploadLimitSpec` 이 세 라우트의 파서로 본다. 15MB 통과, 한도 꼭 맞는 본문 통과, 1바이트 넘는 본문 413(Content-Length 가 있을 때·없을 때).
  * 확인 — 운영: 로그인 쿠키 없이 `pageName` 을 빼고 `file` 만 보내면 부작용 없이 잰다. 한도 안이면 파서를 지나 `400 pageName and file are required`, 밖이면 413 이다.
   * curl 은 `--http1.1` 로 보낸다. HTTP/2 로 보내면 앞단이 본문을 다 받기 전에 413 을 답해도 curl 이 끝나지 않았다.
 

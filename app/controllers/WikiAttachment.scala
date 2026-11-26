@@ -9,6 +9,7 @@ import models._
 import models.tables.Attachment
 import models.tables.Config
 import models.tables.Site
+import models.tables.User
 import play.api.Logging
 import play.api.data.Form
 import play.api.data.Forms._
@@ -85,15 +86,15 @@ class WikiAttachment @Inject()(
                                          objectKey: String,
                                          contentType: String,
                                          fileSize: Long,
-                                       )(implicit request: RequestHeader, connection: Connection): Unit = {
-    val currentUser = SessionLogic.getUser(request)
+                                         uploader: Option[User.SessionUser],
+                                       )(implicit connection: Connection): Unit = {
     val bucket = applicationConf.AhaWiki.aws.s3.bucket()
     val storedFilename = objectKey.split("/").lastOption.getOrElse(objectKey)
     Attachment.insertInitiated(
       site = siteSeq,
       pageName = pageName,
-      user = currentUser.map(_.seq),
-      uploaderEmail = currentUser.flatMap(_.loginEmail),
+      user = uploader.map(_.seq),
+      uploaderEmail = uploader.flatMap(_.loginEmail),
       originalFilename = originalFilename,
       storedFilename = storedFilename,
       bucket = bucket,
@@ -103,14 +104,52 @@ class WikiAttachment @Inject()(
     )
   }
 
-  /** Both upload routes parse with this; the limit and why the two share it are on the constant. */
+  /** Every upload route parses with this; the limit and why they share it are on the constant. */
   private def uploadBodyParser: BodyParser[MultipartFormData[TemporaryFile]] =
     parse.multipartFormData(AttachmentLogic.MaxUploadRequestBytes)
 
-  def uploadAttachment(): Action[MultipartFormData[TemporaryFile]] = Action(uploadBodyParser) { implicit request =>
-    import logics.wikis.macros.S3AttachmentUrlLogic
-    import play.api.libs.json.Json
+  /**
+   * Puts one uploaded file in S3 under a new key and keeps its row in step; the three upload
+   * routes differ only in how they get there and what they answer. The row is written first, as
+   * initiated, so a put that dies half way leaves a row that says so (Dev Attachment).
+   *
+   * Only the put is inside the failure handling. Until 2026-11-26 each route also wrapped the
+   * presigned URL and the Telegram notice in it, so a notice that failed after a good put marked
+   * a stored file Failed.
+   */
+  private def storeFile(
+                         pageName: String,
+                         originalFilename: String,
+                         extension: String,
+                         contentType: String,
+                         filePart: MultipartFormData.FilePart[TemporaryFile],
+                         uploader: Option[User.SessionUser],
+                       )(implicit connection: Connection, site: Site): Try[String] = {
+    val objectKey = AttachmentLogic.objectKey(site.seq, pageName, originalFileName = originalFilename, extension = extension)
+    insertInitiatedAttachment(site.seq, pageName, originalFilename, objectKey, contentType, filePart.fileSize, uploader)
+    Try(Attachment.markUploaded(objectKey, S3Logic.putFile(applicationConf, objectKey, contentType, filePart.ref.path))) match {
+      case Success(_) => Success(objectKey)
+      case Failure(error) =>
+        logger.error(s"upload failed. objectKey=$objectKey", error)
+        Attachment.markFailed(objectKey)
+        Failure(error)
+    }
+  }
 
+  // A file keeps its own extension, letters and digits only, or "bin" when it has none.
+  private def fileExtension(originalFileName: String): String =
+    Some(originalFileName.split('.').lastOption.getOrElse("").replaceAll("[^a-zA-Z0-9]", "").toLowerCase).filter(_.nonEmpty).getOrElse("bin")
+
+  /** What a file upload answers, from the editor or from the API: the editor and an agent both paste `attachmentMacro`. */
+  private def fileUploadedJson(objectKey: String, contentType: String, pageName: String)(implicit site: Site): play.api.libs.json.JsObject =
+    Json.obj(
+      "objectKey" -> objectKey,
+      "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
+      "fileUrl" -> logics.wikis.macros.S3AttachmentUrlLogic.generatePresignedUrl(applicationConf, objectKey).fold(_ => "", url => url),
+      "contentType" -> contentType,
+    )
+
+  def uploadAttachment(): Action[MultipartFormData[TemporaryFile]] = Action(uploadBodyParser) { implicit request =>
     val pageNameOption = request.body.dataParts.get("pageName").flatMap(_.headOption).map(_.trim).filter(_.nonEmpty)
     val fileOption = request.body.file("file")
 
@@ -127,46 +166,61 @@ class WikiAttachment @Inject()(
               if (originalFileName.isEmpty) {
                 BadRequest("invalid file name")
               } else {
-                val extension = originalFileName.split('.').lastOption.getOrElse("bin").replaceAll("[^a-zA-Z0-9]", "").toLowerCase
-                val objectKey = AttachmentLogic.objectKey(
-                  site.seq,
-                  pageName,
-                  originalFileName = originalFileName,
-                  extension = if (extension.nonEmpty) extension else "bin",
-                )
-
                 val contentType = filePart.contentType.getOrElse("application/octet-stream")
-                insertInitiatedAttachment(
-                  siteSeq = site.seq,
-                  pageName = pageName,
-                  originalFilename = originalFileName,
-                  objectKey = objectKey,
-                  contentType = contentType,
-                  fileSize = filePart.fileSize,
-                )
-
-                try {
-                  Attachment.markUploaded(objectKey, S3Logic.putFile(applicationConf, objectKey, contentType, filePart.ref.path))
-
-                  val fileUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
-                  telegramLogic.notifyAttachmentUploaded(request.host, pageName, originalFileName, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())
-                  Ok(Json.obj(
-                    "objectKey" -> objectKey,
-                    "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
-                    "fileUrl" -> fileUrl,
-                    "contentType" -> contentType,
-                  ))
-                } catch {
-                  case error: Throwable =>
-                    logger.error(s"uploadAttachment failed. objectKey=$objectKey", error)
-                    Attachment.markFailed(objectKey)
-                    InternalServerError("File upload failed.")
+                storeFile(pageName, originalFileName, fileExtension(originalFileName), contentType, filePart, provider.getUser) match {
+                  case Failure(_) => InternalServerError("File upload failed.")
+                  case Success(objectKey) =>
+                    telegramLogic.notifyAttachmentUploaded(request.host, pageName, originalFileName, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())
+                    Ok(fileUploadedJson(objectKey, contentType, pageName))
                 }
               }
           }
         }
       case _ =>
         BadRequest("pageName and file are required")
+    }
+  }
+
+  /**
+   * The same upload for an API key: `POST /api/v1/attachment/<page>` with the file as the
+   * multipart part `file`. It answers what the editor's upload answers, so an agent puts the
+   * returned `attachmentMacro` in the page and saves it with `POST /api/v1/page/<page>`.
+   *
+   * It lives here, not in ApiV1, so that the three uploads share `storeFile`; the path is under
+   * /api/v1/ so that Filters lets it through without a CSRF token, as it does the rest of the API.
+   * The key's user is checked for Upload on the page, as the editor's session is. Like a save
+   * through the API, it sends no Telegram notice (wiki page Api, «제한사항»).
+   *
+   * The body is parsed before the key is looked at, as the editor's upload parses before the
+   * session is: a request without a valid key costs the server the read of up to
+   * MaxUploadRequestBytes, and nothing reaches S3 or the table.
+   */
+  def uploadAttachmentViaApi(nameEncoded: String): Action[MultipartFormData[TemporaryFile]] = Action(uploadBodyParser) { implicit request =>
+    SessionLogic.getApiKeyUser(request)(database) match {
+      case None => JsonError(Unauthorized, "API key is required or invalid.")
+      case Some(user) =>
+        val pageName = logics.wikis.PageNameUrl.decode(nameEncoded)
+        request.body.file("file") match {
+          case None => JsonError(BadRequest, "file is required.")
+          case Some(filePart) =>
+            val originalFileName = filePart.filename.trim
+            database.withConnection { implicit connection =>
+              implicit val site: Site = SiteLogic.get(request.host)
+              implicit val provider: RequestWrapper = RequestWrapper.forUser(user)
+              implicit val contextWikiPage: ContextWikiPage = new ContextWikiPage(Seq(pageName), logics.wikis.RenderingMode.Normal).holding(connection)
+              if (!WikiPermission().isUploadable(pageName)) {
+                JsonError(Forbidden, "Permission denied.")
+              } else if (originalFileName.isEmpty) {
+                JsonError(BadRequest, "invalid file name")
+              } else {
+                val contentType = filePart.contentType.getOrElse("application/octet-stream")
+                storeFile(pageName, originalFileName, fileExtension(originalFileName), contentType, filePart, Some(user)) match {
+                  case Failure(_) => JsonError(InternalServerError, "File upload failed.")
+                  case Success(objectKey) => Ok(fileUploadedJson(objectKey, contentType, pageName))
+                }
+              }
+            }
+        }
     }
   }
 
@@ -288,37 +342,16 @@ class WikiAttachment @Inject()(
                 BadRequest("only image is supported")
               } else {
                 val extension = contentType.split("/").lastOption.getOrElse("png").replace("+xml", "").replaceAll("[^a-zA-Z0-9]", "").toLowerCase
-                val objectKey = AttachmentLogic.objectKey(
-                  site.seq,
-                  pageName,
-                  originalFileName = "clipboard",
-                  extension = extension,
-                )
-
-                insertInitiatedAttachment(
-                  siteSeq = site.seq,
-                  pageName = pageName,
-                  originalFilename = "clipboard",
-                  objectKey = objectKey,
-                  contentType = contentType,
-                  fileSize = filePart.fileSize,
-                )
-
-                try {
-                  Attachment.markUploaded(objectKey, S3Logic.putFile(applicationConf, objectKey, contentType, filePart.ref.path))
-
-                  val imageUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
-                  telegramLogic.notifyClipboardImageUploaded(request.host, pageName, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())
-                  Ok(Json.obj(
-                    "objectKey" -> objectKey,
-                    "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
-                    "imageUrl" -> imageUrl,
-                  ))
-                } catch {
-                  case error: Throwable =>
-                    logger.error(s"uploadClipboardImage failed. objectKey=$objectKey", error)
-                    Attachment.markFailed(objectKey)
-                    InternalServerError("Image upload failed.")
+                storeFile(pageName, "clipboard", extension, contentType, filePart, provider.getUser) match {
+                  case Failure(_) => InternalServerError("Image upload failed.")
+                  case Success(objectKey) =>
+                    val imageUrl = S3AttachmentUrlLogic.generatePresignedUrl(objectKey).toOption.getOrElse("")
+                    telegramLogic.notifyClipboardImageUploaded(request.host, pageName, provider.getUser.map(_.nickname).getOrElse("Guest"), Config.Query.Telegram.chatId())
+                    Ok(Json.obj(
+                      "objectKey" -> objectKey,
+                      "attachmentMacro" -> s"[[Attachment(${toAttachmentMacroArgument(objectKey, site.seq, pageName)})]]",
+                      "imageUrl" -> imageUrl,
+                    ))
                 }
               }
           }

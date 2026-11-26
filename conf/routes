@@ -58,6 +58,7 @@ GET           /api/v1/backlinks/*nameEncoded        controllers.ApiV1.backlinks(
 GET           /api/v1/page/*nameEncoded             controllers.ApiV1.getPage(nameEncoded: String)
 POST          /api/v1/page/*nameEncoded             controllers.ApiV1.savePage(nameEncoded: String)
 DELETE        /api/v1/page/*nameEncoded             controllers.ApiV1.deletePage(nameEncoded: String)
+POST          /api/v1/attachment/*nameEncoded       controllers.WikiAttachment.uploadAttachmentViaApi(nameEncoded: String)
 GET           /api/account/ApiKeys                   controllers.ApiApiKey.accountApiKeys
 POST          /api/account/ApiKeys                   controllers.ApiApiKey.accountCreateApiKey
 DELETE        /api/account/ApiKeys/:seq              controllers.ApiApiKey.accountRevokeApiKey(seq: Long)

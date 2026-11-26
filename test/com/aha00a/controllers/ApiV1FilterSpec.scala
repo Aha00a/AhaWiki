@@ -93,4 +93,56 @@ class ApiV1FilterSpec extends PlaySpec with GuiceOneAppPerSuite with BeforeAndAf
       }
     }
   }
+
+  // The answers before S3: a successful upload needs a bucket, which a spec does not have; that
+  // path is the editor's own (WikiAttachment.storeFile) and was checked against the live wiki.
+  "POST /api/v1/attachment/:name through Filters" should {
+    import play.api.libs.Files.SingletonTemporaryFileCreator
+    import play.api.mvc.MultipartFormData
+
+    def body(withFile: Boolean): MultipartFormData[play.api.libs.Files.TemporaryFile] = {
+      val file = SingletonTemporaryFileCreator.create("upload", ".png")
+      java.nio.file.Files.write(file.path, Array[Byte](1, 2, 3))
+      MultipartFormData(
+        dataParts = Map.empty,
+        files = if (withFile) Seq(MultipartFormData.FilePart("file", "a.png", Some("image/png"), file)) else Seq.empty,
+        badParts = Seq.empty,
+      )
+    }
+    def upload(page: String, key: Option[String], withFile: Boolean = true) =
+      route(app, FakeRequest(POST, s"/api/v1/attachment/$page")
+        .withHeaders((Seq(HOST -> "localhost") ++ key.map(k => AUTHORIZATION -> s"Bearer $k")): _*)
+        .withMultipartFormDataBody(body(withFile))).get
+
+    def setLoginPermission(action: Int): Unit = db.withConnection { implicit connection =>
+      SQL(s"UPDATE Permission SET action = $action WHERE site = 1").executeUpdate()
+      logics.AhaWikiCacheMemoryPermission.clear()
+    }
+
+    "answer 401 without a key -- not the CSRF filter's 403, which the editor's route gives" in {
+      status(upload("ApiUpload", None)) mustBe UNAUTHORIZED
+      val editorRoute = route(app, FakeRequest(POST, "/api/uploadAttachment")
+        .withHeaders(HOST -> "localhost", AUTHORIZATION -> s"Bearer ${createApiKey().rawKey}")
+        .withMultipartFormDataBody(body(withFile = true))).get
+      status(editorRoute) mustBe FORBIDDEN
+    }
+
+    "answer 403 when the key's user may edit the page but not upload to it" in {
+      val created = createApiKey()
+      try {
+        setLoginPermission(15) // Read, Edit, Create, Rename -- not Upload (16)
+        val result = upload("ApiUpload", Some(created.rawKey))
+        status(result) mustBe FORBIDDEN
+        (contentAsJson(result) \ "error").asOpt[String] mustBe Some("Permission denied.")
+      } finally {
+        setLoginPermission(255)
+      }
+    }
+
+    "answer 400 without a file part" in {
+      val result = upload("ApiUpload", Some(createApiKey().rawKey), withFile = false)
+      status(result) mustBe BAD_REQUEST
+      (contentAsJson(result) \ "error").asOpt[String] mustBe Some("file is required.")
+    }
+  }
 }

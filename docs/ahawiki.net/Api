@@ -20,8 +20,8 @@ AhaWiki API 요청에는 CSRF token과 reCAPTCHA가 필요하지 않습니다.
 
 == 제한사항
 
- * API로 저장·이름변경·삭제하면 텔레그램 알림이 가지 않습니다. 그 페이지를 열어 둔 브라우저의 실시간 갱신 알림은 API 저장에도 갑니다.
- * '''API Key 로는 파일(이미지·첨부)을 올릴 수 없습니다.''' 업로드(`POST /api/uploadAttachment`, `POST /api/uploadClipboardImage`)는 `/api/v1/` 밖에 있어 브라우저 로그인 세션과 CSRF 토큰을 요구하고, API Key 를 보지 않습니다. 사람이 브라우저에서 올린 첨부는 본문에 `[[Attachment(...)]]`([MacroAttachment])로, 웹에 공개된 이미지는 `[[Image(주소)]]`([MacroImage])로 넣을 수 있으므로 API 저장으로도 이미지가 든 페이지를 만들 수 있습니다. 에이전트에게 주는 순서는 [AiAgent] «이미지와 첨부파일».
+ * API로 저장·이름변경·삭제·첨부 업로드를 하면 텔레그램 알림이 가지 않습니다. 그 페이지를 열어 둔 브라우저의 실시간 갱신 알림은 API 저장에도 갑니다.
+ * 첨부는 올릴 수 있지만(아래 '''첨부파일 올리기''') 목록 조회와 삭제는 API 에 없습니다 — 편집 화면에서 합니다.
 
 == 인증
 
@@ -211,6 +211,31 @@ curl -X POST https://ahawiki.net/api/v1/page/FrontPage \
 ]]]
 
 저장 성공 시 새 revision은 `viaApi = true`로 기록됩니다. 웹 편집과 달리 텔레그램 알림은 보내지 않습니다(위 '''제한사항''').
+
+== 첨부파일 올리기
+
+[[[#!Vim sh
+curl -X POST "https://ahawiki.net/api/v1/attachment/FrontPage" \
+  -H "Authorization: Bearer <api-key>" \
+  -F "file=@screenshot.png;type=image/png"
+]]]
+
+파일은 multipart 의 `file` 부분 하나로 보냅니다. 페이지는 주소의 이름이고, 그 페이지에 '''Upload''' 권한이 있어야 합니다([AccessControl]). 크기 한도는 편집 화면의 업로드와 같습니다([Dev Attachment] «업로드 크기»). 파일은 부분에 적힌 형식(`type=`)으로 저장되고, `[[Attachment]]` 는 `image/*` 일 때 그림으로 그리므로 이미지라면 형식을 꼭 붙입니다.
+
+응답은 편집 화면의 업로드와 같습니다:
+
+[[[#!Vim json
+{
+  "objectKey": "Attachment/1/FrontPage/screenshot.png/screenshot.2026-11-26T19-00-00.png",
+  "attachmentMacro": "[[Attachment(screenshot.png/screenshot.2026-11-26T19-00-00.png)]]",
+  "fileUrl": "https://…(24시간 유효한 서명 주소)",
+  "contentType": "image/png"
+}
+]]]
+
+'''올리기만 해서는 페이지가 바뀌지 않습니다.''' `attachmentMacro` 를 본문의 알맞은 자리에 그대로 넣고 `POST /api/v1/page/*name` 으로 저장합니다. 이 줄의 경로에는 올린 시각이 들어 있어서 짐작으로 만들면 깨진 그림이 됩니다. 웹에 공개된 그림은 올리지 않고 `[[Image(주소)]]`([MacroImage])로 넣을 수도 있습니다.
+
+`401` 키 없음·폐기, `403` Upload 권한 없음, `400` `file` 부분이 없거나 파일 이름이 빔, `413` 한도 초과, `500` 저장소(S3)에 넣지 못함 — 이때 첨부 행은 `Failed` 로 남습니다.
 
 == 페이지 이름변경
 

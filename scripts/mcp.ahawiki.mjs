@@ -4,18 +4,31 @@
 //
 // Where the wiki is comes from the environment, because this repository is public and names no
 // host. The key is the user's own API key (Dev ApiKey): the agent sees what that user can see, and
-// writes only what that user may write. `AHAWIKI_MCP_WRITE=1` is what adds the write tools (save, rename, delete); without
+// writes only what that user may write. `AHAWIKI_MCP_WRITE=1` is what adds the write tools (save, rename, delete, upload); without
 // it the agent has no way to change a page, whatever the key could do.
 //
 // Why this exists and what it leaves out is in the wiki page Dev Mcp.
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import readline from "node:readline";
 import { pathToFileURL } from "node:url";
 import { createServer } from "./lib/mcp.mjs";
 
 const encode = (name) => encodeURIComponent(name);
 
-/** The wiki's tools, over `call(method, path, body) -> parsed JSON`. Exported so a test can feed it a fake. */
-export function wikiTools({ call, write }) {
+// The type the wiki stores a file under, from its extension. The wiki keeps whatever the part
+// says, and [[Attachment]] draws an image only for an image type, so a picture has to arrive as one.
+const contentTypes = {
+  png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp",
+  svg: "image/svg+xml", avif: "image/avif", bmp: "image/bmp", pdf: "application/pdf", txt: "text/plain",
+};
+const contentTypeOf = (file) => contentTypes[path.extname(file).slice(1).toLowerCase()] ?? "application/octet-stream";
+
+/**
+ * The wiki's tools, over `call(method, path, body) -> parsed JSON`; a `FormData` body is sent as
+ * multipart. `read` reads a local file for the upload tool. Exported so a test can feed fakes.
+ */
+export function wikiTools({ call, write, read = readFile }) {
   const tools = [
     {
       name: "ahawiki_search",
@@ -157,18 +170,43 @@ export function wikiTools({ call, write }) {
         return `Deleted ${deleted.name} at revision ${deleted.deletedRevision}. A site admin can restore it from Deleted Pages.`;
       },
     });
+    // Behind the same switch as a save: an upload changes nothing on a page, but it is a write to
+    // the wiki's storage, and the only use of one is a save that shows it.
+    tools.push({
+      name: "ahawiki_upload_attachment",
+      description: "Upload a local file (an image, a PDF...) as an attachment of a page, and get back the [[Attachment(...)]] line that shows it. The upload alone changes nothing on the page: put that line, exactly as returned, where it belongs and save with ahawiki_save_page. Never write such a line by hand -- its path holds the upload's time, and a guessed one shows a broken image.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "The exact name of the page it belongs to." },
+          file: { type: "string", description: "The local file's path." },
+        },
+        required: ["name", "file"],
+      },
+      async run({ name, file }) {
+        if (!file || !String(file).trim()) throw new Error("file is required: the local path of the file to upload.");
+        const form = new FormData();
+        form.append("file", new Blob([await read(file)], { type: contentTypeOf(file) }), path.basename(file));
+        const uploaded = await call("POST", `/api/v1/attachment/${encode(name)}`, form);
+        return `Uploaded ${path.basename(file)} (${uploaded.contentType}) to ${name}. Put this line in the page:\n${uploaded.attachmentMacro}`;
+      },
+    });
   }
 
   return tools;
 }
 
-/** `call` for a real wiki: bearer key, JSON in and out, a readable error for anything but 2xx. */
+/**
+ * `call` for a real wiki: bearer key, JSON in and out, a readable error for anything but 2xx. A
+ * `FormData` body goes as it is, and fetch writes its multipart content type with the boundary.
+ */
 export function wikiCaller({ baseUrl, apiKey, fetchImpl = fetch }) {
   return async function call(method, path, body) {
+    const isForm = body instanceof FormData;
     const response = await fetchImpl(`${baseUrl}${path}`, {
       method,
-      headers: { authorization: `Bearer ${apiKey}`, ...(body ? { "content-type": "application/json" } : {}) },
-      ...(body ? { body: JSON.stringify(body) } : {}),
+      headers: { authorization: `Bearer ${apiKey}`, ...(body && !isForm ? { "content-type": "application/json" } : {}) },
+      ...(body ? { body: isForm ? body : JSON.stringify(body) } : {}),
     });
     const text = await response.text();
     let json = null;

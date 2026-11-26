@@ -22,7 +22,7 @@ import play.api.test.Helpers._
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-/** How large a body the two upload routes take (AttachmentLogic.MaxUploadRequestBytes).
+/** How large a body the three upload routes take (AttachmentLogic.MaxUploadRequestBytes).
   *
   * Only the routes' body parsers run here, which is where the limit is enforced: a body over it is
   * answered with 413 before the action — and its permission check, S3 and the database — is reached.
@@ -67,6 +67,7 @@ class WikiAttachmentUploadLimitSpec extends PlaySpec with GuiceOneAppPerSuite {
   private val routes: Seq[(String, () => Action[MultipartFormData[TemporaryFile]])] = Seq(
     "uploadAttachment" -> (() => controller.uploadAttachment()),
     "uploadClipboardImage" -> (() => controller.uploadClipboardImage()),
+    "uploadAttachmentViaApi" -> (() => controller.uploadAttachmentViaApi("Page")),
   )
 
   routes.foreach { case (name, action) =>

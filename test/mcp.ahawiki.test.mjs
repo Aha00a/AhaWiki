@@ -40,7 +40,7 @@ test('a notification gets no answer, and an unknown request gets a method-not-fo
 
 test('without the write switch the agent is not offered a way to change a page', async () => {
     const names = async write => (await serverWith({ write }).rpc('tools/list')).result.tools.map(t => t.name);
-    for (const tool of ['ahawiki_save_page', 'ahawiki_rename_page', 'ahawiki_delete_page']) {
+    for (const tool of ['ahawiki_save_page', 'ahawiki_rename_page', 'ahawiki_delete_page', 'ahawiki_upload_attachment']) {
         assert.ok(!(await names(false)).includes(tool), tool);
         assert.ok((await names(true)).includes(tool), tool);
     }
@@ -122,6 +122,43 @@ test('a rename sends the revision and a comment, and refuses without either', as
     const { result } = await rpc('tools/call', { name: 'ahawiki_rename_page', arguments: { name: 'Old', newName: 'New', revision: 3, comment: 'clearer name' } });
     assert.deepEqual(calls[0].body, { name: 'Old', newName: 'New', revision: 3, comment: 'clearer name' });
     assert.match(result.content[0].text, /Renamed Old to New/);
+});
+
+test('an upload posts the file as multipart, typed by its extension, and hands back the line to put in the page', async () => {
+    const calls = [];
+    const call = async (method, path, body) => {
+        calls.push({ method, path, body });
+        return { objectKey: 'k', attachmentMacro: '[[Attachment(shot.png/shot.2026-11-26T19-00-00.png)]]', fileUrl: 'u', contentType: 'image/png' };
+    };
+    const read = async file => { assert.equal(file, 'C:/tmp/shot.png'); return Buffer.from([1, 2, 3]); };
+    const server = createServer({ name: 'ahawiki', version: '0', tools: wikiTools({ call, write: true, read }) });
+    const answer = await server.handle({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'ahawiki_upload_attachment', arguments: { name: '회의 기록', file: 'C:/tmp/shot.png' } } });
+    assert.equal(calls[0].method, 'POST');
+    assert.equal(calls[0].path, '/api/v1/attachment/%ED%9A%8C%EC%9D%98%20%EA%B8%B0%EB%A1%9D');
+    assert.ok(calls[0].body instanceof FormData);
+    const part = calls[0].body.get('file');
+    assert.equal(part.name, 'shot.png');
+    assert.equal(part.type, 'image/png');
+    assert.deepEqual([...new Uint8Array(await part.arrayBuffer())], [1, 2, 3]);
+    assert.match(answer.result.content[0].text, /\[\[Attachment\(shot\.png\/shot\.2026-11-26T19-00-00\.png\)\]\]$/);
+});
+
+test('an upload without a file path is refused before anything is read or sent', async () => {
+    const { rpc, calls } = serverWith({ write: true });
+    const { result } = await rpc('tools/call', { name: 'ahawiki_upload_attachment', arguments: { name: 'Notes', file: ' ' } });
+    assert.equal(result.isError, true);
+    assert.equal(calls.length, 0);
+});
+
+test('the caller sends a FormData body as it is, leaving the multipart content type to fetch', async () => {
+    const seen = [];
+    const fetchImpl = async (url, init) => { seen.push(init); return { ok: true, status: 200, text: async () => '{"ok":true}' }; };
+    const call = wikiCaller({ baseUrl: 'https://wiki.example', apiKey: 'k', fetchImpl });
+    const form = new FormData();
+    await call('POST', '/api/v1/attachment/X', form);
+    assert.equal(seen[0].body, form);
+    assert.equal(seen[0].headers['content-type'], undefined);
+    assert.equal(seen[0].headers.authorization, 'Bearer k');
 });
 
 test('a failure in a tool comes back for the model to read, not as a protocol error', async () => {

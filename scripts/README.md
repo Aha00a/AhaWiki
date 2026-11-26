@@ -425,7 +425,7 @@ AHAWIKI_BASE_URL=https://<wiki host> AHAWIKI_API_KEY=<key> node scripts/mcp.ahaw
 ```
 
 It speaks MCP over stdio and has no dependencies (`lib/mcp.mjs` is the protocol half and knows
-nothing of the wiki). It is read-only unless `AHAWIKI_MCP_WRITE=1`, which adds save, rename and delete. Why, and what each costs, is
+nothing of the wiki). It is read-only unless `AHAWIKI_MCP_WRITE=1`, which adds save, rename, delete and attachment upload. Why, and what each costs, is
 the wiki page Dev Mcp. `test/mcp.ahawiki.test.mjs` is part of `npm test`.
 
 ## Wiki page download
