@@ -3,7 +3,12 @@
 .AhaWiki {
 	a {
 		color: var(--color-link);
-		word-break: break-word;
+		// A long address breaks where the line ends. This was `word-break: break-word`, the old
+		// spelling of the same thing with word-break: normal -- which, set on the link itself,
+		// let a link's Korean text break after any syllable while the text around it, since
+		// 2026-11-26, breaks between words (.commonAhaWiki() below). The link now takes its
+		// word-break from where it stands.
+		overflow-wrap: anywhere;
 
 		&[target=_blank] {
 			&:before {
@@ -267,7 +272,16 @@
 		--wiki-contained-indent-list: 10px;
 
 		padding: 0 0 0 0;
-		word-break: break-all;
+		// Text breaks between words; a word wider than its line breaks where the line ends.
+		// Until 2026-11-26 this was break-all, which put a break after any letter: «적법하게»
+		// was cut after «적법하», 100,000,000원 before its 원, MEETING after MEETI. It was there
+		// so that a long address or a long word could not run out of the page, and
+		// overflow-wrap does that without breaking the words that fit.
+		// `anywhere`, not `break-word`: it also counts when the browser works out how narrow
+		// a box may get, so a table squeezed into the page still gives way inside a word, as
+		// it did under break-all, instead of becoming as wide as its longest words (Dev Less).
+		word-break: keep-all;
+		overflow-wrap: anywhere;
 		>.limitWidth>div {
 			&>, >div, >div>div, >div>div>div{
 				>p, >blockquote, >table, >.wikiTableSimpleScroll, >.math, >.error, >.info, >.adjacentPagesGraphWrapper, >.Text, >.Vim {
@@ -342,7 +356,13 @@
 			color: var(--color-code-text);
 			border-radius: 5px;
 			padding: 3px;
+			// Code has no words to keep whole: it breaks after any letter, as all text here did
+			// until 2026-11-26. And only that way -- the text's overflow-wrap: anywhere is turned
+			// off, here and on pre below. Left on, it let the browser count code as narrow as a
+			// letter when squeezing a table, and on a phone the Raw side of a WikiSyntaxPreview,
+			// six letters a line under break-all, was drawn one letter a line.
 			word-break: break-all;
+			overflow-wrap: normal;
 		}
 
 		pre {
@@ -356,6 +376,7 @@
 			padding-top: 0.5em;
 			white-space: pre-wrap;
 			word-break: break-all;
+			overflow-wrap: normal;
 			a {
 				color: var(--color-code-link);
 			}
@@ -824,9 +845,6 @@
 		border-radius: 8px;
 		color: var(--color-flash-warning-text);
 		background-color: var(--color-flash-warning-bg);
-		// .wikiContent breaks words anywhere, which is for the content. On a phone this sentence
-		// came out as "The lat / est", so it breaks between words, as the permission flash does.
-		word-break: break-word;
 
 		// Kept whole: on a phone the timestamp otherwise broke in the middle of its time.
 		time, .oldRevisionActions {
@@ -981,6 +999,14 @@
 	.wikiHistory {
 		table {
 			margin-top: 20px;
+			// Its cells are timestamps, addresses and key names more than sentences, and on a
+			// phone the table is squeezed until each is a column of fragments whatever the rule.
+			// So they go on breaking after any letter, as all of .wikiContent did until
+			// 2026-11-26: with the page's break between words this page was 38% longer on a
+			// phone and no easier to read. What this table needs is a phone layout, which
+			// nobody has written.
+			word-break: break-all;
+			overflow-wrap: normal;
 		}
 	}
 
@@ -1155,12 +1181,6 @@
 	// mixin's indent by level (25px on an h6), its padding, and its size -- a `===` label was
 	// 22.75px beside 13px text. Called at both depths, every rule holds in both (Dev Less).
 	.contractLayout() {
-		// Body text breaks between words. .commonAhaWiki() breaks anywhere, which is for a wiki
-		// page: here it cut «적법하게» after «적법하» and 100,000,000원 before its 원. A word wider
-		// than its line still breaks, rather than running out of the column.
-		word-break: keep-all;
-		overflow-wrap: break-word;
-
 		// A section: space above it, and tall enough to hold the label floating in it.
 		div[class^="HeadingWrapper"] {
 			margin-top: 1em;
@@ -1173,24 +1193,36 @@
 
 		// The title (`== SERVICE CONTRACT 용역 계약서`) keeps an h2's size, and the labels
 		// (`====== 제N조 제목`, any of `===` to `======`) are the body's size in bold. Both float in
-		// the left column, which leaves 10mm before the body's 60mm.
+		// the left column, 50mm wide, which leaves 10mm before the body's 60mm.
 		h2, h3, h4, h5, h6 {
 			float: left;
 			clear: both;
-			width: 50mm;
 			border: none;
 			margin: 0;
-			padding-right: 3mm;
 			// Not the page's justify: it spread the first line of a two-line label to both edges.
 			text-align: left;
 			word-break: keep-all;
-			// A word wider than the column goes on to the next line. A heading hides what
-			// overflows it, so until 2026-11-26 the end of SHAREHOLDERS' in a title was cut
-			// off, on paper too.
+		}
+
+		// The title is 50mm wide, and as much wider as its longest word needs, up to 57mm --
+		// which, with its padding, ends just short of the body. A heading hides what overflows
+		// it, so until 2026-11-26 the end of SHAREHOLDERS' (56mm at this size) was cut off, on
+		// paper too; broken at 50mm instead it read «SHAREHOLDE / RS'». A title whose words all
+		// fit in 50mm is as wide as it always was, and wraps where it always did.
+		h2 {
+			width: min-content;
+			min-width: 50mm;
+			max-width: 57mm;
+			padding-right: 1mm;
+			// A word wider than 57mm still breaks. break-word, not the page's anywhere: with
+			// anywhere the narrowest a title can get is one letter, and min-content above
+			// would be that rather than its longest word.
 			overflow-wrap: break-word;
 		}
 
 		h3, h4, h5, h6 {
+			width: 50mm;
+			padding-right: 3mm;
 			font-size: 1em;
 			font-weight: bold;
 			line-height: 1.6;

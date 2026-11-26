@@ -19,11 +19,13 @@ document.write('<link rel="stylesheet" href="../../../app/assets/interpreter.css
 <body class="AhaWiki no-mathjax">
 <!-- What InterpreterPaper writes for a `#!Paper contract` page -- the server's own answer to the
      text in the README, with the data-edit-link and data-edit-title attributes left out (they
-     carry a page's address, and nothing here reads them). One page that holds what the layout
+     carry a page's address, and nothing here reads them). The first page holds what the layout
      has to get right: a header and a footer with all six places filled, the left one long; a
-     `==` title with a word wider than the title column; body text and lists in Korean; a short
-     `======` label, one that takes two lines, and a `===` label. When InterpreterPaper or
-     InterpreterWiki changes what it writes, change this with it. Nothing checks that they match. -->
+     `==` title with a word wider than 50mm and narrower than 57mm; body text and lists in
+     Korean; a short `======` label, one that takes two lines, and a `===` label. The second
+     and third pages are a title and a paragraph each -- a title of short words, and one with a
+     word wider than 57mm. When InterpreterPaper or InterpreterWiki changes what it writes,
+     change this with it. Nothing checks that they match. -->
 <div class="Paper">
 <div role="main" class="wikiContent PageHarness">
 <div class="limitWidth">
@@ -36,7 +38,7 @@ document.write('<link rel="stylesheet" href="../../../app/assets/interpreter.css
   </div>
   <div class="pageFooter">
     <div class="bottomLeft">견본 주식회사</div>
-    <div class="bottomCenter">1 / 1</div>
+    <div class="bottomCenter">1 / 3</div>
     <div class="bottomRight">견본</div>
   </div>
   <div class="pageContent">
@@ -66,6 +68,48 @@ document.write('<link rel="stylesheet" href="../../../app/assets/interpreter.css
     </div>
   </div>
   <!-- 0 -->
+</div>
+<div class="page">
+  <!-- 1 -->
+  <div class="pageHeader">
+    <div class="topLeft">MINUTES OF SHAREHOLDERS' MEETING</div>
+    <div class="topCenter">대외비</div>
+    <div class="topRight">S-MM-20260101-01</div>
+  </div>
+  <div class="pageFooter">
+    <div class="bottomLeft">견본 주식회사</div>
+    <div class="bottomCenter">2 / 3</div>
+    <div class="bottomRight">견본</div>
+  </div>
+  <div class="pageContent">
+    <div>
+      <div></div><div class="HeadingWrapperSERVICE-CONTRACT-용역-계약서"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-line-start="24" data-line-end="26"><div class="InterpreterRenderContent"><h2 id="SERVICE-CONTRACT-용역-계약서" class=""><a href="#SERVICE-CONTRACT-용역-계약서" aria-label="Link to this heading" class="headingNumber">1.</a> SERVICE CONTRACT 용역 계약서</h2></div></div>
+<p data-line-start="25">낱말이 모두 50mm 안에 드는 제목은 50mm 단에 놓인다. 본문은 그 옆에서 60mm 들여 시작한다.</p>
+</div>
+    </div>
+  </div>
+  <!-- 1 -->
+</div>
+<div class="page">
+  <!-- 2 -->
+  <div class="pageHeader">
+    <div class="topLeft">MINUTES OF SHAREHOLDERS' MEETING</div>
+    <div class="topCenter">대외비</div>
+    <div class="topRight">S-MM-20260101-01</div>
+  </div>
+  <div class="pageFooter">
+    <div class="bottomLeft">견본 주식회사</div>
+    <div class="bottomCenter">3 / 3</div>
+    <div class="bottomRight">견본</div>
+  </div>
+  <div class="pageContent">
+    <div>
+      <div></div><div class="HeadingWrapperINTERNATIONALIZATION-국제화-계획서"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-line-start="28" data-line-end="30"><div class="InterpreterRenderContent"><h2 id="INTERNATIONALIZATION-국제화-계획서" class=""><a href="#INTERNATIONALIZATION-국제화-계획서" aria-label="Link to this heading" class="headingNumber">1.</a> INTERNATIONALIZATION 국제화 계획서</h2></div></div>
+<p data-line-start="29">57mm 보다 긴 낱말은 제목 단 안에서 줄이 바뀐다. 본문은 그 옆에서 60mm 들여 시작한다.</p>
+</div>
+    </div>
+  </div>
+  <!-- 2 -->
 </div></div>
 </div>
 </div>
@@ -79,11 +123,16 @@ function check() {
     const say = (ok, text) => out.push((ok ? 'PASS' : 'FAIL') + ' ' + text);
     const near = (a, b) => Math.abs(a - b) <= 1;
     const box = el => el.getBoundingClientRect();
-    const page = document.querySelector('.paperContent .page');
-    const content = page.querySelector('.pageContent > div');
-    const title = content.querySelector('h2');
-    const labels = [...content.querySelectorAll('h3, h4, h5, h6')];
-    const body = [...content.querySelectorAll('div[class^="HeadingWrapper"] > p, div[class^="HeadingWrapper"] > ul')];
+    const pages = [...document.querySelectorAll('.paperContent .page')];
+    const page = pages[0];
+    const contentOf = el => el.closest('.page').querySelector('.pageContent > div');
+    const content = contentOf(page.querySelector('.pageContent'));
+    // The three titles: one with a word between 50mm and 57mm wide, one of short words, one with
+    // a word wider than 57mm.
+    const [title, shortTitle, longTitle] = pages.map(each => each.querySelector('h2'));
+    const titles = [title, shortTitle, longTitle];
+    const labels = [...document.querySelectorAll('.paperContent h3, .paperContent h4, .paperContent h5, .paperContent h6')];
+    const body = [...document.querySelectorAll('.paperContent div[class^="HeadingWrapper"] > p, .paperContent div[class^="HeadingWrapper"] > ul')];
     const bodyFontSize = getComputedStyle(content.querySelector('p')).fontSize;
     const name = el => el.tagName.toLowerCase() + ' «' + el.textContent.replace(/^[\d.]+\s*/, '').trim().slice(0, 12) + '»';
 
@@ -120,14 +169,14 @@ function check() {
         return broken;
     };
 
-    // 1. Two columns: the title and the labels at the left edge, everything under them 60mm in.
-    const left = box(content).left;
-    const offLeft = [title, ...labels].filter(el => !near(box(el).left, left));
-    say(offLeft.length === 0, 'the title and the labels start at the left edge'
-        + (offLeft.length ? ': ' + offLeft.map(el => name(el) + ' is ' + Math.round(box(el).left - left) + 'px in').join(', ') : ''));
-    const offColumn = body.filter(el => !near(box(el).left, left + 60 * mm));
+    // 1. Two columns: the titles and the labels at the left edge, everything under them 60mm in.
+    const leftOf = el => box(contentOf(el)).left;
+    const offLeft = [...titles, ...labels].filter(el => !near(box(el).left, leftOf(el)));
+    say(offLeft.length === 0, 'the titles and the labels start at the left edge'
+        + (offLeft.length ? ': ' + offLeft.map(el => name(el) + ' is ' + Math.round(box(el).left - leftOf(el)) + 'px in').join(', ') : ''));
+    const offColumn = body.filter(el => !near(box(el).left, leftOf(el) + 60 * mm));
     say(offColumn.length === 0, 'paragraphs and lists start 60mm in (' + Math.round(60 * mm) + 'px)'
-        + (offColumn.length ? ': ' + offColumn.map(el => name(el) + ' at ' + Math.round(box(el).left - left) + 'px').join(', ') : ''));
+        + (offColumn.length ? ': ' + offColumn.map(el => name(el) + ' at ' + Math.round(box(el).left - leftOf(el)) + 'px').join(', ') : ''));
 
     // 2. A label is the body's size, whichever heading level it was written with.
     const wrongSize = labels.filter(el => getComputedStyle(el).fontSize !== bodyFontSize);
@@ -140,11 +189,24 @@ function check() {
     say(twoLines.length > 0 && spread.length === 0, 'a label of two lines is aligned left (' + twoLines.length + ' of them here)'
         + (spread.length ? ': ' + spread.map(el => name(el) + ' is ' + getComputedStyle(el).textAlign).join(', ') : ''));
 
-    // 4. A word wider than the title column is wrapped, not cut off.
-    say(title.scrollWidth <= title.clientWidth, 'the title holds its longest word'
-        + (title.scrollWidth > title.clientWidth ? ': ' + (title.scrollWidth - title.clientWidth) + 'px of it are cut off' : ''));
+    // 4. The title column. It is 50mm wide, and as much wider as the title's longest word
+    //    needs, up to 57mm; no title loses the end of a word or reaches the body.
+    const widthOf = el => parseFloat(getComputedStyle(el).width);
+    const cutOff = titles.filter(el => el.scrollWidth > el.clientWidth);
+    say(cutOff.length === 0, 'no title has a word cut off'
+        + (cutOff.length ? ': ' + cutOff.map(el => name(el) + ' loses ' + (el.scrollWidth - el.clientWidth) + 'px').join(', ') : ''));
+    say(near(widthOf(shortTitle), 50 * mm), 'a title of short words is 50mm wide (' + (widthOf(shortTitle) / mm).toFixed(1) + 'mm)');
+    const titleBroken = brokenWords(title);
+    say(titleBroken.length === 0 && widthOf(title) > 50 * mm + 1 && widthOf(title) <= 57 * mm + 1,
+        'a title word between 50mm and 57mm stays on one line, and the title is as wide as it (' + (widthOf(title) / mm).toFixed(1) + 'mm)'
+        + (titleBroken.length ? ': broken, «' + titleBroken.join('» «') + '»' : ''));
+    say(brokenWords(longTitle).length > 0 && near(widthOf(longTitle), 57 * mm),
+        'a title word wider than 57mm is broken, in a title 57mm wide (' + (widthOf(longTitle) / mm).toFixed(1) + 'mm)');
+    const intoBody = titles.filter(el => box(el).right > leftOf(el) + 60 * mm);
+    say(intoBody.length === 0, 'no title reaches the body'
+        + (intoBody.length ? ': ' + intoBody.map(el => name(el) + ' by ' + Math.round(box(el).right - leftOf(el) - 60 * mm) + 'px').join(', ') : ''));
 
-    // 5. Body text breaks between words. The title is left out: its long word has to break.
+    // 5. Body text breaks between words. The titles are left out: one of theirs has to break.
     const broken = [...body, ...labels].flatMap(el => brokenWords(el));
     say(broken.length === 0, 'no word of the body or of a label is drawn on two lines'
         + (broken.length ? ': ' + broken.length + ' are, ' + broken.slice(0, 4).map(word => '«' + word + '»').join(' ') : ''));
@@ -165,8 +227,8 @@ function check() {
     }
 
     // 7. All of it on the page.
-    const room = Math.round(box(page.querySelector('.pageFooter')).top - box(content).bottom);
-    say(room >= 0, 'the content ends above the footer (' + room + 'px to spare)');
+    const rooms = pages.map(each => Math.round(box(each.querySelector('.pageFooter')).top - box(each.querySelector('.pageContent > div')).bottom));
+    say(rooms.every(room => room >= 0), 'the content of each page ends above its footer (' + rooms.join('px, ') + 'px to spare)');
 
     const failed = out.filter(line => line.startsWith('FAIL')).length;
     out.push(failed ? 'FAIL — ' + failed + ' of ' + out.length : 'PASS — ' + out.length + ' checks');

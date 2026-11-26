@@ -36,16 +36,15 @@
 		// The three places of a header or a footer. The middle one is as wide as its text and
 		// sits in the middle of the page; the left and the right share the rest, half each.
 		// Until 2026-11-26 the three were equal thirds, so a left text wider than a third of
-		// the page wrapped beside an empty middle -- and where .wikiContent's break-all put
-		// the break: «MINUTES OF SHAREHOLDERS' MEETI / NG». Now a text breaks between words,
-		// and only when it is wider than its half.
+		// the page wrapped beside an empty middle -- and, under the break-all .wikiContent had
+		// then, in the middle of a word: «MINUTES OF SHAREHOLDERS' MEETI / NG». Now a text
+		// wraps only when it is wider than its half, and between words, as all of
+		// .wikiContent does (.commonAhaWiki() in wiki.less).
 		.threePlaces() {
 			display: grid;
 			grid-template-columns: 1fr auto 1fr;
 			column-gap: 3mm;
 			align-items: baseline;
-			word-break: keep-all;
-			overflow-wrap: break-word;
 		}
 
 		.pageHeader {

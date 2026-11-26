@@ -1,32 +1,38 @@
 # #!Paper contract layout harness
 
-Draws one `#!Paper contract` page with the real `less.css`, `wiki.css` and `interpreter.css`,
-without a server or a login, and measures what the contract layout is for:
+Draws a `#!Paper contract` document of three pages with the real `less.css`, `wiki.css` and
+`interpreter.css`, without a server or a login, and measures what the contract layout is for:
 
- * **Two columns.** The `==` title and the labels start at the left edge of the page, and the
+ * **Two columns.** The `==` titles and the labels start at the left edge of the page, and the
    paragraphs and lists under them start 60mm in.
  * **A label is the body's size**, whichever of `===` to `======` it was written with.
  * **A label of two lines is aligned left**, not spread to both edges.
- * **The title holds its longest word.** A word wider than the 50mm column goes on to the next
-   line; a heading hides what overflows it, so the alternative is a word with its end cut off.
+ * **The title column.** A title of short words is 50mm wide. A title whose longest word is
+   wider than that is as wide as the word, up to 57mm, and the word stays whole. A word wider
+   than 57mm is broken. No title loses the end of a word -- a heading hides what overflows it --
+   and none reaches the body.
  * **No word of the body or of a label is drawn on two lines.**
  * **The header and the footer:** each of the three places on one line, the middle one in the
    middle of the page, the right one ending at the right edge.
  * **All of it above the footer.**
 
-The page exists because, until 2026-11-26, five of those were not so, and no server-side spec
+The page exists because, until 2026-11-26, most of those were not so, and no server-side spec
 can see any of them. A Paper's `.pageContent` calls `.commonAhaWiki()`, whose heading rules are
 one class more specific than the contract's were, so the labels kept that mixin's indent and
-size; the page's `word-break: break-all` cut words anywhere; and the header's three places were
-equal thirds. The wiki page `Dev Less` has the account.
+size; the page's `word-break: break-all` cut words anywhere; a title word wider than 50mm was
+cut off; and the header's three places were equal thirds. The wiki page `Dev Less` has the
+account.
 
 The result is printed under the page as `PASS`/`FAIL` lines, and the last line counts them.
 
 ## The markup
 
-It is what the server answered for the text below, with the `data-edit-link` and
-`data-edit-title` attributes left out. When `InterpreterPaper` or `InterpreterWiki` changes what
-it writes, change the page with it. Nothing checks that they match.
+The first page is what the server answered for the text below, with the `data-edit-link` and
+`data-edit-title` attributes left out. The second and third pages are a title and a paragraph
+each, written by hand in the same shape: `== SERVICE CONTRACT 용역 계약서`, whose words all fit
+in 50mm, and `== INTERNATIONALIZATION 국제화 계획서`, whose first word is wider than 57mm. When
+`InterpreterPaper` or `InterpreterWiki` changes what it writes, change the page with it. Nothing
+checks that they match.
 
 ```text
 #!Paper contract S-MM-20260101-01
@@ -58,8 +64,9 @@ it writes, change the page with it. Nothing checks that they match.
 이상으로서 … 폐회를 선언하다.
 ```
 
-The long word in the title, the label that takes two lines, the `===` label among `======`
-ones and the long text in the header's left place are each there for one of the checks.
+The long word in the title -- `SHAREHOLDERS'` is 55.8mm wide at a title's size -- the label
+that takes two lines, the `===` label among `======` ones and the long text in the header's
+left place are each there for one of the checks.
 
 ## Running it
 
@@ -75,8 +82,8 @@ and open `http://localhost:9998/test/manual/paper-contract/`. `.claude/launch.js
 Headless, for the result and for a picture of it:
 
 ```bash
-chrome --headless=new --window-size=1000,1500 --virtual-time-budget=8000 --dump-dom "http://localhost:9998/test/manual/paper-contract/index.html"
-chrome --headless=new --window-size=1000,1500 --virtual-time-budget=8000 --screenshot=paper.png "http://localhost:9998/test/manual/paper-contract/index.html"
+chrome --headless=new --window-size=1000,3900 --virtual-time-budget=8000 --dump-dom "http://localhost:9998/test/manual/paper-contract/index.html"
+chrome --headless=new --window-size=1000,3900 --virtual-time-budget=8000 --screenshot=paper.png "http://localhost:9998/test/manual/paper-contract/index.html"
 ```
 
 Give each run a new, empty `--user-data-dir`: `http.server` sends no cache headers, and a profile
@@ -95,6 +102,11 @@ d=test/manual/paper-contract/_old && mkdir -p $d
 git show 7fe5ba83:app/assets/wiki.css > $d/wiki.css
 ```
 
-then open `index.html?css=_old/wiki.css`. It should end in `FAIL — 6 of 13`: the title and labels
-off the left edge, a `===` label at 22.75px, a two-line label justified, 22px of the title cut
-off, words drawn on two lines, and the header's left text on two lines. Delete `_old` afterwards.
+then open `index.html?css=_old/wiki.css`. It should end in `FAIL — 8 of 17`: the titles and
+labels off the left edge, a `===` label at 22.75px, a two-line label justified, 22px and 134px of
+two titles cut off, neither long title word handled, words drawn on two lines, and the header's
+left text on two lines. Delete `_old` afterwards.
+
+The stylesheet of `d66f7562`, the first of that day's two changes, fails 2 of 17: it broke a
+title word wider than 50mm where the column ended -- «SHAREHOLDE / RS'» -- instead of letting
+the column grow to 57mm for it.

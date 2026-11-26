@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<title>word break harness</title>
+<script>
+// ?css=<url> draws the page with another wiki.css -- the one from before a change, to see the
+// checks fail (README). ?theme=dark draws it in the dark theme; nothing is stored.
+var params = new URLSearchParams(location.search);
+document.documentElement.classList.add(params.get('theme') === 'dark' ? 'theme-ahawiki-dark' : 'theme-ahawiki-light');
+document.write('<link rel="stylesheet" href="../../../app/assets/less.css">');
+document.write('<link rel="stylesheet" href="' + (params.get('css') || '../../../app/assets/wiki.css').replace(/"/g, '&quot;') + '">');
+document.write('<link rel="stylesheet" href="../../../app/assets/interpreter.css">');
+</script>
+<style>
+    #result { font: 13px/1.5 ui-monospace, monospace; white-space: pre-wrap; margin: 16px; }
+    /* A phone's width, for the breaks only: the stylesheet's phone rules follow the window. */
+    #narrowBox { width: 390px; margin: 24px 16px; outline: 1px dashed #999; }
+</style>
+</head>
+<body class="AhaWiki no-mathjax">
+<!-- What InterpreterWiki writes for the text in the README: the answer of a wiki's
+     /api/renderAhaMark, unchanged. A long paragraph with a sum, a date and English words in it;
+     list items, one ending in an address wider than a line and one in Korean letters with no
+     space among them; a link with a long Korean label beside inline code; a #!Quote; a #!Table;
+     a #!WikiSyntaxPreview whose Preview side cannot get narrower than its colour codes.
+     Once at the page's width, and once in a 390px box, where a bare table as
+     Wiki/history.scala.html writes one follows it. When InterpreterWiki changes what it writes,
+     change this with it. Nothing checks that they match. -->
+<div role="main" class="wikiContent PageHarness" id="wide">
+<div class="limitWidth">
+<div></div><div class="HeadingWrapper줄바꿈-견본"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-edit-link="/w/Harness?action=edit&amp;revision=0&amp;lineStart=1&amp;lineEnd=24" data-line-start="1" data-line-end="24" data-edit-title="Edit section (r0, L1-L23)"><div class="InterpreterRenderContent"><h2 id="줄바꿈-견본" class=""><a href="#줄바꿈-견본" aria-label="Link to this heading" class="headingNumber">1.</a> 줄바꿈 견본</h2></div></div>
+<p>위키는 한 문단을 한 줄로 쓰는 것이 작문법에 맞으므로 화면 폭보다 긴 문단이 흔하다. 이 문단은 낱말 사이에서만 줄이 바뀌는지 보려고 일부러 길게 썼으며, 100,000,000원 같은 금액이나 2026-11-26 같은 날짜, International Standard Book Number 같은 영어 낱말이 중간에서 끊기지 않아야 한다.</p>
+<ul style="list-style-type: disc;">
+<li>목록의 항목도 낱말 사이에서만 줄이 바뀌어야 하고, 항목이 길어져 여러 줄이 되더라도 낱말 하나하나는 한 줄 안에 온전히 놓여야 한다.</li>
+<li>긴 주소는 줄 끝에서 끊긴다: <a href="https://example.com/a/very/long/path/that/keeps/going/and/going/without/any/space/until/it/is/wider/than/the/column/it/is/in.html" target="_blank" rel="noopener">https://example.com/a/very/long/path/that/keeps/going/and/going/without/any/space/until/it/is/wider/than/the/column/it/is/in.html</a></li>
+<li>띄어쓰기가 없는 긴 글자열도 넘치지 않는다: 가나다라마바사아자차카타파하가나다라마바사아자차카타파하가나다라마바사아자차카타파하가나다라마바사아자차카타파하</li>
+</ul>
+<p><a href="https://example.com/guide" target="_blank" rel="noopener">링크의 글자도 낱말 사이에서만 줄이 바뀌어야 한다는 것을 보려고 일부러 길게 쓴 링크 글자입니다</a> 그리고 <code>inline_code_long_enough_to_need_a_break_somewhere_inside_itself_when_the_column_is_narrow</code> 는 낱말 안에서 끊긴다.</p>
+<div class="InterpreterRenderMetaWrapper Quote" style="position: relative;"
+  data-edit-link="/w/Harness?action=edit&revision=0&lineStart=10&lineEnd=13"
+  data-line-start="10"
+  data-line-end="13"
+  data-edit-title="Edit (r0, L10-L12)">
+  <div class="InterpreterRenderContent"><blockquote><div><p>인용문 안의 글도 같은 규칙을 따른다. 낱말 사이에서만 줄이 바뀌고, 낱말이 줄보다 길 때만 낱말 안에서 끊긴다.</p></div></blockquote></div>
+</div>
+<div class="InterpreterRenderMetaWrapper Table" style="position: relative;"
+  data-edit-link="/w/Harness?action=edit&revision=0&lineStart=14&lineEnd=19"
+  data-line-start="14"
+  data-line-end="19"
+  data-edit-title="Edit (r0, L14-L18)">
+  <div class="InterpreterRenderContent"><table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>이름</p></div></th><th><div><p>설명</p></div></th></tr></thead><tbody><tr><td><div><p>가나다</p></div></td><td><div><p>표의 칸에 든 긴 문장도 낱말 사이에서 줄이 바뀐다. 칸이 좁아져도 낱말은 온전하다.</p></div></td></tr>
+<tr><td><div><p>라마바</p></div></td><td><div><p>둘째 줄의 설명은 조금 더 길게 써서 칸이 여러 줄이 되게 한다. 그래야 줄바꿈이 보인다.</p></div></td></tr></tbody></table></div>
+</div>
+<div class="InterpreterRenderMetaWrapper WikiSyntaxPreview" style="position: relative;"
+  data-edit-link="/w/Harness?action=edit&revision=0&lineStart=20&lineEnd=24"
+  data-line-start="20"
+  data-line-end="24"
+  data-edit-title="Edit (r0, L20-L23)">
+  <div class="InterpreterRenderContent"><table class="wikiTableSimple wikiSyntax">
+    <thead>
+        <tr>
+            <th>Raw</th>
+            <th>Preview</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="raw"><pre class="Interpreter Text text"> * [[ColorCode(rgba(255, 119, 0, 0.5))]]
+ * [[ColorCode(#ff7700)]]</pre></td>
+            <td class="preview"><div><ul style="list-style-type: disc;">
+<li><span class="Macro InlineMacro ColorCode"><span class="MacroColorCode"><span class="MacroColorCodeSwatch"><span style="background: rgba(255, 119, 0, 0.5)"></span></span><span class="MacroCopyable"><input class="auto resizeInputToContent" value="rgba(255, 119, 0, 0.5)" readonly="readonly"/><button type="button" aria-label="Copy" onclick="window.AhaWiki.Clipboard.copy(this.previousElementSibling.value);$(this).next().fadeIn();setTimeout(() =&gt; $(this).next().fadeOut(), 1000);"><i class="far fa-copy" aria-hidden="true"></i></button><span class="tooltip" onclick="$(this).fadeOut();">Copied!!</span></span></span></span></li>
+<li><span class="Macro InlineMacro ColorCode"><span class="MacroColorCode"><span class="MacroColorCodeSwatch"><span style="background: #ff7700"></span></span><span class="MacroCopyable"><input class="auto resizeInputToContent" value="#ff7700" readonly="readonly"/><button type="button" aria-label="Copy" onclick="window.AhaWiki.Clipboard.copy(this.previousElementSibling.value);$(this).next().fadeIn();setTimeout(() =&gt; $(this).next().fadeOut(), 1000);"><i class="far fa-copy" aria-hidden="true"></i></button><span class="tooltip" onclick="$(this).fadeOut();">Copied!!</span></span></span></span></li>
+</ul></div></td>
+        </tr>
+    </tbody>
+</table></div>
+</div></div>
+</div>
+</div>
+<div id="narrowBox">
+<div role="main" class="wikiContent PageHarness" id="narrow">
+<div class="limitWidth">
+<div></div><div class="HeadingWrapper줄바꿈-견본"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-edit-link="/w/Harness?action=edit&amp;revision=0&amp;lineStart=1&amp;lineEnd=24" data-line-start="1" data-line-end="24" data-edit-title="Edit section (r0, L1-L23)"><div class="InterpreterRenderContent"><h2 id="줄바꿈-견본-390" class=""><a href="#줄바꿈-견본-390" aria-label="Link to this heading" class="headingNumber">1.</a> 줄바꿈 견본</h2></div></div>
+<p>위키는 한 문단을 한 줄로 쓰는 것이 작문법에 맞으므로 화면 폭보다 긴 문단이 흔하다. 이 문단은 낱말 사이에서만 줄이 바뀌는지 보려고 일부러 길게 썼으며, 100,000,000원 같은 금액이나 2026-11-26 같은 날짜, International Standard Book Number 같은 영어 낱말이 중간에서 끊기지 않아야 한다.</p>
+<ul style="list-style-type: disc;">
+<li>목록의 항목도 낱말 사이에서만 줄이 바뀌어야 하고, 항목이 길어져 여러 줄이 되더라도 낱말 하나하나는 한 줄 안에 온전히 놓여야 한다.</li>
+<li>긴 주소는 줄 끝에서 끊긴다: <a href="https://example.com/a/very/long/path/that/keeps/going/and/going/without/any/space/until/it/is/wider/than/the/column/it/is/in.html" target="_blank" rel="noopener">https://example.com/a/very/long/path/that/keeps/going/and/going/without/any/space/until/it/is/wider/than/the/column/it/is/in.html</a></li>
+<li>띄어쓰기가 없는 긴 글자열도 넘치지 않는다: 가나다라마바사아자차카타파하가나다라마바사아자차카타파하가나다라마바사아자차카타파하가나다라마바사아자차카타파하</li>
+</ul>
+<p><a href="https://example.com/guide" target="_blank" rel="noopener">링크의 글자도 낱말 사이에서만 줄이 바뀌어야 한다는 것을 보려고 일부러 길게 쓴 링크 글자입니다</a> 그리고 <code>inline_code_long_enough_to_need_a_break_somewhere_inside_itself_when_the_column_is_narrow</code> 는 낱말 안에서 끊긴다.</p>
+<div class="InterpreterRenderMetaWrapper Quote" style="position: relative;"
+  data-edit-link="/w/Harness?action=edit&revision=0&lineStart=10&lineEnd=13"
+  data-line-start="10"
+  data-line-end="13"
+  data-edit-title="Edit (r0, L10-L12)">
+  <div class="InterpreterRenderContent"><blockquote><div><p>인용문 안의 글도 같은 규칙을 따른다. 낱말 사이에서만 줄이 바뀌고, 낱말이 줄보다 길 때만 낱말 안에서 끊긴다.</p></div></blockquote></div>
+</div>
+<div class="InterpreterRenderMetaWrapper Table" style="position: relative;"
+  data-edit-link="/w/Harness?action=edit&revision=0&lineStart=14&lineEnd=19"
+  data-line-start="14"
+  data-line-end="19"
+  data-edit-title="Edit (r0, L14-L18)">
+  <div class="InterpreterRenderContent"><table class="InterpreterTable wikiTableSimple tablesorter"><thead><tr><th><div><p>이름</p></div></th><th><div><p>설명</p></div></th></tr></thead><tbody><tr><td><div><p>가나다</p></div></td><td><div><p>표의 칸에 든 긴 문장도 낱말 사이에서 줄이 바뀐다. 칸이 좁아져도 낱말은 온전하다.</p></div></td></tr>
+<tr><td><div><p>라마바</p></div></td><td><div><p>둘째 줄의 설명은 조금 더 길게 써서 칸이 여러 줄이 되게 한다. 그래야 줄바꿈이 보인다.</p></div></td></tr></tbody></table></div>
+</div>
+<div class="InterpreterRenderMetaWrapper WikiSyntaxPreview" style="position: relative;"
+  data-edit-link="/w/Harness?action=edit&revision=0&lineStart=20&lineEnd=24"
+  data-line-start="20"
+  data-line-end="24"
+  data-edit-title="Edit (r0, L20-L23)">
+  <div class="InterpreterRenderContent"><table class="wikiTableSimple wikiSyntax">
+    <thead>
+        <tr>
+            <th>Raw</th>
+            <th>Preview</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td class="raw"><pre class="Interpreter Text text"> * [[ColorCode(rgba(255, 119, 0, 0.5))]]
+ * [[ColorCode(#ff7700)]]</pre></td>
+            <td class="preview"><div><ul style="list-style-type: disc;">
+<li><span class="Macro InlineMacro ColorCode"><span class="MacroColorCode"><span class="MacroColorCodeSwatch"><span style="background: rgba(255, 119, 0, 0.5)"></span></span><span class="MacroCopyable"><input class="auto resizeInputToContent" value="rgba(255, 119, 0, 0.5)" readonly="readonly"/><button type="button" aria-label="Copy" onclick="window.AhaWiki.Clipboard.copy(this.previousElementSibling.value);$(this).next().fadeIn();setTimeout(() =&gt; $(this).next().fadeOut(), 1000);"><i class="far fa-copy" aria-hidden="true"></i></button><span class="tooltip" onclick="$(this).fadeOut();">Copied!!</span></span></span></span></li>
+<li><span class="Macro InlineMacro ColorCode"><span class="MacroColorCode"><span class="MacroColorCodeSwatch"><span style="background: #ff7700"></span></span><span class="MacroCopyable"><input class="auto resizeInputToContent" value="#ff7700" readonly="readonly"/><button type="button" aria-label="Copy" onclick="window.AhaWiki.Clipboard.copy(this.previousElementSibling.value);$(this).next().fadeIn();setTimeout(() =&gt; $(this).next().fadeOut(), 1000);"><i class="far fa-copy" aria-hidden="true"></i></button><span class="tooltip" onclick="$(this).fadeOut();">Copied!!</span></span></span></span></li>
+</ul></div></td>
+        </tr>
+    </tbody>
+</table></div>
+</div></div>
+<table class="wikiTableSimple" id="bareTable">
+    <thead><tr><th>Page</th><th>Comment</th></tr></thead>
+    <tbody>
+    <tr><td><a href="#">PageNameWithoutAnySpaceThatIsWiderThanItsColumnAndKeepsGoing</a></td><td>표를 감싸는 것이 없으면 표는 화면 폭에 맞게 줄어든다. 낱말보다 좁아진 칸에서는 낱말 안에서 줄이 바뀐다.</td></tr>
+    <tr><td><a href="#">FrontPage</a></td><td>짧은 줄.</td></tr>
+    </tbody>
+</table>
+</div>
+</div>
+</div>
+<pre id="result">running…</pre>
+<script>
+// Text breaks between words; a word wider than its line breaks where the line ends, and nothing
+// runs out of the page. Checked at both widths.
+function check() {
+    const out = [];
+    const say = (ok, text) => out.push((ok ? 'PASS' : 'FAIL') + ' ' + text);
+    const box = el => el.getBoundingClientRect();
+    const quote = words => words.slice(0, 4).map(word => '«' + (word.length > 24 ? word.slice(0, 24) + '…' : word) + '»').join(' ');
+
+    // Every word of an element: how wide it is, how many lines it is drawn on, where it ends.
+    // Inline code is left out -- it breaks after any letter on purpose (wiki.less, code).
+    const words = el => {
+        const found = [];
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        while (walker.nextNode()) {
+            const node = walker.currentNode;
+            if (node.parentElement.closest('code, pre, .headingNumber')) continue;
+            const word = /\S+/g;
+            let match;
+            while ((match = word.exec(node.nodeValue))) {
+                const range = document.createRange();
+                range.setStart(node, match.index);
+                range.setEnd(node, match.index + match[0].length);
+                const rects = [...range.getClientRects()].filter(r => r.width > 0);
+                if (!rects.length) continue;
+                found.push({
+                    text: match[0],
+                    width: rects.reduce((sum, r) => sum + r.width, 0),
+                    lines: new Set(rects.map(r => Math.round(r.top))).size,
+                    right: Math.max(...rects.map(r => r.right)),
+                });
+            }
+        }
+        return found;
+    };
+
+    for (const [id, label] of [['wide', 'page width'], ['narrow', '390px']]) {
+        const root = document.getElementById(id);
+        const edge = box(root.querySelector('.limitWidth')).right;
+        // The innermost blocks of text, so that a word is counted once.
+        const blocks = [...root.querySelectorAll('h2, p, li, td, th')].filter(el => !el.querySelector('p, li, td, th'));
+        // How wide a line of the block can be. A <p> in a list item or a table cell is drawn
+        // inline and has no width of its own, so the nearest box around it that has one.
+        const roomOf = el => {
+            let holder = el;
+            while (!(holder.clientWidth > 0)) holder = holder.parentElement;
+            const style = getComputedStyle(holder);
+            return holder.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+        };
+        const all = blocks.flatMap(el => {
+            const room = roomOf(el);
+            return words(el).map(word => Object.assign(word, { room }));
+        });
+
+        // 1. A word that fits on a line is on one line. A pixel's leave: a cell as wide as its
+        //    one word measures a fraction of a pixel less than the word.
+        const fits = word => word.width <= word.room + 1;
+        const cut = all.filter(word => fits(word) && word.lines > 1);
+        say(cut.length === 0, label + ': no word that fits on a line is drawn on two (' + all.length + ' words)'
+            + (cut.length ? ': ' + cut.length + ' are, ' + quote(cut.map(word => word.text)) : ''));
+
+        // 2. A word wider than its line is broken, and ends inside the page.
+        const long = all.filter(word => !fits(word));
+        const whole = long.filter(word => word.lines === 1);
+        say(whole.length === 0, label + ': a word wider than its line is broken (' + long.length + ' such words)'
+            + (whole.length ? ': not ' + quote(whole.map(word => word.text)) : ''));
+
+        // 3. Nothing ends past the page's right edge. What is inside a #!Table's box scrolls
+        //    there. The WikiSyntaxPreview is left out: neither of its sides can give way here,
+        //    it is 28px wider than the box under any of these stylesheets, and on a page js.js
+        //    puts a scrolling box around it. Check 6 is about what is inside it.
+        const out2 = [...root.querySelectorAll('*')]
+            .filter(el => !el.closest('.InterpreterRenderMetaWrapper.Table .InterpreterRenderContent, table.wikiSyntax'))
+            .filter(el => box(el).width > 0 && box(el).right > edge + 1);
+        say(out2.length === 0, label + ': nothing ends past the right edge'
+            + (out2.length ? ': ' + out2.length + ' element(s) do, the first <' + out2[0].tagName.toLowerCase() + '> by ' + Math.round(box(out2[0]).right - edge) + 'px' : ''));
+    }
+
+    // 4. Inline code still gives way after any letter: in the narrow box it takes several lines.
+    const code = document.querySelector('#narrow code');
+    const codeLines = new Set([...code.getClientRects()].map(r => Math.round(r.top))).size;
+    say(codeLines > 1 && box(code).right <= box(document.querySelector('#narrow .limitWidth')).right + 1, '390px: inline code breaks inside itself and stays in (' + codeLines + ' lines)');
+
+    // 5. A bare table gives way to the page instead of growing as wide as its longest word.
+    const table = document.getElementById('bareTable');
+    const tableRoom = box(document.querySelector('#narrow .limitWidth')).width;
+    say(box(table).width <= tableRoom + 1, '390px: a table with nothing around it is no wider than the page (' + Math.round(box(table).width) + 'px of ' + Math.round(tableRoom) + 'px)');
+
+    // 6. Code squeezed in a table is no narrower than break-all makes it: the Raw side of a
+    //    WikiSyntaxPreview beside a Preview that cannot give way. With the text's
+    //    overflow-wrap: anywhere left on for code, it was drawn two letters to a line.
+    const raw = document.querySelector('#narrow table.wikiSyntax td.raw pre');
+    const rawStyle = getComputedStyle(raw);
+    const pen = document.createElement('canvas').getContext('2d');
+    pen.font = rawStyle.font;
+    const letters = (raw.clientWidth - parseFloat(rawStyle.paddingLeft) - parseFloat(rawStyle.paddingRight)) / pen.measureText('0').width;
+    say(letters >= 4, '390px: code squeezed in a table keeps four letters or more to a line (' + letters.toFixed(1) + ')');
+
+    const failed = out.filter(line => line.startsWith('FAIL')).length;
+    out.push(failed ? 'FAIL — ' + failed + ' of ' + out.length : 'PASS — ' + out.length + ' checks');
+    document.getElementById('result').textContent = out.join('\n');
+    console.log(out.join('\n'));
+}
+// After the fonts: a word's width, and so where a line breaks, is the font's.
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(check);
+</script>
+</body>
+</html>
