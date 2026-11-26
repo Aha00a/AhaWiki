@@ -237,6 +237,10 @@ document.write('<script src="' + quoted(fileOf('controls', 'public/js/AhaWiki.D3
             // 1. Closed, which is how a graph starts.
             placed('closed');
             if (whole.width >= 700) check(covered < 15, 'closed, the buttons cover less than 15% of the graph (' + covered + '%)');
+            // A panel is see-through, and what it is laid on is drawn here with five nodes: the names
+            // of eighty, sharp behind its rows, are not something this page can show. It can ask.
+            const sharp = panels().filter(panel => { const style = getComputedStyle(panel); return (style.backdropFilter || style.webkitBackdropFilter || 'none') === 'none'; }).map(called);
+            check(sharp.length === 0, 'every panel blurs the graph behind it' + (sharp.length ? ': ' + sharp.join(', ') + ' does not' : ''));
 
             const toggles = [...hud.querySelectorAll('.hudToggle')];
             const bar = hud.querySelector('.bottomBar');

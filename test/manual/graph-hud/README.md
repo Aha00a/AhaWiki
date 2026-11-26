@@ -15,6 +15,10 @@ For each graph:
 
  * **Closed**, which is how a graph starts, nothing reaches out of the graph and no panel lies on
    another. On a graph 700px wide or wider the buttons cover less than 15% of it.
+ * **Every panel blurs the graph behind it.** A panel is see-through, half white in the light
+   theme, and sharp, the names of the nodes behind it read between its rows. This one is asked of
+   the stylesheet rather than seen: the page draws five nodes, and it takes a page's eighty to
+   show.
  * **Words or icons.** From 520px across the buttons have their words; below that, icons alone.
    The number is read from the stylesheet, and two graphs a pixel apart stand on either side of it.
  * **The bar** is one line, with every button in it. The legend is whole beside them, or, where it
@@ -33,7 +37,7 @@ buttons, and the wiki page `MacroAdjacentPages` says so. Each is a `NOTE` line, 
 counts them. The `#!Graph` in a help page's table is one on every phone.
 
 The result is printed under the page as `PASS`/`FAIL` lines, the phones' after the page's own, and
-the last line counts them: `PASS — 263 checks, and 3 too small to check`.
+the last line counts them: `PASS — 276 checks, and 3 too small to check`.
 
 ## Why it exists
 
@@ -117,19 +121,25 @@ git show d66f7562:public/js/AhaWiki.D3CanvasControls.js > $d/AhaWiki.D3CanvasCon
 ```
 
 then open `index.html?css=_old/adjacent.css&controls=_old/AhaWiki.D3CanvasControls.js`. It should
-end in `FAIL — 54 of 263`, among them `on a 360px phone, Adjacent Pages: the legend is whole in the
+end in `FAIL — 67 of 276`, among them `on a 360px phone, Adjacent Pages: the legend is whole in the
 bar, beside the buttons: it runs 11px past the bar` and `on a 390px phone, #!Graph: with Control
-open, nothing reaches out of the graph: topLeft by 20px`. Thirty of the 54 are the three checks of
+open, nothing reaches out of the graph: topLeft by 20px`. Thirty of the 67 are the three checks of
 one panel at a time, which that stylesheet did not do: its script closed the other panel instead.
+Thirteen are the blur, which the bar had and the two panels did not. With the stylesheet of
+`0ffd90c9`, where the three faults are mended and the blur is yet to come, those thirteen are all
+that fail.
 
-The state before the buttons were folded at all is commit `869053f7`, and takes all four files:
+The state before the buttons were folded at all is commit `869053f7`, and takes all four files.
+The template goes under another name: sbt compiles every `.scala.html` under `test/`, and one
+left here stops `sbt test` at its compiling.
 
 ```bash
-for f in app/assets/adjacent.css public/js/AhaWiki.D3CanvasControls.js public/js/AhaWiki.AdjacentPagesGraph.js app/views/Wiki/_graphD3CanvasLayout.scala.html; do
+for f in app/assets/adjacent.css public/js/AhaWiki.D3CanvasControls.js public/js/AhaWiki.AdjacentPagesGraph.js; do
   git show 869053f7:$f > $d/$(basename $f)
 done
+git show 869053f7:app/views/Wiki/_graphD3CanvasLayout.scala.html > $d/layout.txt
 ```
 
-and `index.html?css=_old/adjacent.css&controls=_old/AhaWiki.D3CanvasControls.js&graph=_old/AhaWiki.AdjacentPagesGraph.js&template=_old/_graphD3CanvasLayout.scala.html`
-should end in `FAIL — 30 of 53`: four panels always open, covering 23% of a graph 960px wide and
+and `index.html?css=_old/adjacent.css&controls=_old/AhaWiki.D3CanvasControls.js&graph=_old/AhaWiki.AdjacentPagesGraph.js&template=_old/layout.txt`
+should end in `FAIL — 40 of 66`: four panels always open, covering 23% of a graph 960px wide and
 37% of one 700px wide, on each other in every narrow graph. Delete `_old` afterwards.

@@ -88,6 +88,8 @@
 .AhaWiki .adjacentPagesHud .hudPanel {
   position: absolute;
   background: var(--color-adjacent-hud-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--color-adjacent-hud-border);
   border-radius: 8px;
   padding: 8px 10px;
@@ -149,8 +151,6 @@
   justify-content: space-between;
   gap: 8px;
   background: color-mix(in oklch, var(--color-adjacent-hud-bg) 80%, transparent);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
   box-shadow: none;
   pointer-events: none;
 }

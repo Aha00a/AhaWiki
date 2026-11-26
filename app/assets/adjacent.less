@@ -9,6 +9,7 @@
 @hudBarHeight: 36px;	// the bar along the bottom: one line of buttons
 @hudBarGap: 6px;		// between an open panel and the bar
 @hudOpenMin: 60px;		// an open panel's button and rows are never given less than this
+@hudBlur: 8px;			// how far a panel smears the graph behind it
 // What lies beside the rows of an open panel, from one side of the graph to the other: the edge,
 // the panel's border and its padding, twice.
 @hudBesideRows: ((@hudEdge + @hudBorder + @hudOpenSide) * 2);
@@ -137,7 +138,12 @@
 
 		.hudPanel {
 			position: absolute;
+			// The background is see-through -- half white in the light theme -- so the graph stays
+			// in sight under a panel. Sharp, though, the names of the nodes behind it read between
+			// its rows; the blur leaves their colour and takes their letters.
 			background: var(--color-adjacent-hud-bg);
+			backdrop-filter: blur(@hudBlur);
+			-webkit-backdrop-filter: blur(@hudBlur);
 			border: @hudBorder solid var(--color-adjacent-hud-border);
 			border-radius: 8px;
 			padding: 8px 10px;
@@ -209,8 +215,6 @@
 				justify-content: space-between;
 				gap: 8px;
 				background: color-mix(in oklch, var(--color-adjacent-hud-bg) 80%, transparent);
-				backdrop-filter: blur(4px);
-				-webkit-backdrop-filter: blur(4px);
 				box-shadow: none;
 				pointer-events: none;
 				> .row {
