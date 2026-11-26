@@ -1145,10 +1145,76 @@
 		margin: 1px;
 	}
 
+	// A contract's two columns: the title and the labels in a 50mm column on the left, what is
+	// under them 60mm in. A mixin, called from the two places a contract is drawn --
+	// `.wikiContent .contract` below (a wiki page with `#!var class contract`) and
+	// `.paperContent.contract .page .pageContent` in _paper.less (`#!Paper contract`). Until
+	// 2026-11-26 these rules were written once, under `.wikiContent .contract`, and _paper.less
+	// repeated the two it had noticed losing. They lose there because .pageContent calls
+	// .commonAhaWiki(), whose headings are one class more specific: a Paper's labels kept that
+	// mixin's indent by level (25px on an h6), its padding, and its size -- a `===` label was
+	// 22.75px beside 13px text. Called at both depths, every rule holds in both (Dev Less).
+	.contractLayout() {
+		// Body text breaks between words. .commonAhaWiki() breaks anywhere, which is for a wiki
+		// page: here it cut «적법하게» after «적법하» and 100,000,000원 before its 원. A word wider
+		// than its line still breaks, rather than running out of the column.
+		word-break: keep-all;
+		overflow-wrap: break-word;
+
+		// A section: space above it, and tall enough to hold the label floating in it.
+		div[class^="HeadingWrapper"] {
+			margin-top: 1em;
+			&::after {
+				content: "";
+				display: table;
+				clear: both;
+			}
+		}
+
+		// The title (`== SERVICE CONTRACT 용역 계약서`) keeps an h2's size, and the labels
+		// (`====== 제N조 제목`, any of `===` to `======`) are the body's size in bold. Both float in
+		// the left column, which leaves 10mm before the body's 60mm.
+		h2, h3, h4, h5, h6 {
+			float: left;
+			clear: both;
+			width: 50mm;
+			border: none;
+			margin: 0;
+			padding-right: 3mm;
+			// Not the page's justify: it spread the first line of a two-line label to both edges.
+			text-align: left;
+			word-break: keep-all;
+			// A word wider than the column goes on to the next line. A heading hides what
+			// overflows it, so until 2026-11-26 the end of SHAREHOLDERS' in a title was cut
+			// off, on paper too.
+			overflow-wrap: break-word;
+		}
+
+		h3, h4, h5, h6 {
+			font-size: 1em;
+			font-weight: bold;
+			line-height: 1.6;
+		}
+
+		// Only what is directly under a section: a list inside a list keeps its own indent.
+		div[class^="HeadingWrapper"] > p,
+		div[class^="HeadingWrapper"] > ol,
+		div[class^="HeadingWrapper"] > ul {
+			margin-left: 60mm;
+			line-height: 1.6;
+		}
+
+		.headingNumber {
+			display: none;
+		}
+	}
+
 	.wikiContent {
 		.contract {
 			font-size: 0.85em;
 			line-height: 1.6;
+
+			.contractLayout();
 
 			// 접기/펴기 토글 버튼 숨김
 			.InterpreterRenderFoldToggle {
@@ -1164,57 +1230,6 @@
 					margin: 0;
 					padding: 0;
 				}
-			}
-
-			// HeadingWrapper: 섹션 구분 간격 + clearfix (float 넘침 방지)
-			div[class^="HeadingWrapper"] {
-				margin-top: 1em;
-				&::after {
-					content: "";
-					display: table;
-					clear: both;
-				}
-			}
-
-			// 표지 제목 h2 (== SERVICE CONTRACT 용역 계약서):
-			// 기본 h2 크기/볼드 유지, 좌측 float 50mm
-			h2 {
-				float: left;
-				clear: both;
-				width: 50mm;
-				border: none;
-				margin: 0;
-				padding-right: 3mm;
-				text-align: left;
-				word-break: keep-all;
-			}
-
-			// 조항 제목 h3~h6 (====== 제N조 제목):
-			// 본문 크기 + 굵게, 좌측 float 50mm (본문 margin-left 60mm → 10mm 여백)
-			h3, h4, h5, h6 {
-				float: left;
-				clear: both;
-				width: 50mm;
-				border: none;
-				margin: 0;
-				padding-right: 3mm;
-				font-size: 1em;
-				font-weight: bold;
-				line-height: 1.6;
-				word-break: keep-all;
-			}
-
-			// 조항 내용: HeadingWrapper 직속 자식만 60mm 들여쓰기
-			div[class^="HeadingWrapper"] > p,
-			div[class^="HeadingWrapper"] > ol,
-			div[class^="HeadingWrapper"] > ul {
-				margin-left: 60mm;
-				line-height: 1.6;
-			}
-
-			// 조항 번호 숨김
-			.headingNumber {
-				display: none;
 			}
 
 			// 테이블 (옵션 사용 시)

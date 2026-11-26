@@ -33,13 +33,26 @@
 		}
 		padding: @a4PaddingTop @a4PaddingRight @a4PaddingBottom @a4PaddingLeft;
 
+		// The three places of a header or a footer. The middle one is as wide as its text and
+		// sits in the middle of the page; the left and the right share the rest, half each.
+		// Until 2026-11-26 the three were equal thirds, so a left text wider than a third of
+		// the page wrapped beside an empty middle -- and where .wikiContent's break-all put
+		// the break: «MINUTES OF SHAREHOLDERS' MEETI / NG». Now a text breaks between words,
+		// and only when it is wider than its half.
+		.threePlaces() {
+			display: grid;
+			grid-template-columns: 1fr auto 1fr;
+			column-gap: 3mm;
+			align-items: baseline;
+			word-break: keep-all;
+			overflow-wrap: break-word;
+		}
+
 		.pageHeader {
 			border-bottom: 1mm solid currentColor;
-			display: flex;
-			align-items: baseline;
-			.topLeft   { flex: 1; }
-			.topCenter { flex: 1; text-align: center; }
-			.topRight  { flex: 1; text-align: right; }
+			.threePlaces();
+			.topCenter { text-align: center; }
+			.topRight  { text-align: right; }
 		}
 
 		.pageFooter {
@@ -48,11 +61,9 @@
 			width: @a4Width - @a4PaddingLeft - @a4PaddingRight;
 			border-top: 1mm solid currentColor;
 			padding-top: 3mm;
-			display: flex;
-			align-items: baseline;
-			.bottomLeft   { flex: 1; }
-			.bottomCenter { flex: 1; text-align: center; }
-			.bottomRight  { flex: 1; text-align: right; }
+			.threePlaces();
+			.bottomCenter { text-align: center; }
+			.bottomRight  { text-align: right; }
 		}
 
 		.pageContent {
@@ -123,19 +134,16 @@
 
 	&.contract .page {
 		.pageContent {
+			// The contract's two columns, called again at this depth. .pageContent above calls
+			// .commonAhaWiki(), and its headings and paragraphs outweigh the same rules written
+			// under `.wikiContent .contract`. This block used to repeat the ones seen to lose --
+			// the headings' top margin and underline, the body's 60mm -- and the rest went on
+			// losing: see .contractLayout() in wiki.less.
+			.contractLayout();
+
+			// The page's own title; a contract's is its `==` heading.
 			h1 {
 				display: none;
-			}
-			h1, h2, h3, h4, h5, h6 {
-				margin-top: 0;
-				border-bottom: none;
-			}
-			> div, > div > div, > div > div > div {
-				div[class^="HeadingWrapper"] > p,
-				div[class^="HeadingWrapper"] > ol,
-				div[class^="HeadingWrapper"] > ul {
-					margin-left: 60mm;
-				}
 			}
 		}
 		.toc {

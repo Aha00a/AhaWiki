@@ -1171,18 +1171,17 @@
 }
 .AhaWiki .paperContent .page .pageHeader {
   border-bottom: 1mm solid currentColor;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  column-gap: 3mm;
   align-items: baseline;
-}
-.AhaWiki .paperContent .page .pageHeader .topLeft {
-  flex: 1;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 .AhaWiki .paperContent .page .pageHeader .topCenter {
-  flex: 1;
   text-align: center;
 }
 .AhaWiki .paperContent .page .pageHeader .topRight {
-  flex: 1;
   text-align: right;
 }
 .AhaWiki .paperContent .page .pageFooter {
@@ -1191,18 +1190,17 @@
   width: 180mm;
   border-top: 1mm solid currentColor;
   padding-top: 3mm;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  column-gap: 3mm;
   align-items: baseline;
-}
-.AhaWiki .paperContent .page .pageFooter .bottomLeft {
-  flex: 1;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 .AhaWiki .paperContent .page .pageFooter .bottomCenter {
-  flex: 1;
   text-align: center;
 }
 .AhaWiki .paperContent .page .pageFooter .bottomRight {
-  flex: 1;
   text-align: right;
 }
 .AhaWiki .paperContent .page .pageContent {
@@ -1876,28 +1874,52 @@
 .AhaWiki .paperContent.landscape .page.portrait .pageFooter {
   width: 180mm;
 }
-.AhaWiki .paperContent.contract .page .pageContent h1 {
-  display: none;
+.AhaWiki .paperContent.contract .page .pageContent {
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
-.AhaWiki .paperContent.contract .page .pageContent h1,
+.AhaWiki .paperContent.contract .page .pageContent div[class^="HeadingWrapper"] {
+  margin-top: 1em;
+}
+.AhaWiki .paperContent.contract .page .pageContent div[class^="HeadingWrapper"]::after {
+  content: "";
+  display: table;
+  clear: both;
+}
 .AhaWiki .paperContent.contract .page .pageContent h2,
 .AhaWiki .paperContent.contract .page .pageContent h3,
 .AhaWiki .paperContent.contract .page .pageContent h4,
 .AhaWiki .paperContent.contract .page .pageContent h5,
 .AhaWiki .paperContent.contract .page .pageContent h6 {
-  margin-top: 0;
-  border-bottom: none;
+  float: left;
+  clear: both;
+  width: 50mm;
+  border: none;
+  margin: 0;
+  padding-right: 3mm;
+  text-align: left;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
-.AhaWiki .paperContent.contract .page .pageContent > div div[class^="HeadingWrapper"] > p,
-.AhaWiki .paperContent.contract .page .pageContent > div > div div[class^="HeadingWrapper"] > p,
-.AhaWiki .paperContent.contract .page .pageContent > div > div > div div[class^="HeadingWrapper"] > p,
-.AhaWiki .paperContent.contract .page .pageContent > div div[class^="HeadingWrapper"] > ol,
-.AhaWiki .paperContent.contract .page .pageContent > div > div div[class^="HeadingWrapper"] > ol,
-.AhaWiki .paperContent.contract .page .pageContent > div > div > div div[class^="HeadingWrapper"] > ol,
-.AhaWiki .paperContent.contract .page .pageContent > div div[class^="HeadingWrapper"] > ul,
-.AhaWiki .paperContent.contract .page .pageContent > div > div div[class^="HeadingWrapper"] > ul,
-.AhaWiki .paperContent.contract .page .pageContent > div > div > div div[class^="HeadingWrapper"] > ul {
+.AhaWiki .paperContent.contract .page .pageContent h3,
+.AhaWiki .paperContent.contract .page .pageContent h4,
+.AhaWiki .paperContent.contract .page .pageContent h5,
+.AhaWiki .paperContent.contract .page .pageContent h6 {
+  font-size: 1em;
+  font-weight: bold;
+  line-height: 1.6;
+}
+.AhaWiki .paperContent.contract .page .pageContent div[class^="HeadingWrapper"] > p,
+.AhaWiki .paperContent.contract .page .pageContent div[class^="HeadingWrapper"] > ol,
+.AhaWiki .paperContent.contract .page .pageContent div[class^="HeadingWrapper"] > ul {
   margin-left: 60mm;
+  line-height: 1.6;
+}
+.AhaWiki .paperContent.contract .page .pageContent .headingNumber {
+  display: none;
+}
+.AhaWiki .paperContent.contract .page .pageContent h1 {
+  display: none;
 }
 .AhaWiki .paperContent.contract .page .toc {
   display: none;
@@ -3091,6 +3113,48 @@
 .AhaWiki .wikiContent .contract {
   font-size: 0.85em;
   line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.AhaWiki .wikiContent .contract div[class^="HeadingWrapper"] {
+  margin-top: 1em;
+}
+.AhaWiki .wikiContent .contract div[class^="HeadingWrapper"]::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+.AhaWiki .wikiContent .contract h2,
+.AhaWiki .wikiContent .contract h3,
+.AhaWiki .wikiContent .contract h4,
+.AhaWiki .wikiContent .contract h5,
+.AhaWiki .wikiContent .contract h6 {
+  float: left;
+  clear: both;
+  width: 50mm;
+  border: none;
+  margin: 0;
+  padding-right: 3mm;
+  text-align: left;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.AhaWiki .wikiContent .contract h3,
+.AhaWiki .wikiContent .contract h4,
+.AhaWiki .wikiContent .contract h5,
+.AhaWiki .wikiContent .contract h6 {
+  font-size: 1em;
+  font-weight: bold;
+  line-height: 1.6;
+}
+.AhaWiki .wikiContent .contract div[class^="HeadingWrapper"] > p,
+.AhaWiki .wikiContent .contract div[class^="HeadingWrapper"] > ol,
+.AhaWiki .wikiContent .contract div[class^="HeadingWrapper"] > ul {
+  margin-left: 60mm;
+  line-height: 1.6;
+}
+.AhaWiki .wikiContent .contract .headingNumber {
+  display: none;
 }
 .AhaWiki .wikiContent .contract .InterpreterRenderFoldToggle {
   display: none;
@@ -3105,48 +3169,6 @@
     margin: 0;
     padding: 0;
   }
-}
-.AhaWiki .wikiContent .contract div[class^="HeadingWrapper"] {
-  margin-top: 1em;
-}
-.AhaWiki .wikiContent .contract div[class^="HeadingWrapper"]::after {
-  content: "";
-  display: table;
-  clear: both;
-}
-.AhaWiki .wikiContent .contract h2 {
-  float: left;
-  clear: both;
-  width: 50mm;
-  border: none;
-  margin: 0;
-  padding-right: 3mm;
-  text-align: left;
-  word-break: keep-all;
-}
-.AhaWiki .wikiContent .contract h3,
-.AhaWiki .wikiContent .contract h4,
-.AhaWiki .wikiContent .contract h5,
-.AhaWiki .wikiContent .contract h6 {
-  float: left;
-  clear: both;
-  width: 50mm;
-  border: none;
-  margin: 0;
-  padding-right: 3mm;
-  font-size: 1em;
-  font-weight: bold;
-  line-height: 1.6;
-  word-break: keep-all;
-}
-.AhaWiki .wikiContent .contract div[class^="HeadingWrapper"] > p,
-.AhaWiki .wikiContent .contract div[class^="HeadingWrapper"] > ol,
-.AhaWiki .wikiContent .contract div[class^="HeadingWrapper"] > ul {
-  margin-left: 60mm;
-  line-height: 1.6;
-}
-.AhaWiki .wikiContent .contract .headingNumber {
-  display: none;
 }
 .AhaWiki .wikiContent .contract .InterpreterTable {
   width: 100%;

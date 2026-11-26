@@ -34,6 +34,25 @@ lessc --source-map wiki.less wiki.css
  * 살리지 않고 지웠다. 규칙마다 운영 페이지에 끼워 390px 에서 재 보니, 넓은 표는 이미 모두 스크롤되고(`js.js` 가 감싼다) `display: block` 은 RecentChanges 의 표 모양만 바꿔 206px 길게 했다. Schema 높이 제한은 상자 안에 스크롤을 하나 더 만들었다. 휴대폰 목차는 이미 접힌 채 열린다. `hr` 여백은 이미 0이고, 제목 여백 5~15px 차이는 그림에서 거의 보이지 않았다. `.seeAlsoGrid` 마크업은 2026-05-01 에 없어졌다.
  * 휴대폰에서 `.wikiContent` 에 규칙을 더하려면 `.wikiContent { … @media @widthTablet { … } }` 안에 쓴다. 제목 크기가 그렇게 들어가 있다([Dev Editor] «블록 단추와 휴대폰»).
 
+=== Paper 안에서는 같은 규칙이 진다
+
+`_paper.less` 의 `.pageContent` 는 `.commonAhaWiki()` 를 부른다. 그래서 그 믹스인의 제목 규칙이 Paper 안에서는 `.AhaWiki .paperContent .page .pageContent h6` 으로 컴파일된다 — 클래스가 넷이다. `.wikiContent` 아래에 쓴 규칙(`.AhaWiki .wikiContent .contract h6`, 클래스 셋)은 같은 속성을 두고 다투면 진다. 위키 페이지에서는 반대다. 믹스인 쪽이 `.AhaWiki .wikiContent h6`, 클래스 둘이라 `.contract` 규칙이 이긴다.
+
+ * 2026-11-26 까지 계약서 레이아웃(`contract`, [InterpreterPaper])이 그렇게 지고 있었다. 제목·라벨 규칙은 `.wikiContent .contract` 아래에 한 번만 쓰여 있었고, `_paper.less` 의 `&.contract .page` 블록은 지는 것을 본 둘 — 제목의 위 여백과 밑줄, 본문의 60mm — 만 다시 써 두었다. 나머지는 계속 졌다. `#!Paper contract` 의 라벨은 믹스인의 단계별 들여쓰기(`======` 는 25px)와 안쪽 여백을 그대로 가졌고, `===` 라벨은 13px 본문 옆에서 22.75px 였다. 그 규칙의 주석은 «본문 크기» 라고 적고 있었다.
+ * 고친 방법: 2단 규칙을 `wiki.less` 의 `.contractLayout()` 믹스인으로 묶고 두 곳에서 부른다 — `.wikiContent .contract` 와 `_paper.less` 의 `.paperContent.contract .page .pageContent`. 규칙은 한 번만 쓰고, 두 깊이로 컴파일된다. Paper 에서 지는 규칙을 하나씩 골라 다시 쓰는 방식은 그만뒀다. 빠뜨린 것이 조용히 진다.
+ * 같은 날 그 믹스인에 넣은 것:
+  * 본문은 낱말 사이에서만 줄이 바뀐다(`word-break: keep-all`). `.commonAhaWiki()` 의 `break-all` 은 위키 본문을 위한 것이고, 계약서에서는 «적법하/게», «100,000,000/원» 처럼 끊겼다. 줄보다 긴 낱말은 줄 끝에서 끊는다(`overflow-wrap: break-word`).
+  * 제목과 라벨에도 `overflow-wrap: break-word`. 제목은 `overflow: hidden` 이라, 50mm 단보다 긴 낱말은 줄이 바뀌지 않고 끝이 잘려 있었다. 26px 제목의 `SHAREHOLDERS'` 가 22px 잘렸고, 인쇄해도 같았다.
+  * 라벨에 `text-align: left`. 쪽의 `justify` 를 물려받아 두 줄짜리 라벨의 첫 줄이 양쪽 끝으로 벌어졌다.
+ * 머리글과 바닥글(`.pageHeader`·`.pageFooter`)은 세 칸을 `flex: 1` 로 3등분하던 것을 `grid-template-columns: 1fr auto 1fr` 로 바꿨다(`_paper.less` 의 `.threePlaces()`). 가운데 칸은 글자 폭만큼, 양옆은 남는 폭의 반씩이다. 3등분일 때는 왼쪽 글이 쪽 폭의 3분의 1보다 길면 가운데가 비어 있어도 줄이 바뀌었고, `.wikiContent` 의 `break-all` 을 물려받아 «MEETI / NG» 로 끊겼다. 이것은 `contract` 가 아닌 Paper 에도 적용된다.
+ * 하지 않은 것:
+  * 낱말 단위 줄바꿈을 위키 본문 전체나 모든 Paper 로 넓히지 않았다. 줄이 바뀌는 자리가 달라지면 쪽에 맞춰 쓴 문서가 넘칠 수 있는데, 재 본 것은 계약서 양식뿐이다.
+  * 긴 낱말의 글자를 줄이거나 단 밖으로 내보내지 않았다. 끊긴 모양(«SHAREHOLDE / RS'»)이 보기 좋지는 않지만, 글자가 사라지거나 본문을 덮는 것보다 낫다. 보기 싫으면 제목을 짧게 쓴다.
+  * 제목(5px)과 라벨(3px, `===` 는 5px)의 안쪽 여백은 맞추지 않았다. `.commonAhaWiki()` 가 주는 값 그대로다.
+  * 양옆 칸이 반을 넘어 옆 칸의 빈자리까지 쓰게 하지 않았다. 그러면 가운데 칸이 쪽의 한가운데에 있지 못한다.
+ * 확인: `test/manual/paper-contract/`(브라우저, 서버 없음)가 옛 `wiki.css` 로는 13개 중 6개가 FAIL 이고 새것으로는 모두 PASS 다. 운영에서는 소유자 위키 두 곳의 Paper 문서 43개(86쪽, 그중 계약서 양식 42개)에 새 규칙을 끼워 넣어 쪽마다 바닥 여유를 쟀다. 쪽수가 바뀐 문서는 없고, 새로 넘친 쪽도 없다. 한 쪽은 여유가 10px 늘었고(제목의 아래 여백이 없어졌다) 나머지 85쪽은 같았다. 전부터 넘쳐 있던 다섯 문서는 넘친 양이 그대로였다. 문단과 항목이 73개인 문서 하나에서는 두 줄에 걸친 낱말이 23개에서 0개가 됐고, 높이가 바뀐 문단은 없었다 — 양쪽 정렬이라 줄마다 여유가 있다.
+ * 되돌리려면 그 커밋을 revert 한다. 화면만 바뀌고 저장된 것은 없다.
+
 == 파일 구조
 
 === 공용 믹스인 (컴파일 안 함)

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<title>paper contract harness</title>
+<script>
+// ?css=<url> draws the page with another wiki.css -- the one from before a change, to see the
+// checks fail (README). ?theme=dark draws it in the dark theme; nothing is stored.
+var params = new URLSearchParams(location.search);
+document.documentElement.classList.add(params.get('theme') === 'dark' ? 'theme-ahawiki-dark' : 'theme-ahawiki-light');
+document.write('<link rel="stylesheet" href="../../../app/assets/less.css">');
+document.write('<link rel="stylesheet" href="' + (params.get('css') || '../../../app/assets/wiki.css').replace(/"/g, '&quot;') + '">');
+document.write('<link rel="stylesheet" href="../../../app/assets/interpreter.css">');
+</script>
+<style>
+    #result { font: 13px/1.5 ui-monospace, monospace; white-space: pre-wrap; margin: 16px; }
+</style>
+</head>
+<body class="AhaWiki no-mathjax">
+<!-- What InterpreterPaper writes for a `#!Paper contract` page -- the server's own answer to the
+     text in the README, with the data-edit-link and data-edit-title attributes left out (they
+     carry a page's address, and nothing here reads them). One page that holds what the layout
+     has to get right: a header and a footer with all six places filled, the left one long; a
+     `==` title with a word wider than the title column; body text and lists in Korean; a short
+     `======` label, one that takes two lines, and a `===` label. When InterpreterPaper or
+     InterpreterWiki changes what it writes, change this with it. Nothing checks that they match. -->
+<div class="Paper">
+<div role="main" class="wikiContent PageHarness">
+<div class="limitWidth">
+<div class="paperContent contract"><div class="page">
+  <!-- 0 -->
+  <div class="pageHeader">
+    <div class="topLeft">MINUTES OF SHAREHOLDERS' MEETING</div>
+    <div class="topCenter">대외비</div>
+    <div class="topRight">S-MM-20260101-01</div>
+  </div>
+  <div class="pageFooter">
+    <div class="bottomLeft">견본 주식회사</div>
+    <div class="bottomCenter">1 / 1</div>
+    <div class="bottomRight">견본</div>
+  </div>
+  <div class="pageContent">
+    <div>
+      <div></div><div class="HeadingWrapperMINUTES-OF-SHAREHOLDERS&#39;-MEETING-임시주주총회-의사록"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-line-start="1" data-line-end="22"><div class="InterpreterRenderContent"><h2 id="MINUTES-OF-SHAREHOLDERS&#39;-MEETING-임시주주총회-의사록" class=""><a href="#MINUTES-OF-SHAREHOLDERS&#39;-MEETING-임시주주총회-의사록" aria-label="Link to this heading" class="headingNumber">1.</a> MINUTES OF SHAREHOLDERS' MEETING 임시주주총회 의사록</h2></div></div>
+<p data-line-start="2">2026년 01월 01일 10시 00분 본점 회의실에서 임시주주총회를 개최하다.</p>
+<ul style="list-style-type: disc;">
+<li data-line-start="4">주주총수: 3명, 총발행주식수: 10,000주</li>
+<li data-line-start="5">참석주주수: 3명, 참석주식수: 10,000주 (100%)</li>
+</ul>
+<p data-line-start="7">의장인 대표이사는 정관규정에 따라 의장석에 등단하여 위와 같이 법정수에 달하는 주주가 출석하였으므로 본 총회는 적법하게 성립됨을 고하고 개회를 선언한 후 다음 의안을 부의하고 심의를 구하다.</p>
+</div><div class="HeadingWrapper제1호-의안"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-line-start="9" data-line-end="17"><div class="InterpreterRenderContent"><h6 id="제1호-의안" class=""><a href="#제1호-의안" aria-label="Link to this heading" class="headingNumber">1.0.0.0.1.</a> 제1호 의안</h6></div></div>
+<p data-line-start="10"><b>임원 보수 한도 승인의 건</b></p>
+<p data-line-start="12">의장은 본 회사의 임원의 보수의 한도를 다음과 같이 결정할 것을 제안하고 그 가부를 물은 바 전원 이의없이 찬성하다. 이사의 보수한도는 100,000,000원으로 하고 감사의 보수한도는 50,000,000원으로 한다.</p>
+<ul style="list-style-type: decimal;">
+<li data-line-start="13">이사의 보수한도 : 100,000,000원</li>
+<li data-line-start="14">감사의 보수한도 : 50,000,000원</li>
+<ul style="list-style-type: lower-alpha;">
+<li data-line-start="15">상여금은 위 한도에 포함하며, 퇴직금은 별도의 지급규정에 따라 산정하여 지급한다.</li>
+</ul>
+</ul>
+</div><div class="HeadingWrapper제2호-의안-정관-일부-변경-및-본점-이전-승인의-건"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-line-start="17" data-line-end="20"><div class="InterpreterRenderContent"><h6 id="제2호-의안-정관-일부-변경-및-본점-이전-승인의-건" class=""><a href="#제2호-의안-정관-일부-변경-및-본점-이전-승인의-건" aria-label="Link to this heading" class="headingNumber">1.0.0.0.2.</a> 제2호 의안 정관 일부 변경 및 본점 이전 승인의 건</h6></div></div>
+<p data-line-start="18">의장은 정관 제3조를 별지와 같이 변경할 것을 제안하고 그 가부를 물은 바 전원 이의없이 원안대로 승인하다.</p>
+</div><div class="HeadingWrapper폐회"><div class="InterpreterRenderMetaWrapper" style="position: relative;" data-line-start="20" data-line-end="22"><div class="InterpreterRenderContent"><h3 id="폐회" class=""><a href="#폐회" aria-label="Link to this heading" class="headingNumber">1.1.</a> 폐회</h3></div></div>
+<p data-line-start="21">이상으로서 총회목적인 의안 전부의 심의를 종료하였음을 고하고 의장은 폐회를 선언하다.</p>
+</div>
+    </div>
+  </div>
+  <!-- 0 -->
+</div></div>
+</div>
+</div>
+</div>
+<pre id="result">running…</pre>
+<script>
+// What the contract layout is for, measured: two columns that hold, labels at the body's size,
+// no word cut in two or cut off, and a header whose three places do not waste the row.
+function check() {
+    const out = [];
+    const say = (ok, text) => out.push((ok ? 'PASS' : 'FAIL') + ' ' + text);
+    const near = (a, b) => Math.abs(a - b) <= 1;
+    const box = el => el.getBoundingClientRect();
+    const page = document.querySelector('.paperContent .page');
+    const content = page.querySelector('.pageContent > div');
+    const title = content.querySelector('h2');
+    const labels = [...content.querySelectorAll('h3, h4, h5, h6')];
+    const body = [...content.querySelectorAll('div[class^="HeadingWrapper"] > p, div[class^="HeadingWrapper"] > ul')];
+    const bodyFontSize = getComputedStyle(content.querySelector('p')).fontSize;
+    const name = el => el.tagName.toLowerCase() + ' «' + el.textContent.replace(/^[\d.]+\s*/, '').trim().slice(0, 12) + '»';
+
+    // One millimetre in pixels, as this browser draws it.
+    const probe = document.body.appendChild(document.createElement('div'));
+    probe.style.cssText = 'position:absolute;width:100mm;height:0';
+    const mm = box(probe).width / 100;
+    probe.remove();
+
+    // The text of an element, and the lines it is drawn on.
+    const textRects = el => {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        return [...range.getClientRects()].filter(r => r.width > 0);
+    };
+    const lineCount = el => new Set(textRects(el).map(r => Math.round(r.top))).size;
+    // The words of an element drawn on more than one line. A heading's number is not drawn.
+    const brokenWords = el => {
+        const broken = [];
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        while (walker.nextNode()) {
+            const node = walker.currentNode;
+            if (node.parentElement.closest('.headingNumber')) continue;
+            const word = /\S+/g;
+            let match;
+            while ((match = word.exec(node.nodeValue))) {
+                const range = document.createRange();
+                range.setStart(node, match.index);
+                range.setEnd(node, match.index + match[0].length);
+                const tops = new Set([...range.getClientRects()].filter(r => r.width > 0).map(r => Math.round(r.top)));
+                if (tops.size > 1) broken.push(match[0]);
+            }
+        }
+        return broken;
+    };
+
+    // 1. Two columns: the title and the labels at the left edge, everything under them 60mm in.
+    const left = box(content).left;
+    const offLeft = [title, ...labels].filter(el => !near(box(el).left, left));
+    say(offLeft.length === 0, 'the title and the labels start at the left edge'
+        + (offLeft.length ? ': ' + offLeft.map(el => name(el) + ' is ' + Math.round(box(el).left - left) + 'px in').join(', ') : ''));
+    const offColumn = body.filter(el => !near(box(el).left, left + 60 * mm));
+    say(offColumn.length === 0, 'paragraphs and lists start 60mm in (' + Math.round(60 * mm) + 'px)'
+        + (offColumn.length ? ': ' + offColumn.map(el => name(el) + ' at ' + Math.round(box(el).left - left) + 'px').join(', ') : ''));
+
+    // 2. A label is the body's size, whichever heading level it was written with.
+    const wrongSize = labels.filter(el => getComputedStyle(el).fontSize !== bodyFontSize);
+    say(wrongSize.length === 0, 'labels are the size of the body text (' + bodyFontSize + ')'
+        + (wrongSize.length ? ': ' + wrongSize.map(el => name(el) + ' is ' + getComputedStyle(el).fontSize).join(', ') : ''));
+
+    // 3. A label of two lines is not spread to both edges.
+    const twoLines = labels.filter(el => lineCount(el) > 1);
+    const spread = twoLines.filter(el => !['left', 'start'].includes(getComputedStyle(el).textAlign));
+    say(twoLines.length > 0 && spread.length === 0, 'a label of two lines is aligned left (' + twoLines.length + ' of them here)'
+        + (spread.length ? ': ' + spread.map(el => name(el) + ' is ' + getComputedStyle(el).textAlign).join(', ') : ''));
+
+    // 4. A word wider than the title column is wrapped, not cut off.
+    say(title.scrollWidth <= title.clientWidth, 'the title holds its longest word'
+        + (title.scrollWidth > title.clientWidth ? ': ' + (title.scrollWidth - title.clientWidth) + 'px of it are cut off' : ''));
+
+    // 5. Body text breaks between words. The title is left out: its long word has to break.
+    const broken = [...body, ...labels].flatMap(el => brokenWords(el));
+    say(broken.length === 0, 'no word of the body or of a label is drawn on two lines'
+        + (broken.length ? ': ' + broken.length + ' are, ' + broken.slice(0, 4).map(word => '«' + word + '»').join(' ') : ''));
+
+    // 6. The header and the footer: left and right keep their text on one line when there is room
+    //    for it, the middle is in the middle of the page, and the right ends at the right edge.
+    for (const [bar, l, c, r] of [['.pageHeader', '.topLeft', '.topCenter', '.topRight'], ['.pageFooter', '.bottomLeft', '.bottomCenter', '.bottomRight']]) {
+        const barBox = box(page.querySelector(bar));
+        const cells = [l, c, r].map(selector => page.querySelector(bar + ' ' + selector));
+        const wrapped = cells.filter(cell => lineCount(cell) > 1);
+        say(wrapped.length === 0, bar + ': each of the three is on one line'
+            + (wrapped.length ? ': ' + wrapped.map(cell => '«' + cell.textContent.trim() + '» takes ' + lineCount(cell)).join(', ') : ''));
+        const [leftText, centerText, rightText] = cells.map(cell => { const rects = textRects(cell); return { left: Math.min(...rects.map(x => x.left)), right: Math.max(...rects.map(x => x.right)) }; });
+        const middle = (centerText.left + centerText.right) / 2;
+        say(near(middle, (barBox.left + barBox.right) / 2), bar + ': the middle text is in the middle of the page'
+            + (near(middle, (barBox.left + barBox.right) / 2) ? '' : ': ' + Math.round(middle - (barBox.left + barBox.right) / 2) + 'px off'));
+        say(near(leftText.left, barBox.left) && near(rightText.right, barBox.right), bar + ': the left text starts at the left edge and the right one ends at the right edge');
+    }
+
+    // 7. All of it on the page.
+    const room = Math.round(box(page.querySelector('.pageFooter')).top - box(content).bottom);
+    say(room >= 0, 'the content ends above the footer (' + room + 'px to spare)');
+
+    const failed = out.filter(line => line.startsWith('FAIL')).length;
+    out.push(failed ? 'FAIL — ' + failed + ' of ' + out.length : 'PASS — ' + out.length + ' checks');
+    document.getElementById('result').textContent = out.join('\n');
+    console.log(out.join('\n'));
+}
+// After the fonts: a word's width, and so where a line breaks, is the font's.
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(check);
+</script>
+</body>
+</html>
