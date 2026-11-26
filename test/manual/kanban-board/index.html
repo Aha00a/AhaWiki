@@ -129,7 +129,9 @@ document.documentElement.classList.add(params.get('theme') === 'dark' ? 'theme-a
             ' * BlockedBy: [#card-a 설계 문서 쓰기]',
             '==== 내가 맡은 카드 ==== #card-c',
             '===== Property',
+            ' * DueDate: [2099-12-31]',
             ' * Assignee: [User:' + me + ']',
+            ' * RelatedCard: [#card-a 설계 문서 쓰기]',
             '=== Doing',
             '==== 진행 중인 일 ==== #card-d',
             '===== Property',
@@ -138,6 +140,7 @@ document.documentElement.classList.add(params.get('theme') === 'dark' ? 'theme-a
             '==== 끝난 일 ==== #card-e',
             '===== Property',
             ' * Assignee: [User:Bob]',
+            ' * BlockedBy: [#card-b 검토 받기]',
         ]).join('\n');
         const rawText = 'A page with a board on it.\n\n[[[#!Kanban\n' + boardText + '\n]]]\n';
 
@@ -251,17 +254,50 @@ document.documentElement.classList.add(params.get('theme') === 'dark' ? 'theme-a
             return other.length ? ' -- it is not over ' + other.join(', ') : '';
         };
         const emptied = slot => [...slot.children].every(child => css(child).visibility === 'hidden');
+        // A font that arrives while something is being measured makes a list a pixel wider or
+        // narrower between two measurements of it.
+        await document.fonts.ready;
+        // How a card or a list is drawn: every computed property of it and of everything in it.
+        const drawn = el => [el, ...el.querySelectorAll('*')].map(node => {
+            const style = css(node), values = { is: node.tagName.toLowerCase() + (node.classList.length ? '.' + node.classList[0] : '') };
+            for (let i = 0; i < style.length; i++) values[style[i]] = style.getPropertyValue(style[i]);
+            return values;
+        });
+        // The copy that follows the pointer is drawn as what it copies. It is on <body>, where
+        // none of the board's rules reach it and what it inherits is the page's, not the board's;
+        // so everything in it is compared, in every property there is -- but for what the drag
+        // itself gives everything on the page (the pointer, and nothing to be selected or
+        // dragged by the browser), and but for the names a page and a board give their own
+        // measures, which are not drawn. Its own box is compared in what makes a box look as it
+        // does: where it is, how opaque, how blurred, whether it has a shadow are what make it a
+        // copy, and they are on that box too.
+        const ownBox = ['background-color', 'background-image', 'display', 'flex-direction', 'box-sizing']
+            .concat(...['top', 'right', 'bottom', 'left'].map(side => ['padding-' + side, 'border-' + side + '-width', 'border-' + side + '-style', 'border-' + side + '-color']))
+            .concat(['top-left', 'top-right', 'bottom-left', 'bottom-right'].map(corner => 'border-' + corner + '-radius'));
+        const theDragGives = ['cursor', 'pointer-events', 'user-select', '-webkit-user-select', '-webkit-user-drag'];
+        const compared = name => name !== 'is' && !name.startsWith('--') && !theDragGives.includes(name);
+        const unlike = (original, copy) => {
+            if (original.length !== copy.length) return ' -- it has ' + copy.length + ' elements, and what it copies ' + original.length;
+            const found = [], properties = new Set();
+            original.forEach((was, i) => (i ? Object.keys(was).filter(compared) : ownBox)
+                .filter(name => was[name] !== copy[i][name])
+                .forEach(name => { properties.add(name); found.push(was.is + ' { ' + name + ': ' + was[name] + ' } is ' + copy[i][name] + ' in the copy'); }));
+            return found.length ? ' -- ' + found.length + ' differences, in ' + [...properties].slice(0, 12).join(', ') + (properties.size > 12 ? ' and ' + (properties.size - 12) + ' more' : '')
+                + '; the first two: ' + found.slice(0, 2).join('; ') : '';
+        };
         board.scrollIntoView({ block: 'start' });
 
         // A card: the last of three in its list, and the one with a ring to lose.
         {
             const list = listOf(columns()[0]), first = cardOf('card-a'), second = cardOf('card-b'), mine = cardOf('card-c');
-            const tall = box(list).height;
+            const tall = box(list).height, asItWas = drawn(mine);
             const copy = await pickUp(at(mine));
             const left = root.querySelector('.kanban-card-drag-origin');
             say(copy.parentElement === document.body && css(copy).position === 'fixed' && css(copy).pointerEvents === 'none', 'a dragged card is a copy on the page, over everything and out of the pointer\'s way');
             say(css(copy).opacity === '0.64', 'the copy is 64% opaque, not the 80% Sortable writes on it (' + css(copy).opacity + ')');
             say(css(copy).boxShadow !== 'none', 'and has a shadow');
+            say(!unlike(asItWas, drawn(copy)), 'the copy is drawn as the card was, and so is everything in it' + unlike(asItWas, drawn(copy)));
+            say(css(copy).boxShadow === asItWas[0]['box-shadow'], 'and it keeps the ring of a card assigned to whoever is looking (' + css(copy).boxShadow + ')');
             say(picturesIn(copy).length === 1 && !misfits(picturesIn(copy)), 'the assignee\'s picture in the copy fills its circle' + misfits(picturesIn(copy)));
             say(!!left && css(left).opacity === '0.52' && css(left).pointerEvents === 'none', 'where the card was, a faded copy of it stays');
             say(css(mine).display === 'none' && near(box(list).height, tall), 'and until the card is over another place no slot is drawn for it: the list is as tall as it was');
@@ -307,11 +343,15 @@ document.documentElement.classList.add(params.get('theme') === 'dark' ? 'theme-a
         {
             const [first, second, mine] = columns();
             mine.querySelector('.kanban-add-card-button').click();
-            const wide = board.scrollWidth, saves = asked.filter(line => line.startsWith('POST /w/')).length;
+            // The click put the pointer in the box to type in, and a box being typed in has an
+            // outline that a copy of it has not.
+            document.activeElement.blur();
+            const wide = board.scrollWidth, saves = asked.filter(line => line.startsWith('POST /w/')).length, asItWas = drawn(mine);
             const copy = await pickUp(at(mine.querySelector('.kanban-column-title-row')));
             const left = board.querySelector('.kanban-list-drag-origin');
             say(copy.parentElement === document.body && css(copy).position === 'fixed' && css(copy).pointerEvents === 'none', 'a dragged list is a copy on the page too');
             say(css(copy).opacity === '0.64' && css(copy).boxShadow !== 'none', 'as opaque as a dragged card, and with a shadow (' + css(copy).opacity + ')');
+            say(!unlike(asItWas, drawn(copy)), 'the copy is drawn as the list was, and so is everything in it' + unlike(asItWas, drawn(copy)));
             const hidden = [...copy.querySelectorAll('.kanban-hidden')];
             const shown = hidden.filter(el => css(el).display !== 'none').map(el => el.className.replace(/\s*kanban-hidden\s*/, ''));
             say(hidden.length >= 2 && !shown.length, 'what is hidden in a list is hidden in the copy of it' + (shown.length ? ' -- ' + shown.join(', ') + ' is drawn' : ''));

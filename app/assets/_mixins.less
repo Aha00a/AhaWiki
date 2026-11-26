@@ -10,6 +10,15 @@
 	font-family: 'Ubuntu Mono', 'Consolas', monospace;
 }
 
+// Where a wiki page's text breaks its lines: between words, and inside a word only when the word
+// is wider than its line. .commonAhaWiki() in wiki.less gives it to a page's text, and has the
+// reasons for each of the two. kanban.less gives it to the copy of a dragged card, which is put
+// on <body>, outside that text, and would otherwise break its lines where <body> does.
+.wikiLineBreaks() {
+	word-break: keep-all;
+	overflow-wrap: anywhere;
+}
+
 // Figures that line up: right-aligned, equal-width digits. Nothing about weight or colour.
 .tabularFigures() {
 	text-align: right;

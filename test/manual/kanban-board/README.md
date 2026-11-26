@@ -10,17 +10,19 @@ one list at a time under a row of tabs, and a dialog that comes up from the bott
 What it checks:
 
  * **The board.** Its lists and cards are drawn. An assignee's picture fills its circle -- on the
-   board, and in the copies of a dragged card and a dragged list, which have rules of their own.
-   A card shows four assignees and counts the rest. The card assigned to whoever is looking has
-   a ring.
+   board, and in the copies of a dragged card and a dragged list. A card shows four assignees and
+   counts the rest. The card assigned to whoever is looking has a ring.
  * **A card, dragged.** What follows the pointer is a copy on `<body>`, 64% opaque, with a shadow.
+   **The copy is drawn as the card was**: every computed property of everything in it is the
+   card's, and its own box has the card's padding, border, corners and background, and its ring.
    Where the card was, a faded copy of it stays. Until the card is over another place no slot is
    drawn for it, and the list is as tall as it was. Then the slot is a dashed box with nothing
    drawn in it and no shadow -- the card dragged is the one with a ring, which is a shadow. The
    cards the slot pushes aside slide to their places; the faded copy and the slot do not. Over a
    card of another list the slot goes into that list, and the drop is saved there.
- * **A list, dragged.** The same, across the board. And what is hidden in the list is hidden in
-   the copy of it: the list is picked up with its «Add a Card» open, which hides the button.
+ * **A list, dragged.** The same, across the board, and its copy is drawn as the list was. What
+   is hidden in the list is hidden in the copy of it: the list is picked up with its «Add a Card»
+   open, which hides the button and shows a box to type in and two buttons more.
  * **The pointer** is a closed hand wherever it is on the page while either is dragged: over
    another card, a button, a list's title, the board, a link in the page's text, the page.
  * **Files dragged in from outside.** A list they are over is outlined with dashes and tinted; so
@@ -34,7 +36,7 @@ What it checks:
    top, and has round corners at the top only.
 
 The result is printed under the page as `PASS`/`FAIL` lines, the phones' after the page's own, and
-the last line counts them: `PASS — 86 checks`.
+the last line counts them: `PASS — 89 checks`.
 
 ## Why it exists
 
@@ -55,7 +57,20 @@ of its checks fail there, and they are the ways a board looks wrong without them
 Fifteen of the sixty were doing that. Of the rest, one repeated another, thirty-one had nothing
 to outrank, and thirteen sat in rules that match no element. What became of each is on the wiki
 page `Dev Less`, «!important 는 선택자로 이길 수 없는 것에만», and `test/less.important.test.mjs`
-lists the seven that stayed, with what each outranks.
+lists the ones that stayed, with what each outranks.
+
+The pictures taken for that showed something else, and the same day the page was given three
+checks for it. The copy that follows the pointer is on `<body>`, where the board's rules do not
+reach, so the look of a list and of a card had been written out again for each copy, by hand, and
+the three had come apart. A dragged card grew: 14px of padding for the board's 10px and 12px,
+14px text for 13px. It lost its ring. The badges that say how cards are related had no rules in
+either copy, and were drawn as plain text in the page's own size. A list dragged with its «Add a
+Card» open showed the browser's own textarea and buttons. With that stylesheet the copy of the
+card here differs from the card in 197 places -- a computed property of an element in it -- and
+the copy of the list in 592. The rules are written once now, as mixins that the board and both
+copies call, and the three checks say that a copy is drawn as what it copies. What a rule cannot
+give a copy is what the card took from where it was: on a wiki page that is where lines break,
+two properties, and the copies are given them.
 
 ## The markup
 
@@ -111,21 +126,26 @@ A mouse works as well: open the page and drag.
    it does not. Whether a finger scrolls a list is not something it can press.
  * **Every cursor rule there is.** The pointer is asked about in six places. A rule elsewhere
    that outranks the closed hand would be found by dragging over what it is for.
+ * **A board that is not in a wiki page's text.** A copy on `<body>` takes `<body>`'s font and
+   colour, and is given the page's line breaking. A wiki page's text takes the same font and
+   colour from `<body>`, which is why the copy here matches. A board put where the text is
+   another size would have copies in `<body>`'s size, and nothing here is such a place.
  * **The server.** Whatever a real one would refuse.
 
 ## Seeing the checks fail
 
 ```bash
 mkdir test/manual/kanban-board/_old
+git show 587c87b7:app/assets/kanban.css > test/manual/kanban-board/_old/three-copies.css
 git show d030da95:app/assets/kanban.css | sed 's/ !important//g' > test/manual/kanban-board/_old/stripped.css
-npm run harnesses -- "kanban-board?css=_old/stripped.css" --lines
+npm run harnesses -- "kanban-board?css=_old/three-copies.css" "kanban-board?css=_old/stripped.css" --lines
 ```
 
-`FAIL — 15 of 86`, the six above and their repeats on the phones. `d030da95` is the last commit
-with the sixty; with its stylesheet as it is (`git show d030da95:app/assets/kanban.css`, saved
-the same way) every check passes, because the change was meant to draw what was drawn before.
-`?script=` and `?template=` load another `AhaWiki.Kanban.js` and another template the same way,
-and `?theme=dark` draws the dark theme. Delete `_old` afterwards.
+`587c87b7` is the last commit with the look written three times: `FAIL — 3 of 89`, the two copies
+and the ring. `d030da95` is the last with the sixty `!important`, and its stylesheet with every
+one of them deleted gives `FAIL — 18 of 89`: those three, and the six kinds above with their
+repeats on the phones. `?script=` and `?template=` load another `AhaWiki.Kanban.js` and another
+template the same way, and `?theme=dark` draws the dark theme. Delete `_old` afterwards.
 
 ## A picture of a drag half way
 
@@ -137,15 +157,23 @@ another list`, `a card dropped`, `a list picked up`, `a list over another place`
 dropped`, `files over a list`, `files over the dialog`, `the dialog`, and in each frame
 `390px: the board` and `390px: the dialog`. The slides are over by the time it is called.
 
-That is how the change of 2026-11-26 was compared with what came before it. At each stage the
-old stylesheet was swapped for the new one in the open page, and every computed property of
+That is how the two changes of 2026-11-26 were compared with what came before them. At each stage
+the old stylesheet was swapped for the new one in the open page, and every computed property of
 every element and of its `::before` and `::after` compared -- and again with `:hover` forced,
-through the same protocol, on everything that has a hover rule. One thing differed, in both
-themes: the corners of an assignee's picture on the board and in the copy of a dragged list, 6px
-before and its circle's after. That is what its rule had said all along, and lost to a card's
-rule for images. The circle cuts the picture either way: with those corners put back to 6px the
-two stylesheets draw every stage the same to the pixel, and with them as they are now the
-pictures differ by 4 in 255 at most, in a few hundred pixels at the edges of things round.
+through the same protocol, on everything that has a hover rule.
+
+Taking the `!important` out, one thing differed, in both themes: the corners of an assignee's
+picture on the board and in the copy of a dragged list, 6px before and its circle's after. That
+is what its rule had said all along, and lost to a card's rule for images. The circle cuts the
+picture either way: with those corners put back to 6px the two stylesheets draw every stage the
+same to the pixel, and with them as they are now the pictures differ by 4 in 255 at most, in a
+few hundred pixels at the edges of things round.
+
+Writing the look of a list and a card once, the question was the other way about: the copies
+were meant to change, and nothing else was. Every difference, some eight thousand in each theme,
+is in an element of one of the two copies; outside them there is none. The twelve stages with no
+copy on the page are the same to the pixel, and in the five that have one the pixels that differ
+are in a box the size of the copy, where the copy is.
 
 Two things to know before comparing pictures this way. Take both of the same moment, in the one
 open page: of two runs, the dragged copy lands a pixel off in one. And take the first stylesheet's

@@ -280,8 +280,9 @@
 		// `anywhere`, not `break-word`: it also counts when the browser works out how narrow
 		// a box may get, so a table squeezed into the page still gives way inside a word, as
 		// it did under break-all, instead of becoming as wide as its longest words (Dev Less).
-		word-break: keep-all;
-		overflow-wrap: anywhere;
+		// The two declarations are a mixin (_mixins.less) since 2026-11-26, when a second place
+		// came to need them.
+		.wikiLineBreaks();
 		>.limitWidth>div {
 			&>, >div, >div>div, >div>div>div{
 				>p, >blockquote, >table, >.wikiTableSimpleScroll, >.math, >.error, >.info, >.adjacentPagesGraphWrapper, >.Text, >.Vim {

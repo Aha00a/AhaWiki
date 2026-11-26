@@ -17,8 +17,8 @@ import { assetsDir } from '../scripts/less.mjs';
 const outranksWhatNoSelectorCan = [
     { file: 'kanban.less', declaration: 'transform: none', times: 4,
         outranks: 'the transform Sortable writes on an element it slides into place -- the faded copy of a dragged card or list, and the slot for it, are drawn at once where they are' },
-    { file: 'kanban.less', declaration: 'opacity: 0.64', times: 2,
-        outranks: 'the `opacity: 0.8` Sortable writes on the copy of a card or a list that it drags' },
+    { file: 'kanban.less', declaration: 'opacity: 0.64', times: 1,
+        outranks: 'the `opacity: 0.8` Sortable writes on the copy of a card or a list that it drags; one rule for the two copies' },
     { file: 'kanban.less', declaration: 'cursor: grabbing', times: 1,
         outranks: 'every rule on the page that gives something a cursor, while a card or a list is dragged over it' },
 ];
