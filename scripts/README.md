@@ -329,10 +329,31 @@ What it does not do:
 
  * **Look.** Every harness's README says what its checks cannot see, and a picture is still the
    only way to see it.
- * **Run in CI.** The pages measure text, and the widths of words are the font's. Whether a
-   runner's fonts give the numbers this machine's do has not been tried.
  * **More window sizes than one.** `graph-hud` brings its own phones. `slide-layout` asks to be
    run at more widths than one, which is what `--width` is for.
+
+CI runs it on every push and pull request, as a job of its own beside the specs and the node
+tests (`.github/workflows/ci.yml`). What that took, the day it was added:
+
+ * **A Korean font.** The pages measure text, and the widths of words are the font's. A runner
+   has no Korean font, and Korean drawn as empty boxes is not as wide as Korean: as the runner
+   comes, `paper-contract` fails one check — the label that takes two lines takes one — and
+   `word-break` another, a date drawn on two lines. With `fonts-noto-cjk` installed all thirteen
+   pass. That is no accident of two fonts agreeing: the machine these harnesses were written on
+   draws Korean in Noto Sans KR, which it has installed, and the runner's package is the same
+   letters. A machine that has neither will get other numbers, and has not been tried.
+ * **A check that failed one run in two.** `vendor-assets` asked dayjs to put ninety minutes
+   into words and expected «2 hours». `humanize()` reads the clock twice, and when a millisecond
+   passes between the two readings ninety minutes is a hair under an hour and a half, which
+   comes out as «an hour». Twenty thousand tries on a developer's machine give both answers; one
+   try a run had never met the other. It asks about two hours now.
+ * **Nothing else.** No packages from npm, and no flag for Chrome: the script is Node's own
+   modules, the pages load what the repository commits, and the runner's Chrome starts as it is.
+
+A red run that is not a fault in the code can still come of two things. The pages take Noto
+Sans from Google, as production does, so a run cut off from that host measures another font. And
+a runner slow enough to hold a page quiet for longer than the waits above would have it read
+early — which reads as passing, on fewer checks, not as failing.
 
 What its first run found, on 2026-11-26, in harnesses that had each been passing by hand:
 

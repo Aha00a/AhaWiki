@@ -79,7 +79,10 @@ text</textarea></div>
         check("d3 7", () => d3.version);
         check("Sortable", () => Sortable.version);
         check("echarts 6", () => echarts.version);
-        check("dayjs + duration + relativeTime", () => typeof dayjs.duration === "function" && typeof dayjs().fromNow === "function" && dayjs.duration(90, "minutes").humanize() === "2 hours");
+        // Two hours, not ninety minutes. humanize() reads the clock twice, and when a millisecond
+        // passes between the readings ninety minutes is a hair under an hour and a half and comes
+        // out as «an hour». It did on a CI runner on 2026-11-26, once in two runs.
+        check("dayjs + duration + relativeTime", () => typeof dayjs.duration === "function" && typeof dayjs().fromNow === "function" && dayjs.duration(2, "hours").humanize() === "2 hours");
         check("mermaid's loader", () => typeof AhaWiki.Mermaid.renderAll === "function");
         check("CodeMirror 5", () => CodeMirror.version);
         check("Diff2HtmlUI", () => typeof Diff2HtmlUI === "function");
