@@ -13,8 +13,13 @@ What it checks, and prints as `PASS`/`FAIL` every second:
    `export *`, which compiles but leaves React's names to run time, and the browser stopped at
    `does not provide an export named 'createContext'` before drawing anything. The page looked
    like the esm.sh outage it was meant to cure.
- * **Nothing fetched off this origin.** Any address not on `localhost` is a dependency the
-   bundle was supposed to remove.
+ * **Nothing fetched off this origin but the wiki's fonts.** Any other address not on this
+   origin is a dependency the bundle was supposed to remove. The fonts are the page's, not the
+   bundle's: the wiki's stylesheet takes Noto Sans from Google, which `scripts/README.md` lists
+   among what is left on other hosts, and the loading message is drawn in it before Mantine
+   takes the page over. The check names how many font files it saw. Until 2026-11-26 it had
+   no such exception and still passed, because the page was read with `--dump-dom`, which does
+   not paint and so never asked for a font; `npm run harnesses` paints, and it failed there.
  * **The loading message is gone**, and on the dashboard **the two site-activity tables are
    drawn** from the canned `/api/Admin/SiteActivity` (the fixture mirrors
    `ApiAdminSiteActivitySpec`: a busy site and an idle one).

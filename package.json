@@ -6,6 +6,7 @@
     "check:cdn": "node scripts/check-cdn-assets.mjs",
     "admin:watch": "node scripts/admin.mjs --watch",
     "download:ahawiki.net": "node scripts/download.ahawiki.net.mjs",
+    "harnesses": "node scripts/harnesses.mjs",
     "less": "node scripts/less.mjs",
     "schemaDump": "sh ./schemaDump.sh",
     "sync:ahawiki.net": "node scripts/sync.ahawiki.net.mjs",

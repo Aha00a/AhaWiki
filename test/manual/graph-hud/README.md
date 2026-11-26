@@ -75,6 +75,9 @@ file. Its buttons are drawn and clicked all the same; what its sliders do is not
 
 ## Running it
 
+`npm run harnesses -- graph-hud` opens it with nothing else started and prints its last line,
+and the checks that failed (`scripts/README.md`). What follows is for looking at the page.
+
 The Browser pane refuses `file://`, so serve the repository root:
 
 ```bash

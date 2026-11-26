@@ -10,14 +10,17 @@ stops at the first `]`, so `[[Include(["Aws EC2"])]]` was not masked at all and 
 it counted as real. A test caught it. Anything in that file is a claim about
 `app/logics/wikis/`; change it only alongside that code.
 
-`lib/headless-chrome.mjs` holds what the two scripts that open pages in Chrome both need:
-finding Chrome, starting it with a profile of its own, talking to it over the DevTools protocol,
-and the list of a site's pages. It was the first half of `browser-sweep.mjs` until
-`compare-stylesheets.mjs` needed the same lines.
+`lib/headless-chrome.mjs` holds what the scripts that open pages in Chrome all need: finding
+Chrome, starting it with a profile of its own, talking to it over the DevTools protocol, and the
+list of a site's pages. It was the first half of `browser-sweep.mjs` until
+`compare-stylesheets.mjs` needed the same lines; `harnesses.mjs` is the third to use it.
 
 `lib/stylesheet-comparison.mjs` is what `compare-stylesheets.mjs` measures in a page and how it
 reads two measurements of one. It is apart from the script so that the reading — which page is
 worse, what the exit status is — runs in `npm test` without a browser.
+
+`lib/harness-result.mjs` is how `harnesses.mjs` reads what a harness page printed: passing,
+failing, or not done. Apart from the script for the same reason.
 
 ## Front-end admin build
 
@@ -276,6 +279,73 @@ back (the `overflow-wrap: normal` lines of `code` and `pre` taken out), at 390px
 came out `WORSE` — 121.0%, 47.4% and 22.3% taller — six `moved` and 127 `same`. Nothing stuck
 out further on any of them. Two of the six that moved had grown 17.1% and 12.5%: under the
 fifth, and at the top of the list of pages that grew. That is why the list is to be read.
+
+## Running every browser harness
+
+`harnesses.mjs` opens every harness under `test/manual/` in headless Chrome, waits for each to
+print its result, and says which passed. A harness finds nothing unless it is opened, and each
+used to be opened by hand, by whoever remembered that the code it stands over had changed. Why
+it was written is in its header.
+
+```bash
+npm run harnesses                                 # every harness; about a minute
+npm run harnesses -- graph-hud slide-notes        # these
+npm run harnesses -- "graph-hud?theme=dark"       # one, with what its page takes after a ?
+npm run harnesses -- --lines editor-grid          # and every line it printed
+npm run harnesses -- --width=1920 slide-layout    # in a window that wide; 1280 by default
+```
+
+Run it before a deploy that changes what a page draws or what it does with a key or a click.
+Exit status 0 when every harness passed, 1 when one failed or printed nothing, 2 when it could
+not run. It needs Chrome and Node 22, as the sweep does, and nothing started first: it serves
+the repository root itself, to this machine only, on a port of its own.
+
+It prints one line a harness — the harness's own last line where it has one — and, under one
+that did not pass, the checks that failed, what the page threw, what it asked for and did not
+get, and what it said in a dialog.
+
+What it decides, that a person reading a page does not have to:
+
+ * **When a page is done.** No two harnesses say so alike, so it is read off the result: what
+   is printed has to have stood unchanged for a while. Half a second after a last line that
+   sums up (`PASS — 17 checks`). Two and a half without one, because such a page may be printing
+   as it goes. Six when it says `FAIL`, because a page that reports every second says so until
+   what it waits for has come. Three pages never stop reporting and are read after a set time;
+   the script names them. A page that goes quiet for longer than that between two lines and has
+   no last line would be read too early — give a new harness a last line.
+ * **A page that threw has failed**, whatever its checks said. One that threw has not run all of
+   them.
+ * **A dialog is accepted.** A page with one open answers nothing, and the editor's scripts open
+   an `alert()` when no server answers them.
+ * **Real time, and windows allowed.** `slide-notes` opens a second window, and the two do not
+   hear each other under `--virtual-time-budget`.
+
+A new harness is run without being named anywhere. It is a directory under `test/manual/` with
+an `index.html` that prints lines starting `PASS` or `FAIL` into an element with the id
+`result`. `test/harnesses.result.test.mjs` holds each existing page's way of printing, and fails
+when a page has no element the script reads.
+
+What it does not do:
+
+ * **Look.** Every harness's README says what its checks cannot see, and a picture is still the
+   only way to see it.
+ * **Run in CI.** The pages measure text, and the widths of words are the font's. Whether a
+   runner's fonts give the numbers this machine's do has not been tried.
+ * **More window sizes than one.** `graph-hud` brings its own phones. `slide-layout` asks to be
+   run at more widths than one, which is what `--width` is for.
+
+What its first run found, on 2026-11-26, in harnesses that had each been passing by hand:
+
+ * **`admin-vendor` failed.** «Nothing fetched off this origin» met a font: the wiki's
+   stylesheet takes Noto Sans from Google, and the admin page's loading message is drawn in it.
+   That harness had been read with `--dump-dom`, which does not paint, so nothing had asked for
+   the font. The check leaves the wiki's fonts out by name now, and says how many it saw.
+ * **`editor-keys` and `editor-grid` threw on every run.** `edit.page.js` reads
+   `AhaWiki.WikipediaToSchema` as soon as the page is ready, and neither harness loaded that
+   script, as `edit.scala.html` does. Their checks passed all the same. Both load it now.
+ * **`graph-glow` and `diff-long-lines` took d3 and diff2html from CDNs**, which the pages
+   themselves stopped doing on 2026-10-31 — and diff2html at 3.4.52, where the page runs 3.4.56.
+   Both use the copies under `public/vendor/` now.
 
 ## Wiki page sync
 

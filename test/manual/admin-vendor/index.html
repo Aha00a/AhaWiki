@@ -109,7 +109,16 @@
         window.addEventListener("unhandledrejection", (e) => errors.push(String(e.reason && e.reason.message || e.reason)));
 
         function report() {
-            const external = performance.getEntriesByType("resource").map((e) => e.name).filter((name) => !name.startsWith(location.origin));
+            // The wiki's own stylesheet takes its fonts from Google -- scripts/README.md lists them
+            // among what is left on other hosts -- and the loading message is drawn in one before
+            // Mantine takes the page over, so a browser that paints fetches the font. A page reads
+            // without its font. What this check is for is the rest: a script or a stylesheet from
+            // another host is a page that stops when that host does, as esm.sh showed.
+            // (`--dump-dom` does not paint, and for as long as that was how this page was run, the
+            // font never showed here. scripts/harnesses.mjs paints.)
+            const offOrigin = performance.getEntriesByType("resource").map((e) => e.name).filter((name) => !name.startsWith(location.origin));
+            const fonts = offOrigin.filter((name) => name.startsWith("https://fonts.gstatic.com/"));
+            const external = offOrigin.filter((name) => !fonts.includes(name));
             const text = document.getElementById("main")?.innerText ?? "";
             // The two dashboard checks only mean something on the dashboard; the navigation
             // works, and following a link to another page must not read as a failure.
@@ -127,7 +136,7 @@
                 ["Mantine scheme and the html class follow ahawiki-theme", scheme === expectedScheme && root.classList.contains(`theme-ahawiki-${expectedScheme}`), `attribute ${scheme}, class ${root.className}, stored ${expectedScheme}`],
                 ["the page background is that scheme", bodyScheme === expectedScheme, `rgb ${red} ${green} ${blue}`],
                 ["no script error", errors.length === 0, errors.join(" | ")],
-                ["nothing fetched off this origin", external.length === 0, external.join(" ")],
+                ["nothing fetched off this origin but the wiki's fonts", external.length === 0, external.join(" ") || (fonts.length ? `(${fonts.length} font file${fonts.length === 1 ? "" : "s"} from fonts.gstatic.com)` : "")],
                 ["admin UI replaced the loading message", !text.includes("Admin UI 로딩 중"), ""],
                 ["dashboard shows Sites by Month", !onDashboard || (text.includes("Sites by Month") && text.includes("2026-10")), onDashboard ? "" : "(not on the dashboard)"],
                 ["dashboard shows where readers came from", !onDashboard || (text.includes("Where Readers Came From (30 days)") && text.includes("github.com/Aha00a/AhaWiki") && text.includes("/w/예시 회의록")), onDashboard ? "" : "(not on the dashboard)"],

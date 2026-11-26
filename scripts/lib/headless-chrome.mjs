@@ -63,8 +63,10 @@ async function devtoolsPort(profile) {
  * `width` and `height` are the window's. Chrome does not make a window narrower than about 500px;
  * a script that wants a phone's width asks for it with Emulation.setDeviceMetricsOverride.
  * `domains` are the protocol domains to switch on: what they report is what `events` holds.
+ * `flags` are more of Chrome's own, for the one script that needs one: harnesses.mjs lets pages
+ * open windows, which a page under test does.
  */
-export async function openHeadlessChrome({ profilePrefix, width, height, domains }) {
+export async function openHeadlessChrome({ profilePrefix, width, height, domains, flags = [] }) {
   const chromePath = findChrome();
   if (!chromePath) throw new Error('Chrome not found; set CHROME to its path.');
 
@@ -72,6 +74,7 @@ export async function openHeadlessChrome({ profilePrefix, width, height, domains
   const chrome = spawn(chromePath, [
     '--headless=new', '--remote-debugging-port=0', `--user-data-dir=${profile}`,
     '--no-first-run', '--no-default-browser-check', '--disable-extensions', `--window-size=${width},${height}`,
+    ...flags,
     'about:blank',
   ], { stdio: 'ignore' });
   const stop = async () => {

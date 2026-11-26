@@ -12,8 +12,8 @@
     const q = new URLSearchParams(location.search);
     const esc = (s) => s.replace(/"/g, '&quot;');
     document.write('<link rel="stylesheet" href="' + esc(q.get('css') || '../../../app/assets/diff.css') + '">');
-    document.write('<link rel="stylesheet" href="https://unpkg.com/diff2html@3.4.52/bundles/css/diff2html.min.css" crossorigin="anonymous" />');
-    document.write('<script src="https://unpkg.com/diff2html@3.4.52/bundles/js/diff2html-ui.min.js" crossorigin="anonymous"><\/script>');
+    document.write('<link rel="stylesheet" href="/public/vendor/diff2html/diff2html.min.css" />');
+    document.write('<script src="/public/vendor/diff2html/diff2html-ui.min.js"><\/script>');
     document.write('<script src="' + esc(q.get('script') || '../../../public/js/Wiki/diff.js') + '"><\/script>');
 })();
 </script>
