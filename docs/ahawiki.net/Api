@@ -21,6 +21,7 @@ AhaWiki API 요청에는 CSRF token과 reCAPTCHA가 필요하지 않습니다.
 == 제한사항
 
  * API로 저장·이름변경·삭제하면 텔레그램 알림이 가지 않습니다. 그 페이지를 열어 둔 브라우저의 실시간 갱신 알림은 API 저장에도 갑니다.
+ * '''API Key 로는 파일(이미지·첨부)을 올릴 수 없습니다.''' 업로드(`POST /api/uploadAttachment`, `POST /api/uploadClipboardImage`)는 `/api/v1/` 밖에 있어 브라우저 로그인 세션과 CSRF 토큰을 요구하고, API Key 를 보지 않습니다. 사람이 브라우저에서 올린 첨부는 본문에 `[[Attachment(...)]]`([MacroAttachment])로, 웹에 공개된 이미지는 `[[Image(주소)]]`([MacroImage])로 넣을 수 있으므로 API 저장으로도 이미지가 든 페이지를 만들 수 있습니다. 에이전트에게 주는 순서는 [AiAgent] «이미지와 첨부파일».
 
 == 인증
 
