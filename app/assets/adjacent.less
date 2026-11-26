@@ -1,5 +1,21 @@
 @import "_mixins";
 
+// The measures of the buttons over a graph: where its panels sit, and so how much room an open one
+// may take.
+@hudEdge: 10px;			// from the graph's edge to a panel
+@hudBorder: 1px;		// a panel's border
+@hudOpenSide: 10px;		// at each side of an open panel's rows
+@hudOpenPadding: 8px;	// under an open panel's rows
+@hudBarHeight: 36px;	// the bar along the bottom: one line of buttons
+@hudBarGap: 6px;		// between an open panel and the bar
+@hudOpenMin: 60px;		// an open panel's button and rows are never given less than this
+// What lies beside the rows of an open panel, from one side of the graph to the other: the edge,
+// the panel's border and its padding, twice.
+@hudBesideRows: ((@hudEdge + @hudBorder + @hudOpenSide) * 2);
+// And under them, down to the graph's foot: the panel's own padding and borders, then the gap, the
+// bar, and the edge.
+@hudUnderRows: (@hudOpenPadding + @hudBorder * 2 + @hudBarGap + @hudBarHeight + @hudEdge);
+
 .AhaWiki {
 	svg.graph {
 		@opacityNormal: 0.8;
@@ -122,7 +138,7 @@
 		.hudPanel {
 			position: absolute;
 			background: var(--color-adjacent-hud-bg);
-			border: 1px solid var(--color-adjacent-hud-border);
+			border: @hudBorder solid var(--color-adjacent-hud-border);
 			border-radius: 8px;
 			padding: 8px 10px;
 			box-shadow: 0 2px 8px var(--color-adjacent-hud-shadow);
@@ -133,37 +149,62 @@
 
 			// Control and Metrics: a button, and the panel under it when it is open.
 			&.topLeft, &.topRight {
-				top: 10px;
+				--hud-top: @hudEdge;
+				top: var(--hud-top);
 				min-width: 0;
 				padding: 0;
 				&:has(> .hudBody:not([hidden])) {
-					padding: 0 10px 8px;
+					padding: 0 @hudOpenSide @hudOpenPadding;
 				}
 			}
 			// Open, a panel is never wider than the graph (cqw: the HUD is the container, below), so
 			// in a #!Graph in a narrow table cell it does not spill over the next cell.
-			// The 42px is the 10px each side of the panel, and its own padding and border.
 			&.topLeft {
-				left: 10px;
-				&:has(> .hudBody:not([hidden])) { min-width: ~"min(220px, 100cqw - 42px)"; }
+				left: @hudEdge;
+				&:has(> .hudBody:not([hidden])) { min-width: ~"min(220px, 100cqw - @{hudBesideRows})"; }
 			}
 			&.topRight {
-				right: 10px;
-				&:has(> .hudBody:not([hidden])) { min-width: ~"min(200px, 100cqw - 42px)"; }
+				right: @hudEdge;
+				&:has(> .hudBody:not([hidden])) { min-width: ~"min(200px, 100cqw - @{hudBesideRows})"; }
 			}
+			// Nor is it taller than the room between its top and the bar (cqh), and in less room than
+			// it needs its rows scroll. A #!Graph on a 390px phone is 206px high and Control needs
+			// 226px: it hung 20px below the graph and lay on the bar. A graph too low even for
+			// @hudOpenMin still has its open panel on the bar. The height is the content's, as the
+			// widths are.
 			&:has(> .hudBody:not([hidden])) {
-				max-width: calc(100cqw - 42px);
+				max-width: calc(100cqw - @hudBesideRows);
+				max-height: ~"max(@{hudOpenMin}, 100cqh - var(--hud-top) - @{hudUnderRows})";
 				overflow: hidden;
+				display: flex;
+				flex-direction: column;
+				// The rows reach into the panel's right padding, so the scrollbar is at the panel's
+				// edge: a phone draws it over what it scrolls, and that was the end of every number.
+				> .hudBody {
+					min-height: 0;
+					overflow-y: auto;
+					scrollbar-width: thin;
+					margin-right: -@hudOpenSide;
+					padding-right: @hudOpenSide;
+				}
 			}
 			// The buttons on the left, the legend on the right, along the bottom. The bar's empty
-			// middle passes the pointer to the graph under it.
+			// middle passes the pointer to the graph under it. Its height is set, not left to its
+			// buttons, because an open panel's room is counted from it.
+			// A legend that does not fit beside the buttons wraps to a second line, and the set
+			// height hides that line: the legend goes whole, at whatever width this reader's font
+			// stops fitting, where it used to run out of the bar -- on a 360px phone, by 11px.
 			&.bottomBar {
-				left: 10px;
-				right: 10px;
-				bottom: 10px;
+				left: @hudEdge;
+				right: @hudEdge;
+				bottom: @hudEdge;
+				box-sizing: border-box;
+				height: @hudBarHeight;
 				min-width: 0;
 				padding: 4px 6px;
 				display: flex;
+				flex-wrap: wrap;
+				overflow: hidden;
 				align-items: center;
 				justify-content: space-between;
 				gap: 8px;
@@ -199,7 +240,7 @@
 			cursor: pointer;
 		}
 		.hudToggle[aria-expanded="true"] {
-			margin: 0 -10px 2px;
+			margin: 0 -@hudOpenSide 2px;
 			font-weight: 700;
 			color: var(--color-adjacent-hud-title);
 		}
@@ -278,7 +319,7 @@
 	// METRICS panel sat at 10px and the button lay across its corner. In a block, the panel starts
 	// below the button. The page's own Adjacent Pages graph has no such button and keeps 10px.
 	.InterpreterRenderMetaWrapper .adjacentPagesHud .hudPanel.topRight {
-		top: 32px;
+		--hud-top: 32px;
 	}
 
 	@media (max-width: 768px) {
@@ -291,10 +332,12 @@
 
 	// A narrow graph keeps its buttons as icons. Narrow by the graph's own width, not the screen's: a
 	// #!Graph in a table cell is narrow on a wide screen. A phone used to hide the whole HUD,
-	// Fullscreen with it. 520px is where the bar's words stop fitting on one line; the same number
-	// in AhaWiki.D3CanvasControls.js lets only one panel open at a time below it.
+	// Fullscreen with it. 520px is where the bar's words stop fitting on one line.
+	// A container in both directions: its width decides this, and its height is the room an open
+	// panel has (cqh, above). The HUD's own size comes from the graph it lies over, never from what
+	// is in it, which is what a size container has to be.
 	.adjacentPagesHud {
-		container-type: inline-size;
+		container-type: size;
 	}
 	@container (max-width: 519px) {
 		.adjacentPagesHud {
@@ -307,6 +350,16 @@
 			}
 			.hudPanel.bottomBar > .row.compact {
 				flex-wrap: nowrap;
+			}
+			// One panel at a time: the two together are wider than a narrow graph, and in one 266px
+			// wide -- Adjacent Pages on a 320px phone -- an open panel reaches the other's button. So
+			// while one is open the other is not shown, button and all, and comes back when the open
+			// one is closed. This is the stylesheet's to do rather than the script's: a graph that
+			// turns narrow with both open (leaving fullscreen) is not a click, and here Control
+			// stays and Metrics waits under it.
+			.hudPanel.topLeft:has(> .hudBody:not([hidden])) ~ .hudPanel.topRight,
+			&:has(.hudPanel.topRight > .hudBody:not([hidden])) .hudPanel.topLeft:not(:has(> .hudBody:not([hidden]))) {
+				visibility: hidden;
 			}
 		}
 	}

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<!-- As a wiki page has it. Without it a phone lays the page out 980px wide, and nothing here is narrow. -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>graph hud harness</title>
+<script>
+// Each of these loads another copy of one file -- the one from before a change, to see the checks
+// fail (README): ?css= for adjacent.css, ?controls= for AhaWiki.D3CanvasControls.js, ?graph= for
+// AhaWiki.AdjacentPagesGraph.js, ?template= for _graphD3CanvasLayout.scala.html.
+// ?theme=dark draws the dark theme; nothing is stored. ?open=control, ?open=metrics or ?open=both
+// leaves those panels open after the checks, to look at.
+// ?frame= is the page's own: it is how it opens itself at a phone's width, below.
+var params = new URLSearchParams(location.search);
+var fileOf = function (name, path) { return params.get(name) || '../../../' + path; };
+var quoted = function (url) { return url.replace(/"/g, '&quot;'); };
+document.documentElement.classList.add(params.get('theme') === 'dark' ? 'theme-ahawiki-dark' : 'theme-ahawiki-light');
+document.write('<link rel="stylesheet" href="../../../public/vendor/font-awesome/css/all.min.css">');
+document.write('<link rel="stylesheet" href="../../../app/assets/less.css">');
+document.write('<link rel="stylesheet" href="../../../app/assets/wiki.css">');
+document.write('<link rel="stylesheet" href="' + quoted(fileOf('css', 'app/assets/adjacent.css')) + '">');
+</script>
+<script src="../../../public/vendor/jquery/jquery.min.js"></script>
+<script src="../../../public/vendor/d3/d3.min.js"></script>
+<script>
+document.write('<script src="' + quoted(fileOf('controls', 'public/js/AhaWiki.D3CanvasControls.js')) + '"><\/script>');
+</script>
+<script src="../../../public/js/AhaWiki.GraphGlow.js"></script>
+<style>
+    #result { font: 13px/1.5 ui-monospace, monospace; white-space: pre-wrap; margin: 16px; }
+    /* A graph is as wide as what holds it. Each box is one such width, and none is wider than the page. */
+    .fixture { margin: 0 0 32px; max-width: 100%; }
+    .fixture > .caption, #phones > .caption { font: 12px/1.5 ui-monospace, monospace; margin: 0 0 4px; }
+    #phones { margin: 16px; }
+    #phones > iframe { display: block; border: 0; outline: 1px dashed #999; margin: 0 0 32px; }
+</style>
+</head>
+<body class="AhaWiki no-mathjax">
+<!-- What a page puts around its text. The graphs are drawn into it below. -->
+<div class="Wiki">
+<div role="main" class="wikiContent PageHarness">
+<div class="limitWidth" id="graphs"></div>
+</div>
+</div>
+<!-- This page again, in frames as wide as phones. -->
+<div id="phones"></div>
+<pre id="result">running…</pre>
+<script>
+// The buttons over a force graph, drawn from the template that draws them on a page and measured:
+// what they cover, whether they stay in the graph and off each other, and what a click does.
+(async function () {
+    const out = [];
+    const notes = [];
+    const say = (ok, text) => out.push((ok ? 'PASS' : 'FAIL') + ' ' + text);
+    // In a frame, this is the page at a phone's width, and what it finds goes to the page that framed it.
+    const phone = params.get('frame');
+    try {
+        await run();
+    } catch (e) {
+        say(false, 'the page stopped: ' + (e && e.message || e));
+    }
+    if (phone) parent.postMessage({ graphHud: phone, lines: out.concat(notes) }, location.origin);
+    const failed = out.filter(line => line.startsWith('FAIL')).length;
+    const last = (failed ? 'FAIL — ' + failed + ' of ' + out.length : 'PASS — ' + out.length + ' checks')
+        + (notes.length ? ', and ' + notes.length + ' too small to check' : '');
+    document.getElementById('result').textContent = out.concat(notes, last).join('\n');
+    console.log(out.concat(notes, last).join('\n'));
+
+    async function run() {
+        // `python -m http.server` now and then refuses one of a page's dozen requests, and a page
+        // short of a stylesheet measures as nonsense. Better to say so.
+        const missing = [...document.querySelectorAll('link[rel=stylesheet]')].filter(link => !link.sheet).map(link => link.getAttribute('href'))
+            .concat(['jQuery', 'd3', 'AhaWikiD3CanvasControls', 'AhaWikiGraphGlow'].filter(name => !window[name]));
+        if (missing.length) throw new Error('not every file loaded (' + missing.join(', ') + ') -- reload the page');
+        const read = async url => {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(url + ' answered ' + response.status);
+            return response.text();
+        };
+        const views = '../../../app/views/Wiki/';
+        const [layout, adjacentPages, graph, stylesheet] = await Promise.all([
+            read(fileOf('template', 'app/views/Wiki/_graphD3CanvasLayout.scala.html')),
+            read(views + 'adjacentPagesD3CanvasHost.scala.html'),
+            read(views + 'graph.scala.html'),
+            read(fileOf('css', 'app/assets/adjacent.css')),
+        ]);
+
+        // The layout's parameters, and what each of the two templates that call it passes for them:
+        // `name = "text"` or `name = true`. The id is the caller's own.
+        const signature = layout.match(/^@\(([^)]*)\)/);
+        if (!signature) throw new Error('the layout no longer starts with its parameters, @(…)');
+        const parameters = [...signature[1].matchAll(/(\w+)\s*:/g)].map(m => m[1]);
+        const callerOf = text => {
+            const call = text.slice(text.indexOf('_graphD3CanvasLayout('));
+            const passed = {};
+            for (const name of parameters) {
+                const m = call.match(new RegExp('\\b' + name + '\\s*=\\s*(?:"([^"]*)"|(true|false)\\b)'));
+                if (m) passed[name] = m[1] !== undefined ? m[1] : m[2] === 'true';
+            }
+            const wrapper = text.match(/<div class="(aspectRatioWrapper[^"@]*)@id">/);
+            if (!wrapper) throw new Error('a template that calls the layout no longer writes <div class="aspectRatioWrapper … @id">');
+            return { passed, wrapperClass: wrapper[1] };
+        };
+        const callers = { adjacentPages: callerOf(adjacentPages), graph: callerOf(graph) };
+
+        // What Twirl writes for the layout: the signature and the @* comments *@ dropped, an
+        // @if(flag){…} kept or dropped, @name and @(name) filled in. That is all the template uses.
+        // When it uses more, an @ is left over and a check below says so.
+        const expand = passed => layout
+            .replace(/^@\([^)]*\)/, '')
+            .replace(/@\*[\s\S]*?\*@/g, '')
+            .replace(/@if\((\w+)\)\s*\{([^{}]*)\}/g, (all, flag, body) => flag in passed ? (passed[flag] ? body : '') : all)
+            .replace(/@\((\w+)\)|@(\w+)/g, (all, a, b) => (a || b) in passed ? passed[a || b] : all);
+
+        // Below this width a graph is narrow: its buttons are icons, and it shows one panel at a
+        // time. Only the stylesheet has the number, and it is read from there; the two graphs a
+        // pixel apart are here for the two sides of it.
+        const container = stylesheet.match(/@container\s*\(max-width:\s*(\d+)px\)/);
+        const narrowBelow = container ? Number(container[1]) + 1 : 520;
+        say(!!container, 'adjacent.css says below which width a graph is narrow' + (container ? ' (' + narrowBelow + 'px)' : ''));
+        // And below this size it is too small for its buttons at all: under 262px across an open
+        // Control panel is narrower than its rows, and under 160px down an open panel, given the
+        // least the stylesheet ever gives one, lies on the bar. Such a graph is drawn and not
+        // checked. The wiki page MacroAdjacentPages says the same of it.
+        const smallest = { width: 262, height: 160 };
+
+        // The three places a graph is drawn in, as a page writes them.
+        const block = (name, inside) => '<div class="InterpreterRenderMetaWrapper' + name + '" style="position: relative;"><div class="InterpreterRenderContent">' + inside + '</div></div>';
+        const shapes = {
+            // [[AdjacentPages]], at the foot of a page.
+            adjacentPages: wrapper => '<div class="Macro BlockMacro AdjacentPages">' + wrapper + '</div>',
+            // A #!Graph block. Its Metrics button starts lower, under the block's Edit button (adjacent.less).
+            graph: wrapper => block('', wrapper),
+            // A #!Graph in a #!WikiSyntaxPreview, as the help pages show one: in a table, beside its source.
+            preview: wrapper => block(' WikiSyntaxPreview', '<table class="wikiTableSimple wikiSyntax"><thead><tr><th>Raw</th><th>Preview</th></tr></thead>'
+                + '<tbody><tr><td class="raw"><pre class="Interpreter Text text">[[[#!Graph\na->b->c\nc->d->e->a\n]]]</pre></td><td class="preview">' + wrapper + '</td></tr></tbody></table>'),
+        };
+        // On a phone a graph is as wide as the page. In a wide window each box is a width a graph
+        // can have there: the page's, a column's, a table cell's. The last two are low as well as
+        // narrow, which a #!Graph is wherever it is narrow -- only Adjacent Pages turns square.
+        const fixtures = phone ? [
+            { name: 'Adjacent Pages', shape: 'adjacentPages' },
+            { name: '#!Graph', shape: 'graph' },
+            { name: '#!Graph in a help page\'s table', shape: 'preview' },
+        ] : [
+            { name: 'Adjacent Pages in 960px', shape: 'adjacentPages', width: 960 },
+            { name: '#!Graph, 700px', shape: 'graph', width: 700 },
+            { name: '#!Graph, ' + narrowBelow + 'px, the narrowest with words', shape: 'graph', width: narrowBelow },
+            { name: '#!Graph, ' + (narrowBelow - 1) + 'px, a pixel narrower', shape: 'graph', width: narrowBelow - 1 },
+            { name: '#!Graph in a help page\'s table', shape: 'preview', width: 960 },
+            { name: '#!Graph, 336px', shape: 'graph', width: 336 },
+            { name: '#!Graph, 296px', shape: 'graph', width: 296 },
+        ];
+        const graphs = document.getElementById('graphs');
+        let leftOver = '';
+        fixtures.forEach((fixture, index) => {
+            // A UUID, as a page's graphs have, and one that starts with a digit: not every selector takes it.
+            fixture.id = '1000000' + index + '-0000-4000-8000-000000000000';
+            const caller = callers[fixture.shape === 'adjacentPages' ? 'adjacentPages' : 'graph'];
+            const expanded = expand(Object.assign({}, caller.passed, { id: fixture.id }));
+            leftOver = leftOver || (expanded.match(/.{0,30}@.{0,30}/) || [''])[0];
+            const wrapper = '<div class="' + caller.wrapperClass + fixture.id + '">' + expanded
+                + (fixture.shape === 'adjacentPages' ? '<input type="hidden" name="wikiContextName" value="Root"/>' : '')
+                + '</div>';
+            const section = graphs.appendChild(document.createElement('section'));
+            section.className = 'fixture';
+            if (fixture.width) section.style.width = fixture.width + 'px';
+            section.innerHTML = '<div class="caption"></div>' + shapes[fixture.shape](wrapper);
+            fixture.section = section;
+            fixture.wrapper = section.querySelector('.aspectRatioWrapper');
+            fixture.hud = section.querySelector('.adjacentPagesHud');
+        });
+        say(!leftOver, 'this page can draw all of the template' + (leftOver ? ': it does not know «' + leftOver.trim() + '»' : ''));
+
+        // The real script, for the Adjacent Pages graphs, with /api/links answered here: a page with
+        // three around it and one beyond those. (A #!Graph's script is written into its page by
+        // graph.scala.html and cannot be loaded from a file; its buttons are drawn and clicked all the same.)
+        const links = [['Root', 'A'], ['Root', 'B'], ['Root', 'C'], ['A', 'D']].map(([src, dst]) => ({ src, dst }));
+        const pageCount = new Set(links.flatMap(link => [link.src, link.dst])).size;
+        const ajax = $.ajax;
+        $.ajax = function (options) {
+            const asked = /^\/api\/links\/(.*)$/.exec(options.url);
+            if (!asked) return ajax.apply(this, arguments);
+            setTimeout(() => {
+                options.success(links.filter(link => [link.src, link.dst].includes(decodeURIComponent(asked[1]))));
+                options.complete();
+            });
+        };
+        // A pane nobody is looking at says it is hidden, and the script asks for nothing while hidden.
+        Object.defineProperty(document, 'hidden', { get: () => false });
+        const withScript = fixtures.filter(fixture => fixture.shape === 'adjacentPages');
+        for (const fixture of withScript) {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.setAttribute('data-graph-id', fixture.id);
+                script.setAttribute('data-enable-wiki-link', 'false');
+                script.onload = resolve;
+                script.onerror = () => reject(new Error(script.src + ' did not load'));
+                script.src = fileOf('graph', 'public/js/AhaWiki.AdjacentPagesGraph.js');
+                document.head.appendChild(script);
+            });
+        }
+        await new Promise(resolve => $(resolve));       // after the script's own $(function…)
+        withScript.forEach(fixture => $(document).trigger('adjacent-pages-d3canvas:rerender-' + fixture.id));
+
+        if (!document.documentElement.clientWidth) throw new Error('nothing is laid out -- is the pane hidden?');
+        const box = el => el.getBoundingClientRect();
+        const drawn = el => !!el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
+        const shared = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left)) * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+
+        for (const fixture of fixtures) {
+            const { hud, wrapper, section } = fixture;
+            const check = (ok, text) => say(ok, fixture.name + ': ' + text);
+            const panels = () => [...hud.querySelectorAll('.hudPanel')].filter(drawn);
+            const called = panel => panel.classList[1];
+            const whole = box(wrapper);
+            const size = Math.round(whole.width) + '×' + Math.round(whole.height);
+            const covered = Math.round(100 * panels().reduce((sum, panel) => sum + box(panel).width * box(panel).height, 0) / (whole.width * whole.height));
+            section.querySelector('.caption').textContent = fixture.name + ' — ' + size + ', ' + covered + '% under the buttons';
+            if (whole.width < smallest.width || whole.height < smallest.height) {
+                notes.push('NOTE ' + fixture.name + ': at ' + size + ' it is too small for its buttons, and is not checked');
+                continue;
+            }
+            const narrow = whole.width < narrowBelow;
+
+            // Wherever the panels are, open or closed: in the graph, and not on each other.
+            // (The graph is measured again each time: the caption above it has just grown a line.)
+            const beyond = panel => { const b = box(panel), g = box(wrapper); return Math.max(g.left - b.left, b.right - g.right, g.top - b.top, b.bottom - g.bottom); };
+            const placed = when => {
+                const outside = panels().filter(panel => beyond(panel) > 1).map(panel => called(panel) + ' by ' + Math.round(beyond(panel)) + 'px');
+                check(outside.length === 0, when + ', nothing reaches out of the graph' + (outside.length ? ': ' + outside.join(', ') : ''));
+                const stacked = panels().flatMap((a, i) => panels().slice(i + 1).filter(b => shared(box(a), box(b)) > 1).map(b => called(a) + ' and ' + called(b)));
+                check(stacked.length === 0, when + ', no panel lies on another' + (stacked.length ? ': ' + stacked.join(', ') : ''));
+            };
+
+            // 1. Closed, which is how a graph starts.
+            placed('closed');
+            if (whole.width >= 700) check(covered < 15, 'closed, the buttons cover less than 15% of the graph (' + covered + '%)');
+
+            const toggles = [...hud.querySelectorAll('.hudToggle')];
+            const bar = hud.querySelector('.bottomBar');
+            if (toggles.length !== 2 || !bar) {
+                check(false, 'has a Control and a Metrics button, and a bar along the bottom (' + toggles.length + ' buttons, ' + (bar ? 'a' : 'no') + ' bar)');
+                continue;
+            }
+            const [control, metrics] = toggles;
+            const bodyOf = toggle => document.getElementById(toggle.getAttribute('aria-controls'));
+            const open = toggle => toggle.getAttribute('aria-expanded') === 'true' && drawn(bodyOf(toggle));
+            const closed = toggle => toggle.getAttribute('aria-expanded') === 'false' && !drawn(bodyOf(toggle));
+            check(toggles.every(closed), 'Control and Metrics start closed');
+
+            // 2. Words on a wide graph, icons alone on a narrow one.
+            const icons = [...hud.querySelectorAll('.hudToggle i, .hudActions i')];
+            check(icons.length > 0 && icons.every(icon => box(icon).width > 0), 'every button has its icon');
+            const words = [...hud.querySelectorAll('.hudToggle [data-hud-label], .hudActions [data-hud-label]')];
+            check(narrow ? !words.some(drawn) : words.every(drawn), narrow ? 'its buttons are icons alone' : 'its buttons have their words');
+
+            // 3. The bar: one line, every button in it, and the legend beside them when it fits.
+            //    When it does not, it is on a second line, which the bar does not show.
+            const actions = [...bar.querySelectorAll('.hudActions a')].filter(drawn);
+            const legend = bar.querySelector('.legend');
+            const b = box(bar), l = box(legend);
+            const inBar = r => r.left >= b.left - 1 && r.right <= b.right + 1 && r.top >= b.top - 1 && r.bottom <= b.bottom + 1;
+            check(actions.length > 0 && actions.every(a => Math.abs(box(a).top - box(actions[0]).top) <= 1 && inBar(box(a))) && b.height <= 44,
+                'the bar is one line, with every button in it (' + Math.round(b.height) + 'px high)');
+            const between = Math.round(l.left - box(actions[actions.length - 1]).right);
+            const gone = l.top >= b.bottom - 1;
+            if (gone) check(true, 'the legend does not fit beside the buttons, and none of it is shown');
+            else check(inBar(l) && between >= 0 && [...legend.querySelectorAll('[data-hud-label]')].every(drawn), 'the legend is whole in the bar, beside the buttons'
+                + (between < 0 ? ': it lies on them by ' + -between + 'px' : !inBar(l) ? ': it runs ' + Math.round(l.right - b.right) + 'px past the bar' : ' (' + between + 'px between them)'));
+            if (!narrow) check(!gone, 'a graph wide enough for words has its legend');
+
+            // 4. Opening and closing. A wide graph has room for both panels. A narrow one shows one at
+            //    a time: while one is open, the other's button is not there to press. And a low one
+            //    has less room than a panel needs, so its rows scroll.
+            const panelOf = toggle => toggle.closest('.hudPanel');
+            const cut = () => toggles.filter(open).map(panelOf)
+                .filter(panel => panel.scrollWidth > panel.clientWidth + 1 || panel.scrollHeight > panel.clientHeight + 1).map(called);
+            const opened = when => {
+                placed(when);
+                check(cut().length === 0, when + ', nothing of an open panel is cut off' + (cut().length ? ': ' + cut().join(', ') + ' is' : ''));
+            };
+            control.click();
+            check(open(control), 'Control opens from its button');
+            opened('with Control open');
+            if (narrow) {
+                check(!drawn(panelOf(metrics)), 'while Control is open, the Metrics button is out of its way');
+                control.click();
+                check(closed(control) && drawn(metrics), 'closing Control brings the Metrics button back');
+                metrics.click();
+                check(open(metrics) && !drawn(panelOf(control)), 'Metrics opens from its button, and the Control button is out of its way');
+                opened('with Metrics open');
+                // Both open in a narrow graph: no click gets there, but leaving fullscreen does.
+                control.click();
+                check(drawn(panelOf(control)) && !drawn(panelOf(metrics)), 'left open together, only Control is shown');
+            } else {
+                metrics.click();
+                check(open(metrics) && open(control), 'Metrics opens beside it, and both are open at once');
+                opened('with both open');
+            }
+            toggles.filter(toggle => toggle.getAttribute('aria-expanded') === 'true').forEach(toggle => toggle.click());
+            check(toggles.every(closed) && toggles.every(drawn), 'they close from the same buttons, and both buttons are there again');
+
+            // 5. What the real script does to the buttons, and through them.
+            if (fixture.shape !== 'adjacentPages') continue;
+            const fullscreen = hud.querySelector('.toggleFullscreenD3Canvas');
+            check(!!fullscreen && !!fullscreen.querySelector('[data-hud-label]') && fullscreen.textContent.trim() === '', 'the script writes the Fullscreen button\'s word where the stylesheet can hide it');
+            const slider = hud.querySelector('.labelScaleD3Canvas');
+            const move = to => { slider.value = to; slider.dispatchEvent(new Event('input', { bubbles: true })); return hud.querySelector('.labelScaleValueD3Canvas').textContent; };
+            const moved = move('1.5');
+            check(moved === '1.5x', 'a slider in Control reaches the script (Label scale reads ' + moved + ')');
+            move('1');
+        }
+
+        // Metrics counts what the script drew. It fetches a page at a time, so this takes a few seconds.
+        await Promise.all(withScript.map(async fixture => {
+            const count = fixture.hud.querySelector('.nodeCountSummaryD3Canvas');
+            const all = pageCount + '/' + pageCount;
+            for (let waited = 0; count && count.textContent !== all && waited < 20000; waited += 250) await new Promise(resolve => setTimeout(resolve, 250));
+            say(!!count && count.textContent === all, fixture.name + ': Metrics counts the pages the script drew (' + (count ? count.textContent : 'no counter') + ', of ' + all + ')');
+        }));
+
+        // For the picture: the checks leave every panel closed, and this opens them again.
+        const leaveOpen = params.get('open');
+        if (leaveOpen) fixtures.forEach(fixture => [...fixture.hud.querySelectorAll('.hudToggle')]
+            .filter((toggle, index) => leaveOpen === 'both' || leaveOpen === ['control', 'metrics'][index])
+            .forEach(toggle => toggle.click()));
+
+        // And all of it again as three phones show it. What a stylesheet asks about is the window --
+        // a phone's Adjacent Pages graph is square because the window is narrow -- and a frame is a
+        // window. One at a time: the server that refuses a request does it when many come at once.
+        if (!phone) for (const width of [390, 360, 320]) {
+            (await inFrame(width)).forEach(line => (line.startsWith('NOTE') ? notes : out).push(line.replace(' ', ' on a ' + width + 'px phone, ')));
+        }
+    }
+
+    function inFrame(width, attempt) {
+        return new Promise(resolve => {
+            const phones = document.getElementById('phones');
+            const caption = phones.appendChild(document.createElement('div'));
+            caption.className = 'caption';
+            caption.textContent = 'a ' + width + 'px phone';
+            const frame = document.createElement('iframe');
+            const query = new URLSearchParams(location.search);
+            query.set('frame', width);
+            frame.src = location.pathname + '?' + query;
+            // No scrollbar of its own, which would take 15px of the width it is here to have.
+            frame.width = width; frame.height = 800; frame.scrolling = 'no';
+            const settle = lines => { removeEventListener('message', heard); clearTimeout(silence); resolve(lines); };
+            const heard = event => {
+                if (event.source !== frame.contentWindow || !event.data || event.data.graphHud !== String(width)) return;
+                // A frame that lost a file to the server is opened again, a few times.
+                if ((attempt || 1) < 4 && event.data.lines.some(line => line.includes('not every file loaded'))) {
+                    caption.remove(); frame.remove();
+                    return settle(inFrame(width, (attempt || 1) + 1));
+                }
+                frame.height = frame.contentDocument.documentElement.scrollHeight;
+                settle(event.data.lines);
+            };
+            addEventListener('message', heard);
+            const silence = setTimeout(() => settle(['FAIL the frame said nothing for a minute']), 60000);
+            phones.appendChild(frame);
+        });
+    }
+})();
+</script>
+</body>
+</html>

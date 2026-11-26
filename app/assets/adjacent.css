@@ -99,7 +99,8 @@
 }
 .AhaWiki .adjacentPagesHud .hudPanel.topLeft,
 .AhaWiki .adjacentPagesHud .hudPanel.topRight {
-  top: 10px;
+  --hud-top: 10px;
+  top: var(--hud-top);
   min-width: 0;
   padding: 0;
 }
@@ -121,15 +122,29 @@
 }
 .AhaWiki .adjacentPagesHud .hudPanel:has( > .hudBody:not([hidden])) {
   max-width: calc(100cqw - 42px);
+  max-height: max(60px, 100cqh - var(--hud-top) - 62px);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.AhaWiki .adjacentPagesHud .hudPanel:has( > .hudBody:not([hidden])) > .hudBody {
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  margin-right: -10px;
+  padding-right: 10px;
 }
 .AhaWiki .adjacentPagesHud .hudPanel.bottomBar {
   left: 10px;
   right: 10px;
   bottom: 10px;
+  box-sizing: border-box;
+  height: 36px;
   min-width: 0;
   padding: 4px 6px;
   display: flex;
+  flex-wrap: wrap;
+  overflow: hidden;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -233,7 +248,7 @@
   background: var(--color-adjacent-dot-hop2);
 }
 .AhaWiki .InterpreterRenderMetaWrapper .adjacentPagesHud .hudPanel.topRight {
-  top: 32px;
+  --hud-top: 32px;
 }
 @media (max-width: 768px) {
   .AhaWiki .aspectRatioWrapper.adjacentPagesGraphWrapper .ratio_16_9 {
@@ -241,7 +256,7 @@
   }
 }
 .AhaWiki .adjacentPagesHud {
-  container-type: inline-size;
+  container-type: size;
 }
 @container (max-width: 519px) {
   .AhaWiki .adjacentPagesHud .hudToggle > [data-hud-label],
@@ -253,6 +268,10 @@
   }
   .AhaWiki .adjacentPagesHud .hudPanel.bottomBar > .row.compact {
     flex-wrap: nowrap;
+  }
+  .AhaWiki .adjacentPagesHud .hudPanel.topLeft:has( > .hudBody:not([hidden])) ~ .hudPanel.topRight,
+  .AhaWiki .adjacentPagesHud:has(.hudPanel.topRight > .hudBody:not([hidden])) .hudPanel.topLeft:not(:has( > .hudBody:not([hidden]))) {
+    visibility: hidden;
   }
 }
 .AhaWiki .crawlerPreview {

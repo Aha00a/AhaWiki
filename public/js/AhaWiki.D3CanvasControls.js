@@ -17,24 +17,14 @@
 
     // A graph's Control and Metrics panels open and close from their button. Delegated, so it is
     // bound once for every graph on the page, whichever script draws it.
-    var setOpen = function(toggle, open) {
-        var body = document.getElementById(toggle.getAttribute('aria-controls'));
-        if(!body) return;
-        body.hidden = !open;
-        toggle.setAttribute('aria-expanded', String(open));
-    };
+    // In a narrow graph only one of the two is shown at a time. That is adjacent.less's doing, which
+    // takes the other's button away while one is open; until 2026-11-26 this handler closed the other
+    // itself, below a width it had to know as well as the stylesheet did.
     $(document).on('click', '.adjacentPagesHud .hudToggle', function() {
+        var body = document.getElementById(this.getAttribute('aria-controls'));
+        if(!body) return;
         var open = this.getAttribute('aria-expanded') !== 'true';
-        // In a narrow graph -- a phone, or a #!Graph in a table cell -- the two panels together are
-        // wider than the graph and would lie on each other, so opening one closes the other. 520px
-        // is the width below which adjacent.less shows the HUD's buttons as icons.
-        var $hud = $(this).closest('.adjacentPagesHud');
-        if(open && $hud.width() < 520) {
-            var self = this;
-            $hud.find('.hudToggle').each(function() {
-                if(this !== self) setOpen(this, false);
-            });
-        }
-        setOpen(this, open);
+        body.hidden = !open;
+        this.setAttribute('aria-expanded', String(open));
     });
 })(window, jQuery);
