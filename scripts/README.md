@@ -10,6 +10,15 @@ stops at the first `]`, so `[[Include(["Aws EC2"])]]` was not masked at all and 
 it counted as real. A test caught it. Anything in that file is a claim about
 `app/logics/wikis/`; change it only alongside that code.
 
+`lib/headless-chrome.mjs` holds what the two scripts that open pages in Chrome both need:
+finding Chrome, starting it with a profile of its own, talking to it over the DevTools protocol,
+and the list of a site's pages. It was the first half of `browser-sweep.mjs` until
+`compare-stylesheets.mjs` needed the same lines.
+
+`lib/stylesheet-comparison.mjs` is what `compare-stylesheets.mjs` measures in a page and how it
+reads two measurements of one. It is apart from the script so that the reading — which page is
+worse, what the exit status is — runs in `npm test` without a browser.
+
 ## Front-end admin build
 
 `app/assets/js/admin.jsx` is bundled to `public/js/babel/admin.js`. The packages it imports —
@@ -207,6 +216,66 @@ only after a browser has failed to open it too. Three things such checks keep ru
    a `srcdoc` iframe whose document carries `<meta name='referrer' content='no-referrer'>`.
  * archive.ph times out from some networks; from the server it answers with a 302 to
    archive.li and then 200. Such a link is not dead.
+
+## Drawing every page with a changed stylesheet
+
+`compare-stylesheets.mjs` draws each page of a site twice in headless Chrome — as the site
+serves it, then with this checkout's stylesheets in place of the site's — and reports, page by
+page, what that moves. It is for a rule every page inherits: a harness under `test/manual/`
+holds the text someone thought of, and the pages of a wiki hold the rest. Why it was written is
+in its header; why it is built the way it is, on the wiki page `Dev Less`.
+
+```bash
+node scripts/compare-stylesheets.mjs https://ahawiki.net              # every page the site lists
+node scripts/compare-stylesheets.mjs https://ahawiki.net paths.txt    # one path per line
+node scripts/compare-stylesheets.mjs https://ahawiki.net --phone      # in a phone 390px wide; --phone=360 for another width
+node scripts/compare-stylesheets.mjs https://ahawiki.net paths.txt --shots=<dir>   # and pictures of what changed
+```
+
+Run it before the deploy, after `npm run less`. It replaces every stylesheet a page links that
+is also a `.css` file in `app/assets/` and is not the text the site serves already, so once the
+change is deployed there is nothing left to compare — and it says so and stops, with status 2,
+rather than report that nothing moved. The same happens when a `.less` file was edited and not
+compiled. `--assets=<dir>` takes the stylesheets from another directory: with
+`git show <commit>:app/assets/wiki.css` written to `<dir>/wiki.css`, the run shows what going
+back to that commit's stylesheet would move.
+
+Each page comes out as one of four:
+
+ * `same` — both drawings measure alike.
+ * `moved` — something changed and nothing got worse: the page's height, how many words are
+   drawn on two lines, the width of its tables, or one of the things below getting better.
+   This is what a change is usually for, and the script does not judge it.
+ * `WORSE` — the page sticks out further than it did, or its height changed by more than a
+   fifth. Sticking out is any of: the page wider than its window, more elements past the right
+   edge of the wiki content, more tables wider than the box they are in, a page of a Paper
+   document newly or further past its footer.
+ * `FAILED` — it could not be measured. A page that does not answer 200 is one of these, so a
+   run the wiki has banned does not come out as a site where nothing moved.
+
+Exit status 0 when no page is worse, 1 when one is or one could not be measured, 2 when it
+could not run. The summary at the end gives the totals and names the pages that grew or shrank
+most. Read that list even when the status is 0, and look at its first pages — put their paths
+in a file and run again with `--shots`, which saves each changed page as two pictures, before
+and after (of a very long page, the top).
+
+A desktop run and a phone run are two measurements, and a change is not checked until both are
+done: the regression this was written for existed only on the phone. It needs what the sweep
+above needs — Chrome and Node 22 — and the same warning holds, because it opens pages back to
+back: run it from an address the wiki whitelists. It opens them logged out, so it sees no page
+that needs a login, nothing a page draws only after a click, and nothing of print.
+
+The origin can also be a static server on this machine and the paths the harness pages under
+`test/manual/`, which link the same stylesheets under the same names; that is how the Paper
+measurement was tried, on `test/manual/paper-contract/`.
+
+What it gave on 2026-11-26 against the 136 pages ahawiki.net lists: with the checkout's own
+`wiki.css` under a different text — a comment appended — every page came out `same` at 1280px,
+so putting a `<style>` where the `<link>` was moves nothing by itself. With the regression put
+back (the `overflow-wrap: normal` lines of `code` and `pre` taken out), at 390px three pages
+came out `WORSE` — 121.0%, 47.4% and 22.3% taller — six `moved` and 127 `same`. Nothing stuck
+out further on any of them. Two of the six that moved had grown 17.1% and 12.5%: under the
+fifth, and at the top of the list of pages that grew. That is why the list is to be read.
 
 ## Wiki page sync
 
