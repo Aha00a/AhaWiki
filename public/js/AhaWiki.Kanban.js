@@ -1961,8 +1961,8 @@
             }
             evt.preventDefault();
             evt.stopPropagation();
-            cardList.style.setProperty('outline', '2px dashed var(--kanban-primary)', 'important');
-            cardList.style.setProperty('background', 'var(--color-link-hover-bg)', 'important');
+            cardList.style.setProperty('outline', '2px dashed var(--kanban-primary)');
+            cardList.style.setProperty('background', 'var(--color-link-hover-bg)');
             listDropHint.style.display = '';
         });
 
@@ -1979,8 +1979,8 @@
             if (evt.dataTransfer) {
                 evt.dataTransfer.dropEffect = 'copy';
             }
-            cardList.style.setProperty('outline', '2px dashed var(--kanban-primary)', 'important');
-            cardList.style.setProperty('background', 'var(--color-link-hover-bg)', 'important');
+            cardList.style.setProperty('outline', '2px dashed var(--kanban-primary)');
+            cardList.style.setProperty('background', 'var(--color-link-hover-bg)');
             listDropHint.style.display = '';
         });
 
@@ -2322,10 +2322,10 @@
                 }
                 item.classList.remove('kanban-card-drag-chosen', 'kanban-card-drag-placeholder');
             };
+            // On <body>, and nowhere else: the pointer leaves the board while a card is dragged, and
+            // the one rule for its cursor (kanban.less) is for the whole page. The board had a
+            // class of its own for the same cursor until 2026-11-26, and the page's covered it.
             var setCardDragCursorState = function (active, doc) {
-                if (root && root.classList) {
-                    root.classList[active ? 'add' : 'remove']('kanban-card-dragging');
-                }
                 var targetDocument = doc || (root && root.ownerDocument ? root.ownerDocument : document);
                 if (targetDocument && targetDocument.body && targetDocument.body.classList) {
                     targetDocument.body.classList[active ? 'add' : 'remove']('kanban-card-dragging-global');
@@ -2912,8 +2912,8 @@
         var boardFileDragDepth = 0;
         var setBoardFileDropFeedback = function (active) {
             if (active) {
-                board.style.setProperty('outline', '2px dashed var(--kanban-primary)', 'important');
-                board.style.setProperty('background', 'var(--color-link-hover-bg)', 'important');
+                board.style.setProperty('outline', '2px dashed var(--kanban-primary)');
+                board.style.setProperty('background', 'var(--color-link-hover-bg)');
                 return;
             }
             board.style.removeProperty('outline');
@@ -5039,10 +5039,8 @@
                 listDragOriginClone.setAttribute('data-kanban-list-drag-origin', 'true');
                 item.parentElement.insertBefore(listDragOriginClone, item);
             };
+            // On <body> only, as for a card (setCardDragCursorState).
             var setListDragCursorState = function (active) {
-                if (root && root.classList) {
-                    root.classList[active ? 'add' : 'remove']('kanban-list-dragging');
-                }
                 if (document && document.body && document.body.classList) {
                     document.body.classList[active ? 'add' : 'remove']('kanban-list-dragging-global');
                 }

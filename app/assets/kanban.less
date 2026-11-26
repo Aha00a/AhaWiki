@@ -28,10 +28,6 @@
 	// background drag state
 	.kanban-draggable { cursor: grab; }
 	.kanban-dragging { cursor: grabbing; .userSelect(none); }
-	&.kanban-card-dragging,
-	&.kanban-card-dragging *,
-	&.kanban-list-dragging,
-	&.kanban-list-dragging * { cursor: grabbing !important; }
 
 	.kanban-read-only-notice {
 		flex: 0 0 auto;
@@ -70,6 +66,15 @@
 		transition: transform 160ms ease, box-shadow 160ms ease;
 	}
 
+	// A list being dragged is three things. The copy that follows the pointer is on <body>, and
+	// its rules are below, outside this block. Here are the other two: the faded copy left where
+	// the list was (-origin), and the list itself, which Sortable moves about the board as the
+	// slot it would land in (-placeholder).
+	//
+	// `transform: none !important` on both: Sortable slides every child of the board it moves
+	// into place by writing a transform on the element, and these two are drawn at once where
+	// they are. !important is the only thing in a stylesheet that outranks a style written on an
+	// element; it is here, and on the cards' two below, for that and nothing else.
 	.kanban-list-drag-origin {
 		opacity: 0.52;
 		filter: blur(0.4px) saturate(0.94);
@@ -79,21 +84,16 @@
 	.kanban-list-drag-placeholder {
 		background: var(--color-link-hover-bg);
 		border: 1px dashed var(--kanban-primary);
-		box-shadow: none !important;
+		box-shadow: none;
 		cursor: grabbing;
 		min-width: 260px;
-		opacity: 1 !important;
+		opacity: 1;
 		transform: none !important;
 		> * { visibility: hidden; }
 	}
-	.kanban-list-drag-origin.kanban-list-drag-placeholder {
-		background: var(--kanban-column-bg);
-		border: 1px solid var(--kanban-border);
-		box-shadow: none !important;
-		> * { visibility: visible !important; }
-	}
+	// Until the list is over another place, its slot is next to the copy of it, and is not drawn.
 	.kanban-list-drag-origin + .kanban-list-drag-placeholder {
-		display: none !important;
+		display: none;
 	}
 	.kanban-list-drag-chosen { cursor: grabbing; }
 
@@ -148,6 +148,8 @@
 		box-shadow: 0 0 0 2px rgba(12, 102, 228, 0.16), var(--kanban-shadow);
 	}
 
+	// A card being dragged, as a list is above: the faded copy left where it was, and the card
+	// itself as the slot. `transform: none !important` for the reason given there.
 	.kanban-card-drag-origin {
 		opacity: 0.52;
 		filter: blur(0.4px) saturate(0.94);
@@ -159,13 +161,15 @@
 		}
 	}
 
-	.kanban-card-drag-placeholder {
+	// `.kanban-card` is in the selector to make it as specific as the rule that rings a card
+	// assigned to whoever is looking, which names two classes: a slot has no shadow, ring included.
+	.kanban-card.kanban-card-drag-placeholder {
 		background: var(--color-link-hover-bg);
 		border: 1px dashed var(--kanban-primary);
-		box-shadow: none !important;
+		box-shadow: none;
 		cursor: grabbing;
 		min-height: 48px;
-		opacity: 1 !important;
+		opacity: 1;
 		transform: none !important;
 		> * { visibility: hidden; }
 		&:hover {
@@ -175,15 +179,8 @@
 		}
 	}
 
-	.kanban-card-drag-origin.kanban-card-drag-placeholder {
-		background: var(--kanban-card-bg);
-		border: 1px solid var(--kanban-border);
-		box-shadow: var(--kanban-shadow) !important;
-		> * { visibility: visible !important; }
-	}
-
 	.kanban-card-drag-origin + .kanban-card-drag-placeholder {
-		display: none !important;
+		display: none;
 	}
 
 	.kanban-card-drag-chosen { cursor: grabbing; }
@@ -284,20 +281,6 @@
 	.kanban-card .attachment-preview { display:grid; grid-template-columns: repeat(auto-fill, minmax(88px,1fr)); gap:8px; margin-top:8px; }
 	.kanban-card .attachment-preview img { width:100%; height:72px; object-fit:cover; border-radius:6px; }
 
-	// Modal/detail popup
-	.kanban-card-detail-overlay { z-index:1000; }
-	.kanban-card-detail-overlay > div {
-		width: min(720px, calc(100vw - 32px)) !important;
-		max-height: calc(100vh - 32px) !important;
-		overflow-y: auto !important;
-		background: var(--color-surface) !important;
-		color: var(--color-text) !important;
-		border-radius: 14px !important;
-		padding: 24px !important;
-		box-shadow: 0 20px 48px rgba(9,30,66,0.28) !important;
-		border: 1px solid rgba(9,30,66,0.10) !important;
-	}
-
 	@media (max-width: 767px) {
 		// Trello-style: 탭 바 + 단일 컬럼 뷰 (JS로 활성 컬럼만 표시)
 		.kanban-board-ready { overflow:hidden; gap:0; padding:0; min-height:0; background:transparent; border-radius:0; }
@@ -313,6 +296,12 @@
 
 // ─── Kanban popup styles (appended to body, outside .InterpreterKanban) ───────
 // Sortable fallback preview is appended to body, outside .InterpreterKanban.
+
+// While a card or a list is dragged the pointer is a closed hand wherever it is, and that can be
+// anywhere on the page: the copy being dragged lets the pointer through to what is under it.
+// !important, because this has to win against every rule on the page that gives something a
+// cursor, in every stylesheet the page loads; a selector specific enough for the ones there are
+// today loses to the next one written.
 body.kanban-card-dragging-global,
 body.kanban-card-dragging-global *,
 body.kanban-list-dragging-global,
@@ -329,15 +318,17 @@ body.kanban-list-dragging-global * { cursor: grabbing !important; }
 	box-sizing: border-box;
 	display: flex;
 	flex-direction: column;
-	box-shadow: var(--color-kanban-shadow, 0 6px 18px rgba(9, 30, 66, 0.08)) !important;
+	box-shadow: var(--color-kanban-shadow, 0 6px 18px rgba(9, 30, 66, 0.08));
 	color: var(--color-kanban-text);
-	cursor: grabbing !important;
+	cursor: grabbing;
 	filter: blur(0.4px) saturate(0.94);
+	// Sortable writes `opacity: 0.8` on the copy it drags, on the element; !important is what
+	// outranks that. The same on a dragged card's copy, below.
 	opacity: 0.64 !important;
 	pointer-events: none;
 	transform-origin: 50% 50%;
 }
-.kanban-list-drag-preview .kanban-hidden { display: none !important; }
+.kanban-list-drag-preview .kanban-hidden { display: none; }
 .kanban-list-drag-preview .kanban-column-title-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; gap:6px; }
 .kanban-list-drag-preview .kanban-column-title { font-weight:700; flex:1 1 auto; color:var(--color-kanban-text); min-width:0; font-size:14px; }
 .kanban-list-drag-preview .kanban-column-badge {
@@ -395,7 +386,11 @@ body.kanban-list-dragging-global * { cursor: grabbing !important; }
 .kanban-list-drag-preview .kanban-card-stat.due-date-overdue { color: var(--color-flash-error-text); font-weight: 600; }
 .kanban-list-drag-preview .kanban-card-stat.due-date-soon { color: var(--color-flash-warning-text); font-weight: 600; }
 .kanban-list-drag-preview .kanban-card-composer { margin-top:10px; }
-.kanban-list-drag-preview .kanban-add-card-button { display:block; width:100%; padding:10px; text-align:left; border:none; border-radius:8px; background:transparent; color:var(--color-kanban-text); }
+.kanban-list-drag-preview .kanban-add-card-button { display:block; width:100%; padding:10px; text-align:left; border:none; border-radius:8px; background:transparent; color:var(--color-kanban-text);
+	// As on the board: the rule above gives the button a `display`, and is as specific as the
+	// one that hides what is hidden. A list picked up with its «Add a Card» open has it hidden.
+	&.kanban-hidden { display:none; }
+}
 .kanban-list-drag-preview .kanban-card img {
 	display:block; width:100%; height:auto; max-height:180px; object-fit:cover; border-radius:6px; margin-top:6px; border:1px solid var(--color-kanban-border);
 }
@@ -406,13 +401,14 @@ body.kanban-list-dragging-global * { cursor: grabbing !important; }
 	background: var(--color-kanban-card-bg, #ffffff);
 	border: 1px solid var(--color-kanban-border, #dfe1e6);
 	border-radius: 10px;
-	box-shadow: var(--color-kanban-shadow, 0 6px 18px rgba(9, 30, 66, 0.08)) !important;
+	box-shadow: var(--color-kanban-shadow, 0 6px 18px rgba(9, 30, 66, 0.08));
 	box-sizing: border-box;
 	color: var(--color-kanban-text, #172b4d);
-	cursor: grabbing !important;
+	cursor: grabbing;
 	filter: blur(0.4px) saturate(0.94);
 	margin-bottom: 0;
 	max-width: 340px;
+	// Over the 0.8 Sortable writes on the element, as on a dragged list's copy above.
 	opacity: 0.64 !important;
 	padding: 14px;
 	pointer-events: none;
@@ -507,16 +503,19 @@ body.kanban-list-dragging-global * { cursor: grabbing !important; }
 .kanban-card-drag-preview .kanban-card-assignee-avatar:first-child {
 	margin-left: 0;
 }
-.InterpreterKanban .kanban-card-assignee-avatar-image,
-.kanban-list-drag-preview .kanban-card-assignee-avatar-image,
-.kanban-card-drag-preview .kanban-card-assignee-avatar-image {
-	width: 100% !important;
-	height: 100% !important;
-	max-height: none !important;
-	border: none !important;
+// An assignee's picture is an <img> in a card, and a card has a rule for the images in it
+// (`.kanban-card img`) that would size and frame this one as an attachment. The circle the
+// picture is in is named here as well, which makes this the more specific of the two.
+.InterpreterKanban .kanban-card-assignee-avatar > .kanban-card-assignee-avatar-image,
+.kanban-list-drag-preview .kanban-card-assignee-avatar > .kanban-card-assignee-avatar-image,
+.kanban-card-drag-preview .kanban-card-assignee-avatar > .kanban-card-assignee-avatar-image {
+	width: 100%;
+	height: 100%;
+	max-height: none;
+	border: none;
 	border-radius: inherit;
-	margin: 0 !important;
-	object-fit: cover !important;
+	margin: 0;
+	object-fit: cover;
 	display: block;
 }
 .InterpreterKanban .kanban-card-assignee-more,
@@ -548,7 +547,7 @@ body.kanban-list-dragging-global * { cursor: grabbing !important; }
 	border-radius: 6px;
 }
 
-.kanban-card-detail-overlay .kanban-hidden { display: none !important; }
+.kanban-card-detail-overlay .kanban-hidden { display: none; }
 .kanban-card-detail-overlay {
 	--kanban-bg: var(--color-kanban-bg);
 	--kanban-column-bg: var(--color-kanban-column-bg);
@@ -565,23 +564,23 @@ body.kanban-list-dragging-global * { cursor: grabbing !important; }
 	backdrop-filter: blur(2px);
 }
 .kanban-modal {
-	width: min(720px, calc(100vw - 32px)) !important;
-	max-height: calc(100vh - 32px) !important;
-	overflow-x: hidden !important;
-	overflow-y: auto !important;
-	background: var(--color-surface) !important;
-	color: var(--color-text) !important;
-	border-radius: 5px !important;
-	padding: 0 !important;
-	box-shadow: 0 24px 64px rgba(9,30,66,0.32) !important;
-	border: 1px solid var(--kanban-border) !important;
-	position: relative !important;
-	box-sizing: border-box !important;
+	width: min(720px, calc(100vw - 32px));
+	max-height: calc(100vh - 32px);
+	overflow-x: hidden;
+	overflow-y: auto;
+	background: var(--color-surface);
+	color: var(--color-text);
+	border-radius: 5px;
+	padding: 0;
+	box-shadow: 0 24px 64px rgba(9,30,66,0.32);
+	border: 1px solid var(--kanban-border);
+	position: relative;
+	box-sizing: border-box;
 	&.kanban-modal-drop-active {
-		outline: 2px dashed var(--kanban-primary) !important;
-		outline-offset: 2px !important;
-		background: var(--color-link-hover-bg) !important;
-		box-shadow: 0 0 0 4px rgba(12,102,228,0.2), 0 24px 64px rgba(9,30,66,0.32) !important;
+		outline: 2px dashed var(--kanban-primary);
+		outline-offset: 2px;
+		background: var(--color-link-hover-bg);
+		box-shadow: 0 0 0 4px rgba(12,102,228,0.2), 0 24px 64px rgba(9,30,66,0.32);
 	}
 }
 .kanban-modal-header {
@@ -967,11 +966,11 @@ body.kanban-list-dragging-global * { cursor: grabbing !important; }
 @media (max-width: 767px) {
 	.kanban-card-detail-overlay { align-items: flex-end; }
 	.kanban-modal {
-		width: 100vw !important;
-		max-width: 100vw !important;
-		max-height: 90vh !important;
-		max-height: 90dvh !important;
-		border-radius: 16px 16px 0 0 !important;
+		width: 100vw;
+		max-width: 100vw;
+		max-height: 90vh;
+		max-height: 90dvh;
+		border-radius: 16px 16px 0 0;
 	}
 	.kanban-modal-header { border-radius: 16px 16px 0 0; }
 	.kanban-modal-btn-delete, .kanban-modal-btn-close { width:40px; height:40px; }

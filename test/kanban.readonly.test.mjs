@@ -235,7 +235,6 @@ test('card drag keeps an origin clone only while dragging', () => {
     originalEvent: { clientX: 50, clientY: 180 }
   });
 
-  assert.equal(root.classList.contains('kanban-card-dragging'), true);
   assert.equal(body.classList.contains('kanban-card-dragging-global'), true);
 
   const originClone = lists[0].querySelector('.kanban-card-drag-origin');
@@ -283,7 +282,6 @@ test('card drag keeps an origin clone only while dragging', () => {
   });
 
   assert.equal(board.querySelectorAll('.kanban-card-drag-origin').length, 0);
-  assert.equal(root.classList.contains('kanban-card-dragging'), false);
   assert.equal(body.classList.contains('kanban-card-dragging-global'), false);
   assert.equal(dragged.classList.contains('kanban-card-drag-placeholder'), false);
   assert.equal(dragged.classList.contains('kanban-card-drag-chosen'), false);
@@ -337,7 +335,6 @@ test('list drag keeps an origin clone only while dragging', () => {
   assert.equal(originClone.classList.contains('kanban-list-drag-chosen'), false);
   assert.equal(board.children.indexOf(originClone), 0);
   assert.equal(board.children.indexOf(dragged), 1);
-  assert.equal(root.classList.contains('kanban-list-dragging'), true);
   assert.equal(body.classList.contains('kanban-list-dragging-global'), true);
 
   boardSortable.options.onEnd({
@@ -352,7 +349,6 @@ test('list drag keeps an origin clone only while dragging', () => {
   });
 
   assert.equal(board.querySelectorAll('.kanban-list-drag-origin').length, 0);
-  assert.equal(root.classList.contains('kanban-list-dragging'), false);
   assert.equal(body.classList.contains('kanban-list-dragging-global'), false);
   assert.equal(dragged.classList.contains('kanban-list-drag-placeholder'), false);
   assert.equal(dragged.classList.contains('kanban-list-drag-chosen'), false);

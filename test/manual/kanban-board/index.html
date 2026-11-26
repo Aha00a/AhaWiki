@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<!-- As a wiki page has it. Without it a phone lays the page out 980px wide, and nothing here is narrow. -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>kanban board harness</title>
+<script>
+// Each of these loads another copy of one file -- the one from before a change, to see the checks
+// fail (README): ?css= for kanban.css, ?script= for AhaWiki.Kanban.js, ?template= for
+// InterpreterKanban.scala.html. ?theme=dark draws the dark theme; nothing is stored.
+// ?frame= is the page's own: it is how it opens itself at a phone's width, below.
+var params = new URLSearchParams(location.search);
+var fileOf = function (name, path) { return params.get(name) || '../../../' + path; };
+var quoted = function (url) { return url.replace(/"/g, '&quot;'); };
+document.documentElement.classList.add(params.get('theme') === 'dark' ? 'theme-ahawiki-dark' : 'theme-ahawiki-light');
+// The stylesheets a page loads, in the order it loads them (_baseSkeleton.scala.html): of two rules
+// as specific as each other the later one wins, and three sheets come after the board's.
+['public/vendor/font-awesome/css/all.min.css', 'app/assets/less.css', 'app/assets/wiki.css', 'app/assets/search.css', 'app/assets/kanban.css',
+    'app/assets/gantt.css', 'app/assets/interpreter.css', 'app/assets/adjacent.css'].forEach(function (path) {
+    document.write('<link rel="stylesheet" href="' + quoted(path === 'app/assets/kanban.css' ? fileOf('css', path) : '../../../' + path) + '">');
+});
+</script>
+<script src="../../../public/vendor/sortablejs/Sortable.min.js"></script>
+<style>
+    #result { font: 13px/1.5 ui-monospace, monospace; white-space: pre-wrap; margin: 16px; }
+    #phones { margin: 16px; }
+    #phones > .caption { font: 12px/1.5 ui-monospace, monospace; margin: 0 0 4px; }
+    #phones > iframe { display: block; border: 0; outline: 1px dashed #999; margin: 0 0 32px; }
+</style>
+</head>
+<body class="AhaWiki no-mathjax">
+<!-- What a page puts around its text. The board is drawn into it below. The revision is where a
+     page's header has it: the board reads it there before it saves. -->
+<div class="Wiki">
+<div class="revision" hidden>revision <a>1</a></div>
+<div role="main" class="wikiContent PageHarness" data-wiki-writable="true">
+<div class="limitWidth" id="page"></div>
+</div>
+</div>
+<!-- This page again, in frames as wide as phones. -->
+<div id="phones"></div>
+<pre id="result">running…</pre>
+<script>
+// A #!Kanban board, drawn by the script that draws one on a page from the template that writes it,
+// with a card and a list dragged by the pointer and a card's dialog opened: how each looks while
+// that happens, which only a browser can say.
+(async function () {
+    const out = [];
+    const say = (ok, text) => out.push((ok ? 'PASS' : 'FAIL') + ' ' + text);
+    // In a frame, this is the page at a phone's width, and what it finds goes to the page that framed it.
+    const phone = params.get('frame');
+    // A script driving this page -- over the DevTools protocol, say -- can define window.atStage
+    // before the page loads. It is called with each stage's name and the document, and waited
+    // for: that is how to take a picture of a drag half way (README).
+    const stage = async name => {
+        if (typeof window.atStage === 'function') await window.atStage((phone ? phone + 'px: ' : '') + name, document);
+    };
+    try {
+        await run();
+    } catch (e) {
+        say(false, 'the page stopped: ' + (e && e.message || e));
+    }
+    if (phone) parent.postMessage({ kanbanBoard: phone, lines: out }, location.origin);
+    const failed = out.filter(line => line.startsWith('FAIL')).length;
+    const last = failed ? 'FAIL — ' + failed + ' of ' + out.length : 'PASS — ' + out.length + ' checks';
+    document.getElementById('result').textContent = out.concat(last).join('\n');
+    console.log(out.concat(last).join('\n'));
+
+    async function run() {
+        // `python -m http.server` now and then refuses one of a page's dozen requests, and a page
+        // short of a stylesheet measures as nonsense. Better to say so.
+        const missing = [...document.querySelectorAll('link[rel=stylesheet]')].filter(link => !link.sheet).map(link => link.getAttribute('href'))
+            .concat(window.Sortable ? [] : ['Sortable']);
+        if (missing.length) throw new Error('not every file loaded (' + missing.join(', ') + ') -- reload the page');
+
+        const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+        const until = async (test, what, ms) => {
+            const started = performance.now();
+            for (;;) {
+                const got = test();
+                if (got) return got;
+                if (performance.now() - started > (ms || 3000)) throw new Error('waited ' + (ms || 3000) + 'ms for ' + what);
+                await sleep(20);
+            }
+        };
+        const read = async url => {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(url + ' answered ' + response.status);
+            return response.text();
+        };
+        const load = src => new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(src + ' did not load'));
+            document.head.appendChild(script);
+        });
+        const css = el => getComputedStyle(el);
+        const box = el => el.getBoundingClientRect();
+        const near = (a, b) => Math.abs(a - b) <= 0.5;
+        const escaped = text => text.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        const view = { width: document.documentElement.clientWidth, height: document.documentElement.clientHeight };
+
+        // The board. Three lists; the first card has more assignees than a card shows and enough
+        // comments that its dialog has to scroll, the third is assigned to whoever is looking.
+        const me = 'Alice';
+        const pageName = 'KanbanHarness';
+        const boardText = [
+            '=== To do',
+            '==== 설계 문서 쓰기 ==== #card-a',
+            '===== Description',
+            '무엇을 왜 만드는지 적는다.',
+            '===== Property',
+            ' * DueDate: [2020-01-01]',
+            ' * Assignee',
+            '  * [User:Bob]',
+            '  * [User:Carol]',
+            '  * [User:Dave]',
+            '  * [User:Erin]',
+            '  * [User:Frank]',
+            '===== Activity',
+        ].concat(...Array.from({ length: 40 }, (unused, i) => [
+            ' * [User:Bob] [2026-05-' + String(28 - i % 28).padStart(2, '0') + ']T11:11:11Z',
+            '  * 코멘트 ' + (40 - i) + ': 읽는 사람이 다음에 할 일을 알 수 있게 적는다.',
+        ]), [
+            '==== 검토 받기 ==== #card-b',
+            '===== Property',
+            ' * BlockedBy: [#card-a 설계 문서 쓰기]',
+            '==== 내가 맡은 카드 ==== #card-c',
+            '===== Property',
+            ' * Assignee: [User:' + me + ']',
+            '=== Doing',
+            '==== 진행 중인 일 ==== #card-d',
+            '===== Property',
+            ' * ParentCard: [#card-a 설계 문서 쓰기]',
+            '=== Done',
+            '==== 끝난 일 ==== #card-e',
+            '===== Property',
+            ' * Assignee: [User:Bob]',
+        ]).join('\n');
+        const rawText = 'A page with a board on it.\n\n[[[#!Kanban\n' + boardText + '\n]]]\n';
+
+        // The server. The board asks it for a revision and a token, to render what people wrote
+        // -- a [User:Name] comes back with that person's picture, when they have one -- and to save.
+        const pictured = { Alice: '#c0392b', Bob: '#2980b9' };
+        const picture = colour => 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40"><rect width="80" height="40" fill="' + colour + '"/></svg>');
+        const asked = [];
+        const realFetch = window.fetch.bind(window);
+        const answer = (body, type) => Promise.resolve(new Response(typeof body === 'string' ? body : JSON.stringify(body), { status: 200, headers: { 'Content-Type': type || 'application/json' } }));
+        window.fetch = (url, options) => {
+            const path = String(url);
+            if (!/^\/(api|w)\//.test(path)) return realFetch(url, options);
+            asked.push((options && options.method || 'GET') + ' ' + path);
+            if (path.startsWith('/api/pageRevision/')) return answer({ revision: 1 });
+            if (path === '/api/csrf') return answer({ value: 'harness' });
+            if (path.startsWith('/api/renderAhaMark/')) {
+                const comment = String(JSON.parse(options.body).comment || '');
+                const user = /^\[User:(\w+)\]$/.exec(comment.trim());
+                if (!user) return answer({ html: '<p>' + escaped(comment) + '</p>' });
+                return answer({ html: (pictured[user[1]] ? '<img class="userInlineProfileImage" src="' + picture(pictured[user[1]]) + '" alt="">' : '') + '<a href="#' + user[1] + '">' + user[1] + '</a>' });
+            }
+            if (path.includes('action=raw')) return answer(rawText, 'text/plain');
+            return answer({});
+        };
+        window.AhaWikiCurrentUserNickname = me;
+
+        // What Twirl writes for the template: its @import and its parameters dropped, each @name
+        // filled in. When the template uses more than that, an @ is left over and the check says so.
+        const template = await read(fileOf('template', 'app/views/Wiki/InterpreterKanban.scala.html'));
+        const fill = { 'wikiContext.name': pageName, id: 'kanbanHarness', shebangLine: '#!Kanban', content: escaped(boardText) };
+        const written = template.split('\n').filter(line => !/^@(import\b|\()/.test(line)).join('\n')
+            .replace(/@(wikiContext\.name|\w+)/g, (all, name) => name in fill ? fill[name] : all);
+        say(!written.includes('@'), 'the template is all filled in: no @ is left in what it writes');
+        // And around it what a page writes around a block (ExtractConvertInjectInterpreter): the
+        // lines of the page's text the block is on, which the board saves by.
+        const lines = rawText.split('\n');
+        document.getElementById('page').innerHTML = '<p>A page with a board on it, and <a href="#elsewhere" id="linkOutside">a link in its text</a>.</p>'
+            + '<div class="InterpreterRenderMetaWrapper Kanban" style="position: relative;" data-line-start="' + (lines.indexOf('[[[#!Kanban') + 1)
+            + '" data-line-end="' + (lines.indexOf(']]]') + 2) + '"><div class="InterpreterRenderContent">' + written + '</div></div>';
+        await load(fileOf('script', 'public/js/AhaWiki.Kanban.js'));
+
+        const root = document.querySelector('.InterpreterKanban');
+        const board = root.querySelector('.kanban-board');
+        await until(() => board.querySelector('.kanban-column'), 'the board to be drawn');
+        const columns = () => [...board.querySelectorAll(':scope > .kanban-column:not(.kanban-list-drag-origin)')];
+        const listOf = column => column.querySelector('.kanban-card-list');
+        const cardOf = id => root.querySelector('.kanban-card[data-card-id="' + id + '"]:not(.kanban-card-drag-origin)');
+        const titleOf = column => column.querySelector('.kanban-column-title').textContent;
+        say(columns().length === 3 && root.querySelectorAll('.kanban-card').length === 5, 'the board drew its 3 lists and 5 cards');
+
+        // An assignee's picture. It is an <img> in a card, and a card has a rule for every <img>
+        // in it -- on the board, and again in each of the two copies that follow the pointer.
+        const picturesIn = el => [...el.querySelectorAll('.kanban-card-assignee-avatar-image')];
+        const misfits = images => {
+            const wrong = images.map(image => {
+                const circle = image.parentElement, edge = parseFloat(css(circle).borderLeftWidth);
+                const inner = { width: circle.clientWidth, height: circle.clientHeight, left: box(circle).left + edge, top: box(circle).top + edge };
+                const drawn = box(image);
+                return near(drawn.width, inner.width) && near(drawn.height, inner.height) && near(drawn.left, inner.left) && near(drawn.top, inner.top)
+                    ? '' : Math.round(drawn.width) + ' by ' + Math.round(drawn.height) + ' in ' + inner.width + ' by ' + inner.height;
+            }).filter(Boolean);
+            return wrong.length ? ' -- it is ' + wrong.join(', ') : '';
+        };
+        // Three cards have one, in three lists. A phone draws one list at a time, with two of them.
+        const pictures = (await until(() => picturesIn(root).length === 3 && picturesIn(root).every(image => image.complete) && picturesIn(root),
+            'the pictures of the three assignees who have one')).filter(image => image.getClientRects().length);
+        say(pictures.length === (phone ? 2 : 3) && !misfits(pictures), 'an assignee\'s picture fills its circle' + misfits(pictures));
+        const more = root.querySelector('.kanban-card-assignee-more');
+        say(!!more && more.textContent === '+1' && cardOf('card-a').querySelectorAll('.kanban-card-assignee-avatar').length === 5, 'a card shows four assignees and counts the rest');
+
+        if (phone) return onAPhone();
+        say(css(cardOf('card-c')).boxShadow !== css(cardOf('card-b')).boxShadow, 'the card assigned to whoever is looking has a ring around it');
+        await stage('the board');
+
+        // The pointer. Sortable is told to move a copy of what is dragged itself (forceFallback),
+        // so it listens to pointer events and looks, every 50ms, at what is under the last one.
+        const at = (el, x, y) => ({ x: box(el).left + box(el).width * (x === undefined ? 0.5 : x), y: box(el).top + box(el).height * (y === undefined ? 0.5 : y) });
+        const pointer = (type, target, point) => target.dispatchEvent(new PointerEvent(type, {
+            bubbles: true, cancelable: true, composed: true, view: window, pointerId: 1, pointerType: 'mouse', isPrimary: true,
+            button: 0, buttons: type === 'pointerup' ? 0 : 1, clientX: point.x, clientY: point.y,
+        }));
+        const dragged = () => document.querySelector('body > .kanban-card-drag-preview, body > .kanban-list-drag-preview');
+        const pickUp = point => {
+            pointer('pointerdown', document.elementFromPoint(point.x, point.y), point);
+            pointer('pointermove', document, { x: point.x + 6, y: point.y + 6 });
+            return until(dragged, 'the copy of what is dragged');
+        };
+        // Resolves when Sortable has put the slot somewhere else, before anything is painted: what
+        // is measured next is the first frame of the move.
+        const moveTo = point => {
+            const moved = new Promise((resolve, reject) => {
+                const seen = new MutationObserver(() => { seen.disconnect(); clearTimeout(late); resolve(); });
+                const late = setTimeout(() => {
+                    seen.disconnect();
+                    const under = document.elementFromPoint(point.x, point.y);
+                    reject(new Error('nothing was moved within 2s of the pointer going to ' + Math.round(point.x) + ', ' + Math.round(point.y) + ', over ' + (under ? under.tagName.toLowerCase() + '.' + under.className : 'nothing')));
+                }, 2000);
+                seen.observe(board, { childList: true, subtree: true });
+            });
+            pointer('pointermove', document, point);
+            return moved;
+        };
+        // No click follows: a browser sends one to what the button went down on, and the board
+        // has drawn its lists again by then, so that is on the page no longer.
+        const drop = point => pointer('pointerup', document, point);
+        const moving = el => css(el).transform !== 'none';
+        const slideMs = 120 + 80;   // Sortable's animation, and some
+        const handOver = places => {
+            const other = places.filter(([, el]) => css(el).cursor !== 'grabbing').map(([name, el]) => name + ' (' + css(el).cursor + ')');
+            return other.length ? ' -- it is not over ' + other.join(', ') : '';
+        };
+        const emptied = slot => [...slot.children].every(child => css(child).visibility === 'hidden');
+        board.scrollIntoView({ block: 'start' });
+
+        // A card: the last of three in its list, and the one with a ring to lose.
+        {
+            const list = listOf(columns()[0]), first = cardOf('card-a'), second = cardOf('card-b'), mine = cardOf('card-c');
+            const tall = box(list).height;
+            const copy = await pickUp(at(mine));
+            const left = root.querySelector('.kanban-card-drag-origin');
+            say(copy.parentElement === document.body && css(copy).position === 'fixed' && css(copy).pointerEvents === 'none', 'a dragged card is a copy on the page, over everything and out of the pointer\'s way');
+            say(css(copy).opacity === '0.64', 'the copy is 64% opaque, not the 80% Sortable writes on it (' + css(copy).opacity + ')');
+            say(css(copy).boxShadow !== 'none', 'and has a shadow');
+            say(picturesIn(copy).length === 1 && !misfits(picturesIn(copy)), 'the assignee\'s picture in the copy fills its circle' + misfits(picturesIn(copy)));
+            say(!!left && css(left).opacity === '0.52' && css(left).pointerEvents === 'none', 'where the card was, a faded copy of it stays');
+            say(css(mine).display === 'none' && near(box(list).height, tall), 'and until the card is over another place no slot is drawn for it: the list is as tall as it was');
+            say(document.body.classList.contains('kanban-card-dragging-global'), 'the page knows a card is being dragged');
+            const everywhere = handOver([['another card', first], ['a button', columns()[0].querySelector('.kanban-add-card-button')], ['a list\'s title', columns()[1].querySelector('.kanban-column-title')],
+                ['the board', board], ['a link in the page\'s text', document.getElementById('linkOutside')], ['the page', document.body]]);
+            say(!everywhere, 'the pointer is a closed hand wherever it is on the page while a card is dragged' + everywhere);
+            await stage('a card picked up');
+
+            await moveTo(at(first));
+            say(mine.nextElementSibling === first, 'over the first card, the slot goes before it');
+            say(moving(first) && moving(second), 'the cards the slot pushes aside slide to their places');
+            say(!moving(left), 'the faded copy is pushed aside too, and does not slide');
+            say(css(mine).display !== 'none' && css(mine).borderTopStyle === 'dashed' && css(mine).opacity === '1' && emptied(mine), 'the slot is a dashed box with nothing drawn in it');
+            say(css(mine).boxShadow === 'none', 'and it has no shadow, though the card it is for has a ring (' + css(mine).boxShadow + ')');
+            await sleep(slideMs);
+            await stage('a card over another place');
+
+            await moveTo(at(second));
+            say(mine.previousElementSibling === second, 'over the second card, the slot goes after it');
+            say(moving(first) && moving(second), 'the cards slide back');
+            say(!moving(mine), 'the slot does not slide: it is drawn at once where the card would land');
+            await sleep(slideMs);
+
+            // Over its upper half. Coming from another list Sortable asks which half of the card
+            // the pointer is in, and dead centre is in neither.
+            const there = at(cardOf('card-d'), 0.5, 0.25);
+            await moveTo(there);
+            say(mine.parentElement === listOf(columns()[1]), 'over a card of another list, the slot goes into that list');
+            await sleep(slideMs);
+            await stage('a card over another list');
+
+            drop(there);
+            await until(() => !dragged() && !root.querySelector('.kanban-card-drag-origin'), 'the drag to end');
+            say(!document.body.classList.contains('kanban-card-dragging-global') && css(cardOf('card-a')).cursor === 'pointer', 'dropped, a card has its own pointer again');
+            await until(() => asked.some(line => line.startsWith('POST /w/')), 'the board to save the move');
+            say(cardOf('card-c').closest('.kanban-column') === columns()[1], 'and the card is in the list it was dropped on, and that is saved');
+            await stage('a card dropped');
+        }
+
+        // A list: the last of three, with its «Add a Card» open, so that one thing in it is hidden
+        // that a rule of its own would show.
+        {
+            const [first, second, mine] = columns();
+            mine.querySelector('.kanban-add-card-button').click();
+            const wide = board.scrollWidth, saves = asked.filter(line => line.startsWith('POST /w/')).length;
+            const copy = await pickUp(at(mine.querySelector('.kanban-column-title-row')));
+            const left = board.querySelector('.kanban-list-drag-origin');
+            say(copy.parentElement === document.body && css(copy).position === 'fixed' && css(copy).pointerEvents === 'none', 'a dragged list is a copy on the page too');
+            say(css(copy).opacity === '0.64' && css(copy).boxShadow !== 'none', 'as opaque as a dragged card, and with a shadow (' + css(copy).opacity + ')');
+            const hidden = [...copy.querySelectorAll('.kanban-hidden')];
+            const shown = hidden.filter(el => css(el).display !== 'none').map(el => el.className.replace(/\s*kanban-hidden\s*/, ''));
+            say(hidden.length >= 2 && !shown.length, 'what is hidden in a list is hidden in the copy of it' + (shown.length ? ' -- ' + shown.join(', ') + ' is drawn' : ''));
+            say(picturesIn(copy).length === 1 && !misfits(picturesIn(copy)), 'and an assignee\'s picture in the copy fills its circle' + misfits(picturesIn(copy)));
+            say(!!left && css(left).opacity === '0.52' && css(left).pointerEvents === 'none', 'where the list was, a faded copy of it stays');
+            say(css(mine).display === 'none' && board.scrollWidth === wide, 'and until the list is over another place no slot is drawn for it: the board is as wide as it was');
+            const everywhere = handOver([['a card', cardOf('card-a')], ['a button', first.querySelector('.kanban-add-card-button')], ['a link in the page\'s text', document.getElementById('linkOutside')], ['the page', document.body]]);
+            say(!everywhere, 'the pointer is a closed hand wherever it is on the page while a list is dragged' + everywhere);
+            await stage('a list picked up');
+
+            await moveTo(at(first, 0.5, 0.2));
+            say(mine.nextElementSibling === first, 'over the first list, the slot goes before it');
+            say(moving(first) && moving(second), 'the lists the slot pushes aside slide to their places');
+            say(!moving(left), 'the faded copy is pushed aside too, and does not slide');
+            say(css(mine).display !== 'none' && css(mine).borderTopStyle === 'dashed' && css(mine).opacity === '1' && css(mine).boxShadow === 'none' && emptied(mine), 'the slot is a dashed box with nothing drawn in it');
+            await sleep(slideMs);
+            await stage('a list over another place');
+
+            await moveTo(at(second, 0.5, 0.2));
+            say(mine.previousElementSibling === second, 'over the second list, the slot goes after it');
+            say(!moving(mine), 'the slot does not slide: it is drawn at once where the list would land');
+            await sleep(slideMs);
+
+            await moveTo(at(first, 0.5, 0.2));
+            await sleep(slideMs);
+            drop(at(first, 0.5, 0.2));
+            await until(() => !dragged() && !board.querySelector('.kanban-list-drag-origin'), 'the drag to end');
+            await until(() => asked.filter(line => line.startsWith('POST /w/')).length > saves, 'the board to save the move');
+            say(titleOf(columns()[0]) === 'Done' && !document.body.classList.contains('kanban-list-dragging-global'), 'dropped, the list is first, and that is saved');
+            await stage('a list dropped');
+        }
+
+        // Files dragged in from outside, which is the browser's own kind of drag.
+        {
+            const files = () => { const data = new DataTransfer(); data.items.add(new File(['x'], 'note.txt', { type: 'text/plain' })); return data; };
+            const drag = (type, el) => el.dispatchEvent(new DragEvent(type, { bubbles: true, cancelable: true, dataTransfer: files() }));
+            const outlined = el => css(el).outlineStyle === 'dashed' && css(el).outlineWidth === '2px';
+            const list = listOf(columns()[1]), plain = css(list).backgroundColor;
+            drag('dragenter', list);
+            say(outlined(list) && css(list).backgroundColor !== plain, 'a list that files are dragged over is outlined with dashes and tinted');
+            await stage('files over a list');
+            drag('dragleave', list);
+            say(!outlined(list) && css(list).backgroundColor === plain, 'and is as it was when they leave');
+            drag('dragenter', board);
+            say(outlined(board), 'so is the board, when they are over none of its lists');
+            drag('dragleave', board);
+            say(!outlined(board), 'and it too is as it was when they leave');
+
+            await openDialog();
+            const modal = document.querySelector('.kanban-modal'), hint = modal.querySelector('.kanban-modal-drop-hint');
+            drag('dragenter', modal);
+            say(outlined(modal) && css(hint).display !== 'none', 'a card\'s dialog that files are dragged over is outlined with dashes and says what dropping them does');
+            await stage('files over the dialog');
+            drag('dragleave', modal);
+            say(!outlined(modal) && css(hint).display === 'none', 'and is as it was when they leave');
+        }
+
+        // The dialog, in a window: in the middle, and no wider or taller than the window lets it be.
+        {
+            const overlay = document.querySelector('.kanban-card-detail-overlay'), modal = overlay.querySelector('.kanban-modal');
+            const shape = box(modal), width = Math.min(720, innerWidth - 32);
+            say(overlay.parentElement === document.body && near(box(overlay).width, view.width) && near(box(overlay).height, view.height), 'the dialog\'s backdrop covers the window');
+            say(near(shape.width, width) && near(shape.left + shape.width / 2, view.width / 2), 'the dialog is ' + width + 'px wide and in the middle (' + Math.round(shape.width) + 'px)');
+            say(near(shape.height, innerHeight - 32) && modal.scrollHeight > modal.clientHeight && css(modal).overflowY === 'auto', 'a long card\'s dialog stops 16px short of the window\'s top and bottom, and scrolls');
+            say(css(modal).borderTopLeftRadius === '5px' && near(box(modal.querySelector('.kanban-modal-header')).left, shape.left + parseFloat(css(modal).borderLeftWidth)), 'its heading runs to its edges, and its corners are 5px round');
+            hiddenInDialog(overlay);
+            await stage('the dialog');
+            modal.querySelector('.kanban-modal-btn-close').click();
+            say(!document.querySelector('.kanban-card-detail-overlay'), 'its button closes it');
+        }
+
+        // And the board again as three phones show it, where it is one list at a time under a row
+        // of tabs and a card's dialog comes up from the bottom. What a stylesheet asks about is the
+        // window, and a frame is a window. One at a time: the server that refuses a request does
+        // it when many come at once.
+        for (const width of [390, 360, 320]) {
+            (await inFrame(width)).forEach(line => out.push(line.replace(' ', ' on a ' + width + 'px phone, ')));
+        }
+
+        async function openDialog() {
+            cardOf('card-a').click();
+            const modal = await until(() => document.querySelector('.kanban-card-detail-overlay .kanban-modal'), 'the dialog');
+            await until(() => modal.scrollHeight > modal.clientHeight, 'the dialog to have all its comments');
+            return modal;
+        }
+
+        function hiddenInDialog(overlay) {
+            const hidden = [...overlay.querySelectorAll('.kanban-hidden')];
+            const shown = hidden.filter(el => css(el).display !== 'none').map(el => el.className.replace(/\s*kanban-hidden\s*/, ''));
+            say(hidden.length >= 3 && !shown.length, 'what the dialog keeps hidden until it is asked for is hidden' + (shown.length ? ' -- ' + shown.join(', ') + ' is drawn' : ''));
+        }
+
+        async function onAPhone() {
+            const tabs = root.querySelectorAll('.kanban-mobile-tab');
+            const drawn = columns().filter(column => css(column).display !== 'none');
+            say(tabs.length === 3 && drawn.length === 1 && titleOf(drawn[0]) === 'To do', 'the board is a row of tabs and the one list of the first of them');
+            say(!window.Sortable.get(board) && !window.Sortable.get(listOf(drawn[0])), 'and nothing on it is dragged: a finger scrolls');
+            say(document.documentElement.scrollWidth <= view.width, 'the page is no wider than the phone');
+            await stage('the board');
+            tabs[1].click();
+            const now = columns().filter(column => css(column).display !== 'none');
+            say(now.length === 1 && titleOf(now[0]) === 'Doing', 'a tab shows its list in place of the other');
+            root.querySelectorAll('.kanban-mobile-tab')[0].click();
+
+            const modal = await openDialog(), shape = box(modal);
+            say(near(shape.left, 0) && near(shape.width, innerWidth), 'a card\'s dialog is as wide as the phone (' + Math.round(shape.width) + 'px)');
+            say(near(shape.bottom, view.height) && near(shape.height, innerHeight * 0.9) && modal.scrollHeight > modal.clientHeight, 'it comes up from the bottom, a tenth of the phone short of the top, and scrolls');
+            say(css(modal).borderTopLeftRadius === '16px' && css(modal).borderTopRightRadius === '16px' && css(modal).borderBottomLeftRadius === '0px' && css(modal).borderBottomRightRadius === '0px', 'its top corners are round and its bottom ones square');
+            hiddenInDialog(modal.parentElement);
+            await stage('the dialog');
+            modal.querySelector('.kanban-modal-btn-close').click();
+        }
+    }
+
+    function inFrame(width, attempt) {
+        return new Promise(resolve => {
+            const phones = document.getElementById('phones');
+            const caption = phones.appendChild(document.createElement('div'));
+            caption.className = 'caption';
+            caption.textContent = 'a ' + width + 'px phone';
+            const frame = document.createElement('iframe');
+            const query = new URLSearchParams(location.search);
+            query.set('frame', width);
+            frame.src = location.pathname + '?' + query;
+            // No scrollbar of its own, which would take 15px of the width it is here to have. And
+            // as tall as a phone, because the dialog is measured against the bottom of it.
+            frame.width = width; frame.height = 720; frame.scrolling = 'no';
+            const settle = found => { removeEventListener('message', heard); clearTimeout(silence); resolve(found); };
+            const heard = event => {
+                if (event.source !== frame.contentWindow || !event.data || event.data.kanbanBoard !== String(width)) return;
+                // A frame that lost a file to the server is opened again, a few times.
+                if ((attempt || 1) < 4 && event.data.lines.some(line => line.includes('not every file loaded'))) {
+                    caption.remove(); frame.remove();
+                    return settle(inFrame(width, (attempt || 1) + 1));
+                }
+                settle(event.data.lines);
+            };
+            addEventListener('message', heard);
+            const silence = setTimeout(() => settle(['FAIL the frame said nothing for a minute']), 60000);
+            phones.appendChild(frame);
+        });
+    }
+})();
+</script>
+</body>
+</html>

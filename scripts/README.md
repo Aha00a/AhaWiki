@@ -329,8 +329,8 @@ What it does not do:
 
  * **Look.** Every harness's README says what its checks cannot see, and a picture is still the
    only way to see it.
- * **More window sizes than one.** `graph-hud` brings its own phones. `slide-layout` asks to be
-   run at more widths than one, which is what `--width` is for.
+ * **More window sizes than one.** `graph-hud` and `kanban-board` bring their own phones.
+   `slide-layout` asks to be run at more widths than one, which is what `--width` is for.
 
 CI runs it on every push and pull request, as a job of its own beside the specs and the node
 tests (`.github/workflows/ci.yml`). What that took, the day it was added:
