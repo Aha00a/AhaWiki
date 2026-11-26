@@ -131,33 +131,76 @@
 			min-width: 220px;
 			pointer-events: auto;
 
-			&.topLeft {
+			// Control and Metrics: a button, and the panel under it when it is open.
+			&.topLeft, &.topRight {
 				top: 10px;
-				left: 10px;
+				min-width: 0;
+				padding: 0;
+				&:has(> .hudBody:not([hidden])) {
+					padding: 0 10px 8px;
+				}
 			}
-			&.bottomLeft {
+			// Open, a panel is never wider than the graph (cqw: the HUD is the container, below), so
+			// in a #!Graph in a narrow table cell it does not spill over the next cell.
+			// The 42px is the 10px each side of the panel, and its own padding and border.
+			&.topLeft {
 				left: 10px;
-				bottom: 10px;
-				min-width: 100px;
+				&:has(> .hudBody:not([hidden])) { min-width: ~"min(220px, 100cqw - 42px)"; }
 			}
 			&.topRight {
-				top: 10px;
 				right: 10px;
-				min-width: 200px;
+				&:has(> .hudBody:not([hidden])) { min-width: ~"min(200px, 100cqw - 42px)"; }
 			}
-			&.bottomRight {
+			&:has(> .hudBody:not([hidden])) {
+				max-width: calc(100cqw - 42px);
+				overflow: hidden;
+			}
+			// The buttons on the left, the legend on the right, along the bottom. The bar's empty
+			// middle passes the pointer to the graph under it.
+			&.bottomBar {
+				left: 10px;
 				right: 10px;
 				bottom: 10px;
-				min-width: 130px;
+				min-width: 0;
+				padding: 4px 6px;
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 8px;
+				background: color-mix(in oklch, var(--color-adjacent-hud-bg) 80%, transparent);
+				backdrop-filter: blur(4px);
+				-webkit-backdrop-filter: blur(4px);
+				box-shadow: none;
+				pointer-events: none;
+				> .row {
+					margin: 0;
+					pointer-events: auto;
+				}
+				> .row.legend {
+					flex-wrap: nowrap;
+					white-space: nowrap;
+				}
 			}
 		}
 
-		.title {
+		.hudToggle {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			box-sizing: border-box;
+			height: 28px;
+			min-width: 28px;
+			margin: 0;
+			padding: 0 8px;
+			border: none;
+			background: none;
+			color: var(--color-adjacent-hud-text);
+			font: inherit;
+			cursor: pointer;
+		}
+		.hudToggle[aria-expanded="true"] {
+			margin: 0 -10px 2px;
 			font-weight: 700;
-			margin-bottom: 5px;
-			font-size: 11px;
-			letter-spacing: .02em;
-			text-transform: uppercase;
 			color: var(--color-adjacent-hud-title);
 		}
 
@@ -243,8 +286,27 @@
 			.ratio_16_9 {
 				padding-bottom: 100%;
 			}
-			.adjacentPagesHud {
+		}
+	}
+
+	// A narrow graph keeps its buttons as icons. Narrow by the graph's own width, not the screen's: a
+	// #!Graph in a table cell is narrow on a wide screen. A phone used to hide the whole HUD,
+	// Fullscreen with it. 520px is where the bar's words stop fitting on one line; the same number
+	// in AhaWiki.D3CanvasControls.js lets only one panel open at a time below it.
+	.adjacentPagesHud {
+		container-type: inline-size;
+	}
+	@container (max-width: 519px) {
+		.adjacentPagesHud {
+			.hudToggle > [data-hud-label],
+			.hudActions [data-hud-label] {
 				display: none;
+			}
+			.hudActions a {
+				padding: 5px 9px;
+			}
+			.hudPanel.bottomBar > .row.compact {
+				flex-wrap: nowrap;
 			}
 		}
 	}

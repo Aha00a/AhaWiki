@@ -119,7 +119,8 @@ window.AhaWikiAdjacentPagesGraph = {
                 var text = active ? 'Exit Fullscreen' : 'Fullscreen';
                 var $btn = $('.toggleFullscreenD3Canvas.' + id);
                 $btn.toggleClass('active', active);
-                $btn.html('<i class="fas fa-' + icon + '"></i> ' + text);
+                // The word in data-hud-label, as the template has it, so a phone can show the icon alone.
+                $btn.html('<i class="fas fa-' + icon + '"></i> <span data-hud-label="' + text + '"></span>');
             }
 
             function toggleFullscreen() {

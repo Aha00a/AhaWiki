@@ -24,3 +24,5 @@ AhaMark->Interpreter
 
 == 모양
 노드가 12개 이상이면 서로 자주 이어진 무리마다 은은한 빛이 깔리고 노드 링에 무리 색이 입혀집니다. 이유와 규칙은 [Dev GraphGlow].
+
+그래프 위의 Control·Metrics 단추와 바닥 막대는 [MacroAdjacentPages] «그래프 위의 단추» 와 같습니다.

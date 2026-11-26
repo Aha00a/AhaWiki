@@ -97,31 +97,74 @@
   min-width: 220px;
   pointer-events: auto;
 }
-.AhaWiki .adjacentPagesHud .hudPanel.topLeft {
-  top: 10px;
-  left: 10px;
-}
-.AhaWiki .adjacentPagesHud .hudPanel.bottomLeft {
-  left: 10px;
-  bottom: 10px;
-  min-width: 100px;
-}
+.AhaWiki .adjacentPagesHud .hudPanel.topLeft,
 .AhaWiki .adjacentPagesHud .hudPanel.topRight {
   top: 10px;
-  right: 10px;
-  min-width: 200px;
+  min-width: 0;
+  padding: 0;
 }
-.AhaWiki .adjacentPagesHud .hudPanel.bottomRight {
+.AhaWiki .adjacentPagesHud .hudPanel.topLeft:has( > .hudBody:not([hidden])),
+.AhaWiki .adjacentPagesHud .hudPanel.topRight:has( > .hudBody:not([hidden])) {
+  padding: 0 10px 8px;
+}
+.AhaWiki .adjacentPagesHud .hudPanel.topLeft {
+  left: 10px;
+}
+.AhaWiki .adjacentPagesHud .hudPanel.topLeft:has( > .hudBody:not([hidden])) {
+  min-width: min(220px, 100cqw - 42px);
+}
+.AhaWiki .adjacentPagesHud .hudPanel.topRight {
+  right: 10px;
+}
+.AhaWiki .adjacentPagesHud .hudPanel.topRight:has( > .hudBody:not([hidden])) {
+  min-width: min(200px, 100cqw - 42px);
+}
+.AhaWiki .adjacentPagesHud .hudPanel:has( > .hudBody:not([hidden])) {
+  max-width: calc(100cqw - 42px);
+  overflow: hidden;
+}
+.AhaWiki .adjacentPagesHud .hudPanel.bottomBar {
+  left: 10px;
   right: 10px;
   bottom: 10px;
-  min-width: 130px;
+  min-width: 0;
+  padding: 4px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: color-mix(in oklch, var(--color-adjacent-hud-bg) 80%, transparent);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: none;
+  pointer-events: none;
 }
-.AhaWiki .adjacentPagesHud .title {
+.AhaWiki .adjacentPagesHud .hudPanel.bottomBar > .row {
+  margin: 0;
+  pointer-events: auto;
+}
+.AhaWiki .adjacentPagesHud .hudPanel.bottomBar > .row.legend {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+.AhaWiki .adjacentPagesHud .hudToggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 28px;
+  min-width: 28px;
+  margin: 0;
+  padding: 0 8px;
+  border: none;
+  background: none;
+  color: var(--color-adjacent-hud-text);
+  font: inherit;
+  cursor: pointer;
+}
+.AhaWiki .adjacentPagesHud .hudToggle[aria-expanded="true"] {
+  margin: 0 -10px 2px;
   font-weight: 700;
-  margin-bottom: 5px;
-  font-size: 11px;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
   color: var(--color-adjacent-hud-title);
 }
 .AhaWiki .adjacentPagesHud .row {
@@ -196,8 +239,20 @@
   .AhaWiki .aspectRatioWrapper.adjacentPagesGraphWrapper .ratio_16_9 {
     padding-bottom: 100%;
   }
-  .AhaWiki .aspectRatioWrapper.adjacentPagesGraphWrapper .adjacentPagesHud {
+}
+.AhaWiki .adjacentPagesHud {
+  container-type: inline-size;
+}
+@container (max-width: 519px) {
+  .AhaWiki .adjacentPagesHud .hudToggle > [data-hud-label],
+  .AhaWiki .adjacentPagesHud .hudActions [data-hud-label] {
     display: none;
+  }
+  .AhaWiki .adjacentPagesHud .hudActions a {
+    padding: 5px 9px;
+  }
+  .AhaWiki .adjacentPagesHud .hudPanel.bottomBar > .row.compact {
+    flex-wrap: nowrap;
   }
 }
 .AhaWiki .crawlerPreview {

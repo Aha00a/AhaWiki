@@ -15,9 +15,13 @@
         <canvas id="graphD3Canvas-@id" class="graph graphD3Canvas @(id)" style="@canvasStyle"></canvas>
         @* The words are in data-hud-label, drawn by adjacent.less: they are the same on every page, and in
            the text they outweighed the article on a short one. *@
+        @* The two top panels open from a button and start closed: open, they covered a fifth of the
+           graph at 1105px and two fifths at 800px. The two bottom ones are one bar. The wiki page
+           MacroAdjacentPages, «그래프 위의 단추», has the why. *@
         <div class="adjacentPagesHud @id">
             <div class="hudPanel topLeft @id">
-                <div class="title" data-hud-label="Control"></div>
+                <button type="button" class="hudToggle" aria-expanded="false" aria-controls="hudControl-@id"><i class="fas fa-sliders"></i><span data-hud-label="Control"></span></button>
+                <div class="hudBody" id="hudControl-@id" hidden>
                 <div class="row">
                     <label><span data-hud-label="Focus depth"></span> <input type="range" min="1" max="32" step="1" value="32" class="focusDepthD3Canvas @id"/></label>
                     <span class="focusDepthValueD3Canvas @id">≤ 32</span>
@@ -46,8 +50,9 @@
                     <label><input type="checkbox" class="thumbnailToggleD3Canvas @id" checked="checked"/> <span data-hud-label="Thumbnail"></span></label>
                     <span class="thumbnailToggleValueD3Canvas @id">ON</span>
                 </div>
+                </div>
             </div>
-            <div class="hudPanel bottomLeft @id">
+            <div class="hudPanel bottomBar @id">
                 <div class="row compact hudActions">
                     <a href="#" class="controlStartD3Canvas @(id) @if(startActive){active}"><i class="fas fa-play"></i> <span data-hud-label="Start"></span></a>
                     <a href="#" class="controlStopD3Canvas @(id)"><i class="fas fa-stop"></i> <span data-hud-label="Stop"></span></a>
@@ -61,9 +66,15 @@
                     <a href="#" class="controlResetViewD3Canvas @(id)"><i class="fas fa-minimize"></i> <span data-hud-label="Reset"></span></a>
                     }
                 </div>
+                <div class="row legend">
+                    <span class="dot root"></span><span data-hud-label="Root"></span>
+                    <span class="dot hop1"></span><span data-hud-label="@legendHop1"></span>
+                    <span class="dot hop2"></span><span data-hud-label="@legendHop2"></span>
+                </div>
             </div>
             <div class="hudPanel topRight @id">
-                <div class="title" data-hud-label="Metrics"></div>
+                <button type="button" class="hudToggle" aria-expanded="false" aria-controls="hudMetrics-@id"><i class="fas fa-circle-info"></i><span data-hud-label="Metrics"></span></button>
+                <div class="hudBody" id="hudMetrics-@id" hidden>
                 <div class="row metric"><span data-hud-label="Nodes(visible/total)"></span><span class="nodeCountSummaryD3Canvas @id">0/0</span></div>
                 <div class="row metric"><span data-hud-label="Links(visible/total)"></span><span class="linkCountSummaryD3Canvas @id">0/0</span></div>
                 <div class="row metric"><span data-hud-label="Avg degree"></span><span class="avgDegreeD3Canvas @id">0.00</span></div>
@@ -73,12 +84,6 @@
                 }
                 <div class="row metric"><span data-hud-label="Zoom(scale)"></span><span class="zoomScaleD3Canvas @id">1.00x</span></div>
                 <div class="row compact" data-hud-label="Ctrl/⌘ + Scroll: Zoom"></div>
-            </div>
-            <div class="hudPanel bottomRight @id">
-                <div class="row legend">
-                    <span class="dot root"></span><span data-hud-label="Root"></span>
-                    <span class="dot hop1"></span><span data-hud-label="@legendHop1"></span>
-                    <span class="dot hop2"></span><span data-hud-label="@legendHop2"></span>
                 </div>
             </div>
         </div>
